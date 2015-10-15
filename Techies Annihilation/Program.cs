@@ -287,7 +287,7 @@ namespace Techies_Annihilation
                         x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team == _player.Team);
             var bombsList = bombs as IList<Unit> ?? bombs.ToList();
             var enumerable = bombs as IList<Unit> ?? bombsList.ToList();
-            PrintError(Game.IsKeyDown(Key.RightCtrl).ToString());
+            //PrintError(Game.IsKeyDown(Key.RightCtrl).ToString());
             if (Game.IsKeyDown(0x11))
             {
                 if (_forceStaffRange == null)
