@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using Ensage;
 using Ensage.Common;
@@ -20,6 +21,8 @@ namespace Techies_Annihilation
         private static Player _player;
         private static readonly Dictionary<Unit, ParticleEffect> Effects = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Unit, ParticleEffect> Visible = new Dictionary<Unit, ParticleEffect>();
+        private static readonly Dictionary<Unit, float> GlobalHealthAfterSuicide = new Dictionary<Unit, float>();
+        private static readonly Dictionary<Unit, float> GlobalHealthAfterMines = new Dictionary<Unit, float>();
         private static ParticleEffect _forceStaffRange;
         private static readonly Dictionary<Unit, float> BombDamage = new Dictionary<Unit, float>();
         private static float _currentBombDamage;
@@ -31,6 +34,7 @@ namespace Techies_Annihilation
         private static Font _fontSize3;
         private static Font _fontSize1;
         private static Font _fontSize2;
+        private static Font _fontSize4;
         private static Line _line;
         //private static readonly Dictionary<Unit, int> DataWithCurrentHealth = new Dictionary<Unit, int>();
         //private static readonly Dictionary<Unit, int> DataWithMaxHealth = new Dictionary<Unit, int>();
@@ -41,7 +45,9 @@ namespace Techies_Annihilation
         public static bool AutoForceStaff;
         public static bool LegitMode;
         public static bool AutoSuicide;
+        public static bool DetonateOnAegisAndWk;
         public static bool LeftMouseIsPress;
+        private static readonly int[] ErrorLevel = new int[8];
         #endregion
         #region Methods
 
@@ -51,7 +57,7 @@ namespace Techies_Annihilation
         {
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
-            //Drawing.OnDraw += Drawing_OnDraw;
+            Drawing.OnDraw += Drawing_OnDraw;
 
             #region Init font & line
 
@@ -82,6 +88,15 @@ namespace Techies_Annihilation
                     OutputPrecision = FontPrecision.Default,
                     Quality = FontQuality.Default
                 });
+            _fontSize4 = new Font(
+                Drawing.Direct3DDevice9,
+                new FontDescription
+                {
+                    FaceName = "Tahoma",
+                    Height = 16,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Default
+                });
             _line = new Line(Drawing.Direct3DDevice9);
             #endregion
 
@@ -103,12 +118,14 @@ namespace Techies_Annihilation
             _fontSize3.Dispose();
             _fontSize2.Dispose();
             _fontSize1.Dispose();
+            _fontSize4.Dispose();
             _line.Dispose();
         }
 
         private static void Drawing_OnPostReset(EventArgs args)
         {
             _fontSize3.OnResetDevice();
+            _fontSize4.OnResetDevice();
             _fontSize1.OnResetDevice();
             _fontSize2.OnResetDevice();
             _line.OnResetDevice();
@@ -116,6 +133,7 @@ namespace Techies_Annihilation
 
         private static void Drawing_OnPreReset(EventArgs args)
         {
+            _fontSize4.OnLostDevice();
             _fontSize3.OnLostDevice();
             _fontSize2.OnLostDevice();
             _fontSize1.OnLostDevice();
@@ -147,6 +165,42 @@ namespace Techies_Annihilation
             }
         }
 
+        private static void Drawing_OnDraw(EventArgs args)
+        {
+            if (!Game.IsInGame || _me==null) return;
+            var enemies =
+                ObjectMgr.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            x.Team != ObjectMgr.LocalPlayer.Team && !x.IsIllusion && _me.Distance2D(x)<=1500 && x.IsAlive)
+                    .ToList();
+            foreach (Hero enemy in enemies)
+            {
+                try
+                {
+                    Vector2 screenPos;
+
+                    var enemyPos = enemy.Position + new Vector3(0, 0, enemy.HealthBarOffset);
+                    if (!Drawing.WorldToScreen(enemyPos, out screenPos))
+                        continue;
+                    var start = screenPos + new Vector2(-51, -40);
+                    float suicide = 0;
+                    float minesDmg = 0;
+                    var text = string.Format("{0}                                   {1}",
+                        GlobalHealthAfterMines.TryGetValue(enemy, out minesDmg) ? (object) (int) minesDmg : "-",
+                        GlobalHealthAfterSuicide.TryGetValue(enemy, out suicide) ? (object) (int) suicide : "-");
+                    var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 150), FontFlags.None);
+                    var textPos = (start + new Vector2(51 - textSize.X/2, -textSize.Y/2 + 2));
+                    Drawing.DrawText(text, textPos, new Vector2(10, 150), Color.White,
+                        FontFlags.AntiAlias | FontFlags.DropShadow);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+        }
+
         #endregion
 
         private static void Drawing_OnEndScene(EventArgs args)
@@ -166,108 +220,120 @@ namespace Techies_Annihilation
              * vgui\dashboard\dash_button_back
              * 
              * */
-            if (!IsClose)
+            try
             {
-                DrawFilledBox(10, 200, 200, ExtraMenu?400:270, new ColorBGRA(0, 0, 0, 100));
-                DrawLine(10,250,200,250,1,Color.Black);
-                DrawShadowText("Damage Helper", 20, 210, Color.White,_fontSize1);
-                var enemies =
-                    ObjectMgr.GetEntities<Hero>()
-                        .Where(
-                            x =>
-                                x.Team != player.Team && !x.IsIllusion && x.ClassID != ClassID.CDOTA_Unit_Hero_Meepo)
-                        .ToList();
-                var counter = 0;
-                DrawFilledBox(20, 380, 120, 50,
-                    CheckMouse(20, 380, 120, 50) ? new ColorBGRA(255, 255, 0, 100) : new ColorBGRA(100 ,255 ,0, 100));
-                DrawShadowText("Open / Hide", 30, 390, Color.White,_fontSize1);
-                DrawFilledBox(145, 380, 55, 50,
-                    CheckMouse(145, 380, 55, 50) ? new ColorBGRA(255, 255, 0, 100) : WithAll ? new ColorBGRA(100, 255, 0, 100) : new ColorBGRA(255, 0, 0, 100));
-                DrawShadowText(WithAll ? "AllHero" : "WithVis", 150, 390, Color.White,_fontSize2);
-
-                DrawFilledBox(20, 435, 180, 25,
-                    CheckMouse(20, 435, 180, 25) ? new ColorBGRA(255, 255, 0, 100) : ExtraMenu ? new ColorBGRA(100, 255, 0, 100) : new ColorBGRA(255, 0, 0, 100));
-                if (!ExtraMenu)
+                if (!IsClose)
                 {
-                    DrawLine(90, 440, 100, 450, 3, Color.Black);
-                    DrawLine(100, 450, 110, 440, 3, Color.Black);
-                }
-                else
-                {
-                    DrawLine(100, 440, 90, 450, 3, Color.Black);
-                    DrawLine(110, 450, 100, 440, 3, Color.Black);
+                    DrawFilledBox(10, 200, 200, ExtraMenu ? 400 : 270, new ColorBGRA(0, 0, 0, 100));
+                    DrawLine(10, 250, 200, 250, 1, Color.Black);
+                    DrawShadowText("Damage Helper", 20, 210, Color.White, _fontSize1);
+                    var enemies =
+                        ObjectMgr.GetEntities<Hero>()
+                            .Where(
+                                x =>
+                                    x.Team != player.Team && !x.IsIllusion && x.ClassID != ClassID.CDOTA_Unit_Hero_Meepo)
+                            .ToList();
+                    var counter = 0;
+                    DrawFilledBox(20, 380, 120, 50,
+                        CheckMouse(20, 380, 120, 50) ? new ColorBGRA(255, 255, 0, 100) : new ColorBGRA(100, 255, 0, 100));
+                    DrawShadowText("Open / Hide", 30, 390, Color.White, _fontSize1);
+                    DrawFilledBox(145, 380, 55, 50,
+                        CheckMouse(145, 380, 55, 50)
+                            ? new ColorBGRA(255, 255, 0, 100)
+                            : WithAll ? new ColorBGRA(100, 255, 0, 100) : new ColorBGRA(255, 0, 0, 100));
+                    DrawShadowText(WithAll ? "AllHero" : "WithVis", 150, 390, Color.White, _fontSize2);
 
-                    
-                    DrawShadowText("Auto detonate", 20, 470, Color.White, _fontSize2);
-                    DrawShadowText("Auto suicide", 20, 490, Color.White, _fontSize2);
-                    DrawShadowText("Legit mode", 20, 510, Color.White, _fontSize2);
-                    DrawShadowText("Auto Force Staff", 20, 530, Color.White, _fontSize2);
-                    DrawShadowText("Show Force Staff Range", 20, 550, Color.White, _fontSize2);
-
-                    DrawButton(180, 470, 15, 15, 2, ref AutoDetonate,true);
-                    DrawButton(180, 490, 15, 15, 2, ref AutoSuicide, true);
-                    DrawButton(180, 510, 15, 15, 2, ref LegitMode,false);
-                    DrawButton(180, 530, 15, 15, 2, ref AutoForceStaff, true);
-                    DrawButton(180, 550, 15, 15, 2, ref ShowForceStaffRange, true);
-                    
-                }
-                //DrawShadowText(WithAll ? "AllHero" : "WithVis", 150, 390, Color.White, _fontSize2);
-                var dummy = false;
-                if (!WithAll)
-                {
-                    foreach (var v in enemies)
+                    DrawFilledBox(20, 435, 180, 25,
+                        CheckMouse(20, 435, 180, 25)
+                            ? new ColorBGRA(255, 255, 0, 100)
+                            : ExtraMenu ? new ColorBGRA(100, 255, 0, 100) : new ColorBGRA(255, 0, 0, 100));
+                    if (!ExtraMenu)
                     {
-                        DrawShadowText(
-                            string.Format("  {0}: {3} | {1}/{2}", GetNameOfHero(v),
-                                Math.Abs(_currentBombDamage) <= 0 ? 0 : GetCount(v, v.Health, _currentBombDamage),
-                                Math.Abs(_currentBombDamage) <= 0 ? 0 : GetCount(v, v.MaximumHealth, _currentBombDamage),
-                                CanKillSuic(v, ref dummy)),
-                            10, 250 + 25*counter++,
-                            Color.YellowGreen,
-                            _fontSize2);
+                        DrawLine(90, 440, 100, 450, 3, Color.Black);
+                        DrawLine(100, 450, 110, 440, 3, Color.Black);
                     }
-                }
-                else
-                {
-                    for (uint i = 0; i < 10; i++)
+                    else
                     {
-                        try
+                        DrawLine(100, 440, 90, 450, 3, Color.Black);
+                        DrawLine(110, 450, 100, 440, 3, Color.Black);
+
+
+                        DrawShadowText("Auto detonate", 20, 470, Color.White, _fontSize2);
+                        DrawShadowText("Auto suicide", 20, 490, Color.White, _fontSize2);
+                        DrawShadowText("Legit mode", 20, 510, Color.White, _fontSize2);
+                        DrawShadowText("Auto Force Staff", 20, 530, Color.White, _fontSize2);
+                        DrawShadowText("Show Force Staff Range", 20, 550, Color.White, _fontSize2);
+                        DrawShadowText("Detonate Aegis or Wk", 20, 570, Color.White, _fontSize2);
+
+                        DrawButton(180, 470, 15, 15, 2, ref AutoDetonate, true);
+                        DrawButton(180, 490, 15, 15, 2, ref AutoSuicide, true);
+                        DrawButton(180, 510, 15, 15, 2, ref LegitMode, false);
+                        DrawButton(180, 530, 15, 15, 2, ref AutoForceStaff, true);
+                        DrawButton(180, 550, 15, 15, 2, ref ShowForceStaffRange, true);
+                        DrawButton(180, 570, 15, 15, 2, ref DetonateOnAegisAndWk, false);
+
+                    }
+                    //DrawShadowText(WithAll ? "AllHero" : "WithVis", 150, 390, Color.White, _fontSize2);
+                    var dummy = false;
+                    if (!WithAll)
+                    {
+                        foreach (var v in enemies)
                         {
-                            var v = ObjectMgr.GetPlayerById(i).Hero;
-                            if (v!=null && v.Team != _me.Team && !Equals(v, _me))
+                            DrawShadowText(
+                                string.Format("  {0}: {3} | {1}/{2}", GetNameOfHero(v),
+                                    Math.Abs(_currentBombDamage) <= 0 ? 0 : GetCount(v, v.Health, _currentBombDamage),
+                                    Math.Abs(_currentBombDamage) <= 0
+                                        ? 0
+                                        : GetCount(v, v.MaximumHealth, _currentBombDamage),
+                                    CanKillSuic(v, ref dummy)),
+                                10, 250 + 25*counter++,
+                                Color.YellowGreen,
+                                _fontSize2);
+                        }
+                    }
+                    else
+                    {
+                        for (uint i = 0; i < 10; i++)
+                        {
+                            try
                             {
-                                DrawShadowText(
-                                    string.Format("  {0}: {3} | {1}/{2}", GetNameOfHero(v),
-                                        Math.Abs(_currentBombDamage) <= 0
-                                            ? 0
-                                            : GetCount(v, v.Health, _currentBombDamage),
-                                        Math.Abs(_currentBombDamage) <= 0
-                                            ? 0
-                                            : GetCount(v, v.MaximumHealth, _currentBombDamage),
-                                        CanKillSuic(v, ref dummy)),
-                                    10, 250 + 25*counter++,
-                                    Color.YellowGreen,
-                                    _fontSize2);
+                                var v = ObjectMgr.GetPlayerById(i).Hero;
+                                if (v != null && v.Team != _me.Team && !Equals(v, _me))
+                                {
+                                    DrawShadowText(
+                                        string.Format("  {0}: {3} | {1}/{2}", GetNameOfHero(v),
+                                            Math.Abs(_currentBombDamage) <= 0
+                                                ? 0
+                                                : GetCount(v, v.Health, _currentBombDamage),
+                                            Math.Abs(_currentBombDamage) <= 0
+                                                ? 0
+                                                : GetCount(v, v.MaximumHealth, _currentBombDamage),
+                                            CanKillSuic(v, ref dummy)),
+                                        10, 250 + 25*counter++,
+                                        Color.YellowGreen,
+                                        _fontSize2);
+                                }
                             }
-
-                        }
-                        catch (Exception) //not all 10 players in a game!
-                        {
-                            //PrintError("ErrorLevel6 ");
-                            // ignored
+                            catch (Exception) //not all 10 players in a game!
+                            {
+                                ErrorLevel[6]++;
+                                //PrintError("ErrorLevel 6 ");
+                                // ignored
+                            }
                         }
                     }
+                }
+                else
+                {
+                    DrawFilledBox(20, 380, 50, 50,
+                        CheckMouse(20, 380, 50, 50) ? new ColorBGRA(255, 255, 0, 100) : new ColorBGRA(0, 0, 0, 100));
                 }
             }
-            else
+            catch
             {
-                DrawFilledBox(20, 380, 50, 50,
-                    CheckMouse(20, 380, 50, 50) ? new ColorBGRA(255, 255, 0, 100) : new ColorBGRA(0, 0, 0, 100));
+                // ignored
             }
         }
-
-        
-
 
         private static void Game_OnUpdate(EventArgs args)
         {
@@ -287,162 +353,189 @@ namespace Techies_Annihilation
             {
                 _loaded = false;
                 PrintInfo("> Techies Annihilation Unloaded!");
+                PrintSuccess("Stats: ");
+                PrintSuccess(string.Format("Error N {0}: {1}", 1, ErrorLevel[1].ToString()));
+                PrintSuccess(string.Format("Error N {0}: {1}", 2, ErrorLevel[2].ToString()));
+                PrintSuccess(string.Format("Error N {0}: {1}", 3, ErrorLevel[3].ToString()));
+                PrintSuccess(string.Format("Error N {0}: {1}", 4, ErrorLevel[4].ToString()));
+                PrintSuccess(string.Format("Error N {0}(2): {1}", 4, ErrorLevel[7].ToString()));
+                PrintSuccess(string.Format("Error N {0}: {1}", 5, ErrorLevel[5].ToString()));
+                PrintSuccess(string.Format("Error N {0}: {1}", 6, ErrorLevel[6].ToString()));
                 return;
             }
             if (Game.IsPaused)
             {
                 return;
             }
-
-            if (_player == null || _player.Team == Team.Observer)
-                return;
-
-            #region UpdateInfo
-            var ultimate = _me.Spellbook.Spell6;
-            var suic = _me.Spellbook.Spell3;
-
-            var bombLevel = (ultimate != null) ? ultimate.Level : 0;
-            var suicideLevel = (suic != null) ? suic.Level : 0;
-            
-            
-            if (LvlSpell3 != suicideLevel)
+            try
             {
-                Debug.Assert(suic != null, "suic != null");
-                var firstOrDefault = suic.AbilityData.FirstOrDefault(x => x.Name == "damage");
-                if (firstOrDefault != null)
+                if (_player == null || _player.Team == Team.Observer)
+                    return;
+
+                #region UpdateInfo
+
+                var ultimate = _me.Spellbook.Spell6;
+                var suic = _me.Spellbook.Spell3;
+
+                var bombLevel = (ultimate != null) ? ultimate.Level : 0;
+                var suicideLevel = (suic != null) ? suic.Level : 0;
+
+                if (LvlSpell3 != suicideLevel)
                 {
-                    _currentSuicDamage = firstOrDefault.GetValue(suicideLevel - 1);
-                    //PrintError("_currentSuicDamage: " + _currentSuicDamage.ToString(CultureInfo.InvariantCulture));
+                    Debug.Assert(suic != null, "suic != null");
+                    var firstOrDefault = suic.AbilityData.FirstOrDefault(x => x.Name == "damage");
+                    if (firstOrDefault != null)
+                    {
+                        _currentSuicDamage = firstOrDefault.GetValue(suicideLevel - 1);
+                        //PrintError("_currentSuicDamage: " + _currentSuicDamage.ToString(CultureInfo.InvariantCulture));
+                    }
+                    LvlSpell3 = suicideLevel;
                 }
-                LvlSpell3 = suicideLevel;
-            }
-            var agh = _me.FindItem("item_ultimate_scepter");
-            if (LvlSpell6 != bombLevel || !Equals(_aghStatus, agh))
-            {
-                Debug.Assert(ultimate != null, "ultimate != null");
-                var firstOrDefault = ultimate.AbilityData.FirstOrDefault(x => x.Name == "damage");
-                if (firstOrDefault != null)
+                var agh = _me.FindItem("item_ultimate_scepter");
+                if (LvlSpell6 != bombLevel || !Equals(_aghStatus, agh))
                 {
-                    _currentBombDamage = firstOrDefault.GetValue(ultimate.Level - 1);
-                    _currentBombDamage += agh != null
-                        ? 150
-                        : 0;
-                    //PrintError("_currentBombDamage: " + _currentBombDamage.ToString(CultureInfo.InvariantCulture));
+                    Debug.Assert(ultimate != null, "ultimate != null");
+                    var firstOrDefault = ultimate.AbilityData.FirstOrDefault(x => x.Name == "damage");
+                    if (firstOrDefault != null)
+                    {
+                        _currentBombDamage = firstOrDefault.GetValue(ultimate.Level - 1);
+                        _currentBombDamage += agh != null
+                            ? 150
+                            : 0;
+                        //PrintError("_currentBombDamage: " + _currentBombDamage.ToString(CultureInfo.InvariantCulture));
+                    }
+                    LvlSpell6 = bombLevel;
+                    _aghStatus = agh;
                 }
-                LvlSpell6 = bombLevel;
-                _aghStatus = agh;
-            }
 
-            #endregion
+                #endregion
 
-            var bombs = ObjectMgr.GetEntities<Unit>()
-                .Where(
-                    x =>
-                        x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team == _player.Team);
-            var bombsList = bombs as IList<Unit> ?? bombs.ToList();
-            var enumerable = bombs as IList<Unit> ?? bombsList.ToList();
-            //PrintError(Game.IsKeyDown(Key.RightCtrl).ToString());
-
-            #region ForceStaffRange
-
-            if ((Game.IsKeyDown(0x11) || AutoForceStaff)&& ShowForceStaffRange)
-            {
-                if (_forceStaffRange == null)
-                {
-                    _forceStaffRange = _me.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
-                    _forceStaffRange.SetControlPoint(1, new Vector3(800, 0, 0));
-                }
-            }
-            else
-            {
-                if (_forceStaffRange != null)
-                {
-                    _forceStaffRange.Dispose();
-                    _forceStaffRange = null;
-                }
-            }
-
-            #endregion
-
-            foreach (var s in enumerable)
-            {
-                //add effect
-                HandleEffect(s, s.Spellbook.Spell1 != null);
-
-                
-                //Init bomb damage
-                if (!s.Spellbook.Spell1.CanBeCasted()) continue;
-                float dmg;
-                if (!BombDamage.TryGetValue(s, out dmg))
-                {
-                    //PrintError("_currentBombDamage: "+_currentBombDamage.ToString());
-                    BombDamage.Add(s, _currentBombDamage);
-                }
-            
-            }
-            var enemies =
-                ObjectMgr.GetEntities<Hero>()
+                var bombs = ObjectMgr.GetEntities<Unit>()
                     .Where(
                         x =>
-                            x.Team != ObjectMgr.LocalPlayer.Team && !x.IsIllusion)
-                    .ToList();
-            var abilSuic = _me.Spellbook.Spell3;
-            var forcestaff = _me.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_ForceStaff);
-            foreach (var v in enemies)
-            {
-                if (AutoDetonate)
-                {
-                    var needToCastnew = new Dictionary<int, Ability>();
-                    var inputDmg = 0f;
-                    foreach (var b in bombsList)
-                    {
-                        float dmg;
-                        if (!(v.Distance2D(b) <= 425) || !BombDamage.TryGetValue(b, out dmg) || !v.IsAlive ||
-                            !b.Spellbook.Spell1.CanBeCasted() || !b.IsAlive) continue;
-                        try
-                        {
-                            inputDmg += v.DamageTaken(dmg, DamageType.Magical, _me, false);
-                        }
-                        catch
-                        {
-                            PrintError("ErrorLevel2");
-                        }
-                        needToCastnew.Add(needToCastnew.Count + 1, b.Spellbook.Spell1);
+                            x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team == _player.Team);
+                var bombsList = bombs as IList<Unit> ?? bombs.ToList();
+                var enumerable = bombs as IList<Unit> ?? bombsList.ToList();
+                //PrintError(Game.IsKeyDown(Key.RightCtrl).ToString());
 
-                        var finalHealth = v.Health - inputDmg;
-                        //PrintError(string.Format("{2}: inputDmg: {0} finalHealth: {1} (dmg: {3})", inputDmg, finalHealth, v.Name, dmg));
-                        if (!(finalHealth <= 0)) continue;
-                        foreach (
-                            var ability in
-                                needToCastnew.Where(ability => Utils.SleepCheck(ability.Value.Handle.ToString())))
+                #region ForceStaffRange
+
+                if ((Game.IsKeyDown(0x11) || AutoForceStaff) && ShowForceStaffRange)
+                {
+                    if (_forceStaffRange == null)
+                    {
+                        _forceStaffRange = _me.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                        _forceStaffRange.SetControlPoint(1, new Vector3(800, 0, 0));
+                    }
+                }
+                else
+                {
+                    if (_forceStaffRange != null)
+                    {
+                        _forceStaffRange.Dispose();
+                        _forceStaffRange = null;
+                    }
+                }
+
+                #endregion
+
+                foreach (var s in enumerable)
+                {
+                    //add effect
+                    HandleEffect(s, s.Spellbook.Spell1 != null);
+
+
+                    //Init bomb damage
+                    if (!s.Spellbook.Spell1.CanBeCasted()) continue;
+                    float dmg;
+                    if (!BombDamage.TryGetValue(s, out dmg))
+                    {
+                        //PrintError("_currentBombDamage: "+_currentBombDamage.ToString());
+                        BombDamage.Add(s, _currentBombDamage);
+                    }
+
+                }
+                var enemies =
+                    ObjectMgr.GetEntities<Hero>()
+                        .Where(
+                            x =>
+                                x.Team != ObjectMgr.LocalPlayer.Team && !x.IsIllusion)
+                        .ToList();
+                var abilSuic = _me.Spellbook.Spell3;
+                var forcestaff = _me.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_ForceStaff);
+                foreach (var v in enemies)
+                {
+                    if (AutoDetonate)
+                    {
+                        var needToCastnew = new Dictionary<int, Ability>();
+                        var inputDmg = 0f;
+                        if (GlobalHealthAfterMines.ContainsKey(v))
                         {
+                            GlobalHealthAfterMines.Remove(v);
+                        }
+                        foreach (var b in bombsList)
+                        {
+                            float dmg;
+                            if (!(v.Distance2D(b) <= 425) || !BombDamage.TryGetValue(b, out dmg) || !v.IsAlive ||
+                                !b.Spellbook.Spell1.CanBeCasted() || !b.IsAlive) continue;
                             try
                             {
-                                ability.Value.UseAbility();
+                                inputDmg += v.DamageTaken(dmg, DamageType.Magical, _me, false);
                             }
                             catch
                             {
-                                PrintError("ErrorLevel1");
+                                //PrintError("ErrorLevel 2");
+                                ErrorLevel[2]++;
                             }
-                            Utils.Sleep(250, ability.Value.Handle.ToString());
+                            needToCastnew.Add(needToCastnew.Count + 1, b.Spellbook.Spell1);
+
+                            var finalHealth = v.Health - inputDmg;
+                            //PrintError(string.Format("{2}: inputDmg: {0} finalHealth: {1} (dmg: {3})", inputDmg, finalHealth, v.Name, dmg));
+                            if (GlobalHealthAfterMines.ContainsKey(v))
+                            {
+                                GlobalHealthAfterMines.Remove(v);
+                            }
+                            GlobalHealthAfterMines.Add(v, finalHealth);
+                            if (!(finalHealth <= 0)) continue;
+                            foreach (
+                                var ability in
+                                    needToCastnew.Where(ability => Utils.SleepCheck(ability.Value.Handle.ToString())))
+                            {
+                                try
+                                {
+                                    ability.Value.UseAbility();
+                                }
+                                catch
+                                {
+                                    ErrorLevel[1]++;
+                                    //PrintError("ErrorLevel 1");
+                                }
+                                Utils.Sleep(250, ability.Value.Handle.ToString());
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
-                //var link = v.Inventory.Items.FirstOrDefault(x => x.Name == "item_sphere");
-                //var linkCd = link != null?true:Math.Abs(link.Cooldown) >= 0;
-                if (!_me.IsAlive && !v.IsAlive) continue;
-                if ((Game.IsKeyDown(0x11) || AutoForceStaff)&&forcestaff != null && forcestaff.CanBeCasted() && 
-                    CheckForceStaff(v) && _me.Distance2D(v) <= 800/* && v.Modifiers.All(x => x.Name != "modifier_item_sphere_target")*/)
-                {
-                    if (Utils.SleepCheck("force"))
+                    //var link = v.Inventory.Items.FirstOrDefault(x => x.Name == "item_sphere");
+                    //var linkCd = link != null?true:Math.Abs(link.Cooldown) >= 0;
+                    if (!_me.IsAlive && !v.IsAlive) continue;
+                    if ((Game.IsKeyDown(0x11) || AutoForceStaff) && forcestaff != null && forcestaff.CanBeCasted() &&
+                        CheckForceStaff(v) && _me.Distance2D(v) <= 800
+                        /* && v.Modifiers.All(x => x.Name != "modifier_item_sphere_target")*/)
                     {
-                        forcestaff.UseAbility(v);
-                        Utils.Sleep(250, "force");
+                        if (Utils.SleepCheck("force"))
+                        {
+                            forcestaff.UseAbility(v);
+                            Utils.Sleep(250, "force");
+                        }
                     }
+                    if (!(_me.Distance2D(v) <= 120) || abilSuic == null || !abilSuic.CanBeCasted() || !AutoSuicide)
+                        continue;
+                    if (CanKillSuic(v)) abilSuic.UseAbility(v);
                 }
-                if (!(_me.Distance2D(v) <= 120) || abilSuic == null || !abilSuic.CanBeCasted() || AutoSuicide) continue;
-                if (CanKillSuic(v)) abilSuic.UseAbility(v);
+            }
+            catch
+            {
+                // ignored
             }
         }
 
@@ -500,7 +593,7 @@ namespace Techies_Annihilation
             _line.End();
 
         }
-        public static void DrawShadowText(string stext, int x,int y, Color color, Font f)
+        public static void DrawShadowText(string stext, int x, int y, Color color, Font f)
         {
             f.DrawText(null, stext, x + 1, y + 1, Color.Black);
             f.DrawText(null, stext, x, y, color);
@@ -542,8 +635,9 @@ namespace Techies_Annihilation
             try
             {
                 var pos = hero.NetworkPosition;
-                pos.X += 600 * (float)Math.Cos(hero.FindAngleR());
-                pos.Y += 600 * (float)Math.Sin(hero.FindAngleR());
+                pos.X += 600 * (float)Math.Cos(hero.RotationRad);
+                pos.Y += 600 * (float)Math.Sin(hero.RotationRad);
+                //PrintInfo(hero.FindAngleR().ToString(CultureInfo.InvariantCulture));
                 var bombs = ObjectMgr.GetEntities<Unit>()
                     .Where(
                         x =>
@@ -554,11 +648,13 @@ namespace Techies_Annihilation
             }
             catch
             {
-                PrintError("ErrorLevel3");
+                ErrorLevel[3]++;
+                //PrintError("ErrorLevel 3");
                 return false;
             }
             
         }
+
         private static void HandleEffect(Unit unit, bool isRange)
         {
             ParticleEffect effect;
@@ -615,27 +711,35 @@ namespace Techies_Annihilation
             }
             catch
             {
-                PrintError("ErrorLevel4 (2)");
-                s = target.Health;
+                //PrintError("ErrorLevel 4 (2)");
+                ErrorLevel[7]++;
+                s = 1;
             }
             return s <= 0;
         }
 
-        private static string CanKillSuic(Unit target,ref bool killable)
+        private static string CanKillSuic(Unit target, ref bool killable)
         {
             float s;
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (target == null || target.Health <= 0 || _currentSuicDamage == 0) return " - ";
+            if (target == null || target.Health <= 0 || _currentSuicDamage == 0 || !_me.IsAlive) return " - ";
             try
             {
                 s = target.Health - target.DamageTaken(_currentSuicDamage, DamageType.Physical, _me, true);
             }
             catch
             {
-                PrintError("ErrorLevel4");
+                ErrorLevel[4]++;
+                //PrintError("ErrorLevel 4");
                 //PrintError(string.Format("me: {0} target{1} suicDamage: {2}", _me.Name, target.Name, _currentSuicDamage));
-                s = target.Health;
+                s = 1;
             }
+            if (GlobalHealthAfterSuicide.ContainsKey(target))
+            {
+                GlobalHealthAfterSuicide.Remove(target);
+            }
+            GlobalHealthAfterSuicide.Add(target, s);
+            
             killable = s <= 0;
             return (killable) ? string.Format("Killable: {0:N}", s) : string.Format("need: {0:N}", s);
         }
@@ -644,17 +748,21 @@ namespace Techies_Annihilation
         {
             var n = 0;
             float dmg = 0;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (v == null || health == 0 || damage == 0) return 30;
             try
             {
                 do
                 {
                     n++;
                     dmg += damage;
+                    
                 } while (health - v.DamageTaken(dmg, DamageType.Magical, _me, false) > 0 && n < 30);
             }
             catch
             {
-                PrintError("ErrorLevel5");
+                ErrorLevel[5]++;
+                //PrintError("ErrorLevel 5");
                 // ignored
             }
 
@@ -671,6 +779,7 @@ namespace Techies_Annihilation
             PrintEncolored(text, ConsoleColor.Green, arguments);
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static void PrintError(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.Red, arguments);
