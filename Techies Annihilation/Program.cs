@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using Ensage;
 using Ensage.Common;
@@ -167,7 +166,7 @@ namespace Techies_Annihilation
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (!Game.IsInGame || _me==null) return;
+            if (!Game.IsInGame || _me==null || !_loaded) return;
             var enemies =
                 ObjectMgr.GetEntities<Hero>()
                     .Where(
@@ -205,7 +204,7 @@ namespace Techies_Annihilation
 
         private static void Drawing_OnEndScene(EventArgs args)
         {
-            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame)
+            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame || !_loaded)
             {
                 return;
             }
@@ -346,7 +345,7 @@ namespace Techies_Annihilation
                     return;
                 }
                 _loaded = true;
-                PrintSuccess("> Techies Annihilation loaded!");
+                PrintSuccess("> Techies Annihilation loaded! v 1.3");
             }
 
             if (!Game.IsInGame || _me == null || _me.ClassID != ClassID.CDOTA_Unit_Hero_Techies)
@@ -463,10 +462,13 @@ namespace Techies_Annihilation
                         .ToList();
                 var abilSuic = _me.Spellbook.Spell3;
                 var forcestaff = _me.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_ForceStaff);
-                foreach (var v in enemies)
+                for (uint i = 0; i < 10; i++)
                 {
-                    if (AutoDetonate)
+                    try
                     {
+                        var v = ObjectMgr.GetPlayerById(i).Hero;
+                        if (v == null || v.Team == _me.Team || Equals(v, _me)) continue;
+                        if (!AutoDetonate) continue;
                         var needToCastnew = new Dictionary<int, Ability>();
                         var inputDmg = 0f;
                         if (GlobalHealthAfterMines.ContainsKey(v))
@@ -515,9 +517,13 @@ namespace Techies_Annihilation
                             break;
                         }
                     }
-                    //var link = v.Inventory.Items.FirstOrDefault(x => x.Name == "item_sphere");
-                    //var linkCd = link != null?true:Math.Abs(link.Cooldown) >= 0;
-                    if (!_me.IsAlive && !v.IsAlive) continue;
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                }
+                foreach (var v in enemies.Where(v => _me.IsAlive || v.IsAlive))
+                {
                     if ((Game.IsKeyDown(0x11) || AutoForceStaff) && forcestaff != null && forcestaff.CanBeCasted() &&
                         CheckForceStaff(v) && _me.Distance2D(v) <= 800
                         /* && v.Modifiers.All(x => x.Name != "modifier_item_sphere_target")*/)
