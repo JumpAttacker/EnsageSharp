@@ -20,7 +20,7 @@ namespace Auto_Disable
         private static Hero _me;
         private static Player _player;
         private static bool Activated=false;
-        private const float Ver = (float) 1.1;
+        private const float Ver = (float) 1.2;
         static readonly Dictionary<ClassID, string> Ititiators = new Dictionary<ClassID, string>();
         private static Font text;
         #endregion
@@ -137,50 +137,53 @@ namespace Auto_Disable
                     var isHex = v.IsHexed();
                     var isSilence = v.IsSilenced();
                     var isDisarm = v.IsDisarmed();
-
                     var isInvis = _me.IsInvisible();
                     var isChannel = _me.IsChanneling();
                     var items = _me.Inventory.Items.Where(x => x.CanBeCasted());
-
+                    var spells = _me.Spellbook.Spells.Where(x=> x.CanBeCasted());
                     var blink = v.FindItem("item_blink");
                     var forcestaff = v.FindItem("item_force_staff");
                     var dpActivated = v.Modifiers.Any(x => x.Name == "modifier_slark_dark_pact" || x.Name == "modifier_slark_dark_pact_pulses");
                     var enumerable = items as IList<Item> ?? items.ToList();
-
-                    if (!enumerable.Any() || (isInvul || magicImmnune || isInvis || isChannel || dpActivated)) continue;
-
                     string spellString;
-                    if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
+                    if (!enumerable.Any() || (isInvul || magicImmnune || isInvis || isChannel || dpActivated))
                     {
-                        UseDisableStageOne(v, enumerable,false);
-                    }
-                    else if (Activated)
-                    {
-                        UseDisableStageOne(v, enumerable, false);
-                    }
-                    else if (Ititiators.TryGetValue(v.ClassID, out spellString))
-                    {
-                        var initSpell = v.FindSpell(spellString);
-                        if (initSpell != null && initSpell.Cooldown != 0)
+
+                        
+                        if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                         {
-                            UseDisableStageOne(v, enumerable, false);
+                            UseDisableStageOne(v, enumerable,null, false);
+                        }
+                        else if (Activated)
+                        {
+                            UseDisableStageOne(v, enumerable, null, false);
+                        }
+                        else if (Ititiators.TryGetValue(v.ClassID, out spellString))
+                        {
+                            var initSpell = v.FindSpell(spellString);
+                            if (initSpell != null && initSpell.Cooldown != 0)
+                            {
+                                UseDisableStageOne(v, enumerable, null, false);
+                            }
                         }
                     }
                     if (isStun || isHex || isSilence || isDisarm) continue;
+                    var abilities = spells as IList<Ability> ?? spells.ToList();
+                    if (!abilities.Any() && !enumerable.Any()) continue;
                     if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                     {
-                        UseDisableStageOne(v, enumerable,true);
+                        UseDisableStageOne(v, enumerable, abilities, true);
                     }
                     else if (Activated)
                     {
-                        UseDisableStageOne(v, enumerable, true);
+                        UseDisableStageOne(v, enumerable,abilities, true);
                     }
                     else if (Ititiators.TryGetValue(v.ClassID, out spellString))
                     {
                         var initSpell = v.FindSpell(spellString);
                         if (initSpell != null && initSpell.Cooldown != 0)
                         {
-                            UseDisableStageOne(v, enumerable, true);
+                            UseDisableStageOne(v, enumerable,abilities, true);
                         }
                     }
 
@@ -192,28 +195,32 @@ namespace Auto_Disable
             }
         }
 
-        private static void UseDisableStageOne(Hero target, IEnumerable<Item> items,bool stage)
+        private static void UseDisableStageOne(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities, bool stage)
         {
             if (!(_me.Health / _me.MaximumHealth > 0.1)) return;
             Item disable;
+            Ability ab = null;
             if (stage)
             {
                 disable =
                     items.FirstOrDefault( // wo puck_waning_rift
                         x =>
-                            x.Name == "lion_voodoo" || x.Name == "item_sheepstick" || x.Name == "item_orchid" ||
-                            x.Name == "item_abyssal_blade" || x.Name == "shadow_shaman_voodoo" ||
-                            x.Name == "obsidian_destroyer_astral_imprisonment" ||
-                            x.Name == "shadow_demon_disruption" ||
-                            x.Name == "rubick_telekinesis" ||
-                            x.Name == "dragon_knight_dragon_tail" ||
-                            x.Name == "batrider_flaming_lasso" ||
-                            x.Name == "legion_commander_duel" ||
-                            x.Name == "skywrath_mage_ancient_seal" ||
+                            x.Name == "item_sheepstick" || x.Name == "item_orchid" ||
+                            x.Name == "item_abyssal_blade" ||
                             x.Name == "item_ethereal_blade" ||
                             x.Name == "item_rod_of_atos" || x.Name == "item_heavens_halberd" ||
                             x.Name == "item_medallion_of_courage" ||
                             x.Name == "item_cyclone" || x.Name == "item_solar_crest");
+                ab =
+                    abilities.FirstOrDefault(
+                        x =>
+                            x.Name == "lion_voodoo" || x.Name == "shadow_shaman_voodoo" ||
+                            x.Name == "obsidian_destroyer_astral_imprisonment" || x.Name == "shadow_demon_disruption" ||
+                            x.Name == "rubick_telekinesis" ||
+                            x.Name == "dragon_knight_dragon_tail" ||
+                            x.Name == "batrider_flaming_lasso" ||
+                            x.Name == "legion_commander_duel" ||
+                            x.Name == "skywrath_mage_ancient_seal");
             }
             else
             {
@@ -223,6 +230,11 @@ namespace Auto_Disable
             if (disable != null && _me.Distance2D(target) <= disable.CastRange)
             {
                 disable.UseAbility(target);
+                Utils.Sleep(250, target.GetHashCode().ToString());
+            }
+            if (ab != null && _me.Distance2D(target) <= ab.CastRange)
+            {
+                ab.UseAbility(target);
                 Utils.Sleep(250, target.GetHashCode().ToString());
             }
         }
