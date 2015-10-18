@@ -4,6 +4,8 @@ using System.Linq;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
+using SharpDX;
+using SharpDX.Direct3D9;
 
 // ReSharper disable EmptyGeneralCatchClause
 // ReSharper disable CompareOfFloatsByEqualityOperator
@@ -17,10 +19,10 @@ namespace Auto_Disable
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private static bool Activated=true;
-        private const float Ver = (float) 1.0;
-        static readonly Dictionary<ClassID, string> Ititiators = new Dictionary<ClassID, string>(); 
-
+        private static bool Activated=false;
+        private const float Ver = (float) 1.1;
+        static readonly Dictionary<ClassID, string> Ititiators = new Dictionary<ClassID, string>();
+        private static Font text;
         #endregion
         #region Methods
 
@@ -57,13 +59,67 @@ namespace Auto_Disable
             Ititiators.Add(ClassID.CDOTA_Unit_Hero_Puck, "puck_illusory_orb");
             Ititiators.Add(ClassID.CDOTA_Unit_Hero_Magnataur, "magnataur_skewer");
             Ititiators.Add(ClassID.CDOTA_Unit_Hero_EmberSpirit, "ember_spirit_fire_remnant");
+            text = new Font(
+                Drawing.Direct3DDevice9,
+                new FontDescription
+                {
+                    FaceName = "Tahoma",
+                    Height = 13,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Default
+                });
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
             Drawing.OnDraw += Drawing_OnDraw;
+
+            Drawing.OnPreReset += Drawing_OnPreReset;
+            Drawing.OnPostReset += Drawing_OnPostReset;
+            Drawing.OnEndScene += Drawing_OnEndScene;
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
+            Game.OnWndProc += Game_OnWndProc;
         }
 
-        #endregion
+        
 
+        #endregion
+        private static void CurrentDomainDomainUnload(object sender, EventArgs e)
+        {
+            text.Dispose();
+        }
+
+        private static void Drawing_OnEndScene(EventArgs args)
+        {
+            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame)
+            {
+                return;
+            }
+
+            var player = ObjectMgr.LocalPlayer;
+            if (player == null || player.Team == Team.Observer)
+            {
+                return;
+            }
+            var sign = Activated
+                ? "Auto Disable: disable for all | [INSERT] for toggle"
+                : "Auto Disable: disable for initiators | [INSERT] for toggle";
+            text.DrawText(null, sign, 5, 150, Color.YellowGreen);
+        }
+        private static void Drawing_OnPostReset(EventArgs args)
+        {
+            text.OnResetDevice();
+        }
+
+        private static void Drawing_OnPreReset(EventArgs args)
+        {
+            text.OnLostDevice();
+        }
+        private static void Game_OnWndProc(WndEventArgs args)
+        {
+            if (!Game.IsChatOpen && args.Msg == (ulong)Utils.WindowsMessages.WM_KEYUP && args.WParam == 0x2D)
+            {
+                Activated = !Activated;
+            }
+        }
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!Game.IsInGame || _me == null || !_loaded) return;
