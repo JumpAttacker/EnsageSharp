@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Ensage;
-using Ensage.Common;
-using Ensage.Common.Extensions;
 using SharpDX;
-using SharpDX.Direct3D9;
+
+// ReSharper disable EmptyGeneralCatchClause
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace Overlay_information
 {
@@ -17,7 +14,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const float Ver =  1.0f;
+        private const float Ver =  0.2f;
         
         #endregion
         #region Methods
@@ -35,7 +32,7 @@ namespace Overlay_information
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (!Game.IsInGame || _me == null) return;
+            if (!Game.IsInGame || _me == null || !_loaded) return;
             uint i;
             for (i = 0; i < 10; i++)
                 {
@@ -67,8 +64,17 @@ namespace Overlay_information
                         for (var g = 1; g <= 6; g++)
                         {
                             if (spells[g]==null) continue;
-                            Drawing.DrawRect(start + new Vector2(g * 20 - 5, 0), new Vector2(20, 6),
+                            var cd = spells[g].Cooldown;
+                            Drawing.DrawRect(start + new Vector2(g * 20 - 5, 0), new Vector2(20, cd==0?6:20),
                                 new ColorBGRA(0, 0, 0, 100), true);
+                            if (cd > 0)
+                            {
+                                var text = string.Format("{0:0.#}", cd);
+                                var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 150), FontFlags.None);
+                                var textPos = (start + new Vector2(g * 20 - 5, 0) + new Vector2(10 - textSize.X / 2, -textSize.Y / 2 + 12));
+                                Drawing.DrawText(text, textPos, new Vector2(10, 150), Color.White,
+                                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                            }
                             if (spells[g].Level==0) continue;
                             for (var lvl = 1; lvl <= spells[g].Level; lvl++)
                             {
