@@ -14,7 +14,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const float Ver =  0.2f;
+        private const float Ver =  0.3f;
         
         #endregion
         #region Methods
@@ -39,7 +39,7 @@ namespace Overlay_information
                     try
                     {
                         var v = ObjectMgr.GetPlayerById(i).Hero;
-                        if (v == null || Equals(v, _me)) continue;
+                        if (v == null || !v.IsAlive || !v.IsVisible|| Equals(v, _me)) continue;
                         Vector2 screenPos;
 
                         if (!Drawing.WorldToScreen(v.Position, out screenPos))
@@ -47,9 +47,9 @@ namespace Overlay_information
                         
                         var start = screenPos + new Vector2(-75, 20);
                         var spells = new Ability[7];
-                        
-                        try{spells[1] = v.Spellbook.Spell1;} 
-                        catch{}
+
+                        try { spells[1] = v.Spellbook.Spell1; }
+                        catch { }
                         try { spells[2] = v.Spellbook.Spell2; }
                         catch { }
                         try { spells[3] = v.Spellbook.Spell3; }
@@ -70,7 +70,7 @@ namespace Overlay_information
                             if (cd > 0)
                             {
                                 var text = string.Format("{0:0.#}", cd);
-                                var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 150), FontFlags.None);
+                                var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200), FontFlags.None);
                                 var textPos = (start + new Vector2(g * 20 - 5, 0) + new Vector2(10 - textSize.X / 2, -textSize.Y / 2 + 12));
                                 Drawing.DrawText(text, textPos, new Vector2(10, 150), Color.White,
                                     FontFlags.AntiAlias | FontFlags.DropShadow);
