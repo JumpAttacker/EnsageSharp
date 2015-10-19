@@ -14,7 +14,7 @@ namespace Auto_Dust
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver = "1.0";
+        private const string Ver = "1.1";
         private const int Range = 1000;
 
         #endregion
@@ -55,7 +55,7 @@ namespace Auto_Dust
             if (_player == null || _player.Team == Team.Observer)
                 return;
             var dust = _me.FindItem("item_dust");
-            if (dust==null|| !dust.CanBeCasted())return;
+            if (dust==null|| !dust.CanBeCasted() || _me.IsInvisible())return;
             var enemy = ObjectMgr.GetEntities<Hero>()
                 .Where(
                     v =>
