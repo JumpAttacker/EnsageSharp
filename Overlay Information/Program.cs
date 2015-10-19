@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
+using System.Threading;
 using Ensage;
 using Ensage.Common;
 using SharpDX;
@@ -20,11 +22,13 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const float Ver =  0.4f;
+        private const float Ver =  0.5f;
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool IsOpen = false;
         private static bool LeftMouseIsPress;
+        private static readonly Dictionary<Unit, ParticleEffect> Effects2 = new Dictionary<Unit, ParticleEffect>();
+        private static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
         //======================================
         public static bool ShowCooldownOnTopPanel;
         public static bool ShowCooldownOnTopPanelLikeText; //working only with ShowCooldownOnTopPanel
@@ -35,8 +39,13 @@ namespace Overlay_information
         public static bool ShowIllusions;
         public static bool ShowLastHit;
         public static bool ShowManabars;
+        public static bool ShowRoshanTimer;
         //=====================================
         static readonly InitHelper _saveLoadSysHelper = new InitHelper("C:" + "\\jOverlay.ini");
+        //=====================================
+        private static Single DeathTime;
+        private static double RoshanMinutes;
+        private static double RoshanSeconds;
         //=====================================
         private static readonly Font[] FontArray=new Font[21];
         private static Line _line;
@@ -54,6 +63,7 @@ namespace Overlay_information
             ShowHealthOnTopPanel = true;
             ShowManaOnTopPanel = true;
             ShowCooldownOnTopPanelLikeText = true;
+            ShowRoshanTimer = true;
             #region Init font & line
 
             for (var i = 0; i <= 20; i++)
@@ -70,25 +80,33 @@ namespace Overlay_information
             }
             _line = new Line(Drawing.Direct3DDevice9);
             #endregion
-
             Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
             Game.OnWndProc += Game_OnWndProc;
-            
+            Game.OnFireEvent += Game_OnGameEvent;
+            #region Save/load
+
             try
             {
-                ShowHealthOnTopPanel = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Health on top panel"));//
-                ShowManaOnTopPanel = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show mana on top panel"));
-                ShowCooldownOnTopPanel = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel"));//
-                ShowCooldownOnTopPanelLikeText = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel (numbers)"));//
-                OverlayOnlyOnEnemy = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Overlay only on enemy"));//
-                
-                ShowGlyph = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show glyph cd"));//
+                ShowHealthOnTopPanel =
+                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Health on top panel")); //
+                ShowManaOnTopPanel =
+                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show mana on top panel"));
+                ShowCooldownOnTopPanel =
+                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel")); //
+                ShowCooldownOnTopPanelLikeText =
+                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel (numbers)"));
+                    //
+                OverlayOnlyOnEnemy =
+                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Overlay only on enemy")); //
+
+                ShowGlyph = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show glyph cd")); //
                 ShowIllusions = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Illusions"));
                 ShowLastHit = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show LastHit/Deny"));
                 ShowManabars = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show manabars"));
+                ShowRoshanTimer = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show roshan timer"));
             }
             catch
             {
@@ -101,14 +119,28 @@ namespace Overlay_information
                 _saveLoadSysHelper.IniWriteValue("Booleans", "Show Illusions", true.ToString());
                 _saveLoadSysHelper.IniWriteValue("Booleans", "Show LastHit/Deny", true.ToString());
                 _saveLoadSysHelper.IniWriteValue("Booleans", "Show manabars", true.ToString());
+                _saveLoadSysHelper.IniWriteValue("Booleans", "Show roshan timer", true.ToString());
 
                 Console.Beep(1000, 100);
                 Console.Beep(1000, 100);
                 Console.Beep(1000, 100);
             }
+
+            #endregion
             
         }
-
+        static void Game_OnGameEvent(FireEventEventArgs args)
+        {
+            if (args.GameEvent.Name == "dota_roshan_kill") 
+            {
+                //PrintError("roshan kill");
+                //Thread roshanThread=new Thread();
+                DeathTime = Game.GameTime;
+                //RoshanMinutes = 0;
+                //RoshanSeconds = 0;
+                //DeathTime = 0;
+            }
+        }
         #endregion
         #region !
 
@@ -159,6 +191,30 @@ namespace Overlay_information
                 new Color(0, 0, 0, 50), new Color(0, 0, 0, 50), new Color(0, 0, 0, 125));
             DrawShadowText("J-Overlay", (int)_drawHelper.MenuPos.X, (int)_drawHelper.MenuPos.Y, Color.White,
                     FontArray[5]);
+            if (ShowRoshanTimer)
+            {
+                var text = "";
+                if (RoshanMinutes < 8)
+                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 7 - RoshanMinutes, 59 - RoshanSeconds, 10 - RoshanMinutes,
+                        59 - RoshanSeconds);
+                else if (RoshanMinutes == 8)
+                {
+                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 8 - RoshanMinutes, 59 - RoshanSeconds, 10 - RoshanMinutes,
+                        59 - RoshanSeconds);
+                }
+                else if (RoshanMinutes == 9)
+                {
+                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 9 - RoshanMinutes, 59 - RoshanSeconds, 10 - RoshanMinutes,
+                        59 - RoshanSeconds);
+                }
+                else
+                {
+                    text = string.Format("Roshan: {0}:{1:0.}", 0, 59 - RoshanSeconds);
+                }
+                var roshan = ObjectMgr.GetEntities<Unit>().FirstOrDefault(unit => unit.ClassID == ClassID.CDOTA_Unit_Roshan && unit.IsAlive);
+                DrawShadowText(roshan != null ? "Roshan alive" : DeathTime == 0 ? "Roshan death" : text, 217, 10, roshan != null?Color.Green:Color.Red, FontArray[5]);
+            }
+            
             if (IsOpen)
             {
                 DrawFilledBox(_drawHelper.MenuPos.X - 2, _drawHelper.MenuPos.Y, 60, 500, new ColorBGRA(0, 0, 0, 100));
@@ -198,6 +254,9 @@ namespace Overlay_information
                 DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 225, 50, 20, 1, ref ShowManabars,
                     false,
                     new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show manabars");
+                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 250, 50, 20, 1, ref ShowManabars,
+                    true,
+                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show roshan timer");
                 //-----------------------------------------------------------------------------------------------------------------
             }
         }
@@ -231,6 +290,7 @@ namespace Overlay_information
                         break;
                 }
             }
+            
             uint i;
             for (i = 0; i < 10; i++)
                 {
@@ -292,6 +352,12 @@ namespace Overlay_information
                             var cd = spells[g].Cooldown;
                             Drawing.DrawRect(start + new Vector2(g * 20 - 5, 0), new Vector2(20, cd==0?6:20),
                                 new ColorBGRA(0, 0, 0, 100), true);
+                            //PrintError(String.Format("Spell # {0}:{1}", g, spells[g].AbilityState));
+                            if (spells[g].AbilityState == AbilityState.NotEnoughMana)
+                            {
+                                Drawing.DrawRect(start + new Vector2(g*20 - 5, 0), new Vector2(20, cd == 0 ? 6 : 20),
+                                    new ColorBGRA(0, 0, 150, 150));
+                            }
                             if (cd > 0)
                             {
                                 var text = string.Format("{0:0.#}", cd);
@@ -303,6 +369,7 @@ namespace Overlay_information
                             if (spells[g].Level==0) continue;
                             for (var lvl = 1; lvl <= spells[g].Level; lvl++)
                             {
+                                
                                 Drawing.DrawRect(start + new Vector2(g * 20 - 5 + 3 * lvl, 2), new Vector2(2, 2),
                                     new ColorBGRA(255, 255, 0, 255),true);
                             }
@@ -336,7 +403,7 @@ namespace Overlay_information
                 }
         }
         #endregion
-        #region Init
+        #region Method
         private static void Game_OnUpdate(EventArgs args)
         {
             if (!_loaded)
@@ -355,6 +422,52 @@ namespace Overlay_information
                 _loaded = false;
                 PrintInfo("> OverlayInformation unLoaded");
                 return;
+            }
+            if (ShowRoshanTimer)
+            {
+                var tickDelta = Game.GameTime - DeathTime;
+                RoshanMinutes = Math.Floor(tickDelta/60);
+                RoshanSeconds = tickDelta % 60;
+                var roshan = ObjectMgr.GetEntities<Unit>().FirstOrDefault(unit => unit.ClassID == ClassID.CDOTA_Unit_Roshan && unit.IsAlive);
+                if (roshan != null)
+                {
+                    //RoshanMinutes = 0;
+                    //RoshanSeconds = 0;
+                    //DeathTime = 0;
+                }
+            }
+            if (ShowIllusions)
+            {
+                var illusions = ObjectMgr.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            x.IsIllusion && x.Team != _player.Team);
+                foreach (var s in illusions)
+                {
+                    HandleEffect(s);
+                }
+            }
+
+        }
+        private static void HandleEffect(Unit unit)
+        {
+            ParticleEffect effect;
+            ParticleEffect effect2;
+            if (unit.IsAlive && unit.IsVisibleToEnemies)
+            {
+                if (Effects1.TryGetValue(unit, out effect)) return;
+                effect = unit.AddParticleEffect("particles/items2_fx/smoke_of_deceit_buff.vpcf"); //particles/items_fx/diffusal_slow.vpcf
+                effect2 = unit.AddParticleEffect("particles/items2_fx/shadow_amulet_active_ground_proj.vpcf");
+                Effects1.Add(unit, effect);
+                Effects2.Add(unit, effect2);
+            }
+            else
+            {
+                if (!Effects1.TryGetValue(unit, out effect)) return;
+                if (!Effects2.TryGetValue(unit, out effect2)) return;
+                effect.Dispose();
+                effect2.Dispose();
+                Effects1.Remove(unit);
             }
         }
         #endregion
