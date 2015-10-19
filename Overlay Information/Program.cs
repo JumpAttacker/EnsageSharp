@@ -46,6 +46,7 @@ namespace Overlay_information
         private static Single DeathTime;
         private static double RoshanMinutes;
         private static double RoshanSeconds;
+        private static bool RoshIsAlive = false;
         //=====================================
         private static readonly Font[] FontArray=new Font[21];
         private static Line _line;
@@ -136,6 +137,7 @@ namespace Overlay_information
                 //PrintError("roshan kill");
                 //Thread roshanThread=new Thread();
                 DeathTime = Game.GameTime;
+                RoshIsAlive = false;
                 //RoshanMinutes = 0;
                 //RoshanSeconds = 0;
                 //DeathTime = 0;
@@ -194,25 +196,34 @@ namespace Overlay_information
             if (ShowRoshanTimer)
             {
                 var text = "";
-                if (RoshanMinutes < 8)
-                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 7 - RoshanMinutes, 59 - RoshanSeconds, 10 - RoshanMinutes,
-                        59 - RoshanSeconds);
-                else if (RoshanMinutes == 8)
+                if (!RoshIsAlive)
                 {
-                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 8 - RoshanMinutes, 59 - RoshanSeconds, 10 - RoshanMinutes,
-                        59 - RoshanSeconds);
+                    if (RoshanMinutes < 8)
+                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 7 - RoshanMinutes, 59 - RoshanSeconds,
+                            10 - RoshanMinutes,
+                            59 - RoshanSeconds);
+                    else if (RoshanMinutes == 8)
+                    {
+                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 8 - RoshanMinutes, 59 - RoshanSeconds,
+                            10 - RoshanMinutes,
+                            59 - RoshanSeconds);
+                    }
+                    else if (RoshanMinutes == 9)
+                    {
+                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 9 - RoshanMinutes, 59 - RoshanSeconds,
+                            10 - RoshanMinutes,
+                            59 - RoshanSeconds);
+                    }
+                    else
+                    {
+                        text = string.Format("Roshan: {0}:{1:0.}", 0, 59 - RoshanSeconds);
+                        if (59 - RoshanSeconds<=1)
+                        {
+                            RoshIsAlive = true;
+                        }
+                    }
                 }
-                else if (RoshanMinutes == 9)
-                {
-                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 9 - RoshanMinutes, 59 - RoshanSeconds, 10 - RoshanMinutes,
-                        59 - RoshanSeconds);
-                }
-                else
-                {
-                    text = string.Format("Roshan: {0}:{1:0.}", 0, 59 - RoshanSeconds);
-                }
-                var roshan = ObjectMgr.GetEntities<Unit>().FirstOrDefault(unit => unit.ClassID == ClassID.CDOTA_Unit_Roshan && unit.IsAlive);
-                DrawShadowText(roshan != null ? "Roshan alive" : DeathTime == 0 ? "Roshan death" : text, 217, 10, roshan != null?Color.Green:Color.Red, FontArray[5]);
+                DrawShadowText(RoshIsAlive ? "Roshan alive" : DeathTime == 0 ? "Roshan death" : text, 217, 10, RoshIsAlive ? Color.Green : Color.Red, FontArray[5]);
             }
             
             if (IsOpen)
@@ -431,6 +442,7 @@ namespace Overlay_information
                 var roshan = ObjectMgr.GetEntities<Unit>().FirstOrDefault(unit => unit.ClassID == ClassID.CDOTA_Unit_Roshan && unit.IsAlive);
                 if (roshan != null)
                 {
+                    RoshIsAlive = true;
                     //RoshanMinutes = 0;
                     //RoshanSeconds = 0;
                     //DeathTime = 0;
