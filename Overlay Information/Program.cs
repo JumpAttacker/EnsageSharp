@@ -22,7 +22,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const float Ver =  0.5f;
+        private const string Ver =  "0.5b";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool IsOpen = false;
@@ -41,7 +41,7 @@ namespace Overlay_information
         public static bool ShowManabars;
         public static bool ShowRoshanTimer;
         //=====================================
-        static readonly InitHelper _saveLoadSysHelper = new InitHelper("C:" + "\\jOverlay.ini");
+        static readonly InitHelper _saveLoadSysHelper = new InitHelper(Game.AppDataPath + "\\jOverlay.ini");
         //=====================================
         private static Single DeathTime;
         private static double RoshanMinutes;
@@ -426,7 +426,7 @@ namespace Overlay_information
                     return;
                 }
                 _loaded = true;
-                PrintSuccess("> OverlayInformation loaded! v"+Ver);
+                PrintSuccess("> OverlayInformation loaded! v" + Ver);
             }
             if (!Game.IsInGame || _me == null)
             {
