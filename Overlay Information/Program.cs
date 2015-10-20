@@ -22,7 +22,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver =  "0.6";
+        private const string Ver =  "0.6b";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool IsOpen = false;
@@ -231,15 +231,13 @@ namespace Overlay_information
                 {
                     Player p = null;
                     try{p = ObjectMgr.GetPlayerById(i);}catch { }
-                    if (p != null)
-                    {
-                        var initPos = (int) (i >= 5
-                            ? (_drawHelper.RangeBetween + _drawHelper.FloatRange*i) + _drawHelper.Space
-                            : (_drawHelper.RangeBetween + _drawHelper.FloatRange*i));
-                        var text = string.Format("{0}/{1}", p.LastHitCount, p.DenyCount);
-                        DrawShadowText(text, initPos + 10, _drawHelper.BotRange + 1 - _drawHelper.Height*5, Color.White,
-                            FontArray[5]);
-                    }
+                    if (p == null) continue;
+                    var initPos = (int) (i >= 5
+                        ? (_drawHelper.RangeBetween + _drawHelper.FloatRange*i) + _drawHelper.Space
+                        : (_drawHelper.RangeBetween + _drawHelper.FloatRange*i));
+                    var text = string.Format("{0}/{1}", p.LastHitCount, p.DenyCount);
+                    DrawShadowText(text, initPos + 10, _drawHelper.BotRange + 1 - _drawHelper.Height*5, Color.White,
+                        FontArray[5]);
                 }
             }
             if (IsOpen)
@@ -315,7 +313,7 @@ namespace Overlay_information
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
                         break;
                     case 160:
-                        _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
+                        _drawHelper = new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49));
                         break;
                     case 133:
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
