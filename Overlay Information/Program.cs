@@ -40,6 +40,7 @@ namespace Overlay_information
         public static bool ShowLastHit;
         public static bool ShowManabars;
         public static bool ShowRoshanTimer;
+        public static bool ShowBuybackCooldown;
         //=====================================
         static readonly InitHelper _saveLoadSysHelper = new InitHelper(Game.AppDataPath + "\\jOverlay.ini");
         //=====================================
@@ -65,6 +66,7 @@ namespace Overlay_information
             ShowManaOnTopPanel = true;
             ShowCooldownOnTopPanelLikeText = true;
             ShowRoshanTimer = true;
+            ShowBuybackCooldown = true;
             #region Init font & line
 
             for (var i = 0; i <= 20; i++)
@@ -88,7 +90,7 @@ namespace Overlay_information
             Game.OnWndProc += Game_OnWndProc;
             Game.OnFireEvent += Game_OnGameEvent;
             #region Save/load
-
+            
             try
             {
                 ShowHealthOnTopPanel =
@@ -108,6 +110,7 @@ namespace Overlay_information
                 ShowLastHit = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show LastHit/Deny"));
                 ShowManabars = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show manabars"));
                 ShowRoshanTimer = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show roshan timer"));
+                ShowBuybackCooldown = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Buyback cooldown"));
             }
             catch
             {
@@ -121,12 +124,12 @@ namespace Overlay_information
                 _saveLoadSysHelper.IniWriteValue("Booleans", "Show LastHit/Deny", true.ToString());
                 _saveLoadSysHelper.IniWriteValue("Booleans", "Show manabars", true.ToString());
                 _saveLoadSysHelper.IniWriteValue("Booleans", "Show roshan timer", true.ToString());
-
+                _saveLoadSysHelper.IniWriteValue("Booleans", "Show Buyback cooldown", true.ToString());
                 Console.Beep(1000, 100);
                 Console.Beep(1000, 100);
                 Console.Beep(1000, 100);
             }
-
+            
             #endregion
             
         }
@@ -225,19 +228,31 @@ namespace Overlay_information
                 }
                 DrawShadowText(RoshIsAlive ? "Roshan alive" : DeathTime == 0 ? "Roshan death" : text, 217, 10, RoshIsAlive ? Color.Green : Color.Red, FontArray[5]);
             }
-            if (ShowLastHit)
+            if (ShowLastHit || ShowBuybackCooldown)
             {
                 for (uint i = 0; i < 10; i++)
                 {
                     Player p = null;
                     try{p = ObjectMgr.GetPlayerById(i);}catch { }
                     if (p == null) continue;
+                    
                     var initPos = (int) (i >= 5
                         ? (_drawHelper.RangeBetween + _drawHelper.FloatRange*i) + _drawHelper.Space
                         : (_drawHelper.RangeBetween + _drawHelper.FloatRange*i));
-                    var text = string.Format("{0}/{1}", p.LastHitCount, p.DenyCount);
-                    DrawShadowText(text, initPos + 10, _drawHelper.BotRange + 1 - _drawHelper.Height*5, Color.White,
-                        FontArray[5]);
+                    if (ShowLastHit)
+                    {
+                        var text = string.Format("{0}/{1}", p.LastHitCount, p.DenyCount);
+                        DrawShadowText(text, initPos + 10, _drawHelper.BotRange + 1 - _drawHelper.Height*5, Color.White,
+                            FontArray[5]);
+                    }
+                    if (ShowBuybackCooldown && p.BuybackCooldownTime > 0)
+                    {
+                        var text = string.Format("{0:0.}", p.BuybackCooldownTime);
+                        DrawFilledBox(initPos + 2, _drawHelper.BotRange + 1 - _drawHelper.Height * 5 + 22, 35, 15,  new Color(0, 0, 0, 150));
+                        DrawShadowText(text, initPos + 5, _drawHelper.BotRange + 1 - _drawHelper.Height * 5 + 22, Color.White,
+                            FontArray[3]);
+                        //PrintError(i+" p.BuybackCooldownTime: " + p.BuybackCooldownTime);
+                    }
                 }
             }
             if (IsOpen)
@@ -279,9 +294,14 @@ namespace Overlay_information
                 DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 225, 50, 20, 1, ref ShowManabars,
                     false,
                     new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show manabars");
+                //-----------------------------------------------------------------------------------------------------------------
                 DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 250, 50, 20, 1, ref ShowRoshanTimer,
                     true,
                     new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show roshan timer");
+                //-----------------------------------------------------------------------------------------------------------------
+                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 275, 50, 20, 1, ref ShowBuybackCooldown,
+                    true,
+                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Buyback cooldown");
                 //-----------------------------------------------------------------------------------------------------------------
             }
         }
@@ -313,7 +333,7 @@ namespace Overlay_information
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
                         break;
                     case 160:
-                        _drawHelper = new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49));
+                        _drawHelper = new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49)); //1680 x 1050
                         break;
                     case 133:
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
