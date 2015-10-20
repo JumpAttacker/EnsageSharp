@@ -22,7 +22,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver =  "0.6b";
+        private const string Ver =  "0.6c";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool IsOpen = false;
