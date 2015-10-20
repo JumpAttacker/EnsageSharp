@@ -11,7 +11,15 @@ namespace Overlay_information
         private readonly int _rangeBetween;
         private readonly Vector2 _menuPos;
 
-
+        /// <summary>
+        /// Init ur screen size
+        /// </summary>
+        /// <param name="floatRange">range between icons</param>
+        /// <param name="space">range between teams</param>
+        /// <param name="height"></param>
+        /// <param name="botRange">start posY</param>
+        /// <param name="rangeBetween">start posX</param>
+        /// <param name="menuPos">jOverlay vector2 pos</param>
         public ScreenSizer(int floatRange, int space, int height, int botRange, int rangeBetween, Vector2 menuPos)
         {
             _floatRange = floatRange;

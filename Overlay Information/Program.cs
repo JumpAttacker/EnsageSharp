@@ -22,7 +22,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver =  "0.5b";
+        private const string Ver =  "0.6";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool IsOpen = false;
@@ -225,7 +225,23 @@ namespace Overlay_information
                 }
                 DrawShadowText(RoshIsAlive ? "Roshan alive" : DeathTime == 0 ? "Roshan death" : text, 217, 10, RoshIsAlive ? Color.Green : Color.Red, FontArray[5]);
             }
-            
+            if (ShowLastHit)
+            {
+                for (uint i = 0; i < 10; i++)
+                {
+                    Player p = null;
+                    try{p = ObjectMgr.GetPlayerById(i);}catch { }
+                    if (p != null)
+                    {
+                        var initPos = (int) (i >= 5
+                            ? (_drawHelper.RangeBetween + _drawHelper.FloatRange*i) + _drawHelper.Space
+                            : (_drawHelper.RangeBetween + _drawHelper.FloatRange*i));
+                        var text = string.Format("{0}/{1}", p.LastHitCount, p.DenyCount);
+                        DrawShadowText(text, initPos + 10, _drawHelper.BotRange + 1 - _drawHelper.Height*5, Color.White,
+                            FontArray[5]);
+                    }
+                }
+            }
             if (IsOpen)
             {
                 DrawFilledBox(_drawHelper.MenuPos.X - 2, _drawHelper.MenuPos.Y, 60, 500, new ColorBGRA(0, 0, 0, 100));
@@ -255,7 +271,7 @@ namespace Overlay_information
                     new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show glyph cd");
                 //-----------------------------------------------------------------------------------------------------------------
                 DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 175, 50, 20, 1, ref ShowLastHit,
-                    false,
+                    true,
                     new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show LastHit/Deny");
                 //-----------------------------------------------------------------------------------------------------------------
                 DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 200, 50, 20, 1, ref ShowIllusions,
@@ -265,7 +281,7 @@ namespace Overlay_information
                 DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 225, 50, 20, 1, ref ShowManabars,
                     false,
                     new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show manabars");
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 250, 50, 20, 1, ref ShowManabars,
+                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 250, 50, 20, 1, ref ShowRoshanTimer,
                     true,
                     new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show roshan timer");
                 //-----------------------------------------------------------------------------------------------------------------
@@ -282,7 +298,18 @@ namespace Overlay_information
                 switch ((int) Math.Floor((decimal) (_screenSizeVector2.X/_screenSizeVector2.Y*100)))
                 {
                     case 177:
-                        _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
+                        _drawHelper = _screenSizeVector2.X == 1600
+                            ? new ScreenSizer(494 - 439, 885 - 713, 7, 35, 439, new Vector2(1524, 46)) //1600x1900
+                            : _drawHelper =
+                                _screenSizeVector2.X == 1360
+                                    ? new ScreenSizer(418 - 371, 753 - 605, 7, 29, 371, new Vector2(1288, 43))
+                                    //1360x768
+                                    : _drawHelper =
+                                        _screenSizeVector2.X == 1280
+                                            ? new ScreenSizer(395 - 351, 709 - 568, 5, 28, 350, new Vector2(1216, 40))
+                                            //1280x720
+                                            : new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49)); //1920x1080
+                        
                         break;
                     case 166:
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
@@ -334,7 +361,7 @@ namespace Overlay_information
                                 new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
                                 Color.Black, true);
                         }
-
+                        
                         if ( !v.IsVisible|| Equals(v, _me)) continue;
                         Vector2 screenPos;
 
@@ -405,7 +432,7 @@ namespace Overlay_information
                                     FontFlags.AntiAlias | FontFlags.DropShadow);
                             }
                         }
-
+                        
                     }
                     catch (Exception)
                     {
