@@ -29,6 +29,7 @@ namespace SfEulCombo
             if (args.WParam != 'F' || Game.IsChatOpen)
                 return;
             _enabled = args.Msg != WmKeyup;
+            Game.ExecuteCommand(string.Format("dota_player_units_auto_attack_after_spell {0}", _enabled?0:1));
         }
         private static void Game_OnUpdate(EventArgs args)
         {
@@ -55,10 +56,8 @@ namespace SfEulCombo
 
             if (player == null || player.Team == Team.Observer || !_enabled)
             {
-                Game.ExecuteCommand("dota_player_units_auto_attack_after_spell 1");
                 return;
             }
-            Game.ExecuteCommand("dota_player_units_auto_attack_after_spell 0");
             var eul = me.FindItem("item_cyclone");
             var dagger = me.FindItem("item_blink");
             var ultimate = me.Spellbook.Spell6;
