@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mime;
 using System.Threading;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using SharpDX;
 using SharpDX.Direct3D9;
 
@@ -13,20 +13,17 @@ using SharpDX.Direct3D9;
 
 namespace Overlay_information
 {
-
-
     internal class Program
     {
         #region Members
-
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver =  "0.6c";
+        private const string Ver =  "0.7";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
-        private static bool IsOpen = false;
-        private static bool LeftMouseIsPress;
+        private static bool _isOpen;
+        private static bool _leftMouseIsPress;
         private static readonly Dictionary<Unit, ParticleEffect> Effects2 = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
         //======================================
@@ -41,13 +38,25 @@ namespace Overlay_information
         public static bool ShowManabars;
         public static bool ShowRoshanTimer;
         public static bool ShowBuybackCooldown;
+        public static bool ShowMeMore;
+        public static bool AutoItemsMenu;
+        public static bool AutoItemsActive;
+        public static bool AutoItemsMidas;
+        public static bool AutoItemsPhase;
+        public static bool AutoItemsStick;
         //=====================================
-        static readonly InitHelper _saveLoadSysHelper = new InitHelper(Game.AppDataPath + "\\jOverlay.ini");
+        private static readonly ShowMeMoreHelper[] _showMeMore=new ShowMeMoreHelper[5];
+        private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect = new Dictionary<Unit, ParticleEffect>();
+        private static readonly Dictionary<Unit, ParticleEffect>[] Eff = new Dictionary<Unit, ParticleEffect>[141];
+        private static readonly List<Unit> InSystem=new List<Unit>();
+        private static Vector3 ArrowS=new Vector3();
         //=====================================
-        private static Single DeathTime;
-        private static double RoshanMinutes;
-        private static double RoshanSeconds;
-        private static bool RoshIsAlive = false;
+        static readonly InitHelper SaveLoadSysHelper = new InitHelper(Game.AppDataPath + "\\jOverlay.ini");
+        //=====================================
+        private static Single _deathTime;
+        private static double _roshanMinutes;
+        private static double _roshanSeconds;
+        private static bool _roshIsAlive;
         //=====================================
         private static readonly Font[] FontArray=new Font[21];
         private static Line _line;
@@ -58,6 +67,14 @@ namespace Overlay_information
 
         private static void Main()
         {
+            ///////////////////////////////////////////////////////////////////////
+            // TODO: DELETE THIS SHIT (MAY BE? OR NOT?)///////////////////////////
+            PrintEncolored("Useless w8 4 some test. 500ms", ConsoleColor.Cyan);//
+            Thread.Sleep(500);///////////////////////////////////////////////////
+            PrintEncolored("We do this!", ConsoleColor.Cyan);////////////////////////
+            //////////////////////////////////////////////////////////////////////
+            #region Init
+
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
             Drawing.OnDraw += Drawing_OnDraw;
@@ -67,64 +84,105 @@ namespace Overlay_information
             ShowCooldownOnTopPanelLikeText = true;
             ShowRoshanTimer = true;
             ShowBuybackCooldown = true;
+            
             #region Init font & line
 
             for (var i = 0; i <= 20; i++)
             {
                 FontArray[i] = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = 10+i,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
+                    Drawing.Direct3DDevice9,
+                    new FontDescription
+                    {
+                        FaceName = "Tahoma",
+                        Height = 10 + i,
+                        OutputPrecision = FontPrecision.Default,
+                        Quality = FontQuality.Default
+                    });
             }
             _line = new Line(Drawing.Direct3DDevice9);
+
             #endregion
+
             Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
             Game.OnWndProc += Game_OnWndProc;
             Game.OnFireEvent += Game_OnGameEvent;
+
+            #endregion
+
+            #region ShowMeMore
+            _showMeMore[0]=new ShowMeMoreHelper("modifier_invoker_sun_strike",
+                "hero_invoker/invoker_sun_strike_team",
+                "hero_invoker/invoker_sun_strike_ring_b",
+                175);
+            _showMeMore[1]=new ShowMeMoreHelper("modifier_lina_light_strike_array",
+                "hero_lina/lina_spell_light_strike_array_ring_collapse",
+                "hero_lina/lina_spell_light_strike_array_sphere",
+                225);
+            _showMeMore[2]=new ShowMeMoreHelper("modifier_kunkka_torrent_thinker",
+                "hero_kunkka/kunkka_spell_torrent_pool",
+                "hero_kunkka/kunkka_spell_torrent_bubbles_b",
+                225);
+            _showMeMore[3]=new ShowMeMoreHelper("modifier_leshrac_split_earth_thinker",
+                "hero_leshrac/leshrac_split_earth_b",
+                "hero_leshrac/leshrac_split_earth_c",
+                225);
+
+            for (var z = 1; z <= 140; z++)
+            {
+                Eff[z]=new Dictionary<Unit, ParticleEffect>();
+            }
+            #endregion
+
             #region Save/load
             
             try
             {
                 ShowHealthOnTopPanel =
-                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Health on top panel")); //
+                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Health on top panel")); //
                 ShowManaOnTopPanel =
-                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show mana on top panel"));
+                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show mana on top panel"));
                 ShowCooldownOnTopPanel =
-                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel")); //
+                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel")); //
                 ShowCooldownOnTopPanelLikeText =
-                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel (numbers)"));
+                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel (numbers)"));
                     //
                 OverlayOnlyOnEnemy =
-                    Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Overlay only on enemy")); //
+                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Overlay only on enemy")); //
 
-                ShowGlyph = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show glyph cd")); //
-                ShowIllusions = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Illusions"));
-                ShowLastHit = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show LastHit/Deny"));
-                ShowManabars = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show manabars"));
-                ShowRoshanTimer = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show roshan timer"));
-                ShowBuybackCooldown = Convert.ToBoolean(_saveLoadSysHelper.IniReadValue("Booleans", "Show Buyback cooldown"));
+                ShowGlyph = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show glyph cd")); //
+                ShowIllusions = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Illusions"));
+                ShowLastHit = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show LastHit/Deny"));
+                ShowManabars = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show manabars"));
+                ShowRoshanTimer = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show roshan timer"));
+                ShowBuybackCooldown = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Buyback cooldown"));
+
+                AutoItemsActive = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "AutoItems Active"));
+                AutoItemsPhase = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Auto use phase boots"));
+                AutoItemsMidas = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Auto use midas"));
+                AutoItemsStick = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Auto use stick"));
             }
             catch
             {
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show health on top panel", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show mana on top panel", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show cooldown on top panel", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show cooldown on top panel (numbers)", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Overlay only on enemy", false.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show glyph cd", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show Illusions", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show LastHit/Deny", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show manabars", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show roshan timer", true.ToString());
-                _saveLoadSysHelper.IniWriteValue("Booleans", "Show Buyback cooldown", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show health on top panel", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show mana on top panel", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show cooldown on top panel", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show cooldown on top panel (numbers)", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Overlay only on enemy", false.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show glyph cd", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show Illusions", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show LastHit/Deny", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show manabars", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show roshan timer", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Show Buyback cooldown", true.ToString());
+
+                SaveLoadSysHelper.IniWriteValue("Booleans", "AutoItems Active", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Auto use phase boots", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Auto use midas", true.ToString());
+                SaveLoadSysHelper.IniWriteValue("Booleans", "Auto use stick", true.ToString());
+
                 Console.Beep(1000, 100);
                 Console.Beep(1000, 100);
                 Console.Beep(1000, 100);
@@ -133,14 +191,16 @@ namespace Overlay_information
             #endregion
             
         }
+
+
         static void Game_OnGameEvent(FireEventEventArgs args)
         {
             if (args.GameEvent.Name == "dota_roshan_kill") 
             {
                 //PrintError("roshan kill");
                 //Thread roshanThread=new Thread();
-                DeathTime = Game.GameTime;
-                RoshIsAlive = false;
+                _deathTime = Game.GameTime;
+                _roshIsAlive = false;
                 //RoshanMinutes = 0;
                 //RoshanSeconds = 0;
                 //DeathTime = 0;
@@ -153,89 +213,119 @@ namespace Overlay_information
         {
             if (args.WParam != 1 || Game.IsChatOpen || !Utils.SleepCheck("clicker"))
             {
-                LeftMouseIsPress = false;
+                _leftMouseIsPress = false;
                 return;
             }
-            LeftMouseIsPress = true;
+            _leftMouseIsPress = true;
         }
         private static void CurrentDomainDomainUnload(object sender, EventArgs e)
         {
-            for (var i = 0; i <= 20; i++) 
-                FontArray[i].Dispose();
-            _line.Dispose();
+            for (var i = 0; i <= 20; i++)
+                if (FontArray[i] != null)
+                    FontArray[i].Dispose();
+            if (_line != null)
+                _line.Dispose();
         }
 
         private static void Drawing_OnPostReset(EventArgs args)
         {
             for (var i = 0; i <= 20; i++)
-                FontArray[i].OnResetDevice();
-            _line.OnResetDevice();
+                if (FontArray[i] != null)
+                    FontArray[i].OnLostDevice();
+            if (_line != null)
+                _line.OnLostDevice();
         }
 
         private static void Drawing_OnPreReset(EventArgs args)
         {
             for (var i = 0; i <= 20; i++)
-                FontArray[i].OnLostDevice();
-            _line.OnLostDevice();
+                if (FontArray[i] != null)
+                    FontArray[i].OnLostDevice();
+            if (_line != null)
+                _line.OnLostDevice();
         }
 
 
         #endregion
         private static void Drawing_OnEndScene(EventArgs args)
         {
+            #region Checking
+
             if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame || !_loaded)
             {
                 return;
             }
             var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer || !_loaded || _drawHelper == null)
+            if (player == null || player.Team == Team.Observer || _drawHelper == null)
             {
                 return;
             }
-            DrawButton(_drawHelper.MenuPos.X - 2, _drawHelper.MenuPos.Y, 60, 20, 1, ref IsOpen, true,
+
+            #endregion
+
+            #region J - overlay
+
+            DrawButton(_drawHelper.MenuPos.X - 2, _drawHelper.MenuPos.Y, 60, 20, 1, ref _isOpen, true,
                 new Color(0, 0, 0, 50), new Color(0, 0, 0, 50), new Color(0, 0, 0, 125));
-            DrawShadowText("J-Overlay", (int)_drawHelper.MenuPos.X, (int)_drawHelper.MenuPos.Y, Color.White,
-                    FontArray[5]);
+            DrawShadowText("J-Overlay", (int) _drawHelper.MenuPos.X, (int) _drawHelper.MenuPos.Y, Color.White,
+                FontArray[5]);
+
+            #endregion
+
+            #region ShowRoshanTimer
+
             if (ShowRoshanTimer)
             {
                 var text = "";
-                if (!RoshIsAlive)
+                if (!_roshIsAlive)
                 {
-                    if (RoshanMinutes < 8)
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 7 - RoshanMinutes, 59 - RoshanSeconds,
-                            10 - RoshanMinutes,
-                            59 - RoshanSeconds);
-                    else if (RoshanMinutes == 8)
+                    if (_roshanMinutes < 8)
+                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 7 - _roshanMinutes, 59 - _roshanSeconds,
+                            10 - _roshanMinutes,
+                            59 - _roshanSeconds);
+                    else if (_roshanMinutes == 8)
                     {
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 8 - RoshanMinutes, 59 - RoshanSeconds,
-                            10 - RoshanMinutes,
-                            59 - RoshanSeconds);
+                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 8 - _roshanMinutes, 59 - _roshanSeconds,
+                            10 - _roshanMinutes,
+                            59 - _roshanSeconds);
                     }
-                    else if (RoshanMinutes == 9)
+                    else if (_roshanMinutes == 9)
                     {
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 9 - RoshanMinutes, 59 - RoshanSeconds,
-                            10 - RoshanMinutes,
-                            59 - RoshanSeconds);
+                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 9 - _roshanMinutes, 59 - _roshanSeconds,
+                            10 - _roshanMinutes,
+                            59 - _roshanSeconds);
                     }
                     else
                     {
-                        text = string.Format("Roshan: {0}:{1:0.}", 0, 59 - RoshanSeconds);
-                        if (59 - RoshanSeconds<=1)
+                        text = string.Format("Roshan: {0}:{1:0.}", 0, 59 - _roshanSeconds);
+                        if (59 - _roshanSeconds <= 1)
                         {
-                            RoshIsAlive = true;
+                            _roshIsAlive = true;
                         }
                     }
                 }
-                DrawShadowText(RoshIsAlive ? "Roshan alive" : DeathTime == 0 ? "Roshan death" : text, 217, 10, RoshIsAlive ? Color.Green : Color.Red, FontArray[5]);
+                DrawShadowText(_roshIsAlive ? "Roshan alive" : _deathTime == 0 ? "Roshan death" : text, 217, 10,
+                    _roshIsAlive ? Color.Green : Color.Red, FontArray[5]);
             }
+
+            #endregion
+
+            #region ShowLastHit || ShowBuybackCooldown
+
             if (ShowLastHit || ShowBuybackCooldown)
             {
                 for (uint i = 0; i < 10; i++)
                 {
                     Player p = null;
-                    try{p = ObjectMgr.GetPlayerById(i);}catch { }
+                    try
+                    {
+                        p = ObjectMgr.GetPlayerById(i);
+                    }
+                    catch
+                    {
+                    }
                     if (p == null) continue;
-                    
+
                     var initPos = (int) (i >= 5
                         ? (_drawHelper.RangeBetween + _drawHelper.FloatRange*i) + _drawHelper.Space
                         : (_drawHelper.RangeBetween + _drawHelper.FloatRange*i));
@@ -248,69 +338,111 @@ namespace Overlay_information
                     if (ShowBuybackCooldown && p.BuybackCooldownTime > 0)
                     {
                         var text = string.Format("{0:0.}", p.BuybackCooldownTime);
-                        DrawFilledBox(initPos + 2, _drawHelper.BotRange + 1 - _drawHelper.Height * 5 + 22, 35, 15,  new Color(0, 0, 0, 150));
-                        DrawShadowText(text, initPos + 5, _drawHelper.BotRange + 1 - _drawHelper.Height * 5 + 22, Color.White,
+                        DrawFilledBox(initPos + 2, _drawHelper.BotRange + 1 - _drawHelper.Height*5 + 22, 35, 15,
+                            new Color(0, 0, 0, 150));
+                        DrawShadowText(text, initPos + 5, _drawHelper.BotRange + 1 - _drawHelper.Height*5 + 22,
+                            Color.White,
                             FontArray[3]);
                         //PrintError(i+" p.BuybackCooldownTime: " + p.BuybackCooldownTime);
                     }
                 }
             }
-            if (IsOpen)
+
+            #endregion
+
+            #region Menu
+
+            if (!_isOpen) return;
+            DrawFilledBox(_drawHelper.MenuPos.X - 2, _drawHelper.MenuPos.Y, 60, 500, new ColorBGRA(0, 0, 0, 100));
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 25, 50, 20, 1, ref ShowCooldownOnTopPanel,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Cooldown on top panel");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 50, 50, 20, 1,
+                ref ShowCooldownOnTopPanelLikeText,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Cooldown on top panel (numbers)");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 75, 50, 20, 1, ref ShowHealthOnTopPanel,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Health on top panel");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 100, 50, 20, 1, ref ShowManaOnTopPanel,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Mana on top panel");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 125, 50, 20, 1, ref OverlayOnlyOnEnemy,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Overlay only on enemy");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 150, 50, 20, 1, ref ShowGlyph,
+                false,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show glyph cd");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 175, 50, 20, 1, ref ShowLastHit,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show LastHit/Deny");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 200, 50, 20, 1, ref ShowIllusions,
+                false,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Illusions");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 225, 50, 20, 1, ref ShowManabars,
+                false,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show manabars");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 250, 50, 20, 1, ref ShowRoshanTimer,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show roshan timer");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 275, 50, 20, 1, ref ShowBuybackCooldown,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Buyback cooldown");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 300, 50, 20, 1, ref ShowMeMore,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Me more");
+            //-----------------------------------------------------------------------------------------------------------------
+            DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 325, 50, 20, 1, ref AutoItemsMenu,
+                true,
+                new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), " > Auto items");
+            //-----------------------------------------------------------------------------------------------------------------
+
+            #region Extra menu for autoitems
+
+            if (AutoItemsMenu)
             {
-                DrawFilledBox(_drawHelper.MenuPos.X - 2, _drawHelper.MenuPos.Y, 60, 500, new ColorBGRA(0, 0, 0, 100));
                 //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 25, 50, 20, 1, ref ShowCooldownOnTopPanel,
+                DrawButton(_drawHelper.MenuPos.X - 50, _drawHelper.MenuPos.Y + 325, 50, 20, 1, ref AutoItemsActive,
                     true,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Cooldown on top panel");
+                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "AutoItems Active");
                 //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 50, 50, 20, 1, ref ShowCooldownOnTopPanelLikeText,
+                DrawButton(_drawHelper.MenuPos.X - 50, _drawHelper.MenuPos.Y + 350, 50, 20, 1, ref AutoItemsPhase,
                     true,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Cooldown on top panel (numbers)");
+                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Auto use phase boots");
                 //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 75, 50, 20, 1, ref ShowHealthOnTopPanel,
+                DrawButton(_drawHelper.MenuPos.X - 50, _drawHelper.MenuPos.Y + 375, 50, 20, 1, ref AutoItemsMidas,
                     true,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Health on top panel");
-                //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 100, 50, 20, 1, ref ShowManaOnTopPanel,
+                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Auto use midas");
+                DrawButton(_drawHelper.MenuPos.X - 50, _drawHelper.MenuPos.Y + 400, 50, 20, 1, ref AutoItemsStick,
                     true,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Mana on top panel");
-                //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 125, 50, 20, 1, ref OverlayOnlyOnEnemy,
-                    true,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Overlay only on enemy");
-                //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 150, 50, 20, 1, ref ShowGlyph,
-                    false,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show glyph cd");
-                //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 175, 50, 20, 1, ref ShowLastHit,
-                    true,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show LastHit/Deny");
-                //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 200, 50, 20, 1, ref ShowIllusions,
-                    false,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Illusions");
-                //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 225, 50, 20, 1, ref ShowManabars,
-                    false,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show manabars");
-                //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 250, 50, 20, 1, ref ShowRoshanTimer,
-                    true,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show roshan timer");
-                //-----------------------------------------------------------------------------------------------------------------
-                DrawButton(_drawHelper.MenuPos.X + 5, _drawHelper.MenuPos.Y + 275, 50, 20, 1, ref ShowBuybackCooldown,
-                    true,
-                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Show Buyback cooldown");
-                //-----------------------------------------------------------------------------------------------------------------
+                    new Color(100, 255, 0, 50), new Color(100, 0, 0, 50), "Auto use stick");
             }
+
+            #endregion
+
+            #endregion
         }
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!Game.IsInGame || _me == null || !_loaded) return;
-            if (_screenSizeVector2.X==0)
+
+            #region Set Screen Size init
+
+            if (_screenSizeVector2.X == 0)
             {
-                _screenSizeVector2=new Vector2(Drawing.Width,Drawing.Height);
+                _screenSizeVector2 = new Vector2(Drawing.Width, Drawing.Height);
                 PrintSuccess(string.Format(">> OI: init screen size: {0}x{1} -> {2}", _screenSizeVector2.X,
                     _screenSizeVector2.Y, (int) Math.Floor((decimal) (_screenSizeVector2.X/_screenSizeVector2.Y*100))));
                 switch ((int) Math.Floor((decimal) (_screenSizeVector2.X/_screenSizeVector2.Y*100)))
@@ -326,14 +458,19 @@ namespace Overlay_information
                                         _screenSizeVector2.X == 1280
                                             ? new ScreenSizer(395 - 351, 709 - 568, 5, 28, 350, new Vector2(1216, 40))
                                             //1280x720
-                                            : new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49)); //1920x1080
-                        
+                                            : _screenSizeVector2.X == 1366
+                                                ? new ScreenSizer(422-374, 756 - 609, 7, 29, 374, new Vector2(1314, 39)) //1366
+
+                                                : new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49)); //1920x1080
+
+
                         break;
                     case 166:
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
                         break;
                     case 160:
-                        _drawHelper = new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49)); //1680 x 1050
+                        _drawHelper = new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49));
+                            //1680 x 1050
                         break;
                     case 133:
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
@@ -346,29 +483,83 @@ namespace Overlay_information
                         break;
                 }
             }
-            
+
+            #endregion
+
+            #region Show me more cast
+
+            //List<Unit> dummy;
+            if (ShowMeMore)
+            {
+                var dummy = ObjectMgr.GetEntities<Unit>().Where(x => x.ClassID == ClassID.CDOTA_BaseNPC).ToList();
+                foreach (var t in dummy)
+                {
+                    for (var n = 0; n <= 4; n++)
+                    {
+                        try
+                        {
+                            var mod = t.Modifiers.FirstOrDefault(x => x.Name == _showMeMore[n].Modifier);
+                            if (mod == null) continue;
+                            ParticleEffect effect;
+                            if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                            {
+                                effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                                effect.SetControlPoint(1, new Vector3(_showMeMore[n].Range, 0, 0));
+                                ShowMeMoreEffect.Add(t, effect);
+                                new ParticleEffect(@"particles/units/heroes" + _showMeMore[n].EffectName + ".vpcf",
+                                    t.Position);
+                            }
+                            break;
+                        }
+                        catch (Exception)
+                        {
+                            
+                        }
+                        
+                    }
+                }
+            }
+
+            #endregion
+
+
             uint i;
             for (i = 0; i < 10; i++)
                 {
                     try
                     {
+                        #region Settings and Checking
+
                         var v = ObjectMgr.GetPlayerById(i).Hero;
-                        if (OverlayOnlyOnEnemy && v.Team==_me.Team) continue;
+                        if (OverlayOnlyOnEnemy && v.Team == _me.Team) continue;
                         if (v == null || !v.IsAlive) continue;
                         var initPos = i >= 5
                             ? (_drawHelper.RangeBetween + _drawHelper.FloatRange*i) + _drawHelper.Space
                             : (_drawHelper.RangeBetween + _drawHelper.FloatRange*i);
-                        var healthDelta = new Vector2((float)v.Health * _drawHelper.FloatRange / v.MaximumHealth, 0);
-                        var manaDelta = new Vector2(v.Mana * _drawHelper.FloatRange / v.MaximumMana, 0);
+                        var healthDelta = new Vector2((float) v.Health*_drawHelper.FloatRange/v.MaximumHealth, 0);
+                        var manaDelta = new Vector2(v.Mana*_drawHelper.FloatRange/v.MaximumMana, 0);
+
+                        #endregion
+
+                        #region ShowHealthOnTopPanel
+
                         if (ShowHealthOnTopPanel)
                         {
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1), new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
+                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1),
+                                new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
                                 Color.Red);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1), healthDelta + new Vector2(0, _drawHelper.Height),
+                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1),
+                                healthDelta + new Vector2(0, _drawHelper.Height),
                                 Color.Green);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1), new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
+                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1),
+                                new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
                                 Color.Black, true);
                         }
+
+                        #endregion
+
+                        #region ShowManaOnTopPanel
+
                         if (ShowManaOnTopPanel)
                         {
                             Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height),
@@ -379,66 +570,227 @@ namespace Overlay_information
                                 new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
                                 Color.Black, true);
                         }
-                        
-                        if ( !v.IsVisible|| Equals(v, _me)) continue;
-                        Vector2 screenPos;
 
-                        if (!Drawing.WorldToScreen(v.Position, out screenPos))
-                            continue;
-                        
-                        var start = screenPos + new Vector2(-75, 20);
-                        var spells = new Ability[7];
-                        try { spells[1] = v.Spellbook.Spell1; }
-                        catch { }
-                        try { spells[2] = v.Spellbook.Spell2; }
-                        catch { }
-                        try { spells[3] = v.Spellbook.Spell3; }
-                        catch { }
-                        try { spells[4] = v.Spellbook.Spell4; }
-                        catch { }
-                        try { spells[5] = v.Spellbook.Spell5; }
-                        catch { }
-                        try { spells[6] = v.Spellbook.Spell6; }
-                        catch { }
-                        var counter = 0;
-                        for (var g = 6; g >= 1; g--)
+                        #endregion
+
+                        #region ShowMeMore
+
+                        if (ShowMeMore)
                         {
-                            if (spells[g]==null) continue;
-                            counter++;
-                            var cd = spells[g].Cooldown;
-                            Drawing.DrawRect(start + new Vector2(g * 20 - 5, 0), new Vector2(20, cd==0?6:20),
-                                new ColorBGRA(0, 0, 0, 100), true);
-                            //PrintError(String.Format("Spell # {0}:{1}", g, spells[g].AbilityState));
-                            if (spells[g].AbilityState == AbilityState.NotEnoughMana)
+                            switch (v.ClassID)
                             {
-                                Drawing.DrawRect(start + new Vector2(g*20 - 5, 0), new Vector2(20, cd == 0 ? 6 : 20),
-                                    new ColorBGRA(0, 0, 150, 150));
-                            }
-                            if (cd > 0)
-                            {
-                                var text = string.Format("{0:0.#}", cd);
-                                var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200), FontFlags.None);
-                                var textPos = (start + new Vector2(g * 20 - 5, 0) + new Vector2(10 - textSize.X / 2, -textSize.Y / 2 + 12));
-                                Drawing.DrawText(text, textPos, new Vector2(10, 150), Color.White,
-                                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                            }
-                            if (spells[g].Level==0) continue;
-                            for (var lvl = 1; lvl <= spells[g].Level; lvl++)
-                            {
-                                
-                                Drawing.DrawRect(start + new Vector2(g * 20 - 5 + 3 * lvl, 2), new Vector2(2, 2),
-                                    new ColorBGRA(255, 255, 0, 255),true);
+                                case ClassID.CDOTA_Unit_Hero_Mirana:
+                                    //ArrowF(cast, team, v.visible, "mirana");
+                                    var arrow = ObjectMgr.GetEntities<Unit>().FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650/* && x.Team!=_me.Team*/);
+
+                                    if (arrow != null)
+                                    {
+                                        if (!InSystem.Contains(arrow))
+                                        {
+                                            ArrowS = arrow.Position;
+                                            PrintError("first");
+                                            InSystem.Add(arrow);
+                                        }
+                                        else if (Utils.SleepCheck("Arrow"))
+                                        {
+                                            var e = new ParticleEffect[148];
+                                            var ret = FindRet(ArrowS, arrow.Position);
+                                            PrintError("second");
+                                            for (var z = 1; z <= 147; z++)
+                                            {
+                                                var p = FindVector(ArrowS, ret, 20*z + 60);
+                                                e[z] = new ParticleEffect(@"particles\ui_mouseactions\draw_commentator.vpcf", p);
+                                                e[z].SetControlPoint(1, new Vector3(255, 255, 255));
+                                                e[z].SetControlPoint(0, p);
+                                            }
+                                            
+                                            Utils.Sleep(300, "Arrow");
+                                            PrintError("third");
+                                        }
+                                    }
+                                    break;
+                                case ClassID.CDOTA_Unit_Hero_SpiritBreaker:
+                                    //ChargeF(cast, team, v.visible, v: GetAbility(1), hero, "spirit_breaker");
+                                    break;
+                                case ClassID.CDOTA_Unit_Hero_Windrunner:
+                                    if (true)//(Utils.SleepCheck("ArrowWindRun"))
+                                    {
+                                        var spell = v.Spellbook.Spell2;
+                                        if (spell != null && spell.Cooldown != 0)
+                                        {
+                                            var cd = Math.Floor(spell.Cooldown*100);
+                                            if (cd < 880)
+                                            {
+                                                ParticleEffect effect;
+                                                if (!InSystem.Contains(v))
+                                                {
+                                                    if (cd > 720)
+                                                    {
+                                                        var eff = new ParticleEffect[148];
+                                                        for (var z = 1; z <= 140; z++)
+                                                        {
+                                                            try
+                                                            {
+                                                                var p = new Vector3(
+                                                                v.Position.X + 100 * z * (float)Math.Cos(v.RotationRad),
+                                                                v.Position.Y + 100 * z * (float)Math.Sin(v.RotationRad),
+                                                                100);
+                                                                eff[z] =
+                                                                    new ParticleEffect(
+                                                                        @"particles\ui_mouseactions\draw_commentator.vpcf",
+                                                                        p);
+                                                                eff[z].SetControlPoint(1, new Vector3(255, 255, 255));
+                                                                eff[z].SetControlPoint(0, p);
+                                                                Eff[z].Add(v, eff[z]);
+                                                            }
+                                                            catch (Exception ex)
+                                                            {
+                                                                PrintSuccess(ex.ToString());
+                                                            }
+                                                            
+                                                        }
+                                                        InSystem.Add(v);
+                                                    }
+                                                }
+                                                else if( cd < 720 || !v.IsAlive)
+                                                {
+                                                    InSystem.Remove(v);
+                                                    for (var z = 1; z <= 140; z++)
+                                                    {
+                                                        ParticleEffect eff;
+                                                        if (Eff[z].TryGetValue(v, out eff))
+                                                        {
+                                                            eff.Dispose();
+                                                            Eff[z].Clear();
+                                                        }
+                                                    }
+                                                    
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+                                case ClassID.CDOTA_Unit_Hero_Pudge:
+                                    //InfestF(team, hero, "life_stealer");
+                                    break;
+                                case ClassID.CDOTA_Unit_Hero_Kunkka:
+                                    //InfestF(team, hero, "life_stealer");
+                                    break;
                             }
                         }
-                        if (counter >= 4 && ShowCooldownOnTopPanel && spells[counter].Level>0)
+
+                        #endregion
+
+                        #region Spell Panel
+
+                        if (Equals(v, _me)) continue;
+                        Vector2 screenPos;
+
+                        
+
+                        #region GettingSPells
+
+                        
+                        var spells = new Ability[7];
+                        try
+                        {
+                            spells[1] = v.Spellbook.Spell1;
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            spells[2] = v.Spellbook.Spell2;
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            spells[3] = v.Spellbook.Spell3;
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            spells[4] = v.Spellbook.Spell4;
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            spells[5] = v.Spellbook.Spell5;
+                        }
+                        catch
+                        {
+                        }
+                        try
+                        {
+                            spells[6] = v.Spellbook.Spell6;
+                        }
+                        catch
+                        {
+                        }
+
+                        #endregion
+                        var counter = 0;
+                        if (Drawing.WorldToScreen(v.Position, out screenPos))
+                        {
+                            var start = screenPos + new Vector2(-75, 20);
+                            if (v.IsVisible)
+                            {
+                                for (var g = 6; g >= 1; g--)
+                                {
+                                    if (spells[g] == null) continue;
+                                    counter++;
+                                    var cd = spells[g].Cooldown;
+                                    Drawing.DrawRect(start + new Vector2(g*20 - 5, 0), new Vector2(20, cd == 0 ? 6 : 20),
+                                        new ColorBGRA(0, 0, 0, 100), true);
+                                    //PrintError(String.Format("Spell # {0}:{1}", g, spells[g].AbilityState));
+                                    if (spells[g].AbilityState == AbilityState.NotEnoughMana)
+                                    {
+                                        Drawing.DrawRect(start + new Vector2(g*20 - 5, 0),
+                                            new Vector2(20, cd == 0 ? 6 : 20),
+                                            new ColorBGRA(0, 0, 150, 150));
+                                    }
+                                    if (cd > 0)
+                                    {
+                                        var text = string.Format("{0:0.#}", cd);
+                                        var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200),
+                                            FontFlags.None);
+                                        var textPos = (start + new Vector2(g*20 - 5, 0) +
+                                                       new Vector2(10 - textSize.X/2, -textSize.Y/2 + 12));
+                                        Drawing.DrawText(text, textPos, new Vector2(10, 150), Color.White,
+                                            FontFlags.AntiAlias | FontFlags.DropShadow);
+                                    }
+                                    if (spells[g].Level == 0) continue;
+                                    for (var lvl = 1; lvl <= spells[g].Level; lvl++)
+                                    {
+
+                                        Drawing.DrawRect(start + new Vector2(g*20 - 5 + 3*lvl, 2), new Vector2(2, 2),
+                                            new ColorBGRA(255, 255, 0, 255), true);
+                                    }
+                                }
+                            }
+                        }
+
+                        #endregion
+
+                        #region Ultimate Cooldown
+
+                        if (counter >= 4 && ShowCooldownOnTopPanel && spells[counter].Level > 0)
                         {
                             var spellDelta =
-                                new Vector2(spells[counter].Cooldown * _drawHelper.FloatRange / spells[counter].CooldownLength, 0);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height * 2),
+                                new Vector2(
+                                    spells[counter].Cooldown*_drawHelper.FloatRange/spells[counter].CooldownLength, 0);
+                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2),
                                 new Vector2(_drawHelper.FloatRange, _drawHelper.Height), Color.Gray);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height * 2),
+                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2),
                                 spellDelta + new Vector2(0, _drawHelper.Height), Color.Yellow);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height * 2),
+                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2),
                                 new Vector2(_drawHelper.FloatRange, _drawHelper.Height), Color.Black, true);
                             var text = string.Format("{0:0.}", spells[counter].Cooldown);
                             var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200), FontFlags.None);
@@ -446,10 +798,13 @@ namespace Overlay_information
                                            new Vector2(textSize.X/2 + 5, -textSize.Y/2 + 10));
                             if (ShowCooldownOnTopPanelLikeText)
                             {
-                                Drawing.DrawText(text=="0"?"Ready":text, textPos, new Vector2(10, 150), Color.White,
+                                Drawing.DrawText(text == "0" ? "Ready" : text, textPos, new Vector2(10, 150),
+                                    Color.White,
                                     FontFlags.AntiAlias | FontFlags.DropShadow);
                             }
                         }
+
+                        #endregion
                         
                     }
                     catch (Exception)
@@ -462,6 +817,8 @@ namespace Overlay_information
         #region Method
         private static void Game_OnUpdate(EventArgs args)
         {
+            #region Load/Unload
+
             if (!_loaded)
             {
                 _me = ObjectMgr.LocalHero;
@@ -479,20 +836,82 @@ namespace Overlay_information
                 PrintInfo("> OverlayInformation unLoaded");
                 return;
             }
+
+            #endregion
+
+            #region AutoItems
+
+            if (AutoItemsActive && Utils.SleepCheck("AutoItems"))
+            {
+                if (AutoItemsMidas)
+                {
+                    var midas = _me.FindItem("item_hand_of_midas");
+                    if (midas != null && midas.CanBeCasted() && !_me.IsInvisible())
+                    {
+                        var creep =
+                            ObjectMgr
+                                .GetEntities<Unit>(
+                                    ).FirstOrDefault(x => ((x is Hero && !x.IsIllusion) || (x is Creep && x.IsSpawned)) && x.IsAlive &&
+                                        x.IsVisible && _me.Distance2D(x)<=midas.CastRange && x.Team!=_me.Team);
+                        midas.UseAbility(creep);
+                        Utils.Sleep(250, "AutoItems");
+                        //PrintError("midas.CastRange: " + midas.CastRange);
+                    }
+                }
+                if (AutoItemsPhase)
+                {
+                    var phase = _me.FindItem("item_phase_boots");
+                    if (phase!=null && phase.CanBeCasted() && !_me.IsAttacking() && !_me.IsInvisible())
+                    {
+                        phase.UseAbility();
+                        Utils.Sleep(250,"AutoItems");
+                    }
+                }
+                if (AutoItemsStick)
+                {
+                    var stick = _me.FindItem("item_magic_stick");
+                    var wand = _me.FindItem("item_magic_wand");
+                    if (_me.Health*100/_me.MaximumHealth <= 30)
+                    {
+                        if (stick != null && stick.CanBeCasted() && !_me.IsInvisible())
+                        {
+                            stick.UseAbility();
+                            Utils.Sleep(250, "AutoItems");
+                        }
+                        if (wand != null && wand.CanBeCasted())
+                        {
+                            wand.UseAbility();
+                            Utils.Sleep(250, "AutoItems");
+                        }
+                    }
+                }
+            }
+
+            #endregion
+
+            #region ShowRoshanTimer
+
             if (ShowRoshanTimer)
             {
-                var tickDelta = Game.GameTime - DeathTime;
-                RoshanMinutes = Math.Floor(tickDelta/60);
-                RoshanSeconds = tickDelta % 60;
-                var roshan = ObjectMgr.GetEntities<Unit>().FirstOrDefault(unit => unit.ClassID == ClassID.CDOTA_Unit_Roshan && unit.IsAlive);
+                var tickDelta = Game.GameTime - _deathTime;
+                _roshanMinutes = Math.Floor(tickDelta/60);
+                _roshanSeconds = tickDelta%60;
+                var roshan =
+                    ObjectMgr.GetEntities<Unit>()
+                        .FirstOrDefault(unit => unit.ClassID == ClassID.CDOTA_Unit_Roshan && unit.IsAlive);
                 if (roshan != null)
                 {
-                    RoshIsAlive = true;
+                    _roshIsAlive = true;
                     //RoshanMinutes = 0;
                     //RoshanSeconds = 0;
                     //DeathTime = 0;
                 }
             }
+
+            #endregion
+
+            #region ShowIllusions
+
             if (ShowIllusions)
             {
                 var illusions = ObjectMgr.GetEntities<Hero>()
@@ -505,6 +924,39 @@ namespace Overlay_information
                 }
             }
 
+            #endregion
+        }
+        
+        #endregion
+        #region Helpers
+
+        private static Vector3 FindVector(Vector3 first , double ret , float distance )
+        {
+            var retVector = new Vector3(first.X +(float) Math.Cos(Utils.DegreeToRadian(ret)) * distance, first.Y +(float) Math.Sin(Utils.DegreeToRadian(ret))*distance, 100);
+            
+            return retVector;
+        }
+
+        private static double FindRet(Vector3 first, Vector3 second)
+        {
+            var xAngle = Utils.RadianToDegree(Math.Atan((Math.Abs(second.X - first.X)/Math.Abs(second.Y - first.Y))));
+	        if (first.X <= second.X && first.Y >= second.Y)
+	        {
+	            return (270 + xAngle);
+	        }
+            if(first.X >= second.X & first.Y >= second.Y)
+            {
+                return ((90 - xAngle) + 180);
+            }
+            if(first.X >= second.X && first.Y <= second.Y)
+            {
+                return(90 + xAngle);
+            }
+            if(first.X <= second.X && first.Y <= second.Y)
+            {
+                return (90 - xAngle);
+            }
+            return 0;
         }
         private static void HandleEffect(Unit unit)
         {
@@ -527,9 +979,6 @@ namespace Overlay_information
                 Effects1.Remove(unit);
             }
         }
-        #endregion
-        #region Helpers
-
         private static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
@@ -629,10 +1078,10 @@ namespace Overlay_information
             if (isActive)
             {
                 var isIn = CheckMouse(x, y, w, h);
-                if (LeftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
+                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
                 {
                     clicked = !clicked;
-                    _saveLoadSysHelper.IniWriteValue("Booleans", "Show health on top panel", true.ToString());
+                    //SaveLoadSysHelper.IniWriteValue("Booleans", "Show health on top panel", true.ToString());
                     Utils.Sleep(250, "ClickButtonCd");
                 }
                 var newColor = isIn
@@ -665,10 +1114,10 @@ namespace Overlay_information
             var isIn = CheckMouse(x, y, w, h);
             if (isActive)
             {
-                if (LeftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
+                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
                 {
                     clicked = !clicked;
-                    _saveLoadSysHelper.IniWriteValue("Booleans",description,clicked.ToString());
+                    SaveLoadSysHelper.IniWriteValue("Booleans",description,clicked.ToString());
                     Utils.Sleep(250, "ClickButtonCd");
                 }
                 var newColor = isIn
