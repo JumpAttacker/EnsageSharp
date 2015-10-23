@@ -217,7 +217,7 @@ namespace Techies_Annihilation
             Drawing.DrawRect(new Vector2(10, 200), new Vector2((float)15 * screenX, (float)15 * screenX), Drawing.GetTexture(@"vgui\hud\minimap_creep.vmat"));
             Drawing.DrawRect(new Vector2(10, 300), new Vector2((float)15 * screenX, (float)15 * screenX), Drawing.GetTexture(@"vgui\hud\minimap_glow.vmat"));
              * vgui\dashboard\dash_button_back
-             * 
+             * root\materials\vgui\hud\heroportraits\portraitbackground_techies.vmat_c
              * */
             try
             {
@@ -269,7 +269,7 @@ namespace Techies_Annihilation
                         DrawButton(180, 510, 15, 15, 2, ref LegitMode, false);
                         DrawButton(180, 530, 15, 15, 2, ref AutoForceStaff, true);
                         DrawButton(180, 550, 15, 15, 2, ref ShowForceStaffRange, true);
-                        DrawButton(180, 570, 15, 15, 2, ref DetonateOnAegisAndWk, false);
+                        DrawButton(180, 570, 15, 15, 2, ref DetonateOnAegisAndWk, true);
 
                     }
                     //DrawShadowText(WithAll ? "AllHero" : "WithVis", 150, 390, Color.White, _fontSize2);
@@ -345,7 +345,7 @@ namespace Techies_Annihilation
                     return;
                 }
                 _loaded = true;
-                PrintSuccess("> Techies Annihilation loaded! v 1.3");
+                PrintSuccess("> Techies Annihilation loaded! v 1.4");
             }
 
             if (!Game.IsInGame || _me == null || _me.ClassID != ClassID.CDOTA_Unit_Hero_Techies)
@@ -469,20 +469,53 @@ namespace Techies_Annihilation
                         var v = ObjectMgr.GetPlayerById(i).Hero;
                         if (v == null || v.Team == _me.Team || Equals(v, _me)) continue;
                         if (!AutoDetonate) continue;
+                        if (!DetonateOnAegisAndWk)
+                        {
+                            var aegis = v.FindItem("item_aegis");
+                            if (v.ClassID == ClassID.CDOTA_Unit_Hero_SkeletonKing)
+                            {
+                                var reinc = v.Spellbook.Spell4;
+                                if (reinc != null && (int) reinc.Cooldown == 0)
+                                {
+                                    continue;
+                                }
+                            }
+                            if (aegis != null)
+                            {
+                                continue;
+                            }
+                        }
                         var needToCastnew = new Dictionary<int, Ability>();
                         var inputDmg = 0f;
                         if (GlobalHealthAfterMines.ContainsKey(v))
                         {
                             GlobalHealthAfterMines.Remove(v);
                         }
-                        foreach (var b in bombsList)
+                        var extraBombs = 0;
+                        if (v.ClassID == ClassID.CDOTA_Unit_Hero_TemplarAssassin)
+                        {
+                            var refrection = v.Spellbook.Spell1;
+                            if (refrection != null && refrection.Cooldown > 0)
+                            {
+                                extraBombs = (int) (2 + refrection.Level);
+                                //PrintError("its templar: +" + extraBombs);
+                            }
+                        }
+                    foreach (var b in bombsList)
                         {
                             float dmg;
                             if (!(v.Distance2D(b) <= 425) || !BombDamage.TryGetValue(b, out dmg) || !v.IsAlive ||
                                 !b.Spellbook.Spell1.CanBeCasted() || !b.IsAlive) continue;
                             try
                             {
-                                inputDmg += v.DamageTaken(dmg, DamageType.Magical, _me, false);
+                                if (extraBombs > 0)
+                                {
+                                    extraBombs--;
+                                }
+                                else
+                                {
+                                    inputDmg += v.DamageTaken(dmg, DamageType.Magical, _me, false);
+                                }
                             }
                             catch
                             {
@@ -490,7 +523,7 @@ namespace Techies_Annihilation
                                 ErrorLevel[2]++;
                             }
                             needToCastnew.Add(needToCastnew.Count + 1, b.Spellbook.Spell1);
-
+                            //PrintError("NEED: "+needToCastnew.Count);
                             var finalHealth = v.Health - inputDmg;
                             //PrintError(string.Format("{2}: inputDmg: {0} finalHealth: {1} (dmg: {3})", inputDmg, finalHealth, v.Name, dmg));
                             if (GlobalHealthAfterMines.ContainsKey(v))
