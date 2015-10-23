@@ -2,17 +2,20 @@
 using System.Collections.Generic;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using SharpDX;
 
 namespace SpellRanger
 {
     internal class Program
     {
-        private const string Ver = "1.0";
+        private const string Ver = "1.1";
         private static bool _loaded;
+        private static bool _blink;
         private static bool _leftMouseIsPress;
         private static readonly SpellSys[] Spell=new SpellSys[6];
         private static readonly Dictionary<int,ParticleEffect> Effect=new Dictionary<int, ParticleEffect>(); 
+
 
         private static void Main(string[] args)
         {
@@ -46,11 +49,11 @@ namespace SpellRanger
                 return;
             }
             if (!Game.IsInGame || !_loaded) return;
-            
+            var start = new Vector2();
             for (var i = 0; i < 6; i++)
             {
                 if (Spell[i].Spell == null) continue;
-                var start = new Vector2(100+i*50, 52);
+                start = new Vector2(100+i*50, 52);
                 DrawButton(start, new Vector2(50, 50), ref Spell[i].Show, Spell[i].Spell.CastRange>0, new Color(100, 255, 0, 50),
                     new Color(100, 0, 0, 50));
                 
@@ -68,6 +71,24 @@ namespace SpellRanger
                     effect.Dispose();
                     Effect.Remove(i);
                 }
+            }
+            var blink = me.FindItem("item_blink");
+            if (blink==null) return;
+            DrawButton(start + new Vector2(70, 0), new Vector2(50, 50), ref _blink, true, new Color(100, 255, 0, 50),
+                    new Color(100, 0, 0, 50));
+            ParticleEffect eff;
+            if (_blink)
+            {
+                if (Effect.TryGetValue(12, out eff)) return;
+                eff = me.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                eff.SetControlPoint(1, new Vector3(1200, 0, 0));
+                Effect.Add(12, eff);
+            }
+            else
+            {
+                if (!Effect.TryGetValue(12, out eff)) return;
+                eff.Dispose();
+                Effect.Remove(12);
             }
         }
         private static void Game_OnWndProc(WndEventArgs args)
