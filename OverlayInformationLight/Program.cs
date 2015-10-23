@@ -18,7 +18,7 @@ namespace Overlay_informationLight
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver = "0.8 light";
+        private const string Ver = "0.8a light";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool _isOpen;
@@ -292,7 +292,11 @@ namespace Overlay_informationLight
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
                         break;
                     case 160:
-                        _drawHelper = new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49));
+                        _drawHelper = _screenSizeVector2.X == 1680
+                            ? new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49)) //1680
+                            : _screenSizeVector2.X == 1440
+                                ? new ScreenSizer(413 - 358, 806 - 633, 7, 34, 358, new Vector2(1383, 45)) //1440x900
+                                : new ScreenSizer(0, 0, 0, 0, 528, new Vector2(1860, 49)); //
                         //1680 x 1050
                         break;
                     case 133:
