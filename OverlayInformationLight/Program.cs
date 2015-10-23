@@ -18,7 +18,7 @@ namespace Overlay_informationLight
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver = "0.8a light";
+        private const string Ver = "0.8b light";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool _isOpen;
@@ -613,7 +613,7 @@ namespace Overlay_informationLight
                         var spellDelta =
                             new Vector2(
                                 ultimate.Cooldown*_drawHelper.FloatRange/ultimate.CooldownLength, 0);
-                        if (ultimate.Cooldown > 0)
+                        if (ultimate.Cooldown > 0 && ShowCooldownOnTopPanel)
                         {
                             DrawFilledBox(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2,
                                 _drawHelper.FloatRange, _drawHelper.Height, Color.Gray);
