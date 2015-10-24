@@ -1,21 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Ensage;
 using SharpDX;
-using SharpDX.Direct3D9;
 
 namespace SpawnBox
 {
     class Program
     {
-        private const string Ver = "1.0";
+        private const string Ver = "1.1";
         private static bool _loaded;
-        private static readonly Dictionary<int, ParticleEffect> Effect = new Dictionary<int, ParticleEffect>();
-        private static readonly Dictionary<int, ParticleEffect> Effect2 = new Dictionary<int, ParticleEffect>();
-        private static bool Create;
+        private static readonly Dictionary<string, ParticleEffect> Effect = new Dictionary<string, ParticleEffect>();
+        private static readonly Dictionary<string, ParticleEffect> Effect2 = new Dictionary<string, ParticleEffect>();
+        private static readonly Dictionary<string, ParticleEffect> Effect3 = new Dictionary<string, ParticleEffect>();
+        private static readonly Dictionary<string, ParticleEffect> Effect4 = new Dictionary<string, ParticleEffect>();
+        private static bool _create;
         private static readonly int[,] Spots = {
             {2240, -4288, 3776, -5312}, {2688, -2944, 3776, -4096},
             {1088, -3200, 2304, -4544}, {-3530, 768, -2560, -256},
@@ -86,18 +84,22 @@ namespace SpawnBox
                 }
                 _loaded = true;
                 PrintSuccess("> Spawn Box loaded! v" + Ver);
-                Create = false;
+                _create = false;
             }
             if (!Game.IsInGame || me == null)
             {
                 _loaded = false;
                 PrintInfo("> Spawn Box unLoaded");
+                Effect.Clear();
+                Effect2.Clear();
+                Effect3.Clear();
+                Effect4.Clear();
                 return;
             }
             if (!Game.IsInGame || !_loaded) return;
             //PrintSuccess(me.Position.Z.ToString());
-            if (Create) return;
-            Create = true;
+            if (_create) return;
+            _create = true;
             for (var i = 0; i < 12; i++)
             {
                 var coint1 = Math.Floor(Math.Floor((decimal) (Spots[i, 2] - Spots[i, 0]))/50);
@@ -107,14 +109,20 @@ namespace SpawnBox
                 {
                     var first = new Vector3(Spots[i, 0] + a*50, Spots[i, 1], 500);
                     var second = new Vector3(Spots[i, 2] - a*50, Spots[i, 3], 500);
-                    effect = new ParticleEffect(@"particles\world_environmental_fx\candle_flame_medium.vpcf",
+                    if (!Effect.ContainsKey(string.Format("{0} / {1}", i, a)))
+                    {
+                        effect = new ParticleEffect(@"particles\world_environmental_fx\candle_flame_medium.vpcf",
                         first);
-                    effect.SetControlPoint(0, first);
-                    //Effect.Add(i, effect);
-                    effect = new ParticleEffect(@"particles\world_environmental_fx\candle_flame_medium.vpcf",
+                        effect.SetControlPoint(0, first);
+                        Effect.Add(string.Format("{0} / {1}", i, a), effect);
+                    }
+                    if (!Effect2.ContainsKey(string.Format("{0} / {1}", i, a)))
+                    {
+                        effect = new ParticleEffect(@"particles\world_environmental_fx\candle_flame_medium.vpcf",
                         second);
-                    effect.SetControlPoint(0, second);
-                    //Effect2.Add(i, effect);
+                        effect.SetControlPoint(0, second);
+                        Effect2.Add(string.Format("{0} / {1}", i, a), effect);
+                    }
                 }
                 /*
                  * x1=0 y1=1 
@@ -125,14 +133,20 @@ namespace SpawnBox
                 {
                     var first = new Vector3(Spots[i, 0], Spots[i, 1] - a*50, 500);
                     var second = new Vector3(Spots[i, 2], Spots[i, 3] + a*50, 500);
-                    effect = new ParticleEffect(@"particles\world_environmental_fx\candle_flame_medium.vpcf",
-                        first);
-                    effect.SetControlPoint(0, first);
-                    //Effect.Add(i, effect);
-                    effect = new ParticleEffect(@"particles\world_environmental_fx\candle_flame_medium.vpcf",
-                        second);
-                    effect.SetControlPoint(0, second);
-                    //Effect2.Add(i, effect);
+                    if (!Effect3.ContainsKey(string.Format("{0} / {1}", i, a)))
+                    {
+                        effect = new ParticleEffect(@"particles\world_environmental_fx\candle_flame_medium.vpcf",
+                            first);
+                        effect.SetControlPoint(0, first);
+                        Effect3.Add(string.Format("{0} / {1}", i, a), effect);
+                    }
+                    if (!Effect4.ContainsKey(string.Format("{0} / {1}", i, a)))
+                    {
+                        effect = new ParticleEffect(@"particles\world_environmental_fx\candle_flame_medium.vpcf",
+                            second);
+                        effect.SetControlPoint(0, second);
+                        Effect4.Add(string.Format("{0} / {1}", i, a), effect);
+                    }
                 }
                 
             }
