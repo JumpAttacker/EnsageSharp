@@ -71,11 +71,11 @@ namespace Auto_Disable
                         {
                             UseDisableStageOne(v, enumerable, null, false);
                         }
-                        else if (Activated)
+                        else if (_activated)
                         {
                             UseDisableStageOne(v, enumerable, null, false);
                         }
-                        else if (Ititiators.TryGetValue(v.ClassID, out spellString))
+                        else if (Initiators.TryGetValue(v.ClassID, out spellString))
                         {
                             var initSpell = v.FindSpell(spellString);
                             if (initSpell != null && initSpell.Cooldown != 0)
@@ -94,10 +94,8 @@ namespace Auto_Disable
                     }*/
                     if (angle == 0 && distance < 1500)
                     {
-                        Ability r = null;
-                        Ability r2 = null;
-                        r = CheckForFirstSpell(v);
-                        r2 = CheckForSecondSpell(v);
+                        var r = CheckForFirstSpell(v);
+                        var r2 = CheckForSecondSpell(v);
                         //PrintError("kek");
                         var mustHave = false;
                         //PrintError("kek2");
@@ -119,11 +117,11 @@ namespace Auto_Disable
                     {
                         UseDisableStageOne(v, enumerable, abilities, true);
                     }
-                    else if (Activated)
+                    else if (_activated)
                     {
                         UseDisableStageOne(v, enumerable, abilities, true);
                     }
-                    else if (Ititiators.TryGetValue(v.ClassID, out spellString))
+                    else if (Initiators.TryGetValue(v.ClassID, out spellString))
                     {
                         var initSpell = v.FindSpell(spellString);
                         if (initSpell != null && initSpell.Cooldown != 0)
@@ -141,23 +139,23 @@ namespace Auto_Disable
 
         private struct CounterHelp
         {
-            public readonly string _strKey;
-            public readonly int _intKey;
-            public readonly ClassID _hero;
-            public readonly float _extraRange;
-            public readonly NetworkActivity _activity;
-            public readonly string _modifer;
+            public readonly string StrKey;
+            public readonly int IntKey;
+            public readonly ClassID Hero;
+            public readonly float ExtraRange;
+            public readonly NetworkActivity Activity;
+            public readonly string Modifer;
 
             public CounterHelp(ClassID hero, string strKey = "", int intKey = 0, float extraRange = 0,
                 NetworkActivity activity = 0, string modifer = "")
                 : this()
             {
-                _hero = hero;
-                _modifer = modifer;
-                _activity = activity;
-                _intKey = intKey;
-                _strKey = strKey;
-                _extraRange = extraRange;
+                Hero = hero;
+                Modifer = modifer;
+                Activity = activity;
+                IntKey = intKey;
+                StrKey = strKey;
+                ExtraRange = extraRange;
             }
         }
 
@@ -166,11 +164,12 @@ namespace Auto_Disable
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private static bool Activated;
-        private const float Ver = (float) 1.3;
-        private static readonly Dictionary<ClassID, string> Ititiators = new Dictionary<ClassID, string>();
+        private static bool _activated;
+        private static bool _autoBlink;
+        private const string Ver = "1.4";
+        private static readonly Dictionary<ClassID, string> Initiators = new Dictionary<ClassID, string>();
         //static readonly Dictionary<ClassID, string> CounterSpells = new Dictionary<ClassID, string>();
-        private static Font text;
+        private static Font _infoText;
         private static readonly CounterHelp[] CounterSpells = new CounterHelp[50];
 
         #endregion
@@ -181,35 +180,35 @@ namespace Auto_Disable
 
         private static void Main()
         {
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_FacelessVoid, "faceless_void_time_walk");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Shredder, "shredder_timber_chain");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Phoenix, "phoenix_icarus_dive");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_AntiMage, "antimage_blink");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Legion_Commander, "legion_commander_duel");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Mirana, "mirana_leap");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_PhantomLancer, "phantom_lancer_doppelwalk");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Terrorblade, "terrorblade_sunder");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Huskar, "huskar_life_break");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Rattletrap, "rattletrap_hookshot");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_EarthSpirit, "earth_spirit_rolling_boulder");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_ChaosKnight, "chaos_knight_reality_rift");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Morphling, "morphling_waveform");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_VengefulSpirit, "vengefulspirit_nether_swap");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_PhantomAssassin, "phantom_assassin_phantom_strike");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Riki, "riki_blink_strike");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Weaver, "weaver_time_lapse");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_SandKing, "sandking_epicenter");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Slark, "slark_pounce");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_CrystalMaiden, "crystal_maiden_freezing_field");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Pudge, "pudge_dismember");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Bane, "bane_fiends_grip");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Enigma, "enigma_black_hole");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_WitchDoctor, "witch_doctor_death_ward");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_QueenOfPain, "queenofpain_blink");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_StormSpirit, "storm_spirit_ball_lightning");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Puck, "puck_illusory_orb");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_Magnataur, "magnataur_skewer");
-            Ititiators.Add(ClassID.CDOTA_Unit_Hero_EmberSpirit, "ember_spirit_fire_remnant");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_FacelessVoid, "faceless_void_time_walk");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Shredder, "shredder_timber_chain");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Phoenix, "phoenix_icarus_dive");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_AntiMage, "antimage_blink");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Legion_Commander, "legion_commander_duel");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Mirana, "mirana_leap");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_PhantomLancer, "phantom_lancer_doppelwalk");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Terrorblade, "terrorblade_sunder");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Huskar, "huskar_life_break");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Rattletrap, "rattletrap_hookshot");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_EarthSpirit, "earth_spirit_rolling_boulder");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_ChaosKnight, "chaos_knight_reality_rift");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Morphling, "morphling_waveform");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_VengefulSpirit, "vengefulspirit_nether_swap");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_PhantomAssassin, "phantom_assassin_phantom_strike");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Riki, "riki_blink_strike");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Weaver, "weaver_time_lapse");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_SandKing, "sandking_epicenter");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Slark, "slark_pounce");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_CrystalMaiden, "crystal_maiden_freezing_field");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Pudge, "pudge_dismember");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Bane, "bane_fiends_grip");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Enigma, "enigma_black_hole");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_WitchDoctor, "witch_doctor_death_ward");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_QueenOfPain, "queenofpain_blink");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_StormSpirit, "storm_spirit_ball_lightning");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Puck, "puck_illusory_orb");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_Magnataur, "magnataur_skewer");
+            Initiators.Add(ClassID.CDOTA_Unit_Hero_EmberSpirit, "ember_spirit_fire_remnant");
             var c = 0;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_ShadowShaman, "q");
             c++;
@@ -299,7 +298,7 @@ namespace Auto_Disable
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Bane, "r", 2);
             //int Spell = _me.Spellbook.Spells.FirstOrDefault(ability => ability.ClassID==CounterSpells.TryGetValue())
-            text = new Font(
+            _infoText = new Font(
                 Drawing.Direct3DDevice9,
                 new FontDescription
                 {
@@ -323,7 +322,7 @@ namespace Auto_Disable
 
         private static void CurrentDomainDomainUnload(object sender, EventArgs e)
         {
-            text.Dispose();
+            _infoText.Dispose();
         }
 
         //private static float angle;
@@ -339,27 +338,36 @@ namespace Auto_Disable
             {
                 return;
             }
-            var sign = Activated
-                ? "Auto Disable: for all | [INSERT] for toggle"
-                : "Auto Disable: for initiators | [INSERT] for toggle";
-            text.DrawText(null, sign, 5, 150, Color.YellowGreen);
+            var sign = _activated
+                ? "Auto Disable: for all | [INSERT] for toggle."
+                : "Auto Disable: for initiators | [INSERT] for toggle.";
+            var daggerOn = _autoBlink
+                ? " Auto Dagger [on] to fountain | [DEL] for toggle"
+                : " Auto Dagger [off] to fountain | [DEL] for toggle";
+            _infoText.DrawText(null, sign + daggerOn, 5, 150, Color.YellowGreen);
         }
 
         private static void Drawing_OnPostReset(EventArgs args)
         {
-            text.OnResetDevice();
+            _infoText.OnResetDevice();
         }
 
         private static void Drawing_OnPreReset(EventArgs args)
         {
-            text.OnLostDevice();
+            _infoText.OnLostDevice();
         }
 
         private static void Game_OnWndProc(WndEventArgs args)
         {
-            if (!Game.IsChatOpen && args.Msg == (ulong) Utils.WindowsMessages.WM_KEYUP && args.WParam == 0x2D)
+            if (Game.IsChatOpen || args.Msg != (ulong) Utils.WindowsMessages.WM_KEYUP) return;
+            switch (args.WParam)
             {
-                Activated = !Activated;
+                case 0x2D:
+                    _activated = !_activated;
+                    break;
+                case 0x2E:
+                    _autoBlink = !_autoBlink;
+                    break;
             }
         }
 
@@ -370,51 +378,41 @@ namespace Auto_Disable
 
         private static void UsaSafeItems(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities)
         {
-            Item SafeItemSelf = null;
-            Item SafeItemTargetSelf = null;
-            Item SafeItemTargetEnemy = null;
-            Item SafeItemPoint = null;
-            Ability SafeSpell = null;
             var enumerable = items as Item[] ?? items.ToArray();
-            SafeItemSelf =
-                enumerable.FirstOrDefault(
-                    x =>
-                        x.Name == "item_blade_mail" /*|| x.Name == "item_black_king_bar" || x.Name == "item_ghost" ||
+            var safeItemSelf = enumerable.FirstOrDefault(
+                x =>
+                    x.Name == "item_blade_mail" /*|| x.Name == "item_black_king_bar" || x.Name == "item_ghost" ||
                         x.Name == "item_manta"*/);
-            SafeItemTargetSelf =
-                enumerable.FirstOrDefault(
-                    x =>
-                        x.Name == "item_lotus_orb" || x.Name == "item_cyclone" || x.Name == "item_glimmer_cape");
-            SafeItemTargetEnemy =
-                enumerable.FirstOrDefault(
-                    x =>
-                        x.Name == "item_sheepstick" || x.Name == "item_orchid" || x.Name == "item_abyssal_blade" ||
-                        x.Name == "item_heavens_halberd");
-            SafeItemPoint =
-                enumerable.FirstOrDefault(
-                    x =>
-                        x.Name == "item_blink");
+            var safeItemTargetSelf = enumerable.FirstOrDefault(
+                x =>
+                    x.Name == "item_lotus_orb" || x.Name == "item_cyclone" || x.Name == "item_glimmer_cape");
+            var safeItemTargetEnemy = enumerable.FirstOrDefault(
+                x =>
+                    x.Name == "item_sheepstick" || x.Name == "item_orchid" || x.Name == "item_abyssal_blade" ||
+                    x.Name == "item_heavens_halberd");
+            var safeItemPoint = enumerable.FirstOrDefault(
+                x =>
+                    x.Name == "item_blink");
 
 
-            SafeSpell =
-                abilities.FirstOrDefault(
-                    x =>
-                        /*x.Name == "antimage_blink" || x.Name == "queenofpain_blink" ||*/
-                        x.Name == "nyx_assassin_spiked_carapace" || x.Name == "silencer_last_word" ||
-                        x.Name == "shadow_demon_disruption" || x.Name == "obsidian_destroyer_astral_imprisonment" ||
-                        x.Name == "slark_shadow_dance" || x.Name == "slark_dark_pact" || x.Name == "puck_waning_rift" ||
-                        x.Name == "axe_berserkers_call" || x.Name == "abaddon_aphotic_shield" ||
-                        /*x.Name == "ember_spirit_flame_guard" ||*/ x.Name == "skywrath_mage_ancient_seal" ||
-                        x.Name == "juggernaut_omni_slash" || x.Name == "doombringer_doom" ||
-                        x.Name == "tusk_snowball" || x.Name == "naga_siren_mirror_image" ||
-                        x.Name == "alchemist_chemical_rage" || x.Name == "bounty_hunter_wind_walk" ||
-                        /*x.Name == "phantom_lancer_doppelwalk" ||*/ x.Name == "clinkz_skeleton_walk" ||
-                        x.Name == "sandking_sandstorm" || x.Name == "weaver_shukuchi" ||
-                        x.Name == "nyx_assassin_vendetta" || x.Name == "templar_assassin_refraction" ||
-                        x.Name == "templar_assassin_meld" /*|| x.Name == "phoenix_supernova" */||
-                        x.Name == "juggernaut_blade_fury" || x.Name == "life_stealer_rage" || x.Name == "lion_voodoo" ||
-                        x.Name == "shadow_shaman_voodoo" /*|| x.Name == "oracle_fates_edict" */||
-                       /* x.Name == "winter_wyvern_cold_embrace" ||*/ x.Name == "life_stealer_rage");
+            var safeSpell = abilities.FirstOrDefault(
+                x =>
+                    /*x.Name == "antimage_blink" || x.Name == "queenofpain_blink" ||*/
+                    x.Name == "nyx_assassin_spiked_carapace" || x.Name == "silencer_last_word" ||
+                    x.Name == "shadow_demon_disruption" || x.Name == "obsidian_destroyer_astral_imprisonment" ||
+                    x.Name == "slark_shadow_dance" || x.Name == "slark_dark_pact" || x.Name == "puck_waning_rift" ||
+                    x.Name == "axe_berserkers_call" || x.Name == "abaddon_aphotic_shield" ||
+                    /*x.Name == "ember_spirit_flame_guard" ||*/ x.Name == "skywrath_mage_ancient_seal" ||
+                    x.Name == "juggernaut_omni_slash" || x.Name == "doombringer_doom" ||
+                    x.Name == "tusk_snowball" || x.Name == "naga_siren_mirror_image" ||
+                    x.Name == "alchemist_chemical_rage" || x.Name == "bounty_hunter_wind_walk" ||
+                    /*x.Name == "phantom_lancer_doppelwalk" ||*/ x.Name == "clinkz_skeleton_walk" ||
+                    x.Name == "sandking_sandstorm" || x.Name == "weaver_shukuchi" ||
+                    x.Name == "nyx_assassin_vendetta" || x.Name == "templar_assassin_refraction" ||
+                    x.Name == "templar_assassin_meld" /*|| x.Name == "phoenix_supernova" */||
+                    x.Name == "juggernaut_blade_fury" || x.Name == "life_stealer_rage" || x.Name == "lion_voodoo" ||
+                    x.Name == "shadow_shaman_voodoo" /*|| x.Name == "oracle_fates_edict" */||
+                    /* x.Name == "winter_wyvern_cold_embrace" ||*/ x.Name == "life_stealer_rage" || x.Name == "silencer_global_silence");
             /*local v = entityList:GetEntities({classId = CDOTA_Unit_Fountain,team = me.team})[1]
 				local vec = Vector((v.position.x - me.position.x) * 1100 / GetDistance2D(v,me) + me.position.x,(v.position.y - me.position.y) * 1100 / GetDistance2D(v,me) + me.position.y,v.position.z)
 				if blinkfront then
@@ -423,47 +421,51 @@ namespace Auto_Disable
             var v =
                 ObjectMgr.GetEntities<Unit>()
                     .FirstOrDefault(x => x.Team == _me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
-
-            if (SafeItemSelf != null)
+            if (safeItemSelf != null)
             {
-                SafeItemSelf.UseAbility();
+                safeItemSelf.UseAbility();
                 Utils.Sleep(250, target.GetHashCode().ToString());
+                return;
             }
-            PrintError(String.Format("{0} {1}", SafeSpell.CastRange,SafeSpell.Name));
-            /*if (SafeItemPoint != null)
+            //PrintError(String.Format("{0} {1}", SafeSpell.CastRange,SafeSpell.Name));
+            if (safeItemPoint != null && _autoBlink)
             {
                 if (v != null)
                 {
-                    SafeItemPoint.UseAbility(v.Position);
-                }
-                Utils.Sleep(250, target.GetHashCode().ToString());
-            }*/
-            if (SafeItemTargetEnemy != null && SafeItemTargetEnemy.CanBeCasted(target))
-            {
-                if (_me.Distance2D(target) <= SafeItemTargetEnemy.CastRange)
-                {
-                    SafeItemTargetEnemy.UseAbility(target);
+                    safeItemPoint.UseAbility(v.Position);
                     Utils.Sleep(250, target.GetHashCode().ToString());
+                    return;
                 }
             }
-            if (SafeItemTargetSelf != null)
+            if (safeItemTargetEnemy != null && safeItemTargetEnemy.CanBeCasted(target))
             {
-                SafeItemTargetSelf.UseAbility(_me);
+                if (_me.Distance2D(target) <= safeItemTargetEnemy.CastRange)
+                {
+                    safeItemTargetEnemy.UseAbility(target);
+                    Utils.Sleep(250, target.GetHashCode().ToString());
+                    return;
+                }
+            }
+            if (safeItemTargetSelf != null)
+            {
+                safeItemTargetSelf.UseAbility(_me);
                 Utils.Sleep(250, target.GetHashCode().ToString());
+                return;
+
             }
 
-            if (SafeSpell != null && SafeSpell.CanBeCasted())
+            if (safeSpell != null && safeSpell.CanBeCasted())
             {
-                if (SafeSpell.CastRange > 0)
+                if (safeSpell.CastRange > 0)
                 {
-                    if (_me.Distance2D(target) <= SafeSpell.CastRange)
+                    if (_me.Distance2D(target) <= safeSpell.CastRange)
                     {
-                        SafeSpell.UseAbility(target);
+                        safeSpell.UseAbility(target);
                     }
                 }
                 else
                 {
-                    SafeSpell.UseAbility();
+                    safeSpell.UseAbility();
                 }
                 Utils.Sleep(250, target.GetHashCode().ToString());
             }
@@ -472,13 +474,15 @@ namespace Auto_Disable
         private static void UseDisableStageOne(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities,
             bool stage)
         {
-            if (!(_me.Health/_me.MaximumHealth > 0.1)) return;
+            if (_me != null && !(_me.Health/_me.MaximumHealth > 0.1)) return;
             Item disable;
             Ability ab = null;
+            Ability withOutTarget = null;
+            var enumerable = items as Item[] ?? items.ToArray();
             if (stage)
             {
                 disable =
-                    items.FirstOrDefault( // wo puck_waning_rift
+                    enumerable.FirstOrDefault( // wo puck_waning_rift
                         x =>
                             x.Name == "item_sheepstick" || x.Name == "item_orchid" ||
                             x.Name == "item_abyssal_blade" ||
@@ -486,8 +490,9 @@ namespace Auto_Disable
                             x.Name == "item_rod_of_atos" || x.Name == "item_heavens_halberd" ||
                             x.Name == "item_medallion_of_courage" ||
                             x.Name == "item_cyclone" || x.Name == "item_solar_crest");
+                var enumerable1 = abilities as Ability[] ?? abilities.ToArray();
                 ab =
-                    abilities.FirstOrDefault(
+                    enumerable1.FirstOrDefault(
                         x =>
                             x.Name == "lion_voodoo" || x.Name == "shadow_shaman_voodoo" ||
                             x.Name == "obsidian_destroyer_astral_imprisonment" || x.Name == "shadow_demon_disruption" ||
@@ -495,12 +500,16 @@ namespace Auto_Disable
                             x.Name == "dragon_knight_dragon_tail" ||
                             x.Name == "batrider_flaming_lasso" ||
                             x.Name == "legion_commander_duel" ||
-                            x.Name == "skywrath_mage_ancient_seal" || x.Name == "silencer_global_silence");
+                            x.Name == "skywrath_mage_ancient_seal");
+                withOutTarget =
+                    enumerable1.FirstOrDefault(
+                        x =>
+                            x.Name == "silencer_global_silence");
             }
             else
             {
                 disable =
-                    items.FirstOrDefault(
+                    enumerable.FirstOrDefault(
                         x =>
                             x.Name == "item_rod_of_atos" || x.Name == "item_medallion_of_courage" ||
                             x.Name == "item_solar_crest");
@@ -510,10 +519,33 @@ namespace Auto_Disable
             {
                 disable.UseAbility(target);
                 Utils.Sleep(250, target.GetHashCode().ToString());
+                return;
             }
             if (ab != null && _me.Distance2D(target) <= ab.CastRange)
             {
                 ab.UseAbility(target);
+                Utils.Sleep(250, target.GetHashCode().ToString());
+                return;
+            }
+            if (withOutTarget != null)
+            {
+                withOutTarget.UseAbility();
+                Utils.Sleep(250, target.GetHashCode().ToString());
+                return;
+            }
+            var safeItemPoint =
+                enumerable.FirstOrDefault(
+                    x =>
+                        x.Name == "item_blink");
+            var v =
+                ObjectMgr.GetEntities<Unit>()
+                    .FirstOrDefault(x => x.Team == _me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+            if (safeItemPoint != null && _autoBlink)
+            {
+                if (v != null)
+                {
+                    safeItemPoint.UseAbility(v.Position);
+                }
                 Utils.Sleep(250, target.GetHashCode().ToString());
             }
         }
@@ -522,28 +554,28 @@ namespace Auto_Disable
 
         #region Helpers
 
-        private static NetworkActivity CheckForNetworkAct(Unit t)
+        private static NetworkActivity CheckForNetworkAct(Entity t)
         {
             for (var n = 0; n < CounterSpells.Length; n++)
-                if (t.ClassID == CounterSpells[n]._hero)
+                if (t.ClassID == CounterSpells[n].Hero)
                 {
-                    if (CounterSpells[n]._activity != 0)
+                    if (CounterSpells[n].Activity != 0)
                     {
-                        return CounterSpells[n]._activity;
+                        return CounterSpells[n].Activity;
                     }
                 }
             return 0;
         }
 
-        private static string CheckForModifier(Unit t, ref bool mustHave)
+        private static string CheckForModifier(Entity t, ref bool mustHave)
         {
             for (var n = 0; n < CounterSpells.Length; n++)
-                if (t.ClassID == CounterSpells[n]._hero)
+                if (t.ClassID == CounterSpells[n].Hero)
                 {
-                    if (CounterSpells[n]._modifer != "")
+                    if (CounterSpells[n].Modifer != "")
                     {
                         mustHave = true;
-                        return CounterSpells[n]._modifer;
+                        return CounterSpells[n].Modifer;
                     }
                 }
             return "";
@@ -554,9 +586,9 @@ namespace Auto_Disable
             try
             {
                 for (var n = 0; n < CounterSpells.Length; n++)
-                    if (t.ClassID == CounterSpells[n]._hero)
+                    if (t.ClassID == CounterSpells[n].Hero)
                     {
-                        switch (CounterSpells[n]._strKey)
+                        switch (CounterSpells[n].StrKey)
                         {
                             case "q":
                                 return t.Spellbook.Spell1;
@@ -572,9 +604,9 @@ namespace Auto_Disable
                         }
                     }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                PrintError(e.ToString());
+                //PrintError(e.ToString());
             }
             return null;
         }
@@ -584,10 +616,10 @@ namespace Auto_Disable
             try
             {
                 for (var n = 0; n < CounterSpells.Length; n++)
-                    if (t.ClassID == CounterSpells[n]._hero)
+                    if (t.ClassID == CounterSpells[n].Hero)
                     {
                         //PrintInfo("Hero catched: " + CounterSpells[n]._intKey);
-                        switch (CounterSpells[n]._intKey)
+                        switch (CounterSpells[n].IntKey)
                         {
                             case 1:
                                 return t.Spellbook.Spell1;
@@ -605,7 +637,7 @@ namespace Auto_Disable
             }
             catch (Exception e)
             {
-                PrintError(e.ToString());
+                //PrintError(e.ToString());
             }
             //PrintInfo("Return: 0" );
             return null;
