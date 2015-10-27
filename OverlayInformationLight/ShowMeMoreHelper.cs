@@ -1,4 +1,4 @@
-namespace Overlay_informationLight
+namespace OverlayInformationLight
 {
     internal class ShowMeMoreHelper
     {

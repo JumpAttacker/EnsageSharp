@@ -1,6 +1,6 @@
 using SharpDX;
 
-namespace Overlay_informationLight
+namespace OverlayInformationLight
 {
     internal class ScreenSizer
     {

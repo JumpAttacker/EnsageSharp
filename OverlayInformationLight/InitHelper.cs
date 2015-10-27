@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Overlay_informationLight
+namespace OverlayInformationLight
 {
     internal class InitHelper
     {
