@@ -18,9 +18,7 @@ namespace OverlayInformationLight
 
         private static bool _loaded;
         private static Hero _me;
-        private static Player _player;
-        private const string Ver = "0.9 light";
-        private static Vector2 _screenSizeVector2;
+        private const string Ver = "0.9b light";
         private static ScreenSizer _drawHelper;
         private static bool _isOpen;
         private static bool _leftMouseIsPress;
@@ -28,23 +26,23 @@ namespace OverlayInformationLight
         private static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Hero, Ability> SearchAbilities = new Dictionary<Hero, Ability>();
         //======================================
-        public static bool ShowCooldownOnTopPanel;
-        public static bool ShowCooldownOnTopPanelLikeText; //working only with ShowCooldownOnTopPanel
-        public static bool ShowHealthOnTopPanel;
-        public static bool ShowManaOnTopPanel;
-        public static bool OverlayOnlyOnEnemy;
-        public static bool ShowGlyph;
-        public static bool ShowIllusions;
-        public static bool ShowLastHit;
-        public static bool ShowManabars;
-        public static bool ShowRoshanTimer;
-        public static bool ShowBuybackCooldown;
-        public static bool ShowMeMore;
-        public static bool AutoItemsMenu;
-        public static bool AutoItemsActive;
-        public static bool AutoItemsMidas;
-        public static bool AutoItemsPhase;
-        public static bool AutoItemsStick;
+        public static bool ShowCooldownOnTopPanel = true;
+        public static bool ShowCooldownOnTopPanelLikeText = true; //working only with ShowCooldownOnTopPanel
+        public static bool ShowHealthOnTopPanel = true;
+        public static bool ShowManaOnTopPanel = true;
+        public static bool OverlayOnlyOnEnemy = true;
+        public static bool ShowGlyph = true;
+        public static bool ShowIllusions = true;
+        public static bool ShowLastHit = true;
+        public static bool ShowManabars = true;
+        public static bool ShowRoshanTimer = true;
+        public static bool ShowBuybackCooldown = true;
+        public static bool ShowMeMore= true;
+        public static bool AutoItemsMenu = true;
+        public static bool AutoItemsActive = true;
+        public static bool AutoItemsMidas = true;
+        public static bool AutoItemsPhase = true;
+        public static bool AutoItemsStick = true;
         //=====================================
         private static readonly ShowMeMoreHelper[] ShowMeMoreH = new ShowMeMoreHelper[5];
 
@@ -253,12 +251,13 @@ namespace OverlayInformationLight
 
         private static void Game_OnUpdate(EventArgs args)
         {
+            
             #region Load/Unload
-
+            _me = ObjectMgr.LocalHero;
+            
             if (!_loaded)
             {
-                _me = ObjectMgr.LocalHero;
-                _player = ObjectMgr.LocalPlayer;
+                
                 if (!Game.IsInGame || _me == null)
                 {
                     return;
@@ -267,6 +266,7 @@ namespace OverlayInformationLight
                 _players = null;
                 PrintSuccess("> OverlayInformation loaded! v" + Ver);
             }
+            
             if (!Game.IsInGame || _me == null)
             {
                 _loaded = false;
@@ -274,9 +274,9 @@ namespace OverlayInformationLight
             }
 
             #endregion
-
+            
             #region Show me more cast
-
+            
             //List<Unit> dummy;
             if (ShowMeMore)
             {
@@ -289,6 +289,7 @@ namespace OverlayInformationLight
                         {
                             var mod = t.Modifiers.FirstOrDefault(x => x.Name == ShowMeMoreH[n].Modifier);
                             if (mod == null) continue;
+                            
                             ParticleEffect effect;
                             if (!ShowMeMoreEffect.TryGetValue(t, out effect))
                             {
@@ -314,7 +315,7 @@ namespace OverlayInformationLight
             }
 
             #endregion
-
+            
             #region ShowRoshanTimer
 
             if (ShowRoshanTimer)
@@ -343,7 +344,7 @@ namespace OverlayInformationLight
                 var illusions = ObjectMgr.GetEntities<Hero>()
                     .Where(
                         x =>
-                            x.IsIllusion && x.Team != _player.Team);
+                            x.IsIllusion && x.Team != _me.Team);
                 foreach (var s in illusions)
                 {
                     HandleEffect(s);
@@ -351,7 +352,7 @@ namespace OverlayInformationLight
             }
 
             #endregion
-
+            return;
             #region AutoItems
 
             if (!AutoItemsActive || !Utils.SleepCheck("AutoItems")) return;
@@ -407,8 +408,8 @@ namespace OverlayInformationLight
             {
                 return;
             }
-            var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer || Game.IsPaused)
+            var hero = ObjectMgr.LocalHero;
+            if (hero == null || hero.Team == Team.Observer || Game.IsPaused)
             {
                 return;
             }
@@ -885,7 +886,7 @@ namespace OverlayInformationLight
                 var manaDelta = new Vector2(v.Mana * sizeX / v.MaximumMana, 0);
                 const int height = 7;
 
-                Drawing.DrawRect(pos,pos+new Vector2(sizeX,sizeY),new Color(0,0,100,100));
+                //Drawing.DrawRect(pos,pos+new Vector2(sizeX,sizeY),new Color(0,0,100,100));
 
                 Drawing.DrawRect(pos + new Vector2(0, sizeY+1), new Vector2(sizeX, height), new Color(255, 0, 0, 255));
                 Drawing.DrawRect(pos + new Vector2(0, sizeY+1), new Vector2(healthDelta.X, height), new Color(0, 255, 0, 255));
