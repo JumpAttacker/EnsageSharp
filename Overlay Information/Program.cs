@@ -19,7 +19,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver =  "0.7";
+        private const string Ver =  "0.8";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool _isOpen;
@@ -49,9 +49,9 @@ namespace Overlay_information
         private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Unit, ParticleEffect>[] Eff = new Dictionary<Unit, ParticleEffect>[141];
         private static readonly List<Unit> InSystem=new List<Unit>();
-        private static Vector3 ArrowS=new Vector3();
+        private static Vector3 _arrowS;
         //=====================================
-        static readonly InitHelper SaveLoadSysHelper = new InitHelper(Game.AppDataPath + "\\jOverlay.ini");
+        //static readonly InitHelper SaveLoadSysHelper = new InitHelper(Game.AppDataPath + "\\jOverlay.ini");
         //=====================================
         private static Single _deathTime;
         private static double _roshanMinutes;
@@ -137,7 +137,7 @@ namespace Overlay_information
             #endregion
 
             #region Save/load
-            
+            /*
             try
             {
                 ShowHealthOnTopPanel =
@@ -187,7 +187,7 @@ namespace Overlay_information
                 Console.Beep(1000, 100);
                 Console.Beep(1000, 100);
             }
-            
+            */
             #endregion
             
         }
@@ -476,7 +476,7 @@ namespace Overlay_information
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
                         break;
                     case 125:
-                        _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
+                        _drawHelper = new ScreenSizer(60, 1036 - 855, 7, 43, 250, new Vector2(1210, 49)); //1280x1024
                         break;
                     default:
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
@@ -587,25 +587,22 @@ namespace Overlay_information
                                     {
                                         if (!InSystem.Contains(arrow))
                                         {
-                                            ArrowS = arrow.Position;
-                                            PrintError("first");
+                                            _arrowS = arrow.Position;
                                             InSystem.Add(arrow);
                                         }
                                         else if (Utils.SleepCheck("Arrow"))
                                         {
                                             var e = new ParticleEffect[148];
-                                            var ret = FindRet(ArrowS, arrow.Position);
-                                            PrintError("second");
+                                            var ret = FindRet(_arrowS, arrow.Position);
                                             for (var z = 1; z <= 147; z++)
                                             {
-                                                var p = FindVector(ArrowS, ret, 20*z + 60);
+                                                var p = FindVector(_arrowS, ret, 20*z + 60);
                                                 e[z] = new ParticleEffect(@"particles\ui_mouseactions\draw_commentator.vpcf", p);
                                                 e[z].SetControlPoint(1, new Vector3(255, 255, 255));
                                                 e[z].SetControlPoint(0, p);
                                             }
                                             
                                             Utils.Sleep(300, "Arrow");
-                                            PrintError("third");
                                         }
                                     }
                                     break;
@@ -1117,7 +1114,7 @@ namespace Overlay_information
                 if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
                 {
                     clicked = !clicked;
-                    SaveLoadSysHelper.IniWriteValue("Booleans",description,clicked.ToString());
+                    //SaveLoadSysHelper.IniWriteValue("Booleans",description,clicked.ToString());
                     Utils.Sleep(250, "ClickButtonCd");
                 }
                 var newColor = isIn
