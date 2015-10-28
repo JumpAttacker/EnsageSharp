@@ -19,7 +19,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver =  "0.8";
+        private const string Ver =  "0.8b";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool _isOpen;
@@ -850,15 +850,18 @@ namespace Overlay_information
                                 .GetEntities<Unit>(
                                     ).FirstOrDefault(x => ((x is Hero && !x.IsIllusion) || (x is Creep && x.IsSpawned)) && x.IsAlive &&
                                         x.IsVisible && _me.Distance2D(x)<=midas.CastRange && x.Team!=_me.Team);
-                        midas.UseAbility(creep);
-                        Utils.Sleep(250, "AutoItems");
+                        if (creep != null)
+                        {
+                            midas.UseAbility(creep);
+                            Utils.Sleep(250, "AutoItems");
+                        }
                         //PrintError("midas.CastRange: " + midas.CastRange);
                     }
                 }
                 if (AutoItemsPhase)
                 {
                     var phase = _me.FindItem("item_phase_boots");
-                    if (phase!=null && phase.CanBeCasted() && !_me.IsAttacking() && !_me.IsInvisible())
+                    if (phase!=null && phase.CanBeCasted() && !_me.IsStunned() && !_me.IsInvisible())
                     {
                         phase.UseAbility();
                         Utils.Sleep(250,"AutoItems");
