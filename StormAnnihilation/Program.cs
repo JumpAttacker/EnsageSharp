@@ -78,6 +78,7 @@ namespace StormAnnihilation
             if (!GoAction) return;
 
             var zip = me.Spellbook.Spell4;
+            if (zip==null || zip.Level==0) return;
             var inUltimate = me.Modifiers.Any(x => x.Name == "modifier_storm_spirit_ball_lightning");
             var inPassve = me.Modifiers.Any(x => x.Name == "modifier_storm_spirit_overload");
             var zipLevel = zip.Level;
@@ -145,7 +146,8 @@ namespace StormAnnihilation
 
             #endregion
 
-            _totalDamage = (int)(damage * distance);
+            _totalDamage = (int) (damage * distance);
+            _totalDamage = (int) EnemyTargetHero.DamageTaken(_totalDamage, DamageType.Magical, me);
 
             if (enemyHealth < _totalDamage) return; //target ll die only from ultimate
 
