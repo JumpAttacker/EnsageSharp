@@ -19,7 +19,7 @@ namespace Overlay_information
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private const string Ver =  "0.8b";
+        private const string Ver =  "0.8c";
         private static Vector2 _screenSizeVector2;
         private static ScreenSizer _drawHelper;
         private static bool _isOpen;
@@ -445,7 +445,8 @@ namespace Overlay_information
                 _screenSizeVector2 = new Vector2(Drawing.Width, Drawing.Height);
                 PrintSuccess(string.Format(">> OI: init screen size: {0}x{1} -> {2}", _screenSizeVector2.X,
                     _screenSizeVector2.Y, (int) Math.Floor((decimal) (_screenSizeVector2.X/_screenSizeVector2.Y*100))));
-                switch ((int) Math.Floor((decimal) (_screenSizeVector2.X/_screenSizeVector2.Y*100)))
+                _drawHelper = new ScreenSizer(494 - 439, 885 - 713, 7, 35, 439, new Vector2(Drawing.Width-100, 50));
+                /*switch ((int) Math.Floor((decimal) (_screenSizeVector2.X/_screenSizeVector2.Y*100)))
                 {
                     case 177:
                         _drawHelper = _screenSizeVector2.X == 1600
@@ -469,8 +470,10 @@ namespace Overlay_information
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
                         break;
                     case 160:
-                        _drawHelper = new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49));
-                            //1680 x 1050
+                        _drawHelper = _screenSizeVector2.X == 1680
+                            ? new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49))  //1680 x 1050
+                            : new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49)); //1280 x 800
+                            
                         break;
                     case 133:
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
@@ -481,7 +484,7 @@ namespace Overlay_information
                     default:
                         _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
                         break;
-                }
+                }*/
             }
 
             #endregion
@@ -533,27 +536,27 @@ namespace Overlay_information
                         var v = ObjectMgr.GetPlayerById(i).Hero;
                         if (OverlayOnlyOnEnemy && v.Team == _me.Team) continue;
                         if (v == null || !v.IsAlive) continue;
-                        var initPos = i >= 5
+                        /*var initPos = i >= 5
                             ? (_drawHelper.RangeBetween + _drawHelper.FloatRange*i) + _drawHelper.Space
                             : (_drawHelper.RangeBetween + _drawHelper.FloatRange*i);
                         var healthDelta = new Vector2((float) v.Health*_drawHelper.FloatRange/v.MaximumHealth, 0);
-                        var manaDelta = new Vector2(v.Mana*_drawHelper.FloatRange/v.MaximumMana, 0);
+                        var manaDelta = new Vector2(v.Mana*_drawHelper.FloatRange/v.MaximumMana, 0);*/
 
+                        var pos = HUDInfo.GetTopPanelPosition(v);
+                        var sizeX = (float)HUDInfo.GetTopPanelSizeX(v);
+                        var sizeY = (float)HUDInfo.GetTopPanelSizeY(v);
+                        var healthDelta = new Vector2(v.Health * sizeX / v.MaximumHealth, 0);
+                        var manaDelta = new Vector2(v.Mana * sizeX / v.MaximumMana, 0);
+                        const int height = 7;
                         #endregion
 
                         #region ShowHealthOnTopPanel
 
                         if (ShowHealthOnTopPanel)
                         {
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1),
-                                new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
-                                Color.Red);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1),
-                                healthDelta + new Vector2(0, _drawHelper.Height),
-                                Color.Green);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1),
-                                new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
-                                Color.Black, true);
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + 1), new Vector2(sizeX, height), new Color(255, 0, 0, 255));
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + 1), new Vector2(healthDelta.X, height), new Color(0, 255, 0, 255));
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + 1), new Vector2(sizeX, height), Color.Black, true);
                         }
 
                         #endregion
@@ -562,13 +565,9 @@ namespace Overlay_information
 
                         if (ShowManaOnTopPanel)
                         {
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height),
-                                new Vector2(_drawHelper.FloatRange, _drawHelper.Height), Color.Gray);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height),
-                                manaDelta + new Vector2(0, _drawHelper.Height), Color.Blue);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height),
-                                new Vector2(_drawHelper.FloatRange, _drawHelper.Height),
-                                Color.Black, true);
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Gray);
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(manaDelta.X, height), new Color(0, 0, 255, 255));
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Black, true);
                         }
 
                         #endregion
@@ -782,16 +781,13 @@ namespace Overlay_information
                         {
                             var spellDelta =
                                 new Vector2(
-                                    spells[counter].Cooldown*_drawHelper.FloatRange/spells[counter].CooldownLength, 0);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2),
-                                new Vector2(_drawHelper.FloatRange, _drawHelper.Height), Color.Gray);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2),
-                                spellDelta + new Vector2(0, _drawHelper.Height), Color.Yellow);
-                            Drawing.DrawRect(new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2),
-                                new Vector2(_drawHelper.FloatRange, _drawHelper.Height), Color.Black, true);
+                                    spells[counter].Cooldown * sizeX / spells[counter].CooldownLength, 0);
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(sizeX, height), Color.Gray);
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(spellDelta.X, height), Color.Yellow);
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(sizeX, height), Color.Black, true);
                             var text = string.Format("{0:0.}", spells[counter].Cooldown);
                             var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200), FontFlags.None);
-                            var textPos = (new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2) +
+                            var textPos = (pos + new Vector2(0, sizeY + height * 2)+
                                            new Vector2(textSize.X/2 + 5, -textSize.Y/2 + 10));
                             if (ShowCooldownOnTopPanelLikeText)
                             {
