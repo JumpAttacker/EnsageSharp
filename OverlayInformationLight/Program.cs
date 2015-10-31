@@ -18,7 +18,7 @@ namespace OverlayInformationLight
 
         private static bool _loaded;
         private static Hero _me;
-        private const string Ver = "0.9b light";
+        private const string Ver = "0.9c light";
         private static ScreenSizer _drawHelper;
         private static bool _isOpen;
         private static bool _leftMouseIsPress;
@@ -43,6 +43,7 @@ namespace OverlayInformationLight
         public static bool AutoItemsMidas = true;
         public static bool AutoItemsPhase = true;
         public static bool AutoItemsStick = true;
+        
         //=====================================
         private static readonly ShowMeMoreHelper[] ShowMeMoreH = new ShowMeMoreHelper[5];
 
@@ -52,6 +53,8 @@ namespace OverlayInformationLight
         private static readonly Dictionary<Unit, ParticleEffect>[] Eff = new Dictionary<Unit, ParticleEffect>[141];
         private static readonly List<Unit> InSystem = new List<Unit>();
         private static Vector3 _arrowS;
+        /*private static Unit Bara;
+        private static Vector3 BaraStartPos;*/
         //=====================================
         //private static readonly InitHelper SaveLoadSysHelper = new InitHelper("C:"+ "\\jOverlay.ini");
         //=====================================
@@ -309,8 +312,18 @@ namespace OverlayInformationLight
                         {
 
                         }
-
                     }
+                    /*if (t.DayVision == 0 && !find)
+                    {
+                        Bara = t;
+                        find = true;
+                        BaraStartPos=Bara.Position;
+                    }
+                    else if (!find)
+                    {
+                        Bara = null;
+                        BaraStartPos=new Vector3(0,0,0);
+                    }*/
                 }
             }
 
@@ -891,11 +904,42 @@ namespace OverlayInformationLight
                 Drawing.DrawRect(pos + new Vector2(0, sizeY+1), new Vector2(sizeX, height), new Color(255, 0, 0, 255));
                 Drawing.DrawRect(pos + new Vector2(0, sizeY+1), new Vector2(healthDelta.X, height), new Color(0, 255, 0, 255));
                 Drawing.DrawRect(pos + new Vector2(0, sizeY+1), new Vector2(sizeX, height), Color.Black, true);
-
+                /*var text= string.Format("{0} / {1}", (int)v.Health, (int)v.MaximumHealth);
+                var textSize = Drawing.MeasureText(text, "Arial", new Vector2(sizeY, sizeX), FontFlags.AntiAlias);
+                var textPos = pos + new Vector2(0, sizeY + 1) + new Vector2(sizeX/2 - textSize.X/2, -textSize.Y + 2);
+                Drawing.DrawText(
+                    text,
+                    textPos,
+                    new Vector2(sizeY, sizeX),
+                    Color.White,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);*/
                 Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Gray);
                 Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(manaDelta.X, height), new Color(0, 0, 255, 255));
                 Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Black, true);
 
+                var mod = v.Modifiers.Any(x => x.Name == "modifier_spirit_breaker_charge_of_darkness_vision");
+                if (mod/* && Bara!=null*/)
+                {
+                    /*Vector2 vPos;
+                    if (Drawing.WorldToScreen(v.Position, out vPos))
+                    {
+                        Vector2 targetPos;
+                        if (Drawing.WorldToScreen(Bara.Position, out targetPos))
+                        {
+                            Drawing.DrawLine(vPos,targetPos,Color.AliceBlue);
+                        }
+                    }
+                    var dist = Bara.Distance2D(v);
+                    var startDist = v.Distance2D(BaraStartPos);
+                    var spellDelta =
+                                new Vector2(
+                                    dist * sizeX / startDist, 0);
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(sizeX, height), Color.Gray);
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(spellDelta.X, height), Color.Yellow);
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(sizeX, height), Color.Black, true);*/
+                    var textPos = (pos + new Vector2(0, sizeY + height * 2));
+                    Drawing.DrawText("Spirit Breaker", textPos, new Vector2(15, 150), Color.White, FontFlags.AntiAlias | FontFlags.DropShadow);
+                }
                 #region ShowMeMore
 
                 if (ShowMeMore && v.Team != _me.Team)
@@ -933,6 +977,7 @@ namespace OverlayInformationLight
                             }
                             break;
                         case ClassID.CDOTA_Unit_Hero_SpiritBreaker:
+                            
                             break;
                         case ClassID.CDOTA_Unit_Hero_Windrunner:
                             if (true) //(Utils.SleepCheck("ArrowWindRun"))
