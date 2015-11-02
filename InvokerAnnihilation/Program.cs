@@ -27,7 +27,9 @@ namespace Invorker
         private static byte _balstStage = 1;
         private static Ability _spellForCast;
         private static bool _startInitSpell;
+        private static bool SmartSphere=true;
         private static Vector2 _sizer = new Vector2(265, 300);
+        private static NetworkActivity LastAct=NetworkActivity.Idle;
         #endregion
 
 
@@ -37,10 +39,31 @@ namespace Invorker
             _loaded = false;
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnWndProc += Game_OnWndProc;
+            Player.OnExecuteOrder += Player_OnExecuteAction;
             /*Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;*/
+        }
+        static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
+        {
+            if (args.Order != Order.AttackTarget && args.Order != Order.MoveLocation && _inAction && !SmartSphere) return;
+            var me = sender.Hero;
+            var quas = me.Spellbook.SpellQ;
+            var wex = me.Spellbook.SpellW;
+            var exort = me.Spellbook.SpellE;
+            if (args.Order == Order.AttackTarget && me.Distance2D(args.Target)<=650)
+            {
+                exort.UseAbility();
+                exort.UseAbility();
+                exort.UseAbility();
+                Utils.Sleep(200, "act");
+                return;
+            }
+            /*wex.UseAbility();
+            wex.UseAbility();
+            wex.UseAbility();*/
+
         }
         struct ComboStruct
         {
@@ -172,6 +195,8 @@ namespace Invorker
                     new Color(200, 0, 0, 100), "Tornado > EMP > Blast");
                 DrawButton(startPos + new Vector2(10, 210), 50, 50, 4, true, new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Tornado > EMP > Ica Wall");
+                DrawButton(startPos + new Vector2(_sizer.X-22, _sizer.Y-22), 20, 20, ref SmartSphere, true, Color.Green,
+                    Color.Red);
                 var spellName = "empty";
                 if (_inAction && _spellForCast != null)
                     spellName = _spellForCast.NetworkName.Substring(_spellForCast.NetworkName.LastIndexOf('_') + 1);
@@ -290,6 +315,41 @@ namespace Invorker
             if (Game.IsPaused)
             {
                 return;
+            }
+            //PrintInfo(me.NetworkActivity.ToString());
+            if (Utils.SleepCheck("act") && !_inAction && SmartSphere)
+            {
+                var quas = me.Spellbook.SpellQ;
+                var wex = me.Spellbook.SpellW;
+                var exort = me.Spellbook.SpellE;
+                if (wex!=null && wex.CanBeCasted())
+                {
+                    //if (me.NetworkActivity == NetworkActivity.Attack2 && me.NetworkActivity != LastAct)
+
+                    if ((me.NetworkActivity == NetworkActivity.Attack || me.NetworkActivity == NetworkActivity.Attack2) &&
+                        me.NetworkActivity != LastAct)
+                    {
+                        //exort.UseAbility();
+                        //exort.UseAbility();
+                        //exort.UseAbility();
+                        //Utils.Sleep(me.AttackSpeedValue+2000, "act");
+                    }
+                    //else if ((me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != LastAct))
+                    else if (me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != LastAct)
+                    {
+                        wex.UseAbility();
+                        wex.UseAbility();
+                        wex.UseAbility();
+                    }
+                    else if (me.NetworkActivity == NetworkActivity.Idle && me.NetworkActivity != LastAct)
+                    {
+                        /*quas.UseAbility();
+                    quas.UseAbility();
+                    quas.UseAbility();
+                    Utils.Sleep(150, "act");*/
+                    }
+                    LastAct = me.NetworkActivity;
+                }
             }
 
             #endregion
