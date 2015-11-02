@@ -47,7 +47,8 @@ namespace Invorker
         }
         static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
-            if (args.Order != Order.AttackTarget && args.Order != Order.MoveLocation && _inAction && !SmartSphere) return;
+            if (!SmartSphere) return;
+            if (args.Order != Order.AttackTarget && args.Order != Order.MoveLocation && _inAction) return;
             var me = sender.Hero;
             var quas = me.Spellbook.SpellQ;
             var wex = me.Spellbook.SpellW;
