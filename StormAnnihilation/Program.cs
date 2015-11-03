@@ -12,7 +12,7 @@ namespace StormAnnihilation
 
         private static bool _loaded;
         public static bool GoAction { get; private set; }
-        private const string Ver = "0.1";
+        private const string Ver = "0.1b";
         private const int WmKeyup = 0x0101;
         private static readonly int[] TravelSpeeds = { 1250, 1875, 2500 };
         private static readonly double[] DamagePerUnit = { 0.08, 0.12, 0.16 };
@@ -74,7 +74,7 @@ namespace StormAnnihilation
 
             #endregion
             EnemyTargetHero = ClosestToMouse(me);
-            if (EnemyTargetHero == null) return;
+            if (EnemyTargetHero == null && !me.IsAlive && me.IsSilenced() && me.IsHexed()) return;
             if (!GoAction) return;
 
             var zip = me.Spellbook.Spell4;
@@ -130,7 +130,7 @@ namespace StormAnnihilation
                 {
                     if (distance >= damageRadius)
                     {
-                        zip.UseAbility(Prediction.SkillShotXYZ(me, EnemyTargetHero, (float)zip.GetCastPoint(), travelSpeed,
+                        zip.UseAbility(Prediction.SkillShotXYZ(me, EnemyTargetHero, (float)zip.GetCastPoint(0), travelSpeed,
                             damageRadius)); //TODO mb more accurate
                         me.Attack(EnemyTargetHero, true);
                     }
