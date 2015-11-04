@@ -6,14 +6,14 @@ using Ensage.Common;
 using Ensage.Common.Extensions;
 using SharpDX;
 
-namespace Invorker
+namespace InvokerAnnihilation
 {
     internal class Program
     {
         #region Members
 
         private static bool _loaded;
-        private const string Ver = "0.1";
+        private const string Ver = "0.2";
         private const int WmKeyup = 0x0101;
         private static bool _leftMouseIsPress;
         private static int _combo;
@@ -27,9 +27,16 @@ namespace Invorker
         private static byte _balstStage = 1;
         private static Ability _spellForCast;
         private static bool _startInitSpell;
-        private static bool SmartSphere=true;
+        private static bool _smartSphere=true;
         private static Vector2 _sizer = new Vector2(265, 300);
-        private static NetworkActivity LastAct=NetworkActivity.Idle;
+        private static NetworkActivity _lastAct=NetworkActivity.Idle;
+
+        public static byte BalstStage
+        {
+            get { return _balstStage; }
+            set { _balstStage = value; }
+        }
+
         #endregion
 
 
@@ -47,7 +54,7 @@ namespace Invorker
         }
         static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
-            if (!SmartSphere) return;
+            if (!_smartSphere) return;
             if (args.Order != Order.AttackTarget && args.Order != Order.MoveLocation && _inAction) return;
             var me = sender.Hero;
             var quas = me.Spellbook.SpellQ;
@@ -168,8 +175,8 @@ namespace Invorker
 
             if (_showMenu)
             {
-                _sizer.X += 1;
-                _sizer.Y += 1;
+                _sizer.X += 4;
+                _sizer.Y += 4;
                 _sizer.X = Math.Min(_sizer.X, maxSize.X);
                 _sizer.Y = Math.Min(_sizer.Y, maxSize.Y);
 
@@ -196,7 +203,7 @@ namespace Invorker
                     new Color(200, 0, 0, 100), "Tornado > EMP > Blast");
                 DrawButton(startPos + new Vector2(10, 210), 50, 50, 4, true, new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Tornado > EMP > Ica Wall");
-                DrawButton(startPos + new Vector2(_sizer.X-22, _sizer.Y-22), 20, 20, ref SmartSphere, true, Color.Green,
+                DrawButton(startPos + new Vector2(_sizer.X-22, _sizer.Y-22), 20, 20, ref _smartSphere, true, Color.Green,
                     Color.Red);
                 var spellName = "empty";
                 if (_inAction && _spellForCast != null)
@@ -213,8 +220,8 @@ namespace Invorker
             }
             else
             {
-                _sizer.X -= 1;
-                _sizer.Y -= 1;
+                _sizer.X -= 4;
+                _sizer.Y -= 4;
                 _sizer.X = Math.Max(_sizer.X, 20);
                 _sizer.Y = Math.Max(_sizer.Y, 0);
                 Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
@@ -236,7 +243,7 @@ namespace Invorker
             var me = ObjectMgr.LocalHero;
             if (!_loaded)
             {
-                if (!Game.IsInGame || me == null || me.ClassID != ClassID.CDOTA_Unit_Hero_Invoker)
+                if (!Game.IsInGame || me == null/* || me.ClassID != ClassID.CDOTA_Unit_Hero_Invoker*/)
                 {
                     return;
                 }
@@ -318,43 +325,49 @@ namespace Invorker
                 return;
             }
             //PrintInfo(me.NetworkActivity.ToString());
-            if (Utils.SleepCheck("act") && !_inAction && SmartSphere)
+            if (Utils.SleepCheck("act") && !_inAction && _smartSphere)
             {
                 var quas = me.Spellbook.SpellQ;
                 var wex = me.Spellbook.SpellW;
                 var exort = me.Spellbook.SpellE;
-                if (wex!=null && wex.CanBeCasted())
-                {
-                    //if (me.NetworkActivity == NetworkActivity.Attack2 && me.NetworkActivity != LastAct)
+                //if (me.NetworkActivity == NetworkActivity.Attack2 && me.NetworkActivity != LastAct)
 
-                    if ((me.NetworkActivity == NetworkActivity.Attack || me.NetworkActivity == NetworkActivity.Attack2) &&
-                        me.NetworkActivity != LastAct)
-                    {
-                        //exort.UseAbility();
-                        //exort.UseAbility();
-                        //exort.UseAbility();
-                        //Utils.Sleep(me.AttackSpeedValue+2000, "act");
-                    }
-                    //else if ((me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != LastAct))
-                    else if (me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != LastAct)
-                    {
-                        wex.UseAbility();
-                        wex.UseAbility();
-                        wex.UseAbility();
-                    }
-                    else if (me.NetworkActivity == NetworkActivity.Idle && me.NetworkActivity != LastAct)
-                    {
-                        /*quas.UseAbility();
-                    quas.UseAbility();
-                    quas.UseAbility();
-                    Utils.Sleep(150, "act");*/
-                    }
-                    LastAct = me.NetworkActivity;
+                if ((me.NetworkActivity == NetworkActivity.Attack || me.NetworkActivity == NetworkActivity.Attack2) &&
+                    me.NetworkActivity != _lastAct)
+                {
+                    //exort.UseAbility();
+                    //exort.UseAbility();
+                    //exort.UseAbility();
+                    //Utils.Sleep(me.AttackSpeedValue+2000, "act");
                 }
+                //else if ((me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != LastAct))
+                else if (me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != _lastAct && !me.IsInvisible())
+                {
+                    if (wex != null && wex.Level > quas.Level && wex.CanBeCasted())
+                    {
+                        wex.UseAbility();
+                        wex.UseAbility();
+                        wex.UseAbility();
+                    }
+                    else if (quas!=null && quas.CanBeCasted())
+                    {
+                        quas.UseAbility();
+                        quas.UseAbility();
+                        quas.UseAbility();
+                    }
+                }
+                else if (me.NetworkActivity == NetworkActivity.Idle && me.NetworkActivity != _lastAct)
+                {
+                    /*quas.UseAbility();
+                quas.UseAbility();
+                quas.UseAbility();
+                Utils.Sleep(150, "act");*/
+                }
+                _lastAct = me.NetworkActivity;
             }
 
             #endregion
-
+            
             #region Get needed spells
 
             if (_startInitSpell && Utils.SleepCheck("GettingNeededSpells"))
@@ -469,7 +482,7 @@ namespace Invorker
             {
                 _initNewCombo = true;
                 _stage = 1;
-                PrintInfo("Starting new combo! " + string.Format("[{0}]", _combo + 1));
+                PrintInfo("Starting new combo! " + string.Format("[{0}] target: {1}", _combo + 1, target.Name));
             }
             if (!Utils.SleepCheck("StageCheck")) return;
             #endregion
@@ -480,12 +493,13 @@ namespace Invorker
             {
                 PrintInfo(s.Name);
             }*/
+            
             switch (_stage)
             {
                 case 1:
                     if (Combos[_combo].CheckEul())
                     {
-                        if (eul == null || !eul.CanBeCasted(target)) return;
+                        if (eul == null || eul.AbilityState != AbilityState.Ready) return;
                         eul.UseAbility(target);
                         _stage++;
                         Utils.Sleep(250, "StageCheck");
@@ -500,7 +514,7 @@ namespace Invorker
                     _spellForCast = Combos[_combo].GetComboAbilities()[_stage - 2];
                     if (_spellForCast != null)
                     {
-                        if (!_spellForCast.CanBeCasted())
+                        if (_spellForCast.AbilityState != AbilityState.Ready)
                         {
                             PrintInfo(string.Format("spell {0} cant be casted, go next [{1}]", _spellForCast.Name, _stage));
                             _stage++;
