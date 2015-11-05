@@ -13,13 +13,13 @@ namespace InvokerAnnihilation
         #region Members
 
         private static bool _loaded;
-        private const string Ver = "0.2";
+        private const string Ver = "0.3";
         private const int WmKeyup = 0x0101;
         private static bool _leftMouseIsPress;
         private static int _combo;
         private static bool _showMenu = true;
         //private static readonly SpellStruct[] Spells = new SpellStruct[12];
-        private static readonly ComboStruct[] Combos = new ComboStruct[5];
+        private static readonly ComboStruct[] Combos = new ComboStruct[6];
         private static bool _inAction;
         private static bool _initNewCombo;
         private static byte _stage;
@@ -165,10 +165,11 @@ namespace InvokerAnnihilation
         private static void Drawing_OnDraw(EventArgs args)
         {
             var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer)
+            if (player == null || player.Team == Team.Observer || !_loaded)
             {
                 return;
             }
+            if (ObjectMgr.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_Invoker) return;
             var startPos = new Vector2(10, 200);
             var maxSize = new Vector2(265, 300);
 
@@ -193,16 +194,19 @@ namespace InvokerAnnihilation
                 Tornado > EMP > Blast
                 Tornado > EMP > Ica Wall
                  */
-                DrawButton(startPos + new Vector2(10, 10), 50, 50, 0, true, new Color(0, 200, 150),
+                var boxSize = 20;
+                DrawButton(startPos + new Vector2(10, 10), boxSize, boxSize, 0, true, new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Eul > SS > Meteor > Blast > cSnap > fg");
-                DrawButton(startPos + new Vector2(10, 60), 50, 50, 1, true, new Color(0, 200, 150),
+                DrawButton(startPos + new Vector2(10, 30), boxSize, boxSize, 1, true, new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Tornado > EMP > Meteor > Blast");
-                DrawButton(startPos + new Vector2(10, 110), 50, 50, 2, true, new Color(0, 200, 150),
+                DrawButton(startPos + new Vector2(10, 50), boxSize, boxSize, 2, true, new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Tornado > Meteor > Blast");
-                DrawButton(startPos + new Vector2(10, 160), 50, 50, 3, true, new Color(0, 200, 150),
+                DrawButton(startPos + new Vector2(10, 70), boxSize, boxSize, 3, true, new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Tornado > EMP > Blast");
-                DrawButton(startPos + new Vector2(10, 210), 50, 50, 4, true, new Color(0, 200, 150),
+                DrawButton(startPos + new Vector2(10, 90), boxSize, boxSize, 4, true, new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Tornado > EMP > Ica Wall");
+                DrawButton(startPos + new Vector2(10, 110), boxSize, boxSize, 5, true, new Color(0, 200, 150),
+                    new Color(200, 0, 0, 100), "Tornado > SunStrike > Ica Wall");
                 DrawButton(startPos + new Vector2(_sizer.X-22, _sizer.Y-22), 20, 20, ref _smartSphere, true, Color.Green,
                     Color.Red);
                 var spellName = "empty";
@@ -243,7 +247,7 @@ namespace InvokerAnnihilation
             var me = ObjectMgr.LocalHero;
             if (!_loaded)
             {
-                if (!Game.IsInGame || me == null/* || me.ClassID != ClassID.CDOTA_Unit_Hero_Invoker*/)
+                if (!Game.IsInGame || me == null || me.ClassID != ClassID.CDOTA_Unit_Hero_Invoker)
                 {
                     return;
                 }
@@ -302,6 +306,7 @@ namespace InvokerAnnihilation
                 Combos[2] = new ComboStruct(tornado, chaosmeteor, deafblast, null, null);
                 Combos[3] = new ComboStruct(tornado, emp, deafblast, null, null);
                 Combos[4] = new ComboStruct(tornado, emp, icewall, null, null);
+                Combos[5] = new ComboStruct(tornado, ss, icewall, null, null);
                 PrintSuccess(string.Format("> Invorker Loaded v{0}", Ver));
                 PrintInfo("===============Combo selection===============");
                 PrintInfo(string.Format("Init new combo--> {0}", Combos[0]));
@@ -309,6 +314,7 @@ namespace InvokerAnnihilation
                 PrintInfo(string.Format("Init new combo--> {0}", Combos[2]));
                 PrintInfo(string.Format("Init new combo--> {0}", Combos[3]));
                 PrintInfo(string.Format("Init new combo--> {0}", Combos[4]));
+                PrintInfo(string.Format("Init new combo--> {0}", Combos[5]));
                 PrintInfo("============================================");
 
             }
@@ -466,6 +472,8 @@ namespace InvokerAnnihilation
 
             var eul = me.FindItem("item_cyclone");
             var dagger = me.FindSpell("item_blink");
+            var refresher = me.FindItem("item_refresher");
+
 
             var ss = me.FindSpell("invoker_sun_strike");
             var coldsnap = me.FindSpell("invoker_cold_snap");
@@ -520,14 +528,14 @@ namespace InvokerAnnihilation
                             _stage++;
                             return;
                         }
-                        if (Equals(active1, _spellForCast) || Equals(active2, _spellForCast))
+                        if (_spellForCast.CanBeCasted())
                         {
                             if (Combos[_combo].CheckEul())
                             {
                                 var eulmodif = target.Modifiers.FirstOrDefault(x => x.Name == "modifier_eul_cyclone" || x.Name == "modifier_invoker_tornado");
                                 if (Equals(_spellForCast, deafblast))
                                 {
-                                    if (eulmodif != null && eulmodif.RemainingTime <= me.Distance2D(target) / 1100 - .1 - Game.Ping / 1000)
+                                    if (eulmodif != null && eulmodif.RemainingTime <= me.Distance2D(target) / 1100  + Game.Ping / 1000)
                                     {
                                         UseSpell(_spellForCast, target);
                                         _stage++;
@@ -539,20 +547,6 @@ namespace InvokerAnnihilation
                                         _stage++;
                                         Utils.Sleep(250, "StageCheck");
                                     }
-                                    /*
-                                    if (_balstStage == 1 && Utils.SleepCheck("blast"))
-                                    {
-                                        Utils.Sleep(me.Distance2D(target)/1100, "blast");
-                                        _balstStage = 2;
-                                    }
-                                    else if (Utils.SleepCheck("blast"))
-                                    {
-                                        UseSpell(spellForCast, target);
-                                        _stage++;
-                                        Utils.Sleep(250, "StageCheck");
-                                        _balstStage = 1;
-                                    }
-                                    */
                                 }
                                 else if (!Equals(_spellForCast, ss) && !Equals(_spellForCast, chaosmeteor))
                                 {
@@ -570,6 +564,33 @@ namespace InvokerAnnihilation
                                 if (eulmodif != null && eulmodif.RemainingTime < timing)
                                 {
                                     UseSpell(_spellForCast, target);
+                                    _stage++;
+                                    Utils.Sleep(250, "StageCheck");
+                                }
+                            }
+                            else if (Equals(_spellForCast, icewall))
+                            {
+                                var dist = me.Distance2D(target) <= 300;
+                                if (!dist)
+                                {
+                                    if (me.CanMove() && Utils.SleepCheck("icewallmove"))
+                                    {
+                                        var point =
+                                            new Vector3(
+                                                (float) (target.Position.X -
+                                                         200*
+                                                         Math.Cos(me.FindAngleBetween(target.Position, true))),
+                                                (float) (target.Position.Y -
+                                                         200*
+                                                         Math.Sin(me.FindAngleBetween(target.Position, true))), 0);
+                                        me.Move(point);
+                                        Utils.Sleep(300, "icewallmove");
+                                    }
+                                
+                                }
+                                else
+                                {
+                                    _spellForCast.UseAbility();
                                     _stage++;
                                     Utils.Sleep(250, "StageCheck");
                                 }
@@ -612,28 +633,6 @@ namespace InvokerAnnihilation
                                     _stage++;
                                     Utils.Sleep(250, "StageCheck");
                                 }
-                                /*
-                                if (Equals(spellForCast, deafblast))
-                                {
-                                    if (_balstStage == 1 && Utils.SleepCheck("blast"))
-                                    {
-                                        Utils.Sleep(me.Distance2D(target) / 1100, "blast");
-                                        _balstStage = 2;
-                                    }
-                                    else if (Utils.SleepCheck("blast"))
-                                    {
-                                        UseSpell(spellForCast, target);
-                                        _stage++;
-                                        Utils.Sleep(250, "StageCheck");
-                                        _balstStage = 1;
-                                    }
-                                }
-                                else
-                                {
-                                    UseSpell(spellForCast, target);
-                                    _stage++;
-                                    Utils.Sleep(250, "StageCheck");
-                                }*/
                             }
 
                         }
@@ -649,7 +648,7 @@ namespace InvokerAnnihilation
                                     if (spells[1] != null) spells[1].UseAbility();
                                     if (spells[2] != null) spells[2].UseAbility();
                                     invoke.UseAbility();
-                                    Utils.Sleep(Game.Ping + 25, "StageCheck");
+                                    Utils.Sleep(70, "StageCheck");
                                 }
                             }
                             else
@@ -664,6 +663,12 @@ namespace InvokerAnnihilation
                         }
                     }
                     break;
+            }
+            if (refresher != null && refresher.AbilityState == AbilityState.Ready && _stage>=5)
+            {
+                refresher.UseAbility();
+                _stage = 3;
+
             }
         }
         private static void UseSpell(Ability spellForCast, Hero target)
