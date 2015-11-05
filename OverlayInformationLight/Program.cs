@@ -18,7 +18,7 @@ namespace OverlayInformationLight
 
         private static bool _loaded;
         private static Hero _me;
-        private const string Ver = "0.9c light";
+        private const string Ver = "0.9d light";
         private static ScreenSizer _drawHelper;
         private static bool _isOpen;
         private static bool _leftMouseIsPress;
@@ -43,7 +43,7 @@ namespace OverlayInformationLight
         public static bool AutoItemsMidas = true;
         public static bool AutoItemsPhase = true;
         public static bool AutoItemsStick = true;
-        
+        private static readonly Dictionary<Unit, ParticleEffect> BaraIndicator = new Dictionary<Unit, ParticleEffect>();
         //=====================================
         private static readonly ShowMeMoreHelper[] ShowMeMoreH = new ShowMeMoreHelper[5];
 
@@ -885,13 +885,17 @@ namespace OverlayInformationLight
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!Game.IsInGame || _me == null || !_loaded || Game.IsPaused) return;
-            if (_players == null || _players.Count() < 10)
+            /*if (_players == null || _players.Count() < 10)
                 {
                     _players = ObjectMgr.GetEntities<Player>().Where(x => x != null && x.Hero != null && x.Hero.IsAlive);
                 }
-            var enumerable = _players as Player[] ?? _players.ToArray();
-            foreach (var v in enumerable.Select(x => x.Hero))
+            var enumerable = _players as Player[] ?? _players.ToArray();*/
+            //foreach (var s in enumerable)
+            for (uint i = 0; i < 10; i++)
             {
+                Hero v;
+                try{v = ObjectMgr.GetPlayerById(i).Hero;}catch{continue;}
+                if (v==null) continue;
                 var pos = HUDInfo.GetTopPanelPosition(v);
                 var sizeX = (float)HUDInfo.GetTopPanelSizeX(v);
                 var sizeY = (float)HUDInfo.GetTopPanelSizeY(v);
@@ -916,11 +920,12 @@ namespace OverlayInformationLight
                 Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Gray);
                 Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(manaDelta.X, height), new Color(0, 0, 255, 255));
                 Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Black, true);
-
-                var mod = v.Modifiers.Any(x => x.Name == "modifier_spirit_breaker_charge_of_darkness_vision");
-                if (mod/* && Bara!=null*/)
+                if (v.Team == _me.Team)
                 {
-                    /*Vector2 vPos;
+                    var mod = v.Modifiers.Any(x => x.Name == "modifier_spirit_breaker_charge_of_darkness_vision");
+                    if (mod /* && Bara!=null*/)
+                    {
+                        /*Vector2 vPos;
                     if (Drawing.WorldToScreen(v.Position, out vPos))
                     {
                         Vector2 targetPos;
@@ -937,9 +942,33 @@ namespace OverlayInformationLight
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(sizeX, height), Color.Gray);
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(spellDelta.X, height), Color.Yellow);
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(sizeX, height), Color.Black, true);*/
-                    var textPos = (pos + new Vector2(0, sizeY + height * 2));
-                    Drawing.DrawText("Spirit Breaker", textPos, new Vector2(15, 150), Color.White, FontFlags.AntiAlias | FontFlags.DropShadow);
+                        var textPos = (pos + new Vector2(0, sizeY + height*2));
+                        Drawing.DrawText("Spirit Breaker", textPos, new Vector2(15, 150), Color.White,
+                            FontFlags.AntiAlias | FontFlags.DropShadow);
+                        if (Equals(_me, v))
+                        {
+                            Drawing.DrawRect(new Vector2(0, 0), new Vector2(Drawing.Width, Drawing.Height),
+                                new Color(255, 0, 0, 2));
+                        }
+                        ParticleEffect eff;
+                        if (!BaraIndicator.TryGetValue(v, out eff))
+                        {
+                            eff = new ParticleEffect("particles/hw_fx/cursed_rapier.vpcf", v);
+                            eff.SetControlPointEntity(1,v);
+                            BaraIndicator.Add(v,eff);
+                        }
+                    }
+                    else
+                    {
+                        ParticleEffect eff;
+                        if (BaraIndicator.TryGetValue(v, out eff))
+                        {
+                            eff.Dispose();
+                            BaraIndicator.Remove(v);
+                        }
+                    }
                 }
+
                 #region ShowMeMore
 
                 if (ShowMeMore && v.Team != _me.Team)
@@ -947,10 +976,10 @@ namespace OverlayInformationLight
                     switch (v.ClassID)
                     {
                         case ClassID.CDOTA_Unit_Hero_Mirana:
-                            var arrow =
+                            /*var arrow =
                                 ObjectMgr.GetEntities<Unit>()
                                     .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
-                                /* && x.Team!=_me.Team*/);
+                                /* && x.Team!=_me.Team);
 
                             if (arrow != null)
                             {
@@ -974,7 +1003,7 @@ namespace OverlayInformationLight
 
                                     Utils.Sleep(300, "Arrow");
                                 }
-                            }
+                            }*/
                             break;
                         case ClassID.CDOTA_Unit_Hero_SpiritBreaker:
                             
@@ -1099,6 +1128,7 @@ namespace OverlayInformationLight
                 effect.Dispose();
                 effect2.Dispose();
                 Effects1.Remove(unit);
+                Effects2.Remove(unit);
             }
         }
 
