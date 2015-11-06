@@ -13,7 +13,7 @@ namespace InvokerAnnihilation
         #region Members
 
         private static bool _loaded;
-        private const string Ver = "0.4b";
+        private const string Ver = "0.5";
         private const int WmKeyup = 0x0101;
         private static bool _leftMouseIsPress;
         private static int _combo;
@@ -35,7 +35,10 @@ namespace InvokerAnnihilation
         private static bool _autoMoveToTarget;
         private static bool _autoUseDagger;
         private static bool _extraMenu = true;
-
+        //============================================================
+        private static ulong _myKey='G';
+        private static bool _timetochange;
+        //============================================================
         public static byte BalstStage
         {
             get { return _balstStage; }
@@ -141,7 +144,12 @@ namespace InvokerAnnihilation
         {
             if (Game.IsChatOpen)
                 return;
-            if (args.WParam == 'G')
+            if (_timetochange && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+            {
+                _timetochange = false;
+                _myKey = args.WParam;
+            }
+            if (args.WParam == _myKey)
             {
                 if (Game.IsKeyDown(0x11))
                 {
@@ -228,6 +236,9 @@ namespace InvokerAnnihilation
                     DrawButton(startPosExtraMEnu + new Vector2(10, 100), 100, 20, ref _autoUseDagger, true,
                         new Color(0, 200, 150),
                         new Color(200, 0, 0, 100), "Use Dagger");
+                    DrawButton(startPosExtraMEnu + new Vector2(10, _sizer.Y - 30), 100, 20, ref _timetochange, true,
+                        new Color(0, 200, 150),
+                        new Color(200, 0, 0, 100), "Change Hotkey");
                 }
                 DrawButton(startPos + new Vector2(_sizer.X - 22, _sizer.Y / 2 - _sizer.Y / 4), 30, _sizer.Y / 2, ref _extraMenu, true, new Color(0, 0, 0, 200),
                     new Color(0, 0, 0, 200));
@@ -241,8 +252,7 @@ namespace InvokerAnnihilation
                     string.Format("Status: [{0}] Current Spell [{1}] ", _inAction ? "ON" : "OFF", spellName),
                     startPos + new Vector2(10, 280), Color.White,
                     FontFlags.AntiAlias | FontFlags.DropShadow);
-                Drawing.DrawText(
-                    "ComboKey [G] PrepareKey [ctrl+G] ",
+                Drawing.DrawText(string.Format("ComboKey {0}  PrepareKey [ctrl+{0}]", (char)_myKey),
                     startPos + new Vector2(10, 265), Color.White,
                     FontFlags.AntiAlias | FontFlags.DropShadow);
 
