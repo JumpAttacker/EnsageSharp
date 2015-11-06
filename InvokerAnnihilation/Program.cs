@@ -13,7 +13,7 @@ namespace InvokerAnnihilation
         #region Members
 
         private static bool _loaded;
-        private const string Ver = "0.4";
+        private const string Ver = "0.4b";
         private const int WmKeyup = 0x0101;
         private static bool _leftMouseIsPress;
         private static int _combo;
@@ -517,6 +517,7 @@ namespace InvokerAnnihilation
                     if (Combos[_combo].GetComboAbilities().Length < _stage - 1)
                     {
                         me.Attack(target);
+                        Utils.Sleep(1000, "StageCheck");
                         return;
                     }
                     _spellForCast = Combos[_combo].GetComboAbilities()[_stage - 2];
