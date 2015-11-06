@@ -13,7 +13,7 @@ namespace InvokerAnnihilation
         #region Members
 
         private static bool _loaded;
-        private const string Ver = "0.5";
+        private const string Ver = "0.5b";
         private const int WmKeyup = 0x0101;
         private static bool _leftMouseIsPress;
         private static int _combo;
@@ -461,6 +461,8 @@ namespace InvokerAnnihilation
             var dagger = me.FindItem("item_blink");
             var refresher = me.FindItem("item_refresher");
             var icewall = me.FindSpell("invoker_ice_wall");
+
+            var hex = me.FindItem("item_sheepstick");
             /*
             var ss = me.FindSpell("invoker_sun_strike");
             var coldsnap = me.FindSpell("invoker_cold_snap");
@@ -482,6 +484,7 @@ namespace InvokerAnnihilation
             if (!Utils.SleepCheck("StageCheck")) return;
             #endregion
 
+            
             /*var modif = target.Modifiers.Where(x=>x.IsDebuff);
             PrintInfo("===========================");
             foreach (var s in modif)
@@ -759,6 +762,11 @@ namespace InvokerAnnihilation
                 refresher.UseAbility();
                 _stage = 3;
 
+            }
+            if (_stage>2 && !target.IsHexed() && !target.IsStunned())
+            {
+                if (hex != null && hex.CanBeCasted(target))
+                    hex.UseAbility(target);
             }
         }
 
