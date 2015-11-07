@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common;
@@ -13,7 +12,7 @@ namespace Legion_Annihilation
         #region Members
         //============================================================
         private static bool _loaded;
-        private const string Ver = "0.1";
+        private const string Ver = "0.2";
         private const int WmKeyup = 0x0101;
         private static bool _leftMouseIsPress;
         private static bool _showMenu = true;
@@ -115,6 +114,7 @@ namespace Legion_Annihilation
                 _sizer.Y -= 4;
                 _sizer.X = Math.Max(_sizer.X, 20);
                 _sizer.Y = Math.Max(_sizer.Y, 0);
+                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
                 Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
                 DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
                     Color.Gray);
@@ -152,11 +152,11 @@ namespace Legion_Annihilation
 
             #region Lets combo
 
+            if (!_inAction) return;
             var target = ClosestToMouse(me);
-            if (_inAction && target != null && target.IsAlive)
-            {
+            if (target != null && target.IsAlive)
                 ComboInAction(me, target);
-            }
+
             #endregion
         }
 
@@ -200,25 +200,12 @@ namespace Legion_Annihilation
                 bkb = me.FindItem("item_black_king_bar");
             }
             var distance = me.Distance2D(target);
-            if (dagger != null && dagger.CanBeCasted())
+            if (distance >= 1150)
             {
-                if (distance <= 1150)
-                {
-                    if (!me.IsMagicImmune() && heal.CanBeCasted() && heal.ManaCost <= neededMana && _shoulUseHeal && distance >= 500)
-                    {
-                        heal.UseAbility(me);
-                        Utils.Sleep(500, "nextAction");
-                        return;
-                    }
-                    dagger.UseAbility(target.Position);
-                    Utils.Sleep(50, "nextAction");
-                    return;
-                }
                 me.Move(target.Position);
                 Utils.Sleep(200, "nextAction");
                 return;
             }
-            
             if (itemOnMySelf != null && _buffme)
             {
                 itemOnMySelf.UseAbility(me);
@@ -237,13 +224,36 @@ namespace Legion_Annihilation
                 Utils.Sleep(50, "nextAction");
                 return;
             }
+            
+            if (dagger != null && dagger.CanBeCasted())
+            {
+                if (!me.IsMagicImmune() && heal.CanBeCasted() && heal.ManaCost <= neededMana && _shoulUseHeal)
+                {
+                    heal.UseAbility(me);
+                    Utils.Sleep(500, "nextAction");
+                    return;
+                }
+                var point = new Vector3(
+                    (float)(target.Position.X - 60 * Math.Cos(me.FindAngleBetween(target.Position, true))),
+                    (float)(target.Position.Y - 60 * Math.Sin(me.FindAngleBetween(target.Position, true))),
+                    target.Position.Z);
+                dagger.UseAbility(point);
+                Utils.Sleep(50, "nextAction");
+                return;
+            }
+            if (distance>duel.CastRange)
+            {
+                me.Move(target.Position);
+                Utils.Sleep(200, "nextAction");
+                return;
+            }
             if (itemOnTarget != null && !dpActivated && _debuffenemy)
             {
                 itemOnTarget.UseAbility(target);
                 Utils.Sleep(50, "nextAction");
                 return;
             }
-            if (_shoulUseBkb && bkb != null)
+            if (_shoulUseBkb && bkb != null && bkb.CanBeCasted())
             {
                 bkb.UseAbility();
             }
@@ -260,7 +270,7 @@ namespace Legion_Annihilation
                     .Where(
                         x =>
                             x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible
-                            && x.Distance2D(mousePosition) <= range && !x.IsMagicImmune());
+                            && x.Distance2D(mousePosition) <= range);
             Hero[] closestHero = { null };
             foreach (var enemyHero in enemyHeroes.Where(enemyHero => closestHero[0] == null || closestHero[0].Distance2D(mousePosition) > enemyHero.Distance2D(mousePosition)))
             {
