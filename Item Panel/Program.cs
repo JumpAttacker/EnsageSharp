@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using Ensage;
@@ -12,7 +13,7 @@ namespace ItemPanel
         #region Members
         //============================================================
         private static bool _loaded;
-        private const string Ver = "0.2";
+        private const string Ver = "0.2b";
         private static bool _leftMouseIsPress;
         private static bool _showMenu = true;
         private static Vector2 _sizer = new Vector2(265, 300);
@@ -21,6 +22,7 @@ namespace ItemPanel
         private static readonly float Con = Math.Max(1, HUDInfo.ScreenSizeX() / 1600);
         //============================================================
         private static bool _moving;
+        private static readonly Dictionary<string, DotaTexture> TextureCache = new Dictionary<string, DotaTexture>();
         //============================================================
         #endregion
 
@@ -107,7 +109,7 @@ namespace ItemPanel
                     if (Heroes[num].Team == me.Team) continue;
 
                     Drawing.DrawRect(_startPos + new Vector2(5, 18*Con*(i + 1)), new Vector2(18*Con, 18*Con),
-                        Drawing.GetTexture(string.Format("materials/ensage_ui/miniheroes/{0}.vmat",
+                        GetTexture(string.Format("materials/ensage_ui/miniheroes/{0}.vmat",
                             Heroes[num].Name.Replace("npc_dota_hero_", ""))));
                     for (var i2 = 1; i2 <= 6; i2++)
                     {
@@ -135,7 +137,7 @@ namespace ItemPanel
                                 item.Name.Replace("item_", ""));
                         }
                         Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), new Vector2(32 * Con, 18 * Con),
-                            Drawing.GetTexture(texturename));
+                            GetTexture(texturename));
                         if (item == null) continue;
                         if (item.AbilityState == AbilityState.OnCooldown)
                         {
@@ -172,6 +174,12 @@ namespace ItemPanel
         {
             for (uint i = 0; i < 10; i++)
                 Heroes[i] = null;
+        }
+        private static DotaTexture GetTexture(string name)
+        {
+            if (TextureCache.ContainsKey(name)) return TextureCache[name];
+
+            return TextureCache[name] = Drawing.GetTexture(name);
         }
 
         #region Helpers
