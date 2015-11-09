@@ -111,7 +111,15 @@ namespace ItemPanel
                     for (var i2 = 1; i2 <= 6; i2++)
                     {
                         string texturename;
-                        var item = Heroes[num].Inventory.GetItem((ItemSlot)i2 - 1);
+                        Item item;
+                        try
+                        {
+                            item = Heroes[num].Inventory.GetItem((ItemSlot)i2 - 1);
+                        }
+                        catch
+                        {
+                            item = null;
+                        }
                         if (item == null)
                         {
                             texturename = "materials/ensage_ui/items/emptyitembg.vmat";
