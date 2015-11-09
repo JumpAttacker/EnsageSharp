@@ -56,6 +56,9 @@ namespace AutoDeward
 
             if (_player == null || _player.Team == Team.Observer)
                 return;
+
+            if (!_me.IsAlive)
+               return;
             var wards = ObjectMgr.GetEntities<Unit>()
                 .Where(
                     x =>
