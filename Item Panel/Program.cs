@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Drawing.Drawing2D;
+using System.Globalization;
 using Ensage;
 using Ensage.Common;
 using SharpDX;
@@ -10,7 +12,7 @@ namespace ItemPanel
         #region Members
         //============================================================
         private static bool _loaded;
-        private const string Ver = "0.1";
+        private const string Ver = "0.2";
         private static bool _leftMouseIsPress;
         private static bool _showMenu = true;
         private static Vector2 _sizer = new Vector2(265, 300);
@@ -49,8 +51,8 @@ namespace ItemPanel
                 {
                     return;
                 }
+                Flush();
                 _loaded = true;
-
                 PrintSuccess(string.Format("> ItemPanel Loaded v{0}", Ver));
             }
 
@@ -91,7 +93,7 @@ namespace ItemPanel
                 uint i = 0;
                 for (uint num = 0; num < 10; num++)
                 {
-                    if (Heroes[num] == null)
+                    if (Heroes[num] == null || !Heroes[num].IsValid)
                     {
                         try
                         {
@@ -102,7 +104,6 @@ namespace ItemPanel
                             continue;
                         }
                     }
-
                     if (Heroes[num].Team == me.Team) continue;
 
                     Drawing.DrawRect(_startPos + new Vector2(5, 18*Con*(i + 1)), new Vector2(18*Con, 18*Con),
@@ -111,7 +112,15 @@ namespace ItemPanel
                     for (var i2 = 1; i2 <= 6; i2++)
                     {
                         string texturename;
-                        var item = Heroes[num].Inventory.GetItem((ItemSlot)i2 - 1);
+                        Item item;
+                        try
+                        {
+                            item = Heroes[num].Inventory.GetItem((ItemSlot)i2 - 1);
+                        }
+                        catch (Exception)
+                        {
+                            item = null;
+                        }
                         if (item == null)
                         {
                             texturename = "materials/ensage_ui/items/emptyitembg.vmat";
@@ -127,6 +136,21 @@ namespace ItemPanel
                         }
                         Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), new Vector2(32 * Con, 18 * Con),
                             Drawing.GetTexture(texturename));
+                        if (item == null) continue;
+                        if (item.AbilityState == AbilityState.OnCooldown)
+                        {
+                            Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)),
+                                new Vector2((30 * Con)/2, (19 * Con)/2), new Color(255, 255, 255, 255));
+                            Drawing.DrawText(((int) item.Cooldown).ToString(CultureInfo.InvariantCulture),
+                                _startPos + new Vector2(25*Con*i2, 18*Con*(i + 1)), Color.Black,
+                                FontFlags.AntiAlias | FontFlags.DropShadow);
+                        }
+
+                        if (item.AbilityState == AbilityState.NotEnoughMana)
+                        {
+                            Drawing.DrawRect(_startPos + new Vector2(25*Con*i2, 18*Con*(i + 1)),
+                                new Vector2(32*Con, 18*Con), new Color(0, 0, 255, 50));
+                        }
                     }
                     i++;
                 }
@@ -142,6 +166,12 @@ namespace ItemPanel
                 DrawButton(_startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
                     Color.Gray);
             }
+        }
+
+        private static void Flush()
+        {
+            for (uint i = 0; i < 10; i++)
+                Heroes[i] = null;
         }
 
         #region Helpers
