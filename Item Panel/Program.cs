@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
 using System.Globalization;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using SharpDX;
@@ -13,7 +14,7 @@ namespace ItemPanel
         #region Members
         //============================================================
         private static bool _loaded;
-        private const string Ver = "0.2b";
+        private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         private static bool _leftMouseIsPress;
         private static bool _showMenu = true;
         private static Vector2 _sizer = new Vector2(265, 300);
@@ -92,37 +93,50 @@ namespace ItemPanel
                     string.Format("Item Panel v {0}", Ver),
                     _startPos + new Vector2(5, 5), Color.White,
                     FontFlags.AntiAlias | FontFlags.DropShadow);
-                uint i = 0;
-                for (uint num = 0; num < 10; num++)
-                {
-                    if (Heroes[num] == null || !Heroes[num].IsValid)
-                    {
-                        try
-                        {
-                            Heroes[num] = ObjectMgr.GetPlayerById(num).Hero;
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-                    }
-                    if (Heroes[num].Team == me.Team) continue;
+                DrawItems(me);
 
-                    Drawing.DrawRect(_startPos + new Vector2(5, 18*Con*(i + 1)), new Vector2(18*Con, 18*Con),
-                        GetTexture(string.Format("materials/ensage_ui/miniheroes/{0}.vmat",
-                            Heroes[num].Name.Replace("npc_dota_hero_", ""))));
-                    for (var i2 = 1; i2 <= 6; i2++)
+            }
+            else
+            {
+                _sizer.X -= 4;
+                _sizer.Y -= 4;
+                _sizer.X = Math.Max(_sizer.X, 20);
+                _sizer.Y = Math.Max(_sizer.Y, 0);
+                Drawing.DrawRect(_startPos, _sizer, new Color(0, 155, 255, 100));
+                Drawing.DrawRect(_startPos, _sizer, new Color(0, 0, 0, 255), true);
+                DrawButton(_startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
+                    Color.Gray);
+            }
+        }
+
+        private static void DrawItems(Hero me)
+        {
+
+            uint i = 0;
+            for (uint num = 0; num < 10; num++)
+            {
+                if (Heroes[num] == null || !Heroes[num].IsValid)
+                {
+                    try
+                    {
+                        Heroes[num] = ObjectMgr.GetPlayerById(num).Hero;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+                if (Heroes[num].Team == me.Team) continue;
+
+                Drawing.DrawRect(_startPos + new Vector2(5, 18 * Con * (i + 1)), new Vector2(18 * Con, 18 * Con),
+                    GetTexture(string.Format("materials/ensage_ui/miniheroes/{0}.vmat",
+                        Heroes[num].Name.Replace("npc_dota_hero_", ""))));
+                for (var i2 = 1; i2 <= 6; i2++)
+                {
+                    try
                     {
                         string texturename;
-                        Item item;
-                        try
-                        {
-                            item = Heroes[num].Inventory.GetItem((ItemSlot)i2 - 1);
-                        }
-                        catch (Exception)
-                        {
-                            item = null;
-                        }
+                        var item = Heroes[num].Inventory.GetItem((ItemSlot)i2 - 1);
                         if (item == null)
                         {
                             texturename = "materials/ensage_ui/items/emptyitembg.vmat";
@@ -139,34 +153,30 @@ namespace ItemPanel
                         Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), new Vector2(32 * Con, 18 * Con),
                             GetTexture(texturename));
                         if (item == null) continue;
-                        if (item.AbilityState == AbilityState.OnCooldown)
-                        {
-                            Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)),
-                                new Vector2((30 * Con)/2, (19 * Con)/2), new Color(255, 255, 255, 255));
-                            Drawing.DrawText(((int) item.Cooldown).ToString(CultureInfo.InvariantCulture),
-                                _startPos + new Vector2(25*Con*i2, 18*Con*(i + 1)), Color.Black,
-                                FontFlags.AntiAlias | FontFlags.DropShadow);
-                        }
+                        
 
                         if (item.AbilityState == AbilityState.NotEnoughMana)
                         {
-                            Drawing.DrawRect(_startPos + new Vector2(25*Con*i2, 18*Con*(i + 1)),
-                                new Vector2(32*Con, 18*Con), new Color(0, 0, 255, 50));
+                            Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)),
+                                new Vector2(23 * Con, 18 * Con), new Color(0, 0, 255, 75));
+                        }
+
+                        if (item.AbilityState == AbilityState.OnCooldown)
+                        {
+                            Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)),
+                                new Vector2((23 * Con), item.Cooldown / item.CooldownLength * (19 * Con)), new Color(255, 255, 255, 100));
+                            /*Drawing.DrawText(((int)item.Cooldown).ToString(CultureInfo.InvariantCulture),
+                                _startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), Color.Black,
+                                FontFlags.AntiAlias | FontFlags.DropShadow);*/
                         }
                     }
-                    i++;
+                    catch (Exception)
+                    {
+                        Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), new Vector2(32 * Con, 18 * Con),
+                        GetTexture("materials/ensage_ui/items/emptyitembg.vmat"));
+                    }
                 }
-            }
-            else
-            {
-                _sizer.X -= 4;
-                _sizer.Y -= 4;
-                _sizer.X = Math.Max(_sizer.X, 20);
-                _sizer.Y = Math.Max(_sizer.Y, 0);
-                Drawing.DrawRect(_startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(_startPos, _sizer, new Color(0, 0, 0, 255), true);
-                DrawButton(_startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
+                i++;
             }
         }
 
