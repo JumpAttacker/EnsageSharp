@@ -14,10 +14,26 @@ using SharpDX.Direct3D9;
 
 namespace OverlayInformationLight
 {
+    internal class DataMaster
+    {
+        public Hero Hero;
+        public float Health, Mana;
+        public Inventory Inv;
+
+        public DataMaster(Hero hero, float health, float mana, Inventory inv)
+        {
+            Hero = hero;
+            Health = health;
+            Mana = mana;
+            Inv = inv;
+        }
+    }
     internal class Program
     {
         #region Members
 
+        private static List<DataMaster> _data;
+        
         private static bool _loaded;
         private static Hero _me;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version+" light";
@@ -27,7 +43,9 @@ namespace OverlayInformationLight
         private static readonly Dictionary<Unit, ParticleEffect> Effects2 = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
         private static readonly ParticleEffect[] ArrowParticalEffects=new ParticleEffect[150];
-        private static readonly Dictionary<Hero, Ability> SearchAbilities = new Dictionary<Hero, Ability>();
+
+        private static readonly Dictionary<Hero, Ability> UltimateAbilities = new Dictionary<Hero, Ability>();
+
         //======================================
         public static bool ShowHealthOnTopPanel = true;
         public static bool ShowManaOnTopPanel = true;
@@ -40,6 +58,7 @@ namespace OverlayInformationLight
         public static bool AutoItemsMidas = true;
         public static bool AutoItemsPhase = true;
         public static bool AutoItemsStick = true;
+        public static bool ShowUltimateCd = true;
         private static readonly Dictionary<Unit, ParticleEffect> BaraIndicator = new Dictionary<Unit, ParticleEffect>();
         //=====================================
         private static readonly Dictionary<string, DotaTexture> TextureCache = new Dictionary<string, DotaTexture>();
@@ -76,7 +95,6 @@ namespace OverlayInformationLight
         private static void Main()
         {
             #region Init
-
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
             Drawing.OnDraw += Drawing_OnDraw;
@@ -213,7 +231,9 @@ namespace OverlayInformationLight
             }
 
             #endregion
-            
+
+            //_data = new List<DataMaster>();
+
             #region Show me more cast
             
             //List<Unit> dummy;
@@ -530,6 +550,8 @@ namespace OverlayInformationLight
                     DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowIllusions, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show Illusions");
                     pos += 22;
                     DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref DangItems, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Dangerous Items");
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowUltimateCd, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show ultimates");
                 }
             }
             else
@@ -540,7 +562,7 @@ namespace OverlayInformationLight
             }
             DrawButton(startLoc, _sizer.X, 30, ref _isOpen, true, new Color(0, 0, 0, 50), new Color(0, 0, 0, 125), "J-Overlay Light");
             #endregion
-
+            
             for (uint i = 0; i < 10; i++)
             {
                 #region Init
@@ -564,40 +586,6 @@ namespace OverlayInformationLight
 
                 #endregion
 
-                #region Dang Items
-
-                if (DangItems && v.Team != _me.Team && v.IsVisible)
-                {
-                    var invetory =
-                        v.Inventory.Items.Where(
-                            x =>
-                                x.Name == "item_gem" || x.Name == "item_dust" || x.Name == "item_sphere" ||
-                                x.Name == "item_blink");
-                    var iPos = HUDInfo.GetHPbarPosition(v);
-                    var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v), HUDInfo.GetHpBarSizeY(v));
-                    float count = 0;
-                    foreach (var item in invetory)
-                    {
-                        var itemname = string.Format("materials/ensage_ui/items/{0}.vmat",
-                            item.Name.Replace("item_", ""));
-                        Drawing.DrawRect(iPos + new Vector2(count, 50), new Vector2(iSize.X/3, (float) (iSize.Y*2.5)),
-                            GetTexture(itemname));
-                        if (item.AbilityState == AbilityState.OnCooldown)
-                        {
-                            var cd=((int) item.Cooldown).ToString(CultureInfo.InvariantCulture);
-                            Drawing.DrawText(cd, iPos + new Vector2(count, 40), Color.White, FontFlags.AntiAlias | FontFlags.DropShadow);
-                        }
-                        if (item.AbilityState == AbilityState.NotEnoughMana)
-                        {
-                            Drawing.DrawRect(iPos + new Vector2(count, 50), new Vector2(iSize.X /4, (float)(iSize.Y * 2.5)),new Color(0,0,200,100));
-                        }
-                        count += iSize.X / 4;
-                    }
-                }
-
-                #endregion
-
-
                 #region Health
 
                 if (ShowHealthOnTopPanel)
@@ -620,6 +608,83 @@ namespace OverlayInformationLight
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(manaDelta.X, height),
                         new Color(0, 0, 255, 255));
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Black, true);
+                }
+
+                #endregion
+
+                #region Dang Items & Ultimates
+
+                if (v.Team != _me.Team)
+                {
+                    #region DangBang
+
+                    if (DangItems && v.IsVisible && v.IsAlive)
+                    {
+                        var invetory =
+                            v.Inventory.Items.Where(
+                                x =>
+                                    x.Name == "item_gem" || x.Name == "item_dust" || x.Name == "item_sphere" ||
+                                    x.Name == "item_blink");
+                        var iPos = HUDInfo.GetHPbarPosition(v);
+                        var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v), HUDInfo.GetHpBarSizeY(v));
+                        float count = 0;
+                        foreach (var item in invetory)
+                        {
+                            var itemname = string.Format("materials/ensage_ui/items/{0}.vmat",
+                                item.Name.Replace("item_", ""));
+                            Drawing.DrawRect(iPos + new Vector2(count, 50),
+                                new Vector2(iSize.X/3, (float) (iSize.Y*2.5)),
+                                GetTexture(itemname));
+                            if (item.AbilityState == AbilityState.OnCooldown)
+                            {
+                                var cd = ((int) item.Cooldown).ToString(CultureInfo.InvariantCulture);
+                                Drawing.DrawText(cd, iPos + new Vector2(count, 40), Color.White,
+                                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                            }
+                            if (item.AbilityState == AbilityState.NotEnoughMana)
+                            {
+                                Drawing.DrawRect(iPos + new Vector2(count, 50),
+                                    new Vector2(iSize.X/4, (float) (iSize.Y*2.5)), new Color(0, 0, 200, 100));
+                            }
+                            count += iSize.X/4;
+                        }
+                    }
+
+                    #endregion
+
+                    #region ShowUltimate
+
+                    if (ShowUltimateCd)
+                    {
+                        Ability ultimate;
+                        if (!UltimateAbilities.TryGetValue(v, out ultimate))
+                        {
+                            var ult = v.Spellbook.Spells.First(x => x.AbilityType == AbilityType.Ultimate);
+                            if (ult != null) UltimateAbilities.Add(v, ult);
+                        }
+                        else if (ultimate.Level > 0 && ultimate.AbilityBehavior != AbilityBehavior.Passive)
+                        {
+                            var ultPos = pos + new Vector2(sizeX/2 - 5, sizeY + 1);
+                            string path;
+
+                            switch (ultimate.AbilityState)
+                            {
+                                case AbilityState.NotEnoughMana:
+                                    path = "materials/ensage_ui/other/ulti_nomana.vmat";
+                                    break;
+                                case AbilityState.OnCooldown:
+                                    path = "materials/ensage_ui/other/ulti_cooldown.vmat";
+                                    break;
+                                default:
+                                    path = "materials/ensage_ui/other/ulti_ready.vmat";
+                                    break;
+                            }
+                            Drawing.DrawRect(ultPos, new Vector2(14, 14), GetTexture(path));
+                        }
+                    }
+
+                    #endregion
+
                 }
 
                 #endregion
@@ -801,9 +866,6 @@ namespace OverlayInformationLight
                 #endregion
             }
         }
-
-        
-
         #endregion
 
         #endregion
