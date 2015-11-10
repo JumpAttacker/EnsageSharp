@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -18,32 +20,29 @@ namespace OverlayInformationLight
 
         private static bool _loaded;
         private static Hero _me;
-        private const string Ver = "0.9d light";
-        private static ScreenSizer _drawHelper;
-        private static bool _isOpen;
+        private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version+" light";
+        private static Unit _arrowUnit;
+        private static bool _isOpen=true;
         private static bool _leftMouseIsPress;
         private static readonly Dictionary<Unit, ParticleEffect> Effects2 = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
+        private static readonly ParticleEffect[] ArrowParticalEffects=new ParticleEffect[150];
         private static readonly Dictionary<Hero, Ability> SearchAbilities = new Dictionary<Hero, Ability>();
         //======================================
-        public static bool ShowCooldownOnTopPanel = true;
-        public static bool ShowCooldownOnTopPanelLikeText = true; //working only with ShowCooldownOnTopPanel
         public static bool ShowHealthOnTopPanel = true;
         public static bool ShowManaOnTopPanel = true;
-        public static bool OverlayOnlyOnEnemy = true;
-        public static bool ShowGlyph = true;
-        public static bool ShowIllusions = true;
-        public static bool ShowLastHit = true;
-        public static bool ShowManabars = true;
         public static bool ShowRoshanTimer = true;
-        public static bool ShowBuybackCooldown = true;
+        public static bool ShowIllusions = true;
         public static bool ShowMeMore= true;
+        public static bool DangItems = true;
         public static bool AutoItemsMenu = true;
         public static bool AutoItemsActive = true;
         public static bool AutoItemsMidas = true;
         public static bool AutoItemsPhase = true;
         public static bool AutoItemsStick = true;
         private static readonly Dictionary<Unit, ParticleEffect> BaraIndicator = new Dictionary<Unit, ParticleEffect>();
+        //=====================================
+        private static readonly Dictionary<string, DotaTexture> TextureCache = new Dictionary<string, DotaTexture>();
         //=====================================
         private static readonly ShowMeMoreHelper[] ShowMeMoreH = new ShowMeMoreHelper[5];
 
@@ -65,7 +64,9 @@ namespace OverlayInformationLight
         //=====================================
         private static readonly Font[] FontArray = new Font[21];
         private static Line _line;
-        private static IEnumerable<Player> _players;
+        private static Vector2 _sizer = new Vector2(110, 500);
+        private static bool _letsDraw = true;
+
         #endregion
 
         #region Methods
@@ -79,12 +80,6 @@ namespace OverlayInformationLight
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
             Drawing.OnDraw += Drawing_OnDraw;
-            ShowCooldownOnTopPanel = true;
-            ShowHealthOnTopPanel = true;
-            ShowManaOnTopPanel = true;
-            ShowCooldownOnTopPanelLikeText = true;
-            ShowRoshanTimer = true;
-            ShowBuybackCooldown = true;
 
             #region Init font & line
 
@@ -139,64 +134,6 @@ namespace OverlayInformationLight
 
             #endregion
             
-            #region Save/load
-            /*
-            try
-            {
-                ShowHealthOnTopPanel =
-                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Health on top panel")); //
-                ShowManaOnTopPanel =
-                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show mana on top panel"));
-                ShowCooldownOnTopPanel =
-                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel")); //
-                ShowCooldownOnTopPanelLikeText =
-                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Cooldown on top panel (numbers)"));
-                //
-                OverlayOnlyOnEnemy =
-                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Overlay only on enemy")); //
-
-                ShowGlyph = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show glyph cd")); //
-                ShowIllusions = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Illusions"));
-                ShowLastHit = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show LastHit/Deny"));
-                ShowManabars = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show manabars"));
-                ShowRoshanTimer = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show roshan timer"));
-                ShowBuybackCooldown =
-                    Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Buyback cooldown"));
-
-                ShowMeMore = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Show Me more"));
-
-                AutoItemsActive = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "AutoItems Active"));
-                AutoItemsPhase = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Auto use phase boots"));
-                AutoItemsMidas = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Auto use midas"));
-                AutoItemsStick = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", "Auto use stick"));
-            }
-            catch
-            {
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show health on top panel", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show mana on top panel", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show cooldown on top panel", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show cooldown on top panel (numbers)", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Overlay only on enemy", false.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show glyph cd", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show Illusions", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show LastHit/Deny", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show manabars", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show roshan timer", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show Buyback cooldown", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Show Me more", true.ToString());
-
-                SaveLoadSysHelper.IniWriteValue("Booleans", "AutoItems Active", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Auto use phase boots", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Auto use midas", true.ToString());
-                SaveLoadSysHelper.IniWriteValue("Booleans", "Auto use stick", true.ToString());
-
-                Console.Beep(1000, 100);
-                Console.Beep(1000, 100);
-                Console.Beep(1000, 100);
-            }
-             */
-            #endregion
-
         }
 
 
@@ -266,7 +203,6 @@ namespace OverlayInformationLight
                     return;
                 }
                 _loaded = true;
-                _players = null;
                 PrintSuccess("> OverlayInformation loaded! v" + Ver);
             }
             
@@ -467,71 +403,6 @@ namespace OverlayInformationLight
 
             #endregion
 
-            return;
-
-            #region Set Screen Size init
-            /*
-            if (_screenSizeVector2.IsZero)
-            {
-                _screenSizeVector2 = new Vector2(Drawing.Width, Drawing.Height);
-                PrintSuccess(string.Format(">> OI: init screen size: {0}x{1} -> {2}", _screenSizeVector2.X,
-                    _screenSizeVector2.Y, (int) Math.Floor((decimal) (_screenSizeVector2.X/_screenSizeVector2.Y*100))));
-                switch ((int) Math.Floor((decimal) (_screenSizeVector2.X/_screenSizeVector2.Y*100)))
-                {
-                    case 177:
-                        _drawHelper = _screenSizeVector2.X == 1600
-                            ? new ScreenSizer(494 - 439, 885 - 713, 7, 35, 439, new Vector2(1524, 46)) //1600x1900
-                            : _drawHelper =
-                                _screenSizeVector2.X == 1360
-                                    ? new ScreenSizer(418 - 371, 753 - 605, 7, 29, 371, new Vector2(1288, 43))
-                                    //1360x768
-                                    : _drawHelper =
-                                        _screenSizeVector2.X == 1280
-                                            ? new ScreenSizer(395 - 351, 709 - 568, 5, 28, 350, new Vector2(1216, 40))
-                                            //1280x720
-                                            : _screenSizeVector2.X == 1366
-                                                ? new ScreenSizer(422 - 374, 756 - 609, 7, 29, 374,
-                                                    new Vector2(1314, 39)) //1366
-
-                                                : new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
-                            //1920x1080
-
-
-                        break;
-                    case 166:
-                        _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
-                        break;
-                    case 160:
-                        _drawHelper = _screenSizeVector2.X == 1680
-                            ? new ScreenSizer(482 - 419, 941 - 738, 7, 42, 419, new Vector2(1610, 49)) //1680
-                            : _screenSizeVector2.X == 1440
-                                ? new ScreenSizer(413 - 358, 806 - 633, 7, 34, 358, new Vector2(1383, 45)) //1440x900
-                                : new ScreenSizer(0, 0, 0, 0, 528, new Vector2(1860, 49)); //
-                        //1680 x 1050
-                        break;
-                    case 133:
-                        _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
-                        break;
-                    case 125:
-                        _drawHelper = new ScreenSizer(60, 1036 - 855, 7, 43, 250, new Vector2(1210, 49)); //1280x1024
-                        break;
-                    default:
-                        _drawHelper = new ScreenSizer(66, 1063 - 855, 7, 43, 528, new Vector2(1860, 49));
-                        break;
-                }
-            }
-            */
-            #endregion
-
-            #region J - overlay
-            /*
-            DrawButton(_drawHelper.MenuPos.X - 2, _drawHelper.MenuPos.Y, 60, 20, 1, ref _isOpen, true,
-                new Color(0, 0, 0, 50), new Color(0, 0, 0, 50), new Color(0, 0, 0, 125));
-            DrawShadowText("J-Overlay", (int) _drawHelper.MenuPos.X, (int) _drawHelper.MenuPos.Y, Color.White,
-                FontArray[5]);
-            */
-            #endregion
-
             #region Menu
             /*
             if (_isOpen)
@@ -617,264 +488,6 @@ namespace OverlayInformationLight
             }
             */
             #endregion
-
-            
-
-            if (false)
-            {
-                #region Looper
-
-                if (_players == null || _players.Count() < 10)
-                {
-                    _players = ObjectMgr.GetEntities<Player>().Where(x => x != null && x.Hero != null);
-                }
-                foreach (var v in _players.Select(x => x.Hero))
-                {
-                    if (!v.IsAlive) continue;
-                    var i = v.Player.ID;
-                    //PrintInfo(string.Format("{0}: id={1}", v.Player.Name,i));
-                    var initPos = (i >= 5
-                        ? (_drawHelper.RangeBetween + _drawHelper.FloatRange*i) + _drawHelper.Space
-                        : (_drawHelper.RangeBetween + _drawHelper.FloatRange*i));
-
-                    #region ShowLastHit
-
-                    if (ShowLastHit)
-                    {
-                        var text = string.Format("{0}/{1}", v.Player.LastHitCount, v.Player.DenyCount);
-                        DrawShadowText(text, initPos + 10, _drawHelper.BotRange + 1 - _drawHelper.Height*5, Color.White,
-                            FontArray[5]);
-                    }
-
-                    #endregion
-
-                    #region IsVisible
-
-                    if (true)
-                    {
-                        if (v.IsVisibleToEnemies && v.Team == _me.Team)
-                        {
-                            DrawFilledBox(initPos, _drawHelper.BotRange,
-                                _drawHelper.FloatRange,
-                                -60, new Color(0, 0, 100, 50));
-                        }
-                    }
-
-                    #endregion
-
-                    #region ShowBuybackCooldown
-
-                    if (ShowBuybackCooldown && v.Player.BuybackCooldownTime > 0)
-                    {
-                        var text = string.Format("{0:0.}", v.Player.BuybackCooldownTime);
-                        DrawFilledBox(initPos + 2, _drawHelper.BotRange + 1 - _drawHelper.Height*5 + 22, 35, 15,
-                            new Color(0, 0, 0, 150));
-                        DrawShadowText(text, initPos + 5, _drawHelper.BotRange + 1 - _drawHelper.Height*5 + 22,
-                            Color.White,
-                            FontArray[3]);
-                        //PrintError(i+" p.BuybackCooldownTime: " + p.BuybackCooldownTime);
-                    }
-
-                    #endregion
-
-                    #region Settings and Checking
-
-                    if (OverlayOnlyOnEnemy && v.Team == _me.Team) continue;
-
-                    var healthDelta = new Vector2((float) v.Health*_drawHelper.FloatRange/v.MaximumHealth, 0);
-                    var manaDelta = new Vector2(v.Mana*_drawHelper.FloatRange/v.MaximumMana, 0);
-
-                    #endregion
-
-                    #region ShowHealthOnTopPanel
-
-                    if (ShowHealthOnTopPanel)
-                    {
-                        DrawFilledBox(initPos, _drawHelper.BotRange + 1, _drawHelper.FloatRange, _drawHelper.Height,
-                            Color.Red);
-                        DrawFilledBox(initPos, _drawHelper.BotRange + 1, healthDelta.X,
-                            _drawHelper.Height + healthDelta.Y,
-                            Color.Green);
-                        DrawBox(initPos, _drawHelper.BotRange + 1, _drawHelper.FloatRange, _drawHelper.Height, 1,
-                            Color.Black);
-                    }
-
-                    #endregion
-
-                    #region ShowManaOnTopPanel
-
-                    if (ShowManaOnTopPanel)
-                    {
-                        DrawFilledBox(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height, _drawHelper.FloatRange,
-                            _drawHelper.Height, Color.Gray);
-                        DrawFilledBox(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height, manaDelta.X,
-                            _drawHelper.Height + manaDelta.Y, Color.Blue);
-                        DrawBox(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height, _drawHelper.FloatRange,
-                            _drawHelper.Height, 1, Color.Black);
-                    }
-
-                    #endregion
-
-                    #region ShowMeMore
-
-                    if (ShowMeMore && v.Team != _me.Team)
-                    {
-                        switch (v.ClassID)
-                        {
-                            case ClassID.CDOTA_Unit_Hero_Mirana:
-                                var arrow =
-                                    ObjectMgr.GetEntities<Unit>()
-                                        .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
-                                        /* && x.Team!=_me.Team*/);
-
-                                if (arrow != null)
-                                {
-                                    if (!InSystem.Contains(arrow))
-                                    {
-                                        _arrowS = arrow.Position;
-                                        InSystem.Add(arrow);
-                                    }
-                                    else if (Utils.SleepCheck("Arrow"))
-                                    {
-                                        var e = new ParticleEffect[148];
-                                        var ret = FindRet(_arrowS, arrow.Position);
-                                        for (var z = 1; z <= 147; z++)
-                                        {
-                                            var p = FindVector(_arrowS, ret, 20*z + 60);
-                                            e[z] = new ParticleEffect(
-                                                @"particles\ui_mouseactions\draw_commentator.vpcf", p);
-                                            e[z].SetControlPoint(1, new Vector3(255, 255, 255));
-                                            e[z].SetControlPoint(0, p);
-                                        }
-
-                                        Utils.Sleep(300, "Arrow");
-                                    }
-                                }
-                                break;
-                            case ClassID.CDOTA_Unit_Hero_SpiritBreaker:
-                                break;
-                            case ClassID.CDOTA_Unit_Hero_Windrunner:
-                                if (true) //(Utils.SleepCheck("ArrowWindRun"))
-                                {
-                                    var spell = v.Spellbook.Spell2;
-                                    if (spell != null && spell.Cooldown != 0)
-                                    {
-                                        var cd = Math.Floor(spell.Cooldown*100);
-                                        if (cd < 880)
-                                        {
-                                            if (!InSystem.Contains(v))
-                                            {
-                                                if (cd > 720)
-                                                {
-                                                    var eff = new ParticleEffect[148];
-                                                    for (var z = 1; z <= 140; z++)
-                                                    {
-                                                        try
-                                                        {
-                                                            var p = new Vector3(
-                                                                v.Position.X + 100*z*(float) Math.Cos(v.RotationRad),
-                                                                v.Position.Y + 100*z*(float) Math.Sin(v.RotationRad),
-                                                                100);
-                                                            eff[z] =
-                                                                new ParticleEffect(
-                                                                    @"particles\ui_mouseactions\draw_commentator.vpcf",
-                                                                    p);
-                                                            eff[z].SetControlPoint(1, new Vector3(255, 255, 255));
-                                                            eff[z].SetControlPoint(0, p);
-                                                            Eff[z].Add(v, eff[z]);
-                                                        }
-                                                        catch (Exception ex)
-                                                        {
-                                                            PrintSuccess("[WIND RUNNER EX]" + ex);
-                                                        }
-
-                                                    }
-                                                    InSystem.Add(v);
-                                                }
-                                            }
-                                            else if (cd < 720 || !v.IsAlive)
-                                            {
-                                                InSystem.Remove(v);
-                                                for (var z = 1; z <= 140; z++)
-                                                {
-                                                    ParticleEffect eff;
-                                                    if (Eff[z].TryGetValue(v, out eff))
-                                                    {
-                                                        eff.Dispose();
-                                                        Eff[z].Clear();
-                                                    }
-                                                }
-
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            case ClassID.CDOTA_Unit_Hero_Pudge:
-                                break;
-                            case ClassID.CDOTA_Unit_Hero_Kunkka:
-                                break;
-                        }
-                    }
-
-                    #endregion
-
-                    #region Ultimate Cooldown
-
-                    if (Equals(v, _me)) continue;
-                    Ability ultimate;
-                    if (!SearchAbilities.TryGetValue(v, out ultimate))
-                    {
-                        for (var spell = 4; spell <= 6; spell++)
-                        {
-                            if (ultimate == null || ultimate.AbilityType != AbilityType.Ultimate)
-                                switch (spell)
-                                {
-                                    case 4:
-                                        ultimate = v.Spellbook.Spell4;
-                                        break;
-                                    case 5:
-                                        ultimate = v.Spellbook.Spell5;
-                                        break;
-                                    case 6:
-                                        ultimate = v.Spellbook.Spell6;
-                                        break;
-                                }
-                            if (ultimate == null || ultimate.AbilityType != AbilityType.Ultimate) continue;
-                            SearchAbilities.Add(v, ultimate);
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        if (ultimate.Level <= 0) continue;
-                        var spellDelta =
-                            new Vector2(
-                                ultimate.Cooldown*_drawHelper.FloatRange/ultimate.CooldownLength, 0);
-                        if (ultimate.Cooldown > 0 && ShowCooldownOnTopPanel)
-                        {
-                            DrawFilledBox(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2,
-                                _drawHelper.FloatRange, _drawHelper.Height, Color.Gray);
-                            DrawFilledBox(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2,
-                                spellDelta.X, _drawHelper.Height + spellDelta.Y, Color.Yellow);
-                            DrawBox(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2,
-                                _drawHelper.FloatRange, _drawHelper.Height, 1, Color.Black);
-                        }
-                        if (!ShowCooldownOnTopPanelLikeText) break;
-                        var spellCd = string.Format("{0:0.}", ultimate.Cooldown);
-                        var textPos = (new Vector2(initPos, _drawHelper.BotRange + 1 + _drawHelper.Height*2) +
-                                       new Vector2(5, 10));
-                        DrawShadowText(spellCd == "0" ? "Ready" : spellCd, (int) textPos.X, (int) textPos.Y,
-                            Color.White,
-                            FontArray[5]);
-                    }
-
-                    #endregion
-
-                }
-
-                #endregion
-            }
         }
 
         #endregion
@@ -891,36 +504,128 @@ namespace OverlayInformationLight
                 }
             var enumerable = _players as Player[] ?? _players.ToArray();*/
             //foreach (var s in enumerable)
+
+            #region J - overlay
+
+            var startLoc = new Vector2(Drawing.Width - 120, 50);
+            var maxSize = new Vector2(110, 500);
+
+            
+            if (_isOpen)
+            {
+                _sizer.Y += 10;
+                _sizer.Y = Math.Min(_sizer.Y, maxSize.Y);
+                Drawing.DrawRect(startLoc, _sizer, new Color(0, 0, 0, 100));
+                if (Equals(_sizer, maxSize))
+                {
+                    var pos = 35;
+                    DrawButton(startLoc + new Vector2(5, 35), _sizer.X - 10, 20, ref ShowHealthOnTopPanel, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show Health");
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowManaOnTopPanel, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show Mana");
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowRoshanTimer, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Roshan Timer");
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowMeMore, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show Me More");
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowIllusions, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show Illusions");
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref DangItems, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Dangerous Items");
+                }
+            }
+            else
+            {
+                _sizer.Y -= 10;
+                _sizer.Y = Math.Max(_sizer.Y, 0);
+                Drawing.DrawRect(startLoc, _sizer, new Color(0, 0, 0, 100));
+            }
+            DrawButton(startLoc, _sizer.X, 30, ref _isOpen, true, new Color(0, 0, 0, 50), new Color(0, 0, 0, 125), "J-Overlay Light");
+            #endregion
+
             for (uint i = 0; i < 10; i++)
             {
+                #region Init
+
                 Hero v;
-                try{v = ObjectMgr.GetPlayerById(i).Hero;}catch{continue;}
-                if (v==null) continue;
+                try
+                {
+                    v = ObjectMgr.GetPlayerById(i).Hero;
+                }
+                catch
+                {
+                    continue;
+                }
+                if (v == null) continue;
                 var pos = HUDInfo.GetTopPanelPosition(v);
-                var sizeX = (float)HUDInfo.GetTopPanelSizeX(v);
-                var sizeY = (float)HUDInfo.GetTopPanelSizeY(v);
-                var healthDelta = new Vector2(v.Health * sizeX / v.MaximumHealth, 0);
-                var manaDelta = new Vector2(v.Mana * sizeX / v.MaximumMana, 0);
+                var sizeX = (float) HUDInfo.GetTopPanelSizeX(v);
+                var sizeY = (float) HUDInfo.GetTopPanelSizeY(v);
+                var healthDelta = new Vector2(v.Health*sizeX/v.MaximumHealth, 0);
+                var manaDelta = new Vector2(v.Mana*sizeX/v.MaximumMana, 0);
                 const int height = 7;
 
-                //Drawing.DrawRect(pos,pos+new Vector2(sizeX,sizeY),new Color(0,0,100,100));
+                #endregion
 
-                Drawing.DrawRect(pos + new Vector2(0, sizeY+1), new Vector2(sizeX, height), new Color(255, 0, 0, 255));
-                Drawing.DrawRect(pos + new Vector2(0, sizeY+1), new Vector2(healthDelta.X, height), new Color(0, 255, 0, 255));
-                Drawing.DrawRect(pos + new Vector2(0, sizeY+1), new Vector2(sizeX, height), Color.Black, true);
-                /*var text= string.Format("{0} / {1}", (int)v.Health, (int)v.MaximumHealth);
-                var textSize = Drawing.MeasureText(text, "Arial", new Vector2(sizeY, sizeX), FontFlags.AntiAlias);
-                var textPos = pos + new Vector2(0, sizeY + 1) + new Vector2(sizeX/2 - textSize.X/2, -textSize.Y + 2);
-                Drawing.DrawText(
-                    text,
-                    textPos,
-                    new Vector2(sizeY, sizeX),
-                    Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);*/
-                Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Gray);
-                Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(manaDelta.X, height), new Color(0, 0, 255, 255));
-                Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Black, true);
-                if (v.Team == _me.Team)
+                #region Dang Items
+
+                if (DangItems && v.Team != _me.Team && v.IsVisible)
+                {
+                    var invetory =
+                        v.Inventory.Items.Where(
+                            x =>
+                                x.Name == "item_gem" || x.Name == "item_dust" || x.Name == "item_sphere" ||
+                                x.Name == "item_blink");
+                    var iPos = HUDInfo.GetHPbarPosition(v);
+                    var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v), HUDInfo.GetHpBarSizeY(v));
+                    float count = 0;
+                    foreach (var item in invetory)
+                    {
+                        var itemname = string.Format("materials/ensage_ui/items/{0}.vmat",
+                            item.Name.Replace("item_", ""));
+                        Drawing.DrawRect(iPos + new Vector2(count, 50), new Vector2(iSize.X/3, (float) (iSize.Y*2.5)),
+                            GetTexture(itemname));
+                        if (item.AbilityState == AbilityState.OnCooldown)
+                        {
+                            var cd=((int) item.Cooldown).ToString(CultureInfo.InvariantCulture);
+                            Drawing.DrawText(cd, iPos + new Vector2(count, 40), Color.White, FontFlags.AntiAlias | FontFlags.DropShadow);
+                        }
+                        if (item.AbilityState == AbilityState.NotEnoughMana)
+                        {
+                            Drawing.DrawRect(iPos + new Vector2(count, 50), new Vector2(iSize.X /4, (float)(iSize.Y * 2.5)),new Color(0,0,200,100));
+                        }
+                        count += iSize.X / 4;
+                    }
+                }
+
+                #endregion
+
+
+                #region Health
+
+                if (ShowHealthOnTopPanel)
+                {
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + 1), new Vector2(sizeX, height),
+                        new Color(255, 0, 0, 255));
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + 1), new Vector2(healthDelta.X, height),
+                        new Color(0, 255, 0, 255));
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + 1), new Vector2(sizeX, height), Color.Black, true);
+                }
+
+                #endregion
+
+                #region Mana
+
+
+                if (ShowManaOnTopPanel)
+                {
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Gray);
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(manaDelta.X, height),
+                        new Color(0, 0, 255, 255));
+                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Black, true);
+                }
+
+                #endregion
+
+                #region ShowMeMore
+                if (ShowMeMore && v.Team == _me.Team)
                 {
                     var mod = v.Modifiers.Any(x => x.Name == "modifier_spirit_breaker_charge_of_darkness_vision");
                     if (mod /* && Bara!=null*/)
@@ -969,41 +674,62 @@ namespace OverlayInformationLight
                     }
                 }
 
-                #region ShowMeMore
+                
 
                 if (ShowMeMore && v.Team != _me.Team)
                 {
                     switch (v.ClassID)
                     {
                         case ClassID.CDOTA_Unit_Hero_Mirana:
-                            /*var arrow =
-                                ObjectMgr.GetEntities<Unit>()
-                                    .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
-                                /* && x.Team!=_me.Team);
-
-                            if (arrow != null)
+                            if (_arrowUnit == null)
                             {
-                                if (!InSystem.Contains(arrow))
+                                /*foreach (var effect in ArrowParticalEffects)
                                 {
-                                    _arrowS = arrow.Position;
-                                    InSystem.Add(arrow);
+                                    effect.Dispose();
                                 }
-                                else if (Utils.SleepCheck("Arrow"))
+                                ArrowParticalEffects[1] = null;*/
+                                _arrowUnit =
+                                    ObjectMgr.GetEntities<Unit>()
+                                        .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
+                                                             && x.Team != _me.Team);
+                            }
+                            if (_arrowUnit != null)
+                            {
+                                if (!_arrowUnit.IsValid)
                                 {
-                                    var e = new ParticleEffect[148];
-                                    var ret = FindRet(_arrowS, arrow.Position);
+                                    foreach (var effect in ArrowParticalEffects.Where(effect => effect != null))
+                                    {
+                                        effect.Dispose();
+                                    }
+                                    _letsDraw = true;
+                                    _arrowUnit =
+                                    ObjectMgr.GetEntities<Unit>()
+                                        .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
+                                                             && x.Team != _me.Team);
+                                    break;
+                                }
+                                if (!InSystem.Contains(_arrowUnit))
+                                {
+                                    _arrowS = _arrowUnit.Position;
+                                    InSystem.Add(_arrowUnit);
+                                    Utils.Sleep(100,"kek");
+                                }
+                                else if (_letsDraw && Utils.SleepCheck("kek"))
+                                {
+                                    _letsDraw = false;
+                                    /*PrintInfo(string.Format("{0}{1}{2}/{3}{4}{5}", _arrowS.X, _arrowS.Y, _arrowS.Z,
+                                        _arrowUnit.Position.X, _arrowUnit.Position.Y, _arrowUnit.Position.Z));*/
+                                    var ret = FindRet(_arrowS, _arrowUnit.Position);
                                     for (var z = 1; z <= 147; z++)
                                     {
-                                        var p = FindVector(_arrowS, ret, 20 * z + 60);
-                                        e[z] = new ParticleEffect(
+                                        var p = FindVector(_arrowS, ret, 20*z + 60);
+                                        ArrowParticalEffects[z] = new ParticleEffect(
                                             @"particles\ui_mouseactions\draw_commentator.vpcf", p);
-                                        e[z].SetControlPoint(1, new Vector3(255, 255, 255));
-                                        e[z].SetControlPoint(0, p);
+                                        ArrowParticalEffects[z].SetControlPoint(1, new Vector3(255, 255, 255));
+                                        ArrowParticalEffects[z].SetControlPoint(0, p);
                                     }
-
-                                    Utils.Sleep(300, "Arrow");
                                 }
-                            }*/
+                            }
                             break;
                         case ClassID.CDOTA_Unit_Hero_SpiritBreaker:
                             
@@ -1076,12 +802,19 @@ namespace OverlayInformationLight
             }
         }
 
+        
 
         #endregion
 
         #endregion
 
         #region Helpers
+        private static DotaTexture GetTexture(string name)
+        {
+            if (TextureCache.ContainsKey(name)) return TextureCache[name];
+
+            return TextureCache[name] = Drawing.GetTexture(name);
+        }
         private static Vector3 FindVector(Vector3 first, double ret, float distance)
         {
             var retVector = new Vector3(first.X + (float)Math.Cos(Utils.DegreeToRadian(ret)) * distance, first.Y + (float)Math.Sin(Utils.DegreeToRadian(ret)) * distance, 100);
@@ -1113,7 +846,7 @@ namespace OverlayInformationLight
         {
             ParticleEffect effect;
             ParticleEffect effect2;
-            if (unit.IsAlive && unit.IsVisibleToEnemies)
+            if (unit.IsAlive/* && unit.IsVisibleToEnemies*/)
             {
                 if (Effects1.TryGetValue(unit, out effect)) return;
                 effect = unit.AddParticleEffect("particles/items2_fx/smoke_of_deceit_buff.vpcf"); //particles/items_fx/diffusal_slow.vpcf
@@ -1154,12 +887,6 @@ namespace OverlayInformationLight
             Console.ForegroundColor = color;
             Console.WriteLine(text, arguments);
             Console.ForegroundColor = clr;
-        }
-
-        private static bool CheckMouse(float x, float y, float sizeX, float sizeY)
-        {
-            var mousePos = Game.MouseScreenPosition;
-            return mousePos.X >= x && mousePos.X <= x + sizeX && mousePos.Y >= y && mousePos.Y <= y + sizeY;
         }
 
         #endregion
@@ -1274,71 +1001,31 @@ namespace OverlayInformationLight
             DrawFilledBox(a.X + b.X, a.Y, px, b.Y, color);
         }
 
-        private static void DrawButton(float x, float y, float w, float h, float px, ref bool clicked, bool isActive,
-            Color @on, Color off, Color @select)
+        private static void DrawButton(Vector2 a, float w, float h, ref bool clicked, bool isActive, Color @on, Color off, string drawOnButtonText = "")
         {
-            if (isActive)
-            {
-                var isIn = CheckMouse(x, y, w, h);
-                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
-                {
-                    clicked = !clicked;
-                    //SaveLoadSysHelper.IniWriteValue("Booleans", "Show health on top panel", true.ToString());
-                    Utils.Sleep(250, "ClickButtonCd");
-                }
-                var newColor = isIn
-                    ? @select
-                    : clicked ? @on : off;
-                DrawFilledBox(x, y, w, h, newColor);
-                DrawBox(x, y, w, h, px, Color.Black);
-            }
-            else
-            {
-                DrawFilledBox(x, y, w, h, Color.Gray);
-                DrawBox(x, y, w, h, px, Color.Black);
-            }
-        }
-
-        /// <summary>
-        ///     Рисуем кнопку
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="w"></param>
-        /// <param name="h"></param>
-        /// <param name="px">ширина</param>
-        /// <param name="clicked">булку для тогла</param>
-        /// <param name="isActive">активна ли кнопка</param>
-        /// <param name="on">цвет при активе</param>
-        /// <param name="off">цвет при оффе</param>
-        /// <param name="description">описание</param>
-        private static void DrawButton(float x, float y, float w, float h, float px, ref bool clicked, bool isActive,
-            Color @on, Color off, string description)
-        {
-            var isIn = CheckMouse(x, y, w, h);
+            var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
             if (isActive)
             {
                 if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
                 {
                     clicked = !clicked;
-                    //SaveLoadSysHelper.IniWriteValue("Booleans", description, clicked.ToString());
                     Utils.Sleep(250, "ClickButtonCd");
                 }
                 var newColor = isIn
-                    ? new Color((int) (clicked ? @on.R : off.R), clicked ? @on.G : off.G, clicked ? @on.B : off.B, 150)
+                    ? new Color((int)(clicked ? @on.R : off.R), clicked ? @on.G : off.G, clicked ? @on.B : off.B, 150)
                     : clicked ? @on : off;
-                DrawFilledBox(x, y, w, h, newColor);
-                DrawBox(x, y, w, h, px, Color.Black);
+                Drawing.DrawRect(a, new Vector2(w, h), newColor);
+                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
+                if (drawOnButtonText != "")
+                {
+                    Drawing.DrawText(drawOnButtonText, a + new Vector2(10, 2), Color.White,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                }
             }
             else
             {
-                DrawFilledBox(x, y, w, h, Color.Gray);
-                DrawBox(x, y, w, h, px, Color.Black);
-            }
-            if (isIn)
-            {
-                DrawFilledBox(x - description.Length*6 - 40, y, description.Length*6 + 35, 20, new Color(0, 0, 0, 100));
-                DrawShadowText(description, (int) x - description.Length*6 - 40, (int) y, Color.White, FontArray[5]);
+                Drawing.DrawRect(a, new Vector2(w, h), Color.Gray);
+                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
             }
         }
 

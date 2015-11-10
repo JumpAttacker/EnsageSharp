@@ -61,7 +61,6 @@
     <Compile Include="InitHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScreenSizer.cs" />
     <Compile Include="ShowMeMoreHelper.cs" />
   </ItemGroup>
   <ItemGroup>

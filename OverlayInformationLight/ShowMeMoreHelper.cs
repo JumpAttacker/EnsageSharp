@@ -17,7 +17,7 @@ namespace OverlayInformationLight
         public ShowMeMoreHelper(string modifier, string effectName, string secondeffectName, int range)
         {
             Modifier = modifier;
-            this.EffectName = effectName;
+            EffectName = effectName;
             SecondeffectName = secondeffectName;
             Range = range;
         }
