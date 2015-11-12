@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -12,7 +13,7 @@ namespace Legion_Annihilation
         #region Members
         //============================================================
         private static bool _loaded;
-        private const string Ver = "0.2";
+        private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         private const int WmKeyup = 0x0101;
         private static bool _leftMouseIsPress;
         private static bool _showMenu = true;
@@ -179,6 +180,7 @@ namespace Legion_Annihilation
                 target.Modifiers.Any(
                     x => x.Name == "modifier_slark_dark_pact" || x.Name == "modifier_slark_dark_pact_pulses");
             var enumerable = allitems as Item[] ?? allitems.ToArray();
+            var isInvise = me.IsInvisible();
             var itemOnTarget =
                 enumerable.FirstOrDefault(
                     x =>
@@ -190,7 +192,7 @@ namespace Legion_Annihilation
                     x =>
                         x.Name == "item_soul_ring" || (x.Name == "item_armlet" && !x.IsToggled) ||
                         x.Name == "item_mask_of_madness" || x.Name == "item_satanic" ||
-                        x.Name == "item_blade_mail");
+                        x.Name == "item_blade_mail" || x.Name == "item_silver_edge" || x.Name == "item_invis_sword");
             var itemOnMySelf = enumerable.FirstOrDefault(
                 x =>
                     x.Name == "item_mjollnir");
@@ -204,6 +206,12 @@ namespace Legion_Annihilation
             {
                 me.Move(target.Position);
                 Utils.Sleep(200, "nextAction");
+                return;
+            }
+            if (!me.IsMagicImmune() && heal.CanBeCasted() && heal.ManaCost <= neededMana && _shoulUseHeal)
+            {
+                heal.UseAbility(me);
+                Utils.Sleep(500, "nextAction");
                 return;
             }
             if (itemOnMySelf != null && _buffme)
@@ -221,44 +229,50 @@ namespace Legion_Annihilation
                     return;
                 }
                 itemWithOutTarget.UseAbility();
-                Utils.Sleep(50, "nextAction");
+                Utils.Sleep(100, "nextAction");
                 return;
             }
-            
-            if (dagger != null && dagger.CanBeCasted())
+
+            if (dagger != null && dagger.CanBeCasted() && !isInvise && Utils.SleepCheck("dagger"))
             {
-                if (!me.IsMagicImmune() && heal.CanBeCasted() && heal.ManaCost <= neededMana && _shoulUseHeal)
-                {
-                    heal.UseAbility(me);
-                    Utils.Sleep(500, "nextAction");
-                    return;
-                }
                 var point = new Vector3(
-                    (float)(target.Position.X - 60 * Math.Cos(me.FindAngleBetween(target.Position, true))),
-                    (float)(target.Position.Y - 60 * Math.Sin(me.FindAngleBetween(target.Position, true))),
+                    (float)(target.Position.X - 20 * Math.Cos(me.FindAngleBetween(target.Position, true))),
+                    (float)(target.Position.Y - 20 * Math.Sin(me.FindAngleBetween(target.Position, true))),
                     target.Position.Z);
                 dagger.UseAbility(point);
-                Utils.Sleep(50, "nextAction");
+                Utils.Sleep(200, "dagger");
                 return;
             }
-            if (distance>duel.CastRange)
+            if (distance > duel.CastRange + 100 && Utils.SleepCheck("moving"))
             {
-                me.Move(target.Position);
-                Utils.Sleep(200, "nextAction");
+                if (isInvise)
+                    me.Attack(target);
+                else
+                    me.Move(target.Position);
+                Utils.Sleep(150, "moving");
                 return;
             }
-            if (itemOnTarget != null && !dpActivated && _debuffenemy)
+            if (itemOnTarget != null && !dpActivated && _debuffenemy && !isInvise)
             {
                 itemOnTarget.UseAbility(target);
                 Utils.Sleep(50, "nextAction");
                 return;
             }
-            if (_shoulUseBkb && bkb != null && bkb.CanBeCasted())
+            if (_shoulUseBkb && bkb != null && bkb.CanBeCasted() && Utils.SleepCheck("bkb") && !isInvise)
             {
                 bkb.UseAbility();
+                Utils.Sleep(35, "bkb");
+                return;
             }
-            duel.UseAbility(target);
-            Utils.Sleep(300, "nextAction");
+            if (isInvise)
+            {
+                me.Attack(target);
+                Utils.Sleep(200, "nextAction");
+            }
+            else
+                duel.UseAbility(target);
+                
+            Utils.Sleep(10, "nextAction");
         }
 
 
