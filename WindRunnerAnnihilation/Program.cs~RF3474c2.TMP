@@ -1,0 +1,301 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using Ensage;
+using Ensage.Common;
+using Ensage.Common.Extensions;
+using SharpDX;
+using SharpDX.Direct3D9;
+
+namespace WindRunnerAnnihilation
+{
+    internal class Program
+    {
+        private const int WmKeyup = 0x0101;
+
+        private static Font _text;
+        private static bool _enabled;
+        private static List<Unit> creeps = new List<Unit>();
+        //private static readonly Dictionary<int, Vector3> Points = new Dictionary<int, Vector3>();
+        private static readonly Dictionary<Entity, ParticleEffect[]> Effects = new Dictionary<Entity, ParticleEffect[]>();
+        private static ParticleEffect TargetCircleShackle;
+        private static ParticleEffect ToUnitCircle;
+
+        private static Vector3 ASD;
+
+        private static void Main()
+        {
+            _text = new Font(
+                Drawing.Direct3DDevice9,
+                new FontDescription
+                {
+                    FaceName = "Calibri",
+                    Height = 20,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Proof
+                });
+
+            Drawing.OnPreReset += Drawing_OnPreReset;
+            Drawing.OnPostReset += Drawing_OnPostReset;
+            Drawing.OnEndScene += Drawing_OnEndScene;
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+            Game.OnUpdate += Game_OnUpdate;
+            Game.OnWndProc += Game_OnWndProc;
+        }
+
+        private static void Game_OnWndProc(WndEventArgs args)
+        {
+            if (args.WParam != 'G' || Game.IsChatOpen)
+                return;
+            _enabled = args.Msg != WmKeyup;
+        }
+
+        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+            _text.Dispose();
+        }
+
+        private static void Drawing_OnEndScene(EventArgs args)
+        {
+            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame)
+                return;
+            var player = ObjectMgr.LocalPlayer;
+            if (player == null || player.Team == Team.Observer)
+                return;
+            _text.DrawText(null,
+                string.Format("Windrunner Annihilation {0} hold \"G\". {1} Vector3 ({2}{3}{4})", _enabled ? "ON" : "OFF",
+                    creeps.Count, ASD.X, ASD.Y, ASD.Z), 5, 64, _enabled ? Color.Azure : Color.Red);
+        }
+
+        private static void Drawing_OnPostReset(EventArgs args)
+        {
+            _text.OnResetDevice();
+        }
+
+        private static void Drawing_OnPreReset(EventArgs args)
+        {
+            _text.OnLostDevice();
+        }
+
+        private static void Game_OnUpdate(EventArgs args)
+        {
+            var me = ObjectMgr.LocalHero;
+            if (me == null || !_enabled || !Utils.SleepCheck("Move") || !Utils.SleepCheck("Dadzger") || !me.IsAlive)
+                return;
+            var target = ClosestToMouse(me, 500);
+            var dagger = me.FindItem("item_blink");
+            var shackleshot = me.Spellbook.Spell1;
+            if (target == null) return;
+            //PrintInfo("target: "+target.Name);
+            var bestposition = FindBestPosition(me, target, shackleshot);
+            ASD = bestposition;
+            
+            if (!shackleshot.CanBeCasted() || bestposition.IsZero) return;
+
+            if (me.Distance2D(bestposition) <= 1150)
+            {
+                if (dagger != null && dagger.CanBeCasted())
+                    dagger.UseAbility(bestposition);
+                shackleshot.UseAbility(target);
+                Utils.Sleep(250, "Dadzger");
+            }
+            else if (me.CanMove())
+            {
+                me.Move(bestposition);
+                Utils.Sleep(250, "Move");
+            }
+        }
+
+        private static Vector3 FindBestPosition(Hero me, Hero target, Ability spell)
+        {
+            var tartgetPos = target.Position;
+            var returnPointUnit = new Vector3();
+            var returnPointTree = new Vector3();
+            var data =
+                Prediction.TrackTable.ToArray()
+                    .FirstOrDefault(
+                        unitData => unitData.UnitName == target.Name || unitData.UnitClassID == target.ClassID);
+            if (data != null)
+            {
+                if (target.NetworkActivity == NetworkActivity.Move)
+                {
+                    tartgetPos = Prediction.InFront(target,
+                        (float)
+                            ((spell.FindCastPoint() + me.GetTurnTime(tartgetPos) + Game.Ping/1000)*target.MovementSpeed));
+                }
+
+                creeps =
+                    ObjectMgr.GetEntities<Unit>()
+                        .Where(
+                            x =>
+                                x.Distance2D(target) <= 525 && x.Team != me.Team && !x.IsIllusion && x.IsAlive &&
+                                x.IsVisible && !x.IsMagicImmune() && !Equals(x, target))
+                        .ToList();
+                var trees =
+                    ObjectMgr.GetEntities<Entity>()
+                        .Where(x => x.Name == "ent_dota_tree" && x.Distance2D(target.Position) < 800 && x.IsAlive)
+                        .ToList();
+                foreach (var t in creeps)
+                {
+                    var tpos = t.Position;
+                    var a = tpos.ToVector2().FindAngleBetween(tartgetPos.ToVector2(), true);
+                    var points = new Dictionary<int, Vector3>();
+                    if (Utils.SleepCheck("test" + t.GetHashCode()))
+                    {
+                        for (var i = 2; i <= 8; i++)
+                        {
+                            var p = new Vector3(
+                                target.Position.X + 100*i*(float) Math.Cos(a),
+                                target.Position.Y + 100*i*(float) Math.Sin(a),
+                                100);
+                            //me.Move(p);
+
+                            points.Add(i, p);
+                            ParticleEffect[] eff;
+                            if (!Effects.TryGetValue(t, out eff))
+                            {
+                                eff = new ParticleEffect[50];
+                                eff[i] = new ParticleEffect(@"particles\ui_mouseactions\draw_commentator.vpcf", p);
+                                eff[i].SetControlPoint(1, new Vector3(255, 255, 255));
+                                eff[i].SetControlPoint(0, p);
+                                Effects.Add(t, eff);
+                            }
+                            else
+                            {
+                                eff[i].SetControlPoint(1, new Vector3(255, 255, 255));
+                                eff[i].SetControlPoint(0, p);
+                            }
+                            
+                            //var effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                            //effect.SetControlPoint(1, new Vector3(100, 0, 0));
+                        }
+                        Utils.Sleep(500, "test" + t.GetHashCode());
+                    }
+
+                    GetClosest(ref returnPointUnit, me,points);
+                }
+                foreach (var t in trees)
+                {
+                    var tpos = t.Position;
+                    var a = tpos.ToVector2().FindAngleBetween(tartgetPos.ToVector2(), true);
+                    var points = new Dictionary<int, Vector3>();
+                    if (Utils.SleepCheck("test" + t.GetHashCode()))
+                    {
+                        //var effect = new ParticleEffect[50];
+                        for (var i = 2; i <= 8; i++)
+                        {
+                            var p = new Vector3(
+                                target.Position.X + 100 * i * (float)Math.Cos(a),
+                                target.Position.Y + 100 * i * (float)Math.Sin(a),
+                                100);
+                            //me.Move(p);
+                            
+                            points.Add(i, p);
+                            /*
+                            ParticleEffect[] eff;
+                            if (!Effects.TryGetValue(t, out eff))
+                            {
+                                eff = effect;
+                                eff[i] = new ParticleEffect(@"particles\ui_mouseactions\draw_commentator.vpcf", p);
+                                Effects.Add(t, eff);
+                            }
+                            eff[i].SetControlPoint(1, new Vector3(255, 255, 255));
+                            eff[i].SetControlPoint(0, p);
+                            */
+                            //var effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                            //effect.SetControlPoint(1, new Vector3(100, 0, 0));
+                        }
+                        Utils.Sleep(500, "test" + t.GetHashCode());
+                    }
+
+                    GetClosest(ref returnPointTree, me, points);
+                }
+                //var turnTime = me.GetTurnTime(tartgetPos);
+            }
+            if (Utils.SleepCheck("kek"))
+            {
+                var effect = target.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                effect.SetControlPoint(1, new Vector3(500, 0, 0));
+
+                effect = target.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                effect.SetControlPoint(1, new Vector3(800, 0, 0));
+                Utils.Sleep(1000, "kek");
+            }
+            if (!returnPointUnit.IsZero)
+            {
+                var effect = new ParticleEffect(@"particles\ui_mouseactions\range_display.vpcf", returnPointUnit);
+                effect.SetControlPoint(1, new Vector3(100, 0, 0));
+                effect.SetControlPoint(0, returnPointUnit);
+                Utils.Sleep(1000, "Move");
+            }
+            return returnPointTree.IsZero ? returnPointUnit : returnPointTree;
+        }
+
+        private static void GetClosest(ref Vector3 returnPoint, Hero me,Dictionary<int,Vector3> Points)
+        {
+            for (var i = 0; i <= 8; i++)
+            {
+                Vector3 vec;
+                if (!Points.TryGetValue(i, out vec)) continue;
+                if (!returnPoint.IsZero)
+                {
+                    if (vec.Distance2D(me) <= returnPoint.Distance2D(me))
+                    {
+                        returnPoint = vec;
+                    }
+                }
+                else
+                {
+                    returnPoint = vec;
+                }
+            }
+        }
+
+        public static Hero ClosestToMouse(Hero source, float range = 1000)
+        {
+            var mousePosition = Game.MousePosition;
+            var enemyHeroes =
+                ObjectMgr.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible
+                            && x.Distance2D(mousePosition) <= range && !x.IsMagicImmune());
+            Hero[] closestHero = {null};
+            foreach (
+                var enemyHero in
+                    enemyHeroes.Where(
+                        enemyHero =>
+                            closestHero[0] == null ||
+                            closestHero[0].Distance2D(mousePosition) > enemyHero.Distance2D(mousePosition)))
+            {
+                closestHero[0] = enemyHero;
+            }
+            return closestHero[0];
+        }
+
+        private static void PrintInfo(string text, params object[] arguments)
+        {
+            PrintEncolored(text, ConsoleColor.White, arguments);
+        }
+
+        private static void PrintSuccess(string text, params object[] arguments)
+        {
+            PrintEncolored(text, ConsoleColor.Green, arguments);
+        }
+
+        // ReSharper disable once UnusedMember.Local
+        private static void PrintError(string text, params object[] arguments)
+        {
+            PrintEncolored(text, ConsoleColor.Red, arguments);
+        }
+
+        private static void PrintEncolored(string text, ConsoleColor color, params object[] arguments)
+        {
+            var clr = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(text, arguments);
+            Console.ForegroundColor = clr;
+        }
+    }
+}
