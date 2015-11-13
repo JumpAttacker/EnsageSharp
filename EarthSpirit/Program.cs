@@ -24,9 +24,9 @@ namespace EarthSpirit
         private static Vector2 _sizer = new Vector2(265, 300);
         //============================================================
         private static ulong _useComboKey = 'G';
-        private static ulong UsePushKey = 'Z';
-        private static ulong UseRollKey = 'X';
-        private static ulong UsePullKey = 'C';
+        private static ulong _usePushKey = 'Z';
+        private static ulong _useRollKey = 'X';
+        private static ulong _usePullKey = 'C';
         private static bool _timetochange;
         private static bool _shouldUseDagger;
         private static bool _tryToStealWithPush=true;
@@ -38,10 +38,11 @@ namespace EarthSpirit
         public static Ability Magnetize;
         private static int _stage;
         private static Hero _globalTarget;
-        private static int _combo;
+        public static int Combo { get; set; }
         private static bool _timetochangePush;
         private static bool _timetochangeRoll;
         private static bool _timetochangePull;
+        public static bool Debug;
 
 
         //============================================================
@@ -59,38 +60,41 @@ namespace EarthSpirit
         {
             if (Game.IsChatOpen || !_loaded)
                 return;
-            if (_timetochange && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+            if (!_inAction)
             {
-                _timetochange = false;
-                _useComboKey = args.WParam;
-                return;
-            }
-            if (_timetochangePush && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
-            {
-                _timetochangePush = false;
-                UsePushKey = args.WParam;
-                return;
-            }
-            if (_timetochangeRoll && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
-            {
-                _timetochangeRoll = false;
-                UseRollKey = args.WParam;
-                return;
-            }
-            if (_timetochangePull && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
-            {
-                _timetochangePull = false;
-                UsePullKey = args.WParam;
-                return;
-            }
-            if (args.Msg == WmKeyup)
-            {
-                if (args.WParam == UsePushKey)
-                    LetsPush();
-                if (args.WParam == UseRollKey)
-                    LetsRoll();
-                if (args.WParam == UsePullKey)
-                    LetsPull();
+                if (_timetochange && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+                {
+                    _timetochange = false;
+                    _useComboKey = args.WParam;
+                    return;
+                }
+                if (_timetochangePush && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+                {
+                    _timetochangePush = false;
+                    _usePushKey = args.WParam;
+                    return;
+                }
+                if (_timetochangeRoll && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+                {
+                    _timetochangeRoll = false;
+                    _useRollKey = args.WParam;
+                    return;
+                }
+                if (_timetochangePull && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+                {
+                    _timetochangePull = false;
+                    _usePullKey = args.WParam;
+                    return;
+                }
+                if (args.Msg == WmKeyup)
+                {
+                    if (args.WParam == _usePushKey)
+                        LetsPush();
+                    if (args.WParam == _useRollKey)
+                        LetsRoll();
+                    if (args.WParam == _usePullKey)
+                        LetsPull();
+                }
             }
             if (args.WParam == _useComboKey)
             {
@@ -98,6 +102,7 @@ namespace EarthSpirit
                 _inAction = args.Msg != WmKeyup;
                 if (_inAction != _lastStateAction)
                 {
+                    if (Debug) if (_inAction) PrintInfo("combo key is pressed");
                     _lastStateAction = _inAction;
                     Game.ExecuteCommand(string.Format("dota_player_units_auto_attack_after_spell {0}", _inAction ? 0 : 1));
                     if (_inAction)
@@ -243,7 +248,7 @@ namespace EarthSpirit
                     string.Format("Status: [{0}]", _inAction ? _aghanimState ? "Agh ON" : "ON" : "OFF"),
                     startPos + new Vector2(10, _sizer.Y - 50), Color.White,
                     FontFlags.AntiAlias | FontFlags.DropShadow);
-                Drawing.DrawText(string.Format("Single [{0}] [{1}] [{2}]", (char)UsePushKey, (char)UseRollKey, (char)UsePullKey),
+                Drawing.DrawText(string.Format("Single [{0}] [{1}] [{2}]", (char)_usePushKey, (char)_useRollKey, (char)_usePullKey),
                     startPos + new Vector2(10, _sizer.Y - 35), Color.White,
                     FontFlags.AntiAlias | FontFlags.DropShadow);
                 Drawing.DrawText(string.Format("ComboKey {0}", (char)_useComboKey),
@@ -324,9 +329,13 @@ namespace EarthSpirit
         {
             if (!Utils.SleepCheck("nextAction")) return;
             var ability = me.FindSpell("earth_spirit_petrify");
+            if (ability==null) return;
+            if (ability.Level==0) return;
+
             var inStone = target.Modifiers.Any(x=>x.Name=="modifier_earthspirit_petrify");
+
             var dist = me.Distance2D(target);
-            if (ability != null && ability.CanBeCasted() && !inStone)
+            if (ability.CanBeCasted() && !inStone)
             {
                 if (_shouldUseDagger)
                 {
@@ -393,6 +402,7 @@ namespace EarthSpirit
                     }
                     if (AnyStoneNear(me) && dist <= 1900)
                     {
+                        if (Debug) PrintInfo("stone near you finded");
                         _stage++;
                         break;
                     }
@@ -405,6 +415,7 @@ namespace EarthSpirit
                             Remnant.UseAbility(Prediction.InFront(me, 100));
                             Utils.Sleep(50 + Remnant.FindCastPoint(), "nextAction");
                             _stage++;
+                            if (Debug) PrintInfo("remnant create");
                         }
                         else
                         {
@@ -421,11 +432,13 @@ namespace EarthSpirit
 
                         if (last != null)
                         {
+                            if (Debug) PrintInfo("push casted");
                             Push.UseAbility(target.Position);
                             Utils.Sleep(100 + Push.FindCastPoint(), "nextAction");
-                            _stage++;
                         }
                     }
+                    else
+                        _stage++;
                     break;
                 case 2:
                     if (Pull.CanBeCasted())
@@ -436,8 +449,9 @@ namespace EarthSpirit
                             if (me.Distance2D(target) <= Pull.CastRange)
                             {
                                 Pull.UseAbility(last.Position);
+                                if (Debug) PrintInfo("pull casted");
                                 Utils.Sleep(100 + Pull.FindCastPoint(), "nextAction");
-                                _stage++;
+                                
                             }
                             else /*if (_shouldUseDagger)*/
                             {
@@ -454,22 +468,23 @@ namespace EarthSpirit
                                     var p = new Vector2((float)(me.Position.X + 1100 * Math.Cos(ang)), (float)(me.Position.Y + 1100 * Math.Sin(ang)));
                                     blink.UseAbility(p.ToVector3(true));
                                     Utils.Sleep(100, "nextAction");
+                                    if (Debug) PrintInfo("dagger is used");
                                 }
                             }
                         }
                     }
                     else
-                    {
-                        //_stage++;
-                    }
+                        _stage++;
                     break;
                 case 3:
-                    if (Roll.CanBeCasted())
+                    if (Roll.CanBeCasted() && !Pull.CanBeCasted())
                     {
                         Roll.UseAbility(target.Position);
                         Utils.Sleep(100 + Roll.FindCastPoint(), "nextAction");
-                        _stage++;
+                        if (Debug) PrintInfo("roll casted");
                     }
+                    else
+                        _stage++;
                     break;
                 case 4:
                     if (Magnetize.CanBeCasted())
@@ -479,6 +494,7 @@ namespace EarthSpirit
                             Magnetize.UseAbility();
                             Utils.Sleep(100 + Magnetize.FindCastPoint(), "nextAction");
                             _stage++;
+                            if (Debug) PrintInfo("Magnetize casted");
                         }
                     }
                     break;
@@ -535,7 +551,7 @@ namespace EarthSpirit
                     .Any(
                         x =>
                             x.ClassID == ClassID.CDOTA_Unit_Earth_Spirit_Stone && x.Team == me.Team &&
-                            x.Distance2D(me) <= range);
+                            x.Distance2D(me) <= range && x.IsAlive && x.IsValid);
             return ObjectMgr.GetEntities<Unit>()
                 .Any(
                     x =>
