@@ -6,7 +6,6 @@ using Ensage.Common;
 using Ensage.Common.Extensions;
 using SharpDX;
 
-// ReSharper disable once CheckNamespace
 namespace EarthSpirit
 {
     internal class Program
@@ -21,9 +20,13 @@ namespace EarthSpirit
         private static bool _lastStateAction;
         private static bool _inAction;
         private static bool _aghanimState;
+        private static bool _supUlt;
         private static Vector2 _sizer = new Vector2(265, 300);
         //============================================================
-        private static ulong _myKey = 'G';
+        private static ulong _useComboKey = 'G';
+        private const ulong UsePushKey = 'Z';
+        private const ulong UseRollKey = 'X';
+        private const ulong UsePullKey = 'C';
         private static bool _timetochange;
         private static bool _shouldUseDagger;
         private static bool _tryToStealWithPush=true;
@@ -51,15 +54,24 @@ namespace EarthSpirit
 
         private static void Game_OnWndProc(WndEventArgs args)
         {
-            if (Game.IsChatOpen)
+            if (Game.IsChatOpen || !_loaded)
                 return;
             if (_timetochange && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
             {
                 _timetochange = false;
-                _myKey = args.WParam;
+                _useComboKey = args.WParam;
                 return;
             }
-            if (args.WParam == _myKey)
+            if (args.Msg == WmKeyup)
+            {
+                if (args.WParam == UsePushKey)
+                    LetsPush();
+                if (args.WParam == UseRollKey)
+                    LetsRoll();
+                if (args.WParam == UsePullKey)
+                    LetsPull();
+            }
+            if (args.WParam == _useComboKey)
             {
                 _aghanimState = Game.IsKeyDown(0x11);
                 _inAction = args.Msg != WmKeyup;
@@ -83,6 +95,76 @@ namespace EarthSpirit
                 return;
             }
             _leftMouseIsPress = true;
+        }
+
+        private static void LetsPull()
+        {
+            var me = ObjectMgr.LocalHero;
+            if (!Remnant.CanBeCasted() || !Pull.CanBeCasted() || !Utils.SleepCheck("preComboW8")) return;
+            var pos = Game.MousePosition;
+            if (AnyStoneNear(me, pos))
+            {
+
+            }
+            else if (Remnant.CanBeCasted())
+            {
+                Remnant.UseAbility(pos);
+            }
+            else
+            {
+                return;
+            }
+            Pull.UseAbility(pos);
+            Utils.Sleep(500,"preComboW8");
+        }
+
+        private static void LetsRoll()
+        {
+            if (!Roll.CanBeCasted() || !Utils.SleepCheck("preComboW8")) return;
+            var me = ObjectMgr.LocalHero;
+            if (AnyStoneNear(me))
+            {
+
+            }
+            else if (Remnant.CanBeCasted())
+            {
+                var ang = me.FindAngleBetween(Game.MousePosition, true);
+                var p = new Vector2((float)(me.Position.X + 200 * Math.Cos(ang)), (float)(me.Position.Y + 100 * Math.Sin(ang)));
+                Remnant.UseAbility(p.ToVector3(true));
+            }
+            else
+            {
+                return;
+            }
+            Roll.UseAbility(Game.MousePosition);
+            Utils.Sleep(500, "preComboW8");
+        }
+
+        private static void LetsPush()
+        {
+            var me = ObjectMgr.LocalHero;
+            if (!Push.CanBeCasted() || !Utils.SleepCheck("preComboW8")) return;
+            if (AnyStoneNear(me,new Vector3(),200F))
+            {
+                
+            }
+            else if (Remnant.CanBeCasted())
+            {
+                var ang = me.FindAngleBetween(Game.MousePosition, true);
+                var p = new Vector2((float)(me.Position.X + 50 * Math.Cos(ang)), (float)(me.Position.Y + 50 * Math.Sin(ang)));
+                Remnant.UseAbility(p.ToVector3(true));
+            }
+            else
+            {
+                return;
+            }
+            var pos = Game.MousePosition;
+            if (AnyStoneNear(me, pos))
+            {
+                var ang = me.FindAngleBetween(pos, true);
+                pos = new Vector2((float)(pos.X + 300 * Math.Cos(ang)), (float)(pos.Y + 300 * Math.Sin(ang))).ToVector3(true);
+            }
+            Push.UseAbility(pos);
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -112,13 +194,16 @@ namespace EarthSpirit
 
                 DrawButton(startPos + new Vector2(10, 10), 100, 20, ref _shouldUseDagger, true,
                     new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Use dagger");
+                    new Color(200, 0, 0, 100), "Dagger On Start");
                 DrawButton(startPos + new Vector2(10, 35), 100, 20, ref _tryToStealWithPush, true,
                     new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "KillStealSmash");
+                    new Color(200, 0, 0, 100), "Kill Steal Smash");
                 DrawButton(startPos + new Vector2(10, 60), 100, 20, ref _useRoll, true,
                     new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Rolling");
+                DrawButton(startPos + new Vector2(10, 85), 100, 20, ref _supUlt, true,
+                    new Color(0, 200, 150),
+                    new Color(200, 0, 0, 100), "Sup Ult");
 
                 DrawButton(startPos + new Vector2(10, _sizer.Y - 70), 100, 20, ref _timetochange, true,
                     new Color(0, 200, 150),
@@ -128,7 +213,7 @@ namespace EarthSpirit
                     string.Format("Status: [{0}]", _inAction ? _aghanimState ? "Agh ON" : "ON" : "OFF"),
                     startPos + new Vector2(10, _sizer.Y - 35), Color.White,
                     FontFlags.AntiAlias | FontFlags.DropShadow);
-                Drawing.DrawText(string.Format("ComboKey {0}", (char)_myKey),
+                Drawing.DrawText(string.Format("ComboKey {0}", (char)_useComboKey),
                     startPos + new Vector2(10, _sizer.Y - 20), Color.White,
                     FontFlags.AntiAlias | FontFlags.DropShadow);
             }
@@ -184,20 +269,20 @@ namespace EarthSpirit
 
             
             if (!_inAction) return;
-            if (_globalTarget == null)
+            if (_globalTarget == null || !_globalTarget.IsValid)
             {
                 _globalTarget = ClosestToMouse(me, 150);
                 _stage = 0;
             }
-            if (_globalTarget != null && _globalTarget.IsValid && _globalTarget.IsAlive && me.CanCast())
-                if (_aghanimState)
-                {
-                    LetAghanimCombo(me, _globalTarget);
-                }
-                else
-                {
-                    ComboInAction(me, _globalTarget);
-                }
+            if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive || !me.CanCast()) return;
+            if (_aghanimState)
+            {
+                LetAghanimCombo(me, _globalTarget);
+            }
+            else
+            {
+                ComboInAction(me, _globalTarget);
+            }
 
             #endregion
         }
@@ -363,7 +448,7 @@ namespace EarthSpirit
                     }
                     break;
                 case 5:
-                    if (Remnant.CanBeCasted())
+                    if (Remnant.CanBeCasted() && _supUlt)
                     {
                         var mod = target.Modifiers.FirstOrDefault(x => x.Name == "modifier_earth_spirit_magnetize");
                         if (mod != null && mod.RemainingTime <= 0.5+Game.Ping && me.Distance2D(target)<=Remnant.CastRange)
@@ -371,12 +456,18 @@ namespace EarthSpirit
                             Remnant.UseAbility(target.Position);
                             Utils.Sleep(1000, "nextAction");
                             me.Attack(target,true);
+                            break;
                         }
-                        else
+                        else if (Utils.SleepCheck("attackcd"))
                         {
                             me.Attack(target);
-                            Utils.Sleep(150, "nextAction");
+                            Utils.Sleep(150, "attackcd");
                         }
+                    }
+                    else if (Utils.SleepCheck("attackcd"))
+                    {
+                        me.Attack(target);
+                        Utils.Sleep(200, "attackcd");
                     }
                     if (_tryToStealWithPush&&Push.CanBeCasted() && target.DamageTaken(50 * Push.Level, DamageType.Magical, me) > target.Health)
                     {
@@ -402,13 +493,19 @@ namespace EarthSpirit
             return Push.CanBeCasted() && Pull.CanBeCasted() && Roll.CanBeCasted();
         }
 
-        private static bool AnyStoneNear(Hero me)
+        private static bool AnyStoneNear(Hero me,Vector3 pos=new Vector3(),float range=150)
         {
+            if (pos.IsZero)
+                return ObjectMgr.GetEntities<Unit>()
+                    .Any(
+                        x =>
+                            x.ClassID == ClassID.CDOTA_Unit_Earth_Spirit_Stone && x.Team == me.Team &&
+                            x.Distance2D(me) <= range);
             return ObjectMgr.GetEntities<Unit>()
                 .Any(
                     x =>
                         x.ClassID == ClassID.CDOTA_Unit_Earth_Spirit_Stone && x.Team == me.Team &&
-                        x.Distance2D(me) <= 150);
+                        x.Distance2D(pos) <= range);
 
         }
 
@@ -453,6 +550,7 @@ namespace EarthSpirit
         }
 
         #region Helpers
+/*
         private static void DrawButton(Vector2 a, float w, float h, int numberOfCombo, bool isActive, Color @on, Color off, string des)
         {
             var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
@@ -476,6 +574,7 @@ namespace EarthSpirit
                 Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
             }
         }
+*/
         private static void DrawButton(Vector2 a, float w, float h, ref bool clicked, bool isActive, Color @on, Color off, string drawOnButtonText = "")
         {
             var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
