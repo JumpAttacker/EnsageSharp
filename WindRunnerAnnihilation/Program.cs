@@ -9,6 +9,17 @@ using SharpDX;
 
 namespace WindRunnerAnnihilation
 {
+    internal class ParticleMasterOnTimer
+    {
+        public Unit MaintTarget;
+        public ParticleEffect Effect;
+
+        public ParticleMasterOnTimer(Unit target,  ParticleEffect effect)
+        {
+            MaintTarget = target;
+            Effect = effect;
+        }
+    }
     internal class Program
     {
         private static bool _loaded;
@@ -28,6 +39,10 @@ namespace WindRunnerAnnihilation
         private static bool _showMenu = true;
         private static bool _useultimate=true;
         private static bool _nearestPoint=true;
+        private static readonly Dictionary<Unit, ParticleMasterOnTimer> EffectMaster = new Dictionary<Unit, ParticleMasterOnTimer>();
+        private static bool _shackleshotHelper;
+        private static bool _shackleshotHelperWithEffects = true;
+        public static string WrEffect = "particles/items_fx/electrical_arc_01_cp0.vpcf";
         //private static Vector3 ASD;
 
         private static void Main()
@@ -67,11 +82,16 @@ namespace WindRunnerAnnihilation
                 DrawButton(startPos + new Vector2(10, 35), 100, 20, ref _nearestPoint, true,
                     new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Nearest");
+                DrawButton(startPos + new Vector2(10, 60), 100, 20, ref _shackleshotHelperWithEffects, true,
+                    new Color(0, 200, 150),
+                    new Color(200, 0, 0, 100), "ShacleHelper");
+                DrawButton(startPos + new Vector2(10, 85), 100, 20, ref _shackleshotHelper, true,
+                    new Color(0, 200, 150),
+                    new Color(200, 0, 0, 100), "AutoShacle");
                 
                 DrawButton(startPos + new Vector2(10, _sizer.Y - 70), 100, 20, ref _timetochange, true,
                     new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Change Hotkey");
-
                 Drawing.DrawText(
                     string.Format("Status: [{0}]", _enabled ? "ON" : "OFF"),
                     startPos + new Vector2(10, _sizer.Y - 35), Color.White,
@@ -149,6 +169,37 @@ namespace WindRunnerAnnihilation
                 PrintInfo("> WindRunner unLoaded");
                 return;
             }
+            foreach (var f in EffectMaster.ToList())
+            {
+                var hero = f.Key;
+                var dick = f.Value;
+                var mainTarget = dick.MaintTarget;
+                var angle = (float)(Math.Max(
+                        Math.Abs(me.FindAngleBetween(hero.Position, true) - (me.FindAngleBetween(mainTarget.Position, true))) - .19, 0));
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (angle != 0 || me.Distance2D(mainTarget) <= me.Distance2D(hero) || !hero.IsAlive || !mainTarget.IsAlive)
+                {
+                    if (dick.Effect != null)
+                        dick.Effect.Dispose();
+                    EffectMaster.Remove(f.Key);
+                }
+                else if (Utils.SleepCheck("cd " + dick.Effect.GetHashCode()))
+                {
+                    
+                    EffectMaster.Remove(f.Key);
+                    var eff = new ParticleEffect(WrEffect, hero, ParticleAttachment.WorldOrigin);
+                    Utils.Sleep(500, "cd " + eff.GetHashCode());
+                    //dick.Effect.Restart();
+                    EffectMaster.Add(hero, new ParticleMasterOnTimer(mainTarget,eff));
+                }
+            }
+            var shackleshot = me.Spellbook.Spell1;
+            if (_shackleshotHelperWithEffects)
+            {
+                var effectTarget = ClosestToMouse(me, 500);
+                if (effectTarget!=null && effectTarget.IsValidTarget())
+                    FindBestPosition(me, effectTarget, shackleshot, true);
+            }
             if (!_enabled)
             {
                 if (_bestPosEff != null)
@@ -165,11 +216,11 @@ namespace WindRunnerAnnihilation
 
             var dagger = me.FindItem("item_blink");
             //var forsestaff = me.FindItem("item_force_staff");
-            var shackleshot = me.Spellbook.Spell1;
+            
             var ultimate = me.Spellbook.Spell4;
             if (_globalTarget == null) return;
             //PrintInfo("target: "+target.Name);
-            var bestposition = FindBestPosition(me, _globalTarget);
+            var bestposition = FindBestPosition(me, _globalTarget,shackleshot);
             //ASD = bestposition;
             if (!bestposition.IsZero)
             {
@@ -216,8 +267,11 @@ namespace WindRunnerAnnihilation
             }
         }
 
-        private static Vector3 FindBestPosition(Hero me, Hero target)
+        
+
+        private static Vector3 FindBestPosition(Hero me, Hero target, Ability shackleshot, bool helper=false)
         {
+
             var tartgetPos = target.Position;
             var returnPointUnit = new Vector3();
             var returnPointTree = new Vector3();
@@ -233,25 +287,39 @@ namespace WindRunnerAnnihilation
                             x.Distance2D(target) <= 525 && x.Team != me.Team && !x.IsIllusion && x.IsAlive &&
                             x.IsVisible && !x.IsMagicImmune() && !Equals(x, target))
                     .ToList();
-            var trees =
-                ObjectMgr.GetEntities<Entity>()
+            List<Entity> trees = null;
+            if (!helper)
+            {
+                trees = ObjectMgr.GetEntities<Entity>()
                     .Where(x => x.Name == "ent_dota_tree" && x.Distance2D(target.Position) < 500 && x.IsAlive)
                     .ToList();
+            }
             foreach (var t in _creeps)
             {
-                var tpos = t.Position;
-                var a = tpos.ToVector2().FindAngleBetween(tartgetPos.ToVector2(), true);
-                var points = new Dictionary<int, Vector3>();
-                for (var i = 0; i <= 7; i++)
+                if (!helper)
                 {
-                    var p = new Vector3(
-                        target.Position.X + (150 + 100 * i) * (float)Math.Cos(a),
-                        target.Position.Y + (150 + 100 * i) * (float)Math.Sin(a),
-                        target.Position.Z);
-                    points.Add(i, p);
+                    var tpos = t.Position;
+                    var a = tpos.ToVector2().FindAngleBetween(tartgetPos.ToVector2(), true);
+                    var points = new Dictionary<int, Vector3>();
+
+                    for (var i = 0; i <= 7; i++)
+                    {
+                        var p = new Vector3(
+                            target.Position.X + (150 + 100*i)*(float) Math.Cos(a),
+                            target.Position.Y + (150 + 100*i)*(float) Math.Sin(a),
+                            target.Position.Z);
+                        points.Add(i, p);
+                    }
+
+                    GetClosest(ref returnPointUnit, me, points);
                 }
-                GetClosest(ref returnPointUnit, me,points);
+                else
+                {
+                    LetsAddEffects(me,target,t,shackleshot);
+                }
+                
             }
+            if (helper) return new Vector3();
             foreach (var t in trees)
             {
                 var tpos = t.Position;
@@ -286,6 +354,24 @@ namespace WindRunnerAnnihilation
                 }
             }
             return onExit;
+        }
+
+        private static void LetsAddEffects(Hero me, Unit target, Unit t, Ability shackleshot)
+        {
+            var dist = me.Distance2D(target) >= me.Distance2D(t);
+            var angle = (float)(Math.Max(
+                    Math.Abs(me.FindAngleBetween(t.Position, true) - (me.FindAngleBetween(target.Position, true))) - .19, 0));
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (angle == 0 && dist)
+            {
+                if (!EffectMaster.ContainsKey(t))
+                    EffectMaster.Add(t, new ParticleMasterOnTimer(target, new ParticleEffect(WrEffect, t, ParticleAttachment.WorldOrigin)));
+                if (shackleshot != null && shackleshot.CanBeCasted() && Utils.SleepCheck("shshot") && (_shackleshotHelper))
+                {
+                    shackleshot.UseAbility(t);
+                    Utils.Sleep(250, "shshot");
+                }
+            }
         }
 
         private static void GetClosest(ref Vector3 returnPoint, Hero me,Dictionary<int,Vector3> points)
