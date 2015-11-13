@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing.Text;
 using System.Linq;
 using System.Reflection;
 using Ensage;
@@ -165,9 +166,8 @@ namespace Legion_Annihilation
         {
             if (!Utils.SleepCheck("nextAction")) return;
             var duel = me.Spellbook.Spell4;
-
             if (duel==null) return;
-            if (!duel.CanBeCasted(target)) return;
+            if (!duel.CanBeCasted()) return;
 
             //var steal = me.Spellbook.Spell1;
             var heal = me.Spellbook.Spell2;
