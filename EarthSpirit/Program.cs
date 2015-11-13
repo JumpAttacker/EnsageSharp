@@ -24,9 +24,9 @@ namespace EarthSpirit
         private static Vector2 _sizer = new Vector2(265, 300);
         //============================================================
         private static ulong _useComboKey = 'G';
-        private const ulong UsePushKey = 'Z';
-        private const ulong UseRollKey = 'X';
-        private const ulong UsePullKey = 'C';
+        private static ulong UsePushKey = 'Z';
+        private static ulong UseRollKey = 'X';
+        private static ulong UsePullKey = 'C';
         private static bool _timetochange;
         private static bool _shouldUseDagger;
         private static bool _tryToStealWithPush=true;
@@ -39,7 +39,10 @@ namespace EarthSpirit
         private static int _stage;
         private static Hero _globalTarget;
         private static int _combo;
-        
+        private static bool _timetochangePush;
+        private static bool _timetochangeRoll;
+        private static bool _timetochangePull;
+
 
         //============================================================
         #endregion
@@ -60,6 +63,24 @@ namespace EarthSpirit
             {
                 _timetochange = false;
                 _useComboKey = args.WParam;
+                return;
+            }
+            if (_timetochangePush && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+            {
+                _timetochangePush = false;
+                UsePushKey = args.WParam;
+                return;
+            }
+            if (_timetochangeRoll && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+            {
+                _timetochangeRoll = false;
+                UseRollKey = args.WParam;
+                return;
+            }
+            if (_timetochangePull && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+            {
+                _timetochangePull = false;
+                UsePullKey = args.WParam;
                 return;
             }
             if (args.Msg == WmKeyup)
@@ -176,7 +197,7 @@ namespace EarthSpirit
             }
             if (ObjectMgr.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_EarthSpirit) return;
             var startPos = new Vector2(50, 200);
-            var maxSize = new Vector2(120, 200);
+            var maxSize = new Vector2(120, 280);
             if (_showMenu)
             {
                 _sizer.X += 4;
@@ -204,6 +225,15 @@ namespace EarthSpirit
                 DrawButton(startPos + new Vector2(10, 85), 100, 20, ref _supUlt, true,
                     new Color(0, 200, 150),
                     new Color(200, 0, 0, 100), "Sup Ult");
+                DrawButton(startPos + new Vector2(10, 110), 100, 20, ref _timetochangePush, true,
+                    new Color(0, 200, 150),
+                    new Color(200, 0, 0, 100), "Push HK");
+                DrawButton(startPos + new Vector2(10, 135), 100, 20, ref _timetochangeRoll, true,
+                    new Color(0, 200, 150),
+                    new Color(200, 0, 0, 100), "Roll HK");
+                DrawButton(startPos + new Vector2(10, 160), 100, 20, ref _timetochangePull, true,
+                    new Color(0, 200, 150),
+                    new Color(200, 0, 0, 100), "Pull HK");
 
                 DrawButton(startPos + new Vector2(10, _sizer.Y - 70), 100, 20, ref _timetochange, true,
                     new Color(0, 200, 150),
@@ -211,6 +241,9 @@ namespace EarthSpirit
 
                 Drawing.DrawText(
                     string.Format("Status: [{0}]", _inAction ? _aghanimState ? "Agh ON" : "ON" : "OFF"),
+                    startPos + new Vector2(10, _sizer.Y - 50), Color.White,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                Drawing.DrawText(string.Format("Single [{0}] [{1}] [{2}]", (char)UsePushKey, (char)UseRollKey, (char)UsePullKey),
                     startPos + new Vector2(10, _sizer.Y - 35), Color.White,
                     FontFlags.AntiAlias | FontFlags.DropShadow);
                 Drawing.DrawText(string.Format("ComboKey {0}", (char)_useComboKey),
@@ -367,6 +400,8 @@ namespace EarthSpirit
                     {
                         if (dist <= 1900)
                         {
+                            if (me.NetworkActivity == NetworkActivity.Move)
+                                me.Stop();
                             Remnant.UseAbility(Prediction.InFront(me, 100));
                             Utils.Sleep(50 + Remnant.FindCastPoint(), "nextAction");
                             _stage++;
@@ -458,7 +493,7 @@ namespace EarthSpirit
                             me.Attack(target,true);
                             break;
                         }
-                        else if (Utils.SleepCheck("attackcd"))
+                        if (Utils.SleepCheck("attackcd"))
                         {
                             me.Attack(target);
                             Utils.Sleep(150, "attackcd");
