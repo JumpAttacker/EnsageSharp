@@ -169,36 +169,54 @@ namespace WindRunnerAnnihilation
                 PrintInfo("> WindRunner unLoaded");
                 return;
             }
-            foreach (var f in EffectMaster.ToList())
+            try
             {
-                var hero = f.Key;
-                var dick = f.Value;
-                var mainTarget = dick.MaintTarget;
-                var angle = (float)(Math.Max(
-                        Math.Abs(me.FindAngleBetween(hero.Position, true) - (me.FindAngleBetween(mainTarget.Position, true))) - .19, 0));
-                // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (angle != 0 || me.Distance2D(mainTarget) <= me.Distance2D(hero) || !hero.IsAlive || !mainTarget.IsAlive)
+                foreach (var f in EffectMaster.ToList())
                 {
-                    if (dick.Effect != null)
-                        dick.Effect.Dispose();
-                    EffectMaster.Remove(f.Key);
-                }
-                else if (Utils.SleepCheck("cd " + dick.Effect.GetHashCode()))
-                {
-                    
-                    EffectMaster.Remove(f.Key);
-                    var eff = new ParticleEffect(WrEffect, hero, ParticleAttachment.WorldOrigin);
-                    Utils.Sleep(500, "cd " + eff.GetHashCode());
-                    //dick.Effect.Restart();
-                    EffectMaster.Add(hero, new ParticleMasterOnTimer(mainTarget,eff));
+                    var hero = f.Key;
+                    var dick = f.Value;
+                    var mainTarget = dick.MaintTarget;
+                    if (!hero.IsValid || !mainTarget.IsValid) EffectMaster.Remove(f.Key);
+                    var angle = (float)(Math.Max(
+                            Math.Abs(me.FindAngleBetween(hero.Position, true) - (me.FindAngleBetween(mainTarget.Position, true))) - .19, 0));
+                    // ReSharper disable once CompareOfFloatsByEqualityOperator
+                    if (angle != 0 || me.Distance2D(mainTarget) <= me.Distance2D(hero) || !hero.IsAlive || !mainTarget.IsAlive)
+                    {
+                        if (dick.Effect != null)
+                            dick.Effect.Dispose();
+                        EffectMaster.Remove(f.Key);
+                    }
+                    else if (Utils.SleepCheck("cd " + dick.Effect.GetHashCode()))
+                    {
+
+                        EffectMaster.Remove(f.Key);
+                        var eff = new ParticleEffect(WrEffect, hero, ParticleAttachment.WorldOrigin);
+                        Utils.Sleep(500, "cd " + eff.GetHashCode());
+                        //dick.Effect.Restart();
+                        EffectMaster.Add(hero, new ParticleMasterOnTimer(mainTarget, eff));
+                    }
                 }
             }
+            catch (Exception)
+            {
+                PrintError("error #2");
+            }
+            
             var shackleshot = me.Spellbook.Spell1;
             if (_shackleshotHelperWithEffects)
             {
-                var effectTarget = ClosestToMouse(me, 500);
-                if (effectTarget!=null && effectTarget.IsValidTarget())
-                    FindBestPosition(me, effectTarget, shackleshot, true);
+                try
+                {
+                    var effectTarget = ClosestToMouse(me, 500);
+                    if (effectTarget != null && effectTarget.IsValidTarget())
+                        FindBestPosition(me, effectTarget, shackleshot, true);
+                }
+                catch (Exception)
+                {
+                    
+                    PrintError("error #1");
+                }
+                
             }
             if (!_enabled)
             {
