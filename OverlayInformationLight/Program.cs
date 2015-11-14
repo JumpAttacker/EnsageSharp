@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Ensage;
@@ -14,26 +16,10 @@ using SharpDX.Direct3D9;
 
 namespace OverlayInformationLight
 {
-    internal class DataMaster
-    {
-        public Hero Hero;
-        public float Health, Mana;
-        public Inventory Inv;
-
-        public DataMaster(Hero hero, float health, float mana, Inventory inv)
-        {
-            Hero = hero;
-            Health = health;
-            Mana = mana;
-            Inv = inv;
-        }
-    }
     internal class Program
     {
         #region Members
 
-        private static List<DataMaster> _data;
-        
         private static bool _loaded;
         private static Hero _me;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version+" light";
@@ -45,7 +31,8 @@ namespace OverlayInformationLight
         private static readonly ParticleEffect[] ArrowParticalEffects=new ParticleEffect[150];
 
         private static readonly Dictionary<Hero, Ability> UltimateAbilities = new Dictionary<Hero, Ability>();
-
+        //======================================
+        private static readonly StatusInfo[] SInfo=new StatusInfo[10];
         //======================================
         public static bool ShowHealthOnTopPanel = true;
         public static bool ShowManaOnTopPanel = true;
@@ -53,12 +40,21 @@ namespace OverlayInformationLight
         public static bool ShowIllusions = true;
         public static bool ShowMeMore= true;
         public static bool DangItems = true;
-        public static bool AutoItemsMenu = true;
-        public static bool AutoItemsActive = true;
+        public static bool AutoItemsMenu;
+        public static bool AutoItemsActive;
         public static bool AutoItemsMidas = true;
         public static bool AutoItemsPhase = true;
         public static bool AutoItemsStick = true;
         public static bool ShowUltimateCd = true;
+        public static bool ExtraVisionPanel;
+        public static bool StatusEnemyTimer;
+        public static bool ShowStatusInfo;
+        public static bool ShowStatusInfoActivated;
+        public static bool ShowExtraVisionPanel;
+        public static bool StatusEnemyOnMinimap;
+
+        private static bool _showPAonMinimap;
+        //=====================================
         private static readonly Dictionary<Unit, ParticleEffect> BaraIndicator = new Dictionary<Unit, ParticleEffect>();
         //=====================================
         private static readonly Dictionary<string, DotaTexture> TextureCache = new Dictionary<string, DotaTexture>();
@@ -86,6 +82,10 @@ namespace OverlayInformationLight
         private static Vector2 _sizer = new Vector2(110, 500);
         private static bool _letsDraw = true;
 
+        private static bool _saveSettings;
+        private static bool _printPathLoc;
+        private static readonly string MyPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+        static readonly InitHelper SaveLoadSysHelper = new InitHelper(MyPath + "\\jOverlayLight.ini");
         #endregion
 
         #region Methods
@@ -151,9 +151,72 @@ namespace OverlayInformationLight
             }
 
             #endregion
-            
+
+            #region SaveLoadSys
+
+            try
+            {
+                LoadThis(out ShowHealthOnTopPanel, "ShowHealthOnTopPanel");
+                LoadThis(out ShowManaOnTopPanel, "ShowManaOnTopPanel");
+                LoadThis(out ShowRoshanTimer, "ShowRoshanTimer");
+                LoadThis(out ShowIllusions, "ShowIllusions");
+                LoadThis(out ShowMeMore, "ShowMeMore");
+                LoadThis(out DangItems, "DangItems");
+                LoadThis(out AutoItemsMenu, "AutoItemsMenu");
+                LoadThis(out AutoItemsActive, "AutoItemsActive");
+                LoadThis(out AutoItemsMidas, "AutoItemsMidas");
+                LoadThis(out AutoItemsPhase, "AutoItemsPhase");
+                LoadThis(out AutoItemsStick, "AutoItemsStick");
+                LoadThis(out ShowUltimateCd, "ShowUltimateCd");
+                LoadThis(out ExtraVisionPanel, "ExtraVisionPanel");
+                LoadThis(out StatusEnemyTimer, "StatusEnemyTimer");
+                LoadThis(out ShowStatusInfo, "ShowStatusInfo");
+                LoadThis(out ShowStatusInfoActivated, "ShowStatusInfoActivated");
+                LoadThis(out ShowExtraVisionPanel, "ShowExtraVisionPanel");
+                LoadThis(out StatusEnemyOnMinimap, "StatusEnemyOnMinimap");
+            }
+            catch
+            {
+                SaveAll();
+
+                Console.Beep(1000, 100);
+                Console.Beep(1000, 100);
+                Console.Beep(1000, 100);
+            }
+
+            #endregion
         }
 
+        private static void SaveAll()
+        {
+            SaveThis(ShowHealthOnTopPanel, "ShowHealthOnTopPanel");
+            SaveThis(ShowManaOnTopPanel, "ShowManaOnTopPanel");
+            SaveThis(ShowRoshanTimer, "ShowRoshanTimer");
+            SaveThis(ShowIllusions, "ShowIllusions");
+            SaveThis(ShowMeMore, "ShowMeMore");
+            SaveThis(DangItems, "DangItems");
+            SaveThis(AutoItemsMenu, "AutoItemsMenu");
+            SaveThis(AutoItemsActive, "AutoItemsActive");
+            SaveThis(AutoItemsMidas, "AutoItemsMidas");
+            SaveThis(AutoItemsPhase, "AutoItemsPhase");
+            SaveThis(AutoItemsStick, "AutoItemsStick");
+            SaveThis(ShowUltimateCd, "ShowUltimateCd");
+            SaveThis(ExtraVisionPanel, "ExtraVisionPanel");
+            SaveThis(StatusEnemyTimer, "StatusEnemyTimer");
+            SaveThis(ShowStatusInfo, "ShowStatusInfo");
+            SaveThis(ShowStatusInfoActivated, "ShowStatusInfoActivated");
+            SaveThis(ShowExtraVisionPanel, "ShowExtraVisionPanel");
+            SaveThis(StatusEnemyOnMinimap, "StatusEnemyOnMinimap");
+        }
+
+        private static void LoadThis(out bool boolka, string empty)
+        {
+            boolka = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", empty));
+        }
+        private static void SaveThis(bool boolka, string empty)
+        {
+            SaveLoadSysHelper.IniWriteValue("Booleans", empty, boolka.ToString());
+        }
 
         private static void Game_OnGameEvent(FireEventEventArgs args)
         {
@@ -222,12 +285,36 @@ namespace OverlayInformationLight
                 }
                 _loaded = true;
                 PrintSuccess("> OverlayInformation loaded! v" + Ver);
+                
             }
             
             if (!Game.IsInGame || _me == null)
             {
                 _loaded = false;
                 PrintInfo("> OverlayInformation unLoaded");
+            }
+
+            if (_saveSettings)
+            {
+                _saveSettings = false;
+                try
+                {
+                    SaveAll();
+                    //PrintSuccess("Saved");
+                }
+                catch (Exception)
+                {
+                    PrintError("Can't save");
+                }
+            }
+            if (_printPathLoc)
+            {
+                _printPathLoc = false;
+                if (Utils.SleepCheck("path"))
+                {
+                    PrintInfo("Your path for settings: " + MyPath);
+                    Utils.Sleep(1000, "path");
+                }
             }
 
             #endregion
@@ -321,7 +408,7 @@ namespace OverlayInformationLight
             }
 
             #endregion
-            return;
+
             #region AutoItems
 
             if (!AutoItemsActive || !Utils.SleepCheck("AutoItems")) return;
@@ -512,18 +599,11 @@ namespace OverlayInformationLight
 
         #endregion
 
-        #region Off
+        #region Drawing_OnDraw
 
-        
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!Game.IsInGame || _me == null || !_loaded || Game.IsPaused) return;
-            /*if (_players == null || _players.Count() < 10)
-                {
-                    _players = ObjectMgr.GetEntities<Player>().Where(x => x != null && x.Hero != null && x.Hero.IsAlive);
-                }
-            var enumerable = _players as Player[] ?? _players.ToArray();*/
-            //foreach (var s in enumerable)
 
             #region J - overlay
 
@@ -552,6 +632,43 @@ namespace OverlayInformationLight
                     DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref DangItems, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Dangerous Items");
                     pos += 22;
                     DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowUltimateCd, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show ultimates");
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref AutoItemsMenu, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Auto Items Menu");
+                    if (AutoItemsMenu)
+                    {
+                        ShowStatusInfo = false;
+                        Drawing.DrawRect(startLoc - new Vector2(_sizer.X + 2, 0), _sizer, new Color(0, 0, 0, 100));
+                        var pos2 = 5;
+                        DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20, ref AutoItemsActive, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Activated");
+                        pos2 += 22;
+                        DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20, ref AutoItemsMidas, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Midas");
+                        pos2 += 22;
+                        DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20, ref AutoItemsPhase, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "PhaseBoots");
+                        pos2 += 22;
+                        DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20, ref AutoItemsStick, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Sticks");
+                    }
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowStatusInfo, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Status Info");
+                    if (ShowStatusInfo)
+                    {
+                        AutoItemsMenu = false;
+                        Drawing.DrawRect(startLoc - new Vector2(_sizer.X + 2, 0), _sizer, new Color(0, 0, 0, 100));
+                        var pos2 = 5;
+                        DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20,
+                            ref ShowStatusInfoActivated, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50),
+                            "Activated");
+                        pos2 += 22;
+                        DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20,
+                            ref StatusEnemyTimer, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "EnemyTimer");
+                        pos2 += 22;
+                        DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20,
+                            ref StatusEnemyOnMinimap, false, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "LastPosOnMinMap");
+                        pos2 += 22;
+                        DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20,
+                            ref _showPAonMinimap, false, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show PA");
+                    }
+                    DrawButton(startLoc + new Vector2(5, _sizer.Y - 35), _sizer.X - 10, 30, ref _saveSettings, true, new Color(0, 200, 0, 50), new Color(200, 200, 0, 50), "Save Settings");
+                    DrawButton(startLoc + new Vector2(5, _sizer.Y - 57), _sizer.X - 10, 22, ref _printPathLoc, true, new Color(0, 200, 0, 50), new Color(200, 200, 0, 50), "Print Path Loc");
                 }
             }
             else
@@ -561,8 +678,8 @@ namespace OverlayInformationLight
                 Drawing.DrawRect(startLoc, _sizer, new Color(0, 0, 0, 100));
             }
             DrawButton(startLoc, _sizer.X, 30, ref _isOpen, true, new Color(0, 0, 0, 50), new Color(0, 0, 0, 125), "J-Overlay Light");
-            #endregion
             
+            #endregion
             for (uint i = 0; i < 10; i++)
             {
                 #region Init
@@ -608,6 +725,39 @@ namespace OverlayInformationLight
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(manaDelta.X, height),
                         new Color(0, 0, 255, 255));
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Black, true);
+                }
+
+                #endregion
+
+                #region StatusInfo
+
+                if (ShowStatusInfoActivated)
+                {
+                    if (v.Team != _me.Team)
+                    {
+                        if (StatusEnemyTimer)
+                        {
+                            if (SInfo[i] == null)
+                            {
+                                SInfo[i] = new StatusInfo(v, Game.GameTime);
+                            }
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + height*2), new Vector2(sizeX, height*2),
+                                new Color(0, 0, 0, 100));
+                            Drawing.DrawRect(pos + new Vector2(0, sizeY + height*2), new Vector2(sizeX, height*2),
+                                new Color(0, 0, 0, 255), true);
+                            var text = (v.IsVisible) ? SInfo[i].GetStatus() : SInfo[i].GetTime();
+                            Drawing.DrawText(text, pos + new Vector2(5, sizeY + height*2), Color.White,
+                                FontFlags.AntiAlias | FontFlags.DropShadow);
+                        }
+                        if (StatusEnemyOnMinimap)
+                        {
+
+                        }
+                        if (_showPAonMinimap)
+                        {
+
+                        }
+                    }
                 }
 
                 #endregion
@@ -866,6 +1016,7 @@ namespace OverlayInformationLight
                 #endregion
             }
         }
+
         #endregion
 
         #endregion
@@ -1081,13 +1232,18 @@ namespace OverlayInformationLight
                 if (drawOnButtonText != "")
                 {
                     Drawing.DrawText(drawOnButtonText, a + new Vector2(10, 2), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                        FontFlags.AntiAlias | FontFlags.DropShadow);
                 }
             }
             else
             {
                 Drawing.DrawRect(a, new Vector2(w, h), Color.Gray);
                 Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
+                if (drawOnButtonText != "")
+                {
+                    Drawing.DrawText(drawOnButtonText, a + new Vector2(10, 2), Color.White,
+                        FontFlags.AntiAlias | FontFlags.DropShadow);
+                }
             }
         }
 
