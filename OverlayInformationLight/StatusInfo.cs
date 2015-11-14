@@ -24,9 +24,12 @@ namespace OverlayInformationLight
         public string GetTime()
         {
             var curStat=GetStatus();
-            if (_status == GetStatus()) return curStat + " " + (int) (Game.GameTime - _time);
-            _status = curStat;
-            _time = Game.GameTime;
+            if (_status != GetStatus())
+            {
+                _time = Game.GameTime;
+                _status = curStat;
+            }
+            if (curStat == "visible") return curStat;
             return curStat + " " + (int) (Game.GameTime - _time);
         }
 
@@ -34,5 +37,6 @@ namespace OverlayInformationLight
         {
             return _hero.IsInvisible() ? "invis" : _hero.IsVisible ? "visible" : "in fog";
         }
+
     }
 }

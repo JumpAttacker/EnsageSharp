@@ -745,7 +745,7 @@ namespace OverlayInformationLight
                                 new Color(0, 0, 0, 100));
                             Drawing.DrawRect(pos + new Vector2(0, sizeY + height*2), new Vector2(sizeX, height*2),
                                 new Color(0, 0, 0, 255), true);
-                            var text = (v.IsVisible) ? SInfo[i].GetStatus() : SInfo[i].GetTime();
+                            var text = SInfo[i].GetTime();
                             Drawing.DrawText(text, pos + new Vector2(5, sizeY + height*2), Color.White,
                                 FontFlags.AntiAlias | FontFlags.DropShadow);
                         }
