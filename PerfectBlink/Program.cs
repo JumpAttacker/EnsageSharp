@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Ensage;
 using Ensage.Common.Extensions;
 using SharpDX;
@@ -7,7 +8,7 @@ namespace PerfectBlink
 {
     class Program
     {
-        private const string Ver = "1.0";
+        private const string Ver = "1.1";
 
         static void Main()
         {
@@ -16,19 +17,38 @@ namespace PerfectBlink
         }
         static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
+            if ((args.Order == Order.AbilityTarget || args.Order == Order.AbilityLocation))
+                if (args.Ability.Name == "item_tpscroll" || args.Ability.Name == "item_travel_boots" ||
+                    args.Ability.Name == "item_travel_boots_2")
+                    TpPos = args.TargetPosition;
             if (args.Order != Order.AbilityLocation) return;
+
             if (args.Ability.Name != "item_blink") return;
             var me = ObjectMgr.LocalHero;
-            if (!(me.Distance2D(args.TargetPosition) > 1200)) return;
+            if (!(me.Distance2D(args.TargetPosition) > 1200))
+                return;
             var tpos = me.Position;
             var a = tpos.ToVector2().FindAngleBetween(args.TargetPosition.ToVector2(), true);
             var p = new Vector3(
                 tpos.X + 1150 * (float)Math.Cos(a),
                 tpos.Y + 1150 * (float)Math.Sin(a),
                 100);
-            args.Ability.UseAbility(p);
+            if (me.Modifiers.Any(x => x.Name == "modifier_teleporting"))
+            {
+                tpos = TpPos;
+                a = tpos.ToVector2().FindAngleBetween(args.TargetPosition.ToVector2(), true);
+                p = new Vector3(
+                    tpos.X + 1150*(float) Math.Cos(a),
+                    tpos.Y + 1150*(float) Math.Sin(a),
+                    100);
+            }
+            args.Ability.UseAbility(p,me.IsChanneling());
             args.Process = false;
         }
+
+        public static Vector3 TpPos { get; set; }
+
+
         private static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
