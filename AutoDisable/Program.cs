@@ -33,7 +33,25 @@ namespace Auto_Disable
                 PrintInfo("> AutoDisable unLoaded");
                 return;
             }
+            #region Dodge by mod
 
+            if (Utils.SleepCheck("item_manta"))
+            {
+                var dodgeByManta = _me.FindItem("item_manta");
+                var mod =
+                    _me.Modifiers.FirstOrDefault(
+                        x =>
+                            /*x.Name == "modifier_lion_finger_of_death" || */x.Name == "modifier_orchid_malevolence_debuff" ||
+                            x.Name == "modifier_pudge_meat_hook" /*|| x.Name == "modifier_lina_laguna_blade"*/);
+                if (dodgeByManta != null && dodgeByManta.CanBeCasted() && mod != null)
+                {
+                    dodgeByManta.UseAbility();
+                    Utils.Sleep(250, "item_manta");
+                    return;
+                }
+            }
+
+            #endregion
             uint i;
             for (i = 0; i < 10; i++)
             {
@@ -51,6 +69,9 @@ namespace Auto_Disable
                     var isDisarm = v.IsDisarmed();
                     var isInvis = _me.IsInvisible();
                     var isChannel = _me.IsChanneling();
+
+                    if ((isInvis && !_me.IsVisibleToEnemies)|| isChannel) continue;
+
                     var items = _me.Inventory.Items.Where(x => x.CanBeCasted());
                     var spells = _me.Spellbook.Spells.Where(x => x.CanBeCasted());
                     var blink = v.FindItem("item_blink");
@@ -65,7 +86,7 @@ namespace Auto_Disable
                     var angle = (float) (Math.Max(
                         Math.Abs(v.RotationRad - Utils.DegreeToRadian(v.FindAngleBetween(_me.Position))) - 0.20, 0));
 
-                    if (!enumerable.Any() || (isInvul || magicImmnune || isInvis || isChannel || dpActivated))
+                    if (!enumerable.Any() || !(isInvul || magicImmnune || isInvis || isChannel || dpActivated))
                     {
                         if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                         {
@@ -110,9 +131,10 @@ namespace Auto_Disable
                         if ((r != null && r.IsInAbilityPhase) || (r2 != null && r2.IsInAbilityPhase) ||
                             mustHave && modifier && act || !mustHave && act)
                         {
-                            UsaSafeItems(v, enumerable, abilities);
+                            CounterSpellAndItems(v, enumerable, abilities);
                         }
                     }
+                    
                     if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                     {
                         UseDisableStageOne(v, enumerable, abilities, true);
@@ -166,7 +188,7 @@ namespace Auto_Disable
         private static Player _player;
         private static bool _activated;
         private static bool _autoBlink;
-        private const string Ver = "1.4";
+        private const string Ver = "1.5";
         private static readonly Dictionary<ClassID, string> Initiators = new Dictionary<ClassID, string>();
         //static readonly Dictionary<ClassID, string> CounterSpells = new Dictionary<ClassID, string>();
         private static Font _infoText;
@@ -376,9 +398,10 @@ namespace Auto_Disable
             if (!Game.IsInGame || _me == null || !_loaded) return;
         }
 
-        private static void UsaSafeItems(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities)
+        private static void CounterSpellAndItems(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities)
         {
             var enumerable = items as Item[] ?? items.ToArray();
+            
             var safeItemSelf = enumerable.FirstOrDefault(
                 x =>
                     x.Name == "item_blade_mail" /*|| x.Name == "item_black_king_bar" || x.Name == "item_ghost" ||
@@ -500,7 +523,7 @@ namespace Auto_Disable
                             x.Name == "dragon_knight_dragon_tail" ||
                             x.Name == "batrider_flaming_lasso" ||
                             x.Name == "legion_commander_duel" ||
-                            x.Name == "skywrath_mage_ancient_seal");
+                            x.Name == "skywrath_mage_ancient_seal" /*|| x.Name == "vengefulspirit_magic_missile"*/);
                 withOutTarget =
                     enumerable1.FirstOrDefault(
                         x =>
@@ -540,7 +563,7 @@ namespace Auto_Disable
             var v =
                 ObjectMgr.GetEntities<Unit>()
                     .FirstOrDefault(x => x.Team == _me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
-            if (safeItemPoint != null && _autoBlink)
+            if (safeItemPoint != null && _autoBlink && _me.Distance2D(target)<=1000)
             {
                 if (v != null)
                 {
