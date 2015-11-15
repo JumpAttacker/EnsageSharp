@@ -187,6 +187,8 @@ namespace OverlayInformationLight
             #endregion
         }
 
+        #region saveload staff
+
         private static void SaveAll()
         {
             SaveThis(ShowHealthOnTopPanel, "ShowHealthOnTopPanel");
@@ -213,10 +215,13 @@ namespace OverlayInformationLight
         {
             boolka = Convert.ToBoolean(SaveLoadSysHelper.IniReadValue("Booleans", empty));
         }
+
         private static void SaveThis(bool boolka, string empty)
         {
             SaveLoadSysHelper.IniWriteValue("Booleans", empty, boolka.ToString());
         }
+
+        #endregion
 
         private static void Game_OnGameEvent(FireEventEventArgs args)
         {
@@ -420,8 +425,8 @@ namespace OverlayInformationLight
                     var creep =
                         ObjectMgr
                             .GetEntities<Unit>(
-                            ).FirstOrDefault(x => ((x is Hero && !x.IsIllusion) || (x is Creep && x.IsSpawned)) && x.IsAlive &&
-                                                  x.IsVisible && _me.Distance2D(x) <= midas.CastRange && x.Team != _me.Team);
+                            ).FirstOrDefault(x => x is Creep && x.IsSpawned && x.IsAlive &&
+                                                  x.IsVisible && _me.Distance2D(x) <= midas.CastRange && x.Team != _me.Team && midas.CanBeCasted(x));
                     midas.UseAbility(creep);
                     Utils.Sleep(250, "AutoItems");
                     //PrintError("midas.CastRange: " + midas.CastRange);
@@ -437,16 +442,10 @@ namespace OverlayInformationLight
                 }
             }
             if (!AutoItemsStick) return;
-            var stick = _me.FindItem("item_magic_stick");
-            var wand = _me.FindItem("item_magic_wand");
+            var stick = _me.Inventory.Items.FirstOrDefault(x => (x.Name == "item_magic_stick" || x.Name == "item_magic_wand") && x.CanBeCasted() && x.CurrentCharges>0);
             if (_me.Health * 100 / _me.MaximumHealth > 30 || !_me.IsAlive) return;
-            if (stick != null && stick.CanBeCasted() && !_me.IsInvisible())
-            {
-                stick.UseAbility();
-                Utils.Sleep(250, "AutoItems");
-            }
-            if (wand == null || !wand.CanBeCasted()) return;
-            wand.UseAbility();
+            if (stick == null || _me.IsInvisible()) return;
+            stick.UseAbility();
             Utils.Sleep(250, "AutoItems");
 
             #endregion
