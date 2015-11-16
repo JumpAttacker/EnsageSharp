@@ -35,7 +35,7 @@ namespace OverlayInformationLight
 
         public string GetStatus()
         {
-            return _hero.IsInvisible() ? "invis" : _hero.IsVisible ? "visible" : "in fog";
+            return !_hero.IsValid?"heh":_hero.IsInvisible() ? "invis" : _hero.IsVisible ? "visible" : "in fog";
         }
 
     }
