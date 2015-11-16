@@ -73,6 +73,7 @@ namespace OverlayInformationLight
         //private static readonly InitHelper SaveLoadSysHelper = new InitHelper("C:"+ "\\jOverlay.ini");
         //=====================================
         private static float _deathTime;
+        private static float _aegisTime;
         private static double _roshanMinutes;
         private static double _roshanSeconds;
         private static bool _roshIsAlive;
@@ -86,6 +87,8 @@ namespace OverlayInformationLight
         private static bool _printPathLoc;
         private static readonly string MyPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
         static readonly InitHelper SaveLoadSysHelper = new InitHelper(MyPath + "\\jOverlayLight.ini");
+        private static bool _findAa;
+
         #endregion
 
         #region Methods
@@ -225,9 +228,15 @@ namespace OverlayInformationLight
 
         private static void Game_OnGameEvent(FireEventEventArgs args)
         {
-            if (args.GameEvent.Name != "dota_roshan_kill") return;
-            _deathTime = Game.GameTime;
-            _roshIsAlive = false;
+            if (args.GameEvent.Name == "dota_roshan_kill")
+            {
+                _deathTime = Game.GameTime;
+                _roshIsAlive = false;
+            }
+            /*if (args.GameEvent.Name == "spec_item_pickup")
+            {
+                _aegisTime = Game.GameTime;
+            }*/
         }
 
         #endregion
@@ -323,9 +332,7 @@ namespace OverlayInformationLight
             }
 
             #endregion
-
             //_data = new List<DataMaster>();
-
             #region Show me more cast
             
             //List<Unit> dummy;
@@ -360,6 +367,16 @@ namespace OverlayInformationLight
                         {
 
                         }
+                    }
+                    if (t.DayVision == 550)
+                    {
+                        if (_findAa) continue;
+                        _findAa = true;
+                        GenerateSideMessage("ancient_apparition", "ancient_apparition_ice_blast");
+                    }
+                    else
+                    {
+                        _findAa = false;
                     }
                     /*if (t.DayVision == 0 && !find)
                     {
@@ -875,6 +892,7 @@ namespace OverlayInformationLight
                             eff = new ParticleEffect("particles/hw_fx/cursed_rapier.vpcf", v);
                             eff.SetControlPointEntity(1,v);
                             BaraIndicator.Add(v,eff);
+                            GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""), "spirit_breaker_charge_of_darkness");
                         }
                     }
                     else
@@ -927,6 +945,7 @@ namespace OverlayInformationLight
                                     _arrowS = _arrowUnit.Position;
                                     InSystem.Add(_arrowUnit);
                                     Utils.Sleep(100,"kek");
+                                    GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""), "mirana_arrow");
                                 }
                                 else if (_letsDraw && Utils.SleepCheck("kek"))
                                 {
@@ -1013,6 +1032,7 @@ namespace OverlayInformationLight
                 }
 
                 #endregion
+
             }
         }
 
@@ -1021,6 +1041,15 @@ namespace OverlayInformationLight
         #endregion
 
         #region Helpers
+        private static void GenerateSideMessage(string hero, string spellName)
+        {
+            var msg = new SideMessage(hero, new Vector2(200, 60));
+            msg.AddElement(new Vector2(006, 06), new Vector2(72, 36), GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
+            msg.AddElement(new Vector2(078, 12), new Vector2(64, 32), GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
+            msg.AddElement(new Vector2(142, 06), new Vector2(72, 36), GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
+            msg.CreateMessage();
+        }
+
         private static DotaTexture GetTexture(string name)
         {
             if (TextureCache.ContainsKey(name)) return TextureCache[name];
