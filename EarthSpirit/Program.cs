@@ -444,32 +444,48 @@ namespace EarthSpirit
                     if (Pull.CanBeCasted())
                     {
                         var last = GetLastRemnant(me);
-                        if (target.Distance2D(last) <= 200)
+                        if (last != null)
                         {
-                            if (me.Distance2D(target) <= Pull.CastRange)
+                            if (target.Distance2D(last) <= 200)
                             {
-                                Pull.UseAbility(last.Position);
-                                if (Debug) PrintInfo("pull casted");
-                                Utils.Sleep(100 + Pull.FindCastPoint(), "nextAction");
-                                
-                            }
-                            else /*if (_shouldUseDagger)*/
-                            {
-                                var blink = me.FindItem("item_blink");
-                                if (dist >= Pull.CastRange && blink != null && blink.CanBeCasted())
+                                if (me.Distance2D(target) <= Pull.CastRange)
                                 {
-                                    if (dist >= Pull.CastRange + 1100)
-                                    {
-                                        me.Move(target.Position);
-                                        Utils.Sleep(200, "nextAction");
-                                        break;
-                                    }
-                                    var ang = me.FindAngleBetween(target.Position, true);
-                                    var p = new Vector2((float)(me.Position.X + 1100 * Math.Cos(ang)), (float)(me.Position.Y + 1100 * Math.Sin(ang)));
-                                    blink.UseAbility(p.ToVector3(true));
-                                    Utils.Sleep(100, "nextAction");
-                                    if (Debug) PrintInfo("dagger is used");
+                                    Pull.UseAbility(target.Position);
+                                    //PrintInfo("last pos: "+last.Position.X);
+                                    if (Debug) PrintInfo("pull casted");
+                                    Utils.Sleep(100 + Pull.FindCastPoint(), "nextAction");
+
                                 }
+                                else /*if (_shouldUseDagger)*/
+                                {
+                                    var blink = me.FindItem("item_blink");
+                                    if (dist >= Pull.CastRange && blink != null && blink.CanBeCasted())
+                                    {
+                                        if (dist >= Pull.CastRange + 1100)
+                                        {
+                                            me.Move(target.Position);
+                                            Utils.Sleep(200, "nextAction");
+                                            break;
+                                        }
+                                        var ang = me.FindAngleBetween(target.Position, true);
+                                        var p = new Vector2((float) (me.Position.X + 1100*Math.Cos(ang)),
+                                            (float) (me.Position.Y + 1100*Math.Sin(ang)));
+                                        blink.UseAbility(p.ToVector3(true));
+                                        Utils.Sleep(100, "nextAction");
+                                        if (Debug) PrintInfo("dagger is used");
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (Remnant.CanBeCasted())
+                            {
+                                if (me.NetworkActivity == NetworkActivity.Move)
+                                    me.Stop();
+                                Remnant.UseAbility(target.Position);
+                                if (Debug) PrintInfo("remnant create");
+
                             }
                         }
                     }
