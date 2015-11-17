@@ -42,7 +42,7 @@ namespace EarthSpirit
         private static bool _timetochangePush;
         private static bool _timetochangeRoll;
         private static bool _timetochangePull;
-        public static bool Debug;
+        public static bool Debug = true;
 
 
         //============================================================
