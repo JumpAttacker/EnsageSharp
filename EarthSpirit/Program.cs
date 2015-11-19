@@ -176,7 +176,6 @@ namespace EarthSpirit
                 return;
             }
             #endregion
-
             #region Lets combo
 
             if (Menu.Item("pushKey").GetValue<KeyBind>().Active)
@@ -451,12 +450,16 @@ namespace EarthSpirit
                     break;
                     
             }
-            LetsUseItems(me, target);
+            if (Menu.Item("items").GetValue<bool>())
+            {
+                LetsUseItems(me, target);
+            }
         }
 
         private static void LetsUseItems(Hero me, Hero target)
         {
-            if (Push!=null && Push.CanBeCasted()) return;
+
+            if (Push != null && Push.CanBeCasted()) return;
             var itemOnTarget =
                 me.Inventory.Items.FirstOrDefault(
                     x =>
