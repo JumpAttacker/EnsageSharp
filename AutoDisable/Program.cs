@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
-using SharpDX;
-using SharpDX.Direct3D9;
+using Ensage.Common.Menu;
 
 // ReSharper disable EmptyGeneralCatchClause
 // ReSharper disable CompareOfFloatsByEqualityOperator
@@ -14,12 +14,35 @@ namespace Auto_Disable
 {
     internal class Program
     {
+        enum DisableType
+        {
+            OnlyInitiators,
+            All
+        }
+        enum Using
+        {
+            All,
+            OnlyItems,
+            OnlyAblities
+        }
+
+
+        #region Members
+        private static readonly Menu Menu = new Menu("Auto Disable", "autodisable", true);
+        private static bool _loaded;
+        private static Hero _me;
+        private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        private static readonly Dictionary<ClassID, string> Initiators = new Dictionary<ClassID, string>();
+        //static readonly Dictionary<ClassID, string> CounterSpells = new Dictionary<ClassID, string>();
+        private static readonly CounterHelp[] CounterSpells = new CounterHelp[50];
+
+        #endregion
+
         private static void Game_OnUpdate(EventArgs args)
         {
             if (!_loaded)
             {
                 _me = ObjectMgr.LocalHero;
-                _player = ObjectMgr.LocalPlayer;
                 if (!Game.IsInGame || _me == null)
                 {
                     return;
@@ -41,8 +64,9 @@ namespace Auto_Disable
                 var mod =
                     _me.Modifiers.FirstOrDefault(
                         x =>
-                            /*x.Name == "modifier_lion_finger_of_death" || */x.Name == "modifier_orchid_malevolence_debuff" ||
-                            x.Name == "modifier_pudge_meat_hook" /*|| x.Name == "modifier_lina_laguna_blade"*/);
+                            x.Name == "modifier_orchid_malevolence_debuff" || x.Name == "modifier_lina_laguna_blade" ||
+                        x.Name == "modifier_pudge_meat_hook" || x.Name == "modifier_skywrath_mage_ancient_seal" ||
+                        x.Name == "modifier_lion_finger_of_death");
                 if (dodgeByManta != null && dodgeByManta.CanBeCasted() && mod != null)
                 {
                     dodgeByManta.UseAbility();
@@ -53,6 +77,10 @@ namespace Auto_Disable
 
             #endregion
             uint i;
+            var isInvis = _me.IsInvisible();
+            var isChannel = _me.IsChanneling();
+            var items = _me.Inventory.Items.Where(x => x.CanBeCasted());
+            var spells = _me.Spellbook.Spells.Where(x => x.CanBeCasted());
             for (i = 0; i < 10; i++)
             {
                 try
@@ -67,13 +95,11 @@ namespace Auto_Disable
                     var isHex = v.IsHexed();
                     var isSilence = v.IsSilenced();
                     var isDisarm = v.IsDisarmed();
-                    var isInvis = _me.IsInvisible();
-                    var isChannel = _me.IsChanneling();
+                    
 
                     if ((isInvis && !_me.IsVisibleToEnemies)|| isChannel) continue;
 
-                    var items = _me.Inventory.Items.Where(x => x.CanBeCasted());
-                    var spells = _me.Spellbook.Spells.Where(x => x.CanBeCasted());
+                    
                     var blink = v.FindItem("item_blink");
                     var forcestaff = v.FindItem("item_force_staff");
                     var dpActivated =
@@ -88,20 +114,22 @@ namespace Auto_Disable
 
                     if (!enumerable.Any() || !(isInvul || magicImmnune || isInvis || isChannel || dpActivated))
                     {
+                        
                         if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                         {
-                            UseDisableStageOne(v, enumerable, null, false);
+                            UseDisableStageOne(v, enumerable, null, false, true);
                         }
-                        else if (_activated)
+                        else if (Menu.Item("onlyoninitiators").GetValue<StringList>().SelectedIndex == (int)DisableType.All)
                         {
-                            UseDisableStageOne(v, enumerable, null, false);
+                            
+                            UseDisableStageOne(v, enumerable, null, false, false);
                         }
                         else if (Initiators.TryGetValue(v.ClassID, out spellString))
                         {
                             var initSpell = v.FindSpell(spellString);
                             if (initSpell != null && initSpell.Cooldown != 0)
                             {
-                                UseDisableStageOne(v, enumerable, null, false);
+                                UseDisableStageOne(v, enumerable, null, false, true);
                             }
                         }
                     }
@@ -137,18 +165,18 @@ namespace Auto_Disable
                     
                     if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                     {
-                        UseDisableStageOne(v, enumerable, abilities, true);
+                        UseDisableStageOne(v, enumerable, abilities, true, true);
                     }
-                    else if (_activated)
+                    else if (Menu.Item("onlyoninitiators").GetValue<StringList>().SelectedIndex == (int)DisableType.All)
                     {
-                        UseDisableStageOne(v, enumerable, abilities, true);
+                        UseDisableStageOne(v, enumerable, abilities, true, false);
                     }
-                    else if (Initiators.TryGetValue(v.ClassID, out spellString))
+                    if (Initiators.TryGetValue(v.ClassID, out spellString))
                     {
                         var initSpell = v.FindSpell(spellString);
                         if (initSpell != null && initSpell.Cooldown != 0)
                         {
-                            UseDisableStageOne(v, enumerable, abilities, true);
+                            UseDisableStageOne(v, enumerable, abilities, true, true);
                         }
                     }
                 }
@@ -181,27 +209,14 @@ namespace Auto_Disable
             }
         }
 
-        #region Members
-
-        private static bool _loaded;
-        private static Hero _me;
-        private static Player _player;
-        private static bool _activated;
-        private static bool _autoBlink;
-        private const string Ver = "1.5";
-        private static readonly Dictionary<ClassID, string> Initiators = new Dictionary<ClassID, string>();
-        //static readonly Dictionary<ClassID, string> CounterSpells = new Dictionary<ClassID, string>();
-        private static Font _infoText;
-        private static readonly CounterHelp[] CounterSpells = new CounterHelp[50];
-
-        #endregion
-
         #region Methods
 
         #region Init
 
         private static void Main()
         {
+            #region init
+
             Initiators.Add(ClassID.CDOTA_Unit_Hero_FacelessVoid, "faceless_void_time_walk");
             Initiators.Add(ClassID.CDOTA_Unit_Hero_Shredder, "shredder_timber_chain");
             Initiators.Add(ClassID.CDOTA_Unit_Hero_Phoenix, "phoenix_icarus_dive");
@@ -319,87 +334,24 @@ namespace Auto_Disable
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_DoomBringer, "r");
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Bane, "r", 2);
-            //int Spell = _me.Spellbook.Spells.FirstOrDefault(ability => ability.ClassID==CounterSpells.TryGetValue())
-            _infoText = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = 13,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
+
+            #endregion
+
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
-            //Drawing.OnDraw += Drawing_OnDraw;
 
-            Drawing.OnPreReset += Drawing_OnPreReset;
-            Drawing.OnPostReset += Drawing_OnPostReset;
-            Drawing.OnEndScene += Drawing_OnEndScene;
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
-            Game.OnWndProc += Game_OnWndProc;
+            Menu.AddItem(new MenuItem("onlyoninitiators", "Disable").SetValue(new StringList(new[] {"Only Initiators", "All"})));
+            Menu.AddItem(new MenuItem("usedagger", "Use Dagger").SetValue(true).SetTooltip("use a dagger to escape"));
+            Menu.AddItem(new MenuItem("oneenemy", "Disable One Enemy").SetValue(true).SetTooltip("use only one disable for one enemy at one time"));
+            Menu.AddItem(new MenuItem("using", "Use").SetValue(new StringList(new[] {"All", "only items","only abilities"})).SetTooltip("what should i use for disable"));
+            Menu.AddToMainMenu();
         }
 
         #endregion
 
-        private static void CurrentDomainDomainUnload(object sender, EventArgs e)
-        {
-            _infoText.Dispose();
-        }
-
-        //private static float angle;
-        private static void Drawing_OnEndScene(EventArgs args)
-        {
-            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame)
-            {
-                return;
-            }
-
-            var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer)
-            {
-                return;
-            }
-            var sign = _activated
-                ? "Auto Disable: for all | [INSERT] for toggle."
-                : "Auto Disable: for initiators | [INSERT] for toggle.";
-            var daggerOn = _autoBlink
-                ? " Auto Dagger [on] to fountain | [DEL] for toggle"
-                : " Auto Dagger [off] to fountain | [DEL] for toggle";
-            _infoText.DrawText(null, sign + daggerOn, 5, 150, Color.YellowGreen);
-        }
-
-        private static void Drawing_OnPostReset(EventArgs args)
-        {
-            _infoText.OnResetDevice();
-        }
-
-        private static void Drawing_OnPreReset(EventArgs args)
-        {
-            _infoText.OnLostDevice();
-        }
-
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (Game.IsChatOpen || args.Msg != (ulong) Utils.WindowsMessages.WM_KEYUP) return;
-            switch (args.WParam)
-            {
-                case 0x2D:
-                    _activated = !_activated;
-                    break;
-                case 0x2E:
-                    _autoBlink = !_autoBlink;
-                    break;
-            }
-        }
-
-        private static void Drawing_OnDraw(EventArgs args)
-        {
-            if (!Game.IsInGame || _me == null || !_loaded) return;
-        }
-
         private static void CounterSpellAndItems(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities)
         {
+            if (!_me.IsValid) return;
             var enumerable = items as Item[] ?? items.ToArray();
             
             var safeItemSelf = enumerable.FirstOrDefault(
@@ -408,11 +360,11 @@ namespace Auto_Disable
                         x.Name == "item_manta"*/);
             var safeItemTargetSelf = enumerable.FirstOrDefault(
                 x =>
-                    x.Name == "item_lotus_orb" || x.Name == "item_cyclone" || x.Name == "item_glimmer_cape");
+                    x.Name == "item_lotus_orb" || x.Name == "item_glimmer_cape");
             var safeItemTargetEnemy = enumerable.FirstOrDefault(
                 x =>
                     x.Name == "item_sheepstick" || x.Name == "item_orchid" || x.Name == "item_abyssal_blade" ||
-                    x.Name == "item_heavens_halberd");
+                    x.Name == "item_heavens_halberd" || x.Name == "item_cyclone");
             var safeItemPoint = enumerable.FirstOrDefault(
                 x =>
                     x.Name == "item_blink");
@@ -444,60 +396,62 @@ namespace Auto_Disable
             var v =
                 ObjectMgr.GetEntities<Unit>()
                     .FirstOrDefault(x => x.Team == _me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
-            if (safeItemSelf != null)
+            if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
+                Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyItems)
             {
-                safeItemSelf.UseAbility();
-                Utils.Sleep(250, target.GetHashCode().ToString());
-                return;
-            }
-            //PrintError(String.Format("{0} {1}", SafeSpell.CastRange,SafeSpell.Name));
-            if (safeItemPoint != null && _autoBlink)
-            {
-                if (v != null)
+                if (safeItemSelf != null)
                 {
-                    safeItemPoint.UseAbility(v.Position);
+                    safeItemSelf.UseAbility();
                     Utils.Sleep(250, target.GetHashCode().ToString());
-                    return;
+                    if (Menu.Item("oneenemy").GetValue<bool>()) return;
                 }
-            }
-            if (safeItemTargetEnemy != null && safeItemTargetEnemy.CanBeCasted(target))
-            {
-                if (_me.Distance2D(target) <= safeItemTargetEnemy.CastRange)
+                //PrintError(String.Format("{0} {1}", SafeSpell.CastRange,SafeSpell.Name));
+                if (safeItemPoint != null && Menu.Item("usedagger").GetValue<bool>() && _me.Distance2D(target) <= 1000)
                 {
-                    safeItemTargetEnemy.UseAbility(target);
-                    Utils.Sleep(250, target.GetHashCode().ToString());
-                    return;
-                }
-            }
-            if (safeItemTargetSelf != null)
-            {
-                safeItemTargetSelf.UseAbility(_me);
-                Utils.Sleep(250, target.GetHashCode().ToString());
-                return;
-
-            }
-
-            if (safeSpell != null && safeSpell.CanBeCasted())
-            {
-                if (safeSpell.CastRange > 0)
-                {
-                    if (_me.Distance2D(target) <= safeSpell.CastRange)
+                    if (v != null && v.IsValid)
                     {
-                        safeSpell.UseAbility(target);
+                        safeItemPoint.UseAbility(v.Position);
+                        Utils.Sleep(250, target.GetHashCode().ToString());
+                        if (Menu.Item("oneenemy").GetValue<bool>()) return;
                     }
                 }
-                else
+                if (safeItemTargetEnemy != null && safeItemTargetEnemy.CanBeCasted(target))
                 {
-                    safeSpell.UseAbility();
+                    if (_me.Distance2D(target) <= safeItemTargetEnemy.CastRange)
+                    {
+                        safeItemTargetEnemy.UseAbility(target);
+                        Utils.Sleep(250, target.GetHashCode().ToString());
+                        if (Menu.Item("oneenemy").GetValue<bool>()) return;
+                    }
                 }
-                Utils.Sleep(250, target.GetHashCode().ToString());
+                if (safeItemTargetSelf != null)
+                {
+                    safeItemTargetSelf.UseAbility(_me);
+                    Utils.Sleep(250, target.GetHashCode().ToString());
+                    if (Menu.Item("oneenemy").GetValue<bool>()) return;
+
+                }
             }
+            if (safeSpell == null || !safeSpell.CanBeCasted() ||
+                (Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.All &&
+                 Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.OnlyAblities)) return;
+            if (safeSpell.CastRange > 0)
+            {
+                if (_me.Distance2D(target) <= safeSpell.CastRange)
+                {
+                    safeSpell.UseAbility(target);
+                }
+            }
+            else
+            {
+                safeSpell.UseAbility();
+            }
+            Utils.Sleep(250, target.GetHashCode().ToString());
         }
 
-        private static void UseDisableStageOne(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities,
-            bool stage)
+        private static void UseDisableStageOne(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities, bool stage, bool itsRealConterSpell)
         {
-            if (_me != null && !(_me.Health/_me.MaximumHealth > 0.1)) return;
+            if (!_me.IsValid) return;
             Item disable;
             Ability ab = null;
             Ability withOutTarget = null;
@@ -537,41 +491,53 @@ namespace Auto_Disable
                             x.Name == "item_rod_of_atos" || x.Name == "item_medallion_of_courage" ||
                             x.Name == "item_solar_crest");
             }
+            if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
+                Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyItems)
+            {
+                if (disable != null && _me.Distance2D(target) <= disable.CastRange)
+                {
+                    disable.UseAbility(target);
+                    Utils.Sleep(250, target.GetHashCode().ToString());
+                    if (Menu.Item("oneenemy").GetValue<bool>()) return;
+                }
+            }
+            if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
+                Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyAblities)
+            {
+                if (ab != null && _me.Distance2D(target) <= ab.CastRange)
+                {
+                    ab.UseAbility(target);
+                    Utils.Sleep(250, target.GetHashCode().ToString());
+                    if (Menu.Item("oneenemy").GetValue<bool>()) return;
+                }
 
-            if (disable != null && _me.Distance2D(target) <= disable.CastRange)
-            {
-                disable.UseAbility(target);
-                Utils.Sleep(250, target.GetHashCode().ToString());
-                return;
+                if (withOutTarget != null)
+                {
+                    withOutTarget.UseAbility();
+                    Utils.Sleep(250, target.GetHashCode().ToString());
+                    if (Menu.Item("oneenemy").GetValue<bool>()) return;
+                }
             }
-            if (ab != null && _me.Distance2D(target) <= ab.CastRange)
-            {
-                ab.UseAbility(target);
-                Utils.Sleep(250, target.GetHashCode().ToString());
-                return;
-            }
-            if (withOutTarget != null)
-            {
-                withOutTarget.UseAbility();
-                Utils.Sleep(250, target.GetHashCode().ToString());
-                return;
-            }
-            var safeItemPoint =
-                enumerable.FirstOrDefault(
-                    x =>
-                        x.Name == "item_blink");
+            if (Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.All &&
+                Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.OnlyItems) return;
+            if (!itsRealConterSpell) return;
+            var
+                safeItemPoint =
+                    enumerable.FirstOrDefault(
+                        x =>
+                            x.Name == "item_blink");
             var v =
                 ObjectMgr.GetEntities<Unit>()
                     .FirstOrDefault(x => x.Team == _me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
-            if (safeItemPoint != null && _autoBlink && _me.Distance2D(target)<=1000)
+            if (safeItemPoint == null || !Menu.Item("usedagger").GetValue<bool>() || !(_me.Distance2D(target) <= 1000))
+                return;
+            if (v != null)
             {
-                if (v != null)
-                {
-                    safeItemPoint.UseAbility(v.Position);
-                }
-                Utils.Sleep(250, target.GetHashCode().ToString());
+                safeItemPoint.UseAbility(v.Position);
             }
+            Utils.Sleep(250, target.GetHashCode().ToString());
         }
+
 
         #endregion
 
@@ -658,7 +624,7 @@ namespace Auto_Disable
                         break;
                     }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //PrintError(e.ToString());
             }

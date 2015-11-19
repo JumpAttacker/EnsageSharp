@@ -4,7 +4,7 @@ using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
-using SharpDX;
+using Ensage.Common.Menu;
 
 namespace StormAnnihilation
 {
@@ -13,19 +13,23 @@ namespace StormAnnihilation
         #region Members
 
         private static bool _loaded;
-        public static bool GoAction { get; private set; }
+        //public static bool GoAction { get; private set; }
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        private const int WmKeyup = 0x0101;
+        private static readonly Menu Menu = new Menu("StormAnnihilation", "stormannihilation", true);
+        //private const int WmKeyup = 0x0101;
         private static readonly int[] TravelSpeeds = { 1250, 1875, 2500 };
         private static readonly double[] DamagePerUnit = { 0.08, 0.12, 0.16 };
         private static int _totalDamage;
         private static float _remainingMana;
+        
+/*
         private static bool _leftMouseIsPress;
-        private static bool _timetochange;
+*/
+        /*private static bool _timetochange;
         private static ulong _useComboKey='G';
         private static bool _lastStateAction;
         private static bool _showMenu=true;
-        private static Vector2 _sizer;
+        private static Vector2 _sizer;*/
         public static Hero EnemyTargetHero { get; private set; }
 
         #endregion
@@ -38,68 +42,83 @@ namespace StormAnnihilation
 
             _loaded = false;
             Game.OnUpdate += Game_OnUpdate;
-            Drawing.OnDraw += Drawing_OnDraw;
-            Game.OnWndProc += Game_OnWndProc;
-            
+            //Drawing.OnDraw += Drawing_OnDraw;
+            //Game.OnWndProc += Game_OnWndProc;
+
+            Menu.AddItem(
+                new MenuItem("hotkey", "Combo hotkey").SetValue(new KeyBind('G', KeyBindType.Press))
+                    .SetTooltip("just hold this key for combo"));
+
+            Menu.AddItem(new MenuItem("usemanta", "Use manta for dodge").SetValue(true));
+
+            Menu.AddItem(
+                new MenuItem("castUlt", "Ultimate rate").SetValue(new Slider(500, 300, 4000)).SetTooltip("in ms"));
+
+            Menu.AddItem(
+                new MenuItem("minrange", "Minimum range").SetValue(new Slider(0, 0, 1000))
+                    .SetTooltip("Minimum range for casting ultimate"));
+            Menu.AddToMainMenu();
             #endregion
         }
 
         #endregion
 
         #region Methods
-        private static void Drawing_OnDraw(EventArgs args)
-        {
-            var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer || !_loaded)
-            {
-                return;
-            }
-            if (ObjectMgr.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_StormSpirit) return;
-            var startPos = new Vector2(50, 200);
-            var maxSize = new Vector2(120, 100);
-            if (_showMenu)
-            {
-                _sizer.X += 4;
-                _sizer.Y += 4;
-                _sizer.X = Math.Min(_sizer.X, maxSize.X);
-                _sizer.Y = Math.Min(_sizer.Y, maxSize.Y);
 
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
-                Drawing.DrawRect(startPos + new Vector2(-5, -5), _sizer + new Vector2(10, 10),
-                    new Color(0, 0, 0, 255), true);
-                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-                if (!Equals(_sizer, maxSize)) return;
-                /*
-                DrawButton(startPos + new Vector2(10, 10), 100, 20, ref _shouldUseDagger, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Dagger On Start");
-                */
-                DrawButton(startPos + new Vector2(10, _sizer.Y - 70), 100, 20, ref _timetochange, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Change Hotkey");
-
-                Drawing.DrawText(
-                    string.Format("Status: [{0}]", GoAction ? "ON" : "OFF"),
-                    startPos + new Vector2(10, _sizer.Y - 35), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                Drawing.DrawText(string.Format("ComboKey {0}", (char)_useComboKey),
-                    startPos + new Vector2(10, _sizer.Y - 20), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-            }
-            else
-            {
-                _sizer.X -= 4;
-                _sizer.Y -= 4;
-                _sizer.X = Math.Max(_sizer.X, 20);
-                _sizer.Y = Math.Max(_sizer.Y, 0);
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
-                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-            }
-        }
+//        private static void Drawing_OnDraw(EventArgs args)
+//        {
+//            var player = ObjectMgr.LocalPlayer;
+//            if (player == null || player.Team == Team.Observer || !_loaded)
+//            {
+//                return;
+//            }
+//            if (ObjectMgr.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_StormSpirit) return;
+//            var startPos = new Vector2(50, 200);
+//            var maxSize = new Vector2(120, 100);
+//            if (_showMenu)
+//            {
+//                _sizer.X += 4;
+//                _sizer.Y += 4;
+//                _sizer.X = Math.Min(_sizer.X, maxSize.X);
+//                _sizer.Y = Math.Min(_sizer.Y, maxSize.Y);
+//
+//                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
+//                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
+//                Drawing.DrawRect(startPos + new Vector2(-5, -5), _sizer + new Vector2(10, 10),
+//                    new Color(0, 0, 0, 255), true);
+//                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
+//                    Color.Gray);
+//                if (!Equals(_sizer, maxSize)) return;
+//                /*
+//                DrawButton(startPos + new Vector2(10, 10), 100, 20, ref _shouldUseDagger, true,
+//                    new Color(0, 200, 150),
+//                    new Color(200, 0, 0, 100), "Dagger On Start");
+//                */
+//                DrawButton(startPos + new Vector2(10, _sizer.Y - 70), 100, 20, ref _timetochange, true,
+//                    new Color(0, 200, 150),
+//                    new Color(200, 0, 0, 100), "Change Hotkey");
+//
+//                Drawing.DrawText(
+//                    string.Format("Status: [{0}]", GoAction ? "ON" : "OFF"),
+//                    startPos + new Vector2(10, _sizer.Y - 35), Color.White,
+//                    FontFlags.AntiAlias | FontFlags.DropShadow);
+//                Drawing.DrawText(string.Format("ComboKey {0}", (char)_useComboKey),
+//                    startPos + new Vector2(10, _sizer.Y - 20), Color.White,
+//                    FontFlags.AntiAlias | FontFlags.DropShadow);
+//            }
+//            else
+//            {
+//                _sizer.X -= 4;
+//                _sizer.Y -= 4;
+//                _sizer.X = Math.Max(_sizer.X, 20);
+//                _sizer.Y = Math.Max(_sizer.Y, 0);
+//                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
+//                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
+//                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
+//                    Color.Gray);
+//            }
+//        }
+/*
         private static void Game_OnWndProc(WndEventArgs args)
         {
             if (Game.IsChatOpen || !_loaded)
@@ -131,6 +150,8 @@ namespace StormAnnihilation
             }
             _leftMouseIsPress = true;
         }
+*/
+
         private static void Game_OnUpdate(EventArgs args)
         {
             #region check
@@ -160,7 +181,15 @@ namespace StormAnnihilation
 
             #endregion
 
-            if (!GoAction) return;
+
+            if (!Menu.Item("hotkey").GetValue<KeyBind>().Active)
+            {
+                EnemyTargetHero = null;
+                return;
+            }
+
+            //if (!GoAction) return;
+
             if (EnemyTargetHero == null || !EnemyTargetHero.IsValid)
             {
                 EnemyTargetHero = ClosestToMouse(me, 150);
@@ -218,19 +247,27 @@ namespace StormAnnihilation
                 }
                 else if (_remainingMana > 0)
                 {
-                    if (distance >= damageRadius)
+                    if (distance >= Menu.Item("minrange").GetValue<Slider>().Value && Utils.SleepCheck("Attacking"))
                     {
-                        zip.UseAbility(Prediction.SkillShotXYZ(me, EnemyTargetHero, (float)zip.FindCastPoint(), travelSpeed,
-                            damageRadius)); //TODO mb more accurate
-                        me.Attack(EnemyTargetHero, true);
+                        if (distance >= damageRadius)
+                        {
+                            zip.UseAbility(Prediction.SkillShotXYZ(me, EnemyTargetHero, (float) zip.FindCastPoint(),
+                                travelSpeed,
+                                damageRadius)); //TODO mb more accurate
+                            me.Attack(EnemyTargetHero, true);
+                        }
+                        else
+                        {
+                            zip.UseAbility(me.Position);
+                            me.Attack(EnemyTargetHero, true);
+                        }
+                        Utils.Sleep(Menu.Item("castUlt").GetValue<Slider>().Value, "castUlt");
                     }
                     else
                     {
-                        zip.UseAbility(me.Position);
-                        me.Attack(EnemyTargetHero, true);
+                        me.Attack(EnemyTargetHero);
+                        Utils.Sleep(750, "Attacking");
                     }
-
-                    Utils.Sleep(500, "castUlt");
                 }
             }
 
@@ -306,21 +343,18 @@ namespace StormAnnihilation
 
             #region Dodging
 
+            if (!Menu.Item("usemanta").GetValue<bool>()) return;
             var mantaMod =
                 me.Modifiers.Any(
                     x =>
                         x.Name == "modifier_orchid_malevolence_debuff" || x.Name == "modifier_lina_laguna_blade" ||
                         x.Name == "modifier_pudge_meat_hook" || x.Name == "modifier_skywrath_mage_ancient_seal" ||
                         x.Name == "modifier_lion_finger_of_death");
-            if (mantaMod)
-            {
-                var manta = me.FindItem("item_manta");
-                if (manta != null && manta.CanBeCasted() && (Utils.SleepCheck("dispell")))
-                {
-                    manta.UseAbility();
-                    Utils.Sleep(250, "dispell");
-                }
-            }
+            if (!mantaMod) return;
+            var manta = me.FindItem("item_manta");
+            if (manta == null || !manta.CanBeCasted() || (!Utils.SleepCheck("dispell"))) return;
+            manta.UseAbility();
+            Utils.Sleep(250, "dispell");
 
             #endregion
         }
@@ -336,7 +370,6 @@ namespace StormAnnihilation
 */
 
         #endregion
-
 
         #region Helper
         private static Hero ClosestToMouse(Hero source, float range = 1000)
@@ -360,6 +393,7 @@ namespace StormAnnihilation
             }
             return closestHero[0];
         }
+/*
         private static void DrawButton(Vector2 a, float w, float h, ref bool clicked, bool isActive, Color @on, Color off, string drawOnButtonText = "")
         {
             var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
@@ -387,6 +421,7 @@ namespace StormAnnihilation
                 Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
             }
         }
+*/
         private static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
@@ -412,7 +447,6 @@ namespace StormAnnihilation
         }
 
         #endregion
-
 
     }
 }
