@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
 using SharpDX;
 
 namespace EarthSpirit
@@ -14,23 +16,7 @@ namespace EarthSpirit
         //============================================================
         private static bool _loaded;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        private const int WmKeyup = 0x0101;
-        private static bool _leftMouseIsPress;
-        private static bool _showMenu = true;
-        private static bool _lastStateAction;
-        private static bool _inAction;
-        private static bool _aghanimState;
-        private static bool _supUlt;
-        private static Vector2 _sizer = new Vector2(265, 300);
         //============================================================
-        private static ulong _useComboKey = 'G';
-        private static ulong _usePushKey = 'Z';
-        private static ulong _useRollKey = 'X';
-        private static ulong _usePullKey = 'C';
-        private static bool _timetochange;
-        private static bool _shouldUseDagger;
-        private static bool _tryToStealWithPush=true;
-        private static bool _useRoll;
         public static Ability Remnant;
         public static Ability Push;
         public static Ability Pull;
@@ -39,88 +25,50 @@ namespace EarthSpirit
         private static int _stage;
         private static Hero _globalTarget;
         public static int Combo { get; set; }
-        private static bool _timetochangePush;
-        private static bool _timetochangeRoll;
-        private static bool _timetochangePull;
-        public static bool Debug = true;
-
+        private static readonly Menu Menu = new Menu("Earth Spirit", "earthspirit", true);
 
         //============================================================
+        enum DaggerStage
+        {
+            OnStartCombo,
+            AfterSmash,
+            Never
+        }
         #endregion
-
+        
         private static void Main()
         {
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
-            Drawing.OnDraw += Drawing_OnDraw;
-            Game.OnWndProc += Game_OnWndProc;
-        }
 
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (Game.IsChatOpen || !_loaded)
-                return;
-            if (!_inAction)
-            {
-                if (_timetochange && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
-                {
-                    _timetochange = false;
-                    _useComboKey = args.WParam;
-                    return;
-                }
-                if (_timetochangePush && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
-                {
-                    _timetochangePush = false;
-                    _usePushKey = args.WParam;
-                    return;
-                }
-                if (_timetochangeRoll && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
-                {
-                    _timetochangeRoll = false;
-                    _useRollKey = args.WParam;
-                    return;
-                }
-                if (_timetochangePull && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
-                {
-                    _timetochangePull = false;
-                    _usePullKey = args.WParam;
-                    return;
-                }
-                if (args.Msg == WmKeyup)
-                {
-                    if (args.WParam == _usePushKey)
-                        LetsPush();
-                    if (args.WParam == _useRollKey)
-                        LetsRoll();
-                    if (args.WParam == _usePullKey)
-                        LetsPull();
-                }
-            }
-            if (args.WParam == _useComboKey)
-            {
-                _aghanimState = Game.IsKeyDown(0x11);
-                _inAction = args.Msg != WmKeyup;
-                if (_inAction != _lastStateAction)
-                {
-                    if (Debug) if (_inAction) PrintInfo("combo key is pressed");
-                    _lastStateAction = _inAction;
-                    Game.ExecuteCommand(string.Format("dota_player_units_auto_attack_after_spell {0}", _inAction ? 0 : 1));
-                    if (_inAction)
-                    {
-                        ObjectMgr.LocalHero.Stop();
-                    }
-                }
-                if (!_inAction)
-                {
-                    _globalTarget = null;
-                }
-            }
-            if (args.WParam != 1 || !Utils.SleepCheck("clicker"))
-            {
-                _leftMouseIsPress = false;
-                return;
-            }
-            _leftMouseIsPress = true;
+            Menu.AddItem(
+                new MenuItem("hotkey", "Combo hotkey").SetValue(new KeyBind('G', KeyBindType.Press))
+                    .SetTooltip("just hold this key for combo"));
+            Menu.AddItem(new MenuItem("asd", "for combo with ultimate use CTRL").SetFontStyle(
+                FontStyle.Bold,
+                SharpDX.Color.Coral));
+            Menu.AddItem(
+                new MenuItem("pushKey", "SingleKey for SMASH").SetValue(new KeyBind('Z', KeyBindType.Press)));
+            Menu.AddItem(
+                new MenuItem("rollKey", "SingleKey for ROLL").SetValue(new KeyBind('X', KeyBindType.Press)));
+            Menu.AddItem(
+                new MenuItem("pullKey", "SingleKey for GRIP").SetValue(new KeyBind('C', KeyBindType.Press)));
+
+            Menu.AddItem(new MenuItem("rolling", "Use Roll For Chasing").SetValue(true).SetTooltip("after combo"));
+
+            Menu.AddItem(new MenuItem("supult", "Remnant For Ultimate").SetValue(true).SetTooltip("use remnant for supporting the ultimate (if combo is active)"));
+
+            Menu.AddItem(new MenuItem("dagger", "Use Dagger").SetValue(new StringList(new[] { "on start combo", "after smash", "never" })));
+            Menu.AddItem(new MenuItem("dsa", "only if you so far from enemy").SetFontStyle(
+                FontStyle.Bold,
+                SharpDX.Color.Coral));
+
+            Menu.AddItem(new MenuItem("items", "Use Items").SetValue(true));
+
+            Menu.AddItem(new MenuItem("killsteal", "Smash Stealer").SetValue(true));
+
+            Menu.AddItem(new MenuItem("debug", "Print Debug Messages").SetValue(false));
+            Menu.AddToMainMenu();
         }
 
         private static void LetsPull()
@@ -191,81 +139,7 @@ namespace EarthSpirit
                 pos = new Vector2((float)(pos.X + 300 * Math.Cos(ang)), (float)(pos.Y + 300 * Math.Sin(ang))).ToVector3(true);
             }
             Push.UseAbility(pos);
-        }
-
-        private static void Drawing_OnDraw(EventArgs args)
-        {
-            var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer || !_loaded)
-            {
-                return;
-            }
-            if (ObjectMgr.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_EarthSpirit) return;
-            var startPos = new Vector2(50, 200);
-            var maxSize = new Vector2(120, 280);
-            if (_showMenu)
-            {
-                _sizer.X += 4;
-                _sizer.Y += 4;
-                _sizer.X = Math.Min(_sizer.X, maxSize.X);
-                _sizer.Y = Math.Min(_sizer.Y, maxSize.Y);
-
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
-                Drawing.DrawRect(startPos + new Vector2(-5, -5), _sizer + new Vector2(10, 10),
-                    new Color(0, 0, 0, 255), true);
-                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-                if (!Equals(_sizer, maxSize)) return;
-
-                DrawButton(startPos + new Vector2(10, 10), 100, 20, ref _shouldUseDagger, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Dagger On Start");
-                DrawButton(startPos + new Vector2(10, 35), 100, 20, ref _tryToStealWithPush, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Kill Steal Smash");
-                DrawButton(startPos + new Vector2(10, 60), 100, 20, ref _useRoll, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Rolling");
-                DrawButton(startPos + new Vector2(10, 85), 100, 20, ref _supUlt, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Sup Ult");
-                DrawButton(startPos + new Vector2(10, 110), 100, 20, ref _timetochangePush, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Push HK");
-                DrawButton(startPos + new Vector2(10, 135), 100, 20, ref _timetochangeRoll, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Roll HK");
-                DrawButton(startPos + new Vector2(10, 160), 100, 20, ref _timetochangePull, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Pull HK");
-
-                DrawButton(startPos + new Vector2(10, _sizer.Y - 70), 100, 20, ref _timetochange, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Change Hotkey");
-
-                Drawing.DrawText(
-                    string.Format("Status: [{0}]", _inAction ? _aghanimState ? "Agh ON" : "ON" : "OFF"),
-                    startPos + new Vector2(10, _sizer.Y - 50), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                Drawing.DrawText(string.Format("Single [{0}] [{1}] [{2}]", (char)_usePushKey, (char)_useRollKey, (char)_usePullKey),
-                    startPos + new Vector2(10, _sizer.Y - 35), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                Drawing.DrawText(string.Format("ComboKey {0}", (char)_useComboKey),
-                    startPos + new Vector2(10, _sizer.Y - 20), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-            }
-            else
-            {
-                _sizer.X -= 4;
-                _sizer.Y -= 4;
-                _sizer.X = Math.Max(_sizer.X, 20);
-                _sizer.Y = Math.Max(_sizer.Y, 0);
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
-                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-            }
+            Utils.Sleep(500, "preComboW8");
         }
 
         private static void Game_OnUpdate(EventArgs args)
@@ -305,15 +179,35 @@ namespace EarthSpirit
 
             #region Lets combo
 
-            
-            if (!_inAction) return;
+            if (Menu.Item("pushKey").GetValue<KeyBind>().Active)
+            {
+                LetsPush();
+                if (Menu.Item("debug").GetValue<bool>()) PrintInfo("Lets push");
+            }
+            else if (Menu.Item("rollKey").GetValue<KeyBind>().Active)
+            {
+                LetsRoll();
+                if (Menu.Item("debug").GetValue<bool>()) PrintInfo("Lets roll");
+            }
+            else if (Menu.Item("pullKey").GetValue<KeyBind>().Active)
+            {
+                LetsPull();
+                if (Menu.Item("debug").GetValue<bool>()) PrintInfo("Lets smash");
+            }
+
+            if (!Menu.Item("hotkey").GetValue<KeyBind>().Active)
+            {
+                _globalTarget = null;
+                return;
+            }
+
             if (_globalTarget == null || !_globalTarget.IsValid)
             {
                 _globalTarget = ClosestToMouse(me, 150);
                 _stage = 0;
             }
             if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive || !me.CanCast()) return;
-            if (_aghanimState)
+            if (Game.IsKeyDown(0x11))
             {
                 LetAghanimCombo(me, _globalTarget);
             }
@@ -337,13 +231,13 @@ namespace EarthSpirit
             var dist = me.Distance2D(target);
             if (ability.CanBeCasted() && !inStone)
             {
-                if (_shouldUseDagger)
+                if (Menu.Item("dagger").GetValue<StringList>().SelectedIndex == (int)DaggerStage.OnStartCombo || Menu.Item("dagger").GetValue<StringList>().SelectedIndex == (int)DaggerStage.AfterSmash)
                 {
                     var blink = me.FindItem("item_blink");
                     if (dist >= ability.CastRange && blink!=null && blink.CanBeCasted())
                     {
                         var ang = me.FindAngleBetween(target.Position, true);
-                        var p = new Vector2((float)(me.Position.X + 1100 * Math.Cos(ang)), (float)(me.Position.Y + 1100 * Math.Sin(ang)));
+                        var p = new Vector2((float)(target.Position.X - 100 * Math.Cos(ang)), (float)(target.Position.Y - 100 * Math.Sin(ang)));
                         blink.UseAbility(p.ToVector3(true));
                     }
                 }
@@ -377,13 +271,14 @@ namespace EarthSpirit
 
         private static void ComboInAction(Hero me, Hero target)
         {
+            
             if (!Utils.SleepCheck("nextAction")) return;
             var dist = me.Distance2D(target);
             switch (_stage)
             {
                 case 0:
                     if (target.Modifiers.Any(x => x.Name == "modifier_earth_spirit_magnetize") && !CanCastCombo()) { _stage = 5; }
-                    if (_shouldUseDagger)
+                    if (Menu.Item("dagger").GetValue<StringList>().SelectedIndex == (int)DaggerStage.OnStartCombo)
                     {
                         var blink = me.FindItem("item_blink");
                         if (dist >= Pull.CastRange && blink != null && blink.CanBeCasted())
@@ -397,12 +292,13 @@ namespace EarthSpirit
                             var ang = me.FindAngleBetween(target.Position, true);
                             var p = new Vector2((float)(me.Position.X + 1100 * Math.Cos(ang)), (float)(me.Position.Y + 1100 * Math.Sin(ang)));
                             blink.UseAbility(p.ToVector3(true));
+                            Utils.Sleep(100, "nextAction");
                             break;
                         }
                     }
                     if (AnyStoneNear(me) && dist <= 1900)
                     {
-                        if (Debug) PrintInfo("stone near you finded");
+                        if (Menu.Item("debug").GetValue<bool>()) PrintInfo("stone near you finded");
                         _stage++;
                         break;
                     }
@@ -415,7 +311,7 @@ namespace EarthSpirit
                             Remnant.UseAbility(Prediction.InFront(me, 100));
                             Utils.Sleep(50 + Remnant.FindCastPoint(), "nextAction");
                             _stage++;
-                            if (Debug) PrintInfo("remnant create");
+                            if (Menu.Item("debug").GetValue<bool>()) PrintInfo("remnant create");
                         }
                         else
                         {
@@ -432,7 +328,7 @@ namespace EarthSpirit
 
                         if (last != null)
                         {
-                            if (Debug) PrintInfo("push casted");
+                            if (Menu.Item("debug").GetValue<bool>()) PrintInfo("push casted");
                             Push.UseAbility(target.Position);
                             Utils.Sleep(100 + Push.FindCastPoint(), "nextAction");
                         }
@@ -452,7 +348,7 @@ namespace EarthSpirit
                                 {
                                     Pull.UseAbility(target.Position);
                                     //PrintInfo("last pos: "+last.Position.X);
-                                    if (Debug) PrintInfo("pull casted");
+                                    if (Menu.Item("debug").GetValue<bool>()) PrintInfo("pull casted");
                                     Utils.Sleep(100 + Pull.FindCastPoint(), "nextAction");
 
                                 }
@@ -467,12 +363,16 @@ namespace EarthSpirit
                                             Utils.Sleep(200, "nextAction");
                                             break;
                                         }
-                                        var ang = me.FindAngleBetween(target.Position, true);
-                                        var p = new Vector2((float) (me.Position.X + 1100*Math.Cos(ang)),
-                                            (float) (me.Position.Y + 1100*Math.Sin(ang)));
-                                        blink.UseAbility(p.ToVector3(true));
-                                        Utils.Sleep(100, "nextAction");
-                                        if (Debug) PrintInfo("dagger is used");
+                                        if (Menu.Item("dagger").GetValue<StringList>().SelectedIndex ==
+                                            (int) DaggerStage.AfterSmash)
+                                        {
+                                            var ang = me.FindAngleBetween(target.Position, true);
+                                            var p = new Vector2((float) (me.Position.X + 1100*Math.Cos(ang)),
+                                                (float) (me.Position.Y + 1100*Math.Sin(ang)));
+                                            blink.UseAbility(p.ToVector3(true));
+                                            Utils.Sleep(100, "nextAction");
+                                            if (Menu.Item("debug").GetValue<bool>()) PrintInfo("dagger is used");
+                                        }
                                     }
                                 }
                             }
@@ -484,7 +384,7 @@ namespace EarthSpirit
                                 if (me.NetworkActivity == NetworkActivity.Move)
                                     me.Stop();
                                 Remnant.UseAbility(target.Position);
-                                if (Debug) PrintInfo("remnant create");
+                                if (Menu.Item("debug").GetValue<bool>()) PrintInfo("remnant create");
 
                             }
                         }
@@ -497,7 +397,7 @@ namespace EarthSpirit
                     {
                         Roll.UseAbility(target.Position);
                         Utils.Sleep(100 + Roll.FindCastPoint(), "nextAction");
-                        if (Debug) PrintInfo("roll casted");
+                        if (Menu.Item("debug").GetValue<bool>()) PrintInfo("roll casted");
                     }
                     else
                         _stage++;
@@ -505,17 +405,17 @@ namespace EarthSpirit
                 case 4:
                     if (Magnetize.CanBeCasted())
                     {
-                        if (me.Distance2D(target) <= 300)
+                        if (me.Distance2D(target) < 300)
                         {
                             Magnetize.UseAbility();
                             Utils.Sleep(100 + Magnetize.FindCastPoint(), "nextAction");
                             _stage++;
-                            if (Debug) PrintInfo("Magnetize casted");
+                            if (Menu.Item("debug").GetValue<bool>()) PrintInfo("Magnetize casted");
                         }
                     }
                     break;
                 case 5:
-                    if (Remnant.CanBeCasted() && _supUlt)
+                    if (Remnant.CanBeCasted() && Menu.Item("supult").GetValue<bool>())
                     {
                         var mod = target.Modifiers.FirstOrDefault(x => x.Name == "modifier_earth_spirit_magnetize");
                         if (mod != null && mod.RemainingTime <= 0.5+Game.Ping && me.Distance2D(target)<=Remnant.CastRange)
@@ -536,14 +436,14 @@ namespace EarthSpirit
                         me.Attack(target);
                         Utils.Sleep(200, "attackcd");
                     }
-                    if (_tryToStealWithPush&&Push.CanBeCasted() && target.DamageTaken(50 * Push.Level, DamageType.Magical, me) > target.Health)
+                    if (Menu.Item("killsteal").GetValue<bool>() && Push.CanBeCasted() && target.DamageTaken(50 * Push.Level, DamageType.Magical, me) > target.Health)
                     {
                         Push.UseAbility(target);
                         Utils.Sleep(500, "nextAction");
                         me.Attack(target, true);
                         break;
                     }
-                    if (_useRoll && Roll.CanBeCasted())
+                    if (Menu.Item("rolling").GetValue<bool>() && Roll.CanBeCasted())
                     {
                         Roll.UseAbility(target.Position);
                         Utils.Sleep(500, "nextAction");
@@ -551,9 +451,33 @@ namespace EarthSpirit
                     break;
                     
             }
+            LetsUseItems(me, target);
         }
 
-        
+        private static void LetsUseItems(Hero me, Hero target)
+        {
+            if (Push!=null && Push.CanBeCasted()) return;
+            var itemOnTarget =
+                me.Inventory.Items.FirstOrDefault(
+                    x =>
+                        (x.Name == "item_abyssal_blade" || x.Name == "item_orchid" ||
+                         x.Name == "item_heavens_halberd" || x.Name == "item_sheepstick" ||
+                         (x.Name == "item_urn_of_shadows" && x.CurrentCharges>0)|| x.Name == "item_medallion_of_courage" ||
+                         x.Name == "item_solar_crest") && x.CastRange >= me.Distance2D(target) && x.CanBeCasted() &&
+                        Utils.SleepCheck(x.GetHashCode().ToString()));
+            //Game.PrintMessage(me.FindItem("item_solar_crest").CastRange.ToString(), MessageType.LogMessage);
+            if (itemOnTarget!=null)
+            {
+                itemOnTarget.UseAbility(target);
+                Utils.Sleep(300,itemOnTarget.GetHashCode().ToString());
+            }
+            var dagon = me.GetDagon();
+            if (dagon != null && dagon.CanBeCasted(target) && me.Distance2D(target) <= dagon.CastRange)
+            {
+                dagon.UseAbility(target);
+            }
+        }
+
 
         private static bool CanCastCombo()
         {
@@ -617,58 +541,7 @@ namespace EarthSpirit
         }
 
         #region Helpers
-/*
-        private static void DrawButton(Vector2 a, float w, float h, int numberOfCombo, bool isActive, Color @on, Color off, string des)
-        {
-            var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
-            if (isActive)
-            {
-                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
-                {
-                    _combo = numberOfCombo;
-                    Utils.Sleep(250, "ClickButtonCd");
-                }
-                var newColor = isIn
-                    ? new Color((int)(_combo == numberOfCombo ? @on.R : off.R), _combo == numberOfCombo ? @on.G : off.G, _combo == numberOfCombo ? @on.B : off.B, 150)
-                    : _combo == numberOfCombo ? @on : off;
-                Drawing.DrawRect(a, new Vector2(w, h), newColor);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-                Drawing.DrawText(des, a + new Vector2(w + 10, 0), Color.White, FontFlags.AntiAlias | FontFlags.DropShadow);
-            }
-            else
-            {
-                Drawing.DrawRect(a, new Vector2(w, h), Color.Gray);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-            }
-        }
-*/
-        private static void DrawButton(Vector2 a, float w, float h, ref bool clicked, bool isActive, Color @on, Color off, string drawOnButtonText = "")
-        {
-            var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
-            if (isActive)
-            {
-                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
-                {
-                    clicked = !clicked;
-                    Utils.Sleep(250, "ClickButtonCd");
-                }
-                var newColor = isIn
-                    ? new Color((int)(clicked ? @on.R : off.R), clicked ? @on.G : off.G, clicked ? @on.B : off.B, 150)
-                    : clicked ? @on : off;
-                Drawing.DrawRect(a, new Vector2(w, h), newColor);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-                if (drawOnButtonText != "")
-                {
-                    Drawing.DrawText(drawOnButtonText, a + new Vector2(10, 2), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                }
-            }
-            else
-            {
-                Drawing.DrawRect(a, new Vector2(w, h), Color.Gray);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-            }
-        }
+
         public static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
