@@ -44,7 +44,7 @@ namespace EarthSpirit
             Menu.AddItem(
                 new MenuItem("hotkey", "Combo hotkey").SetValue(new KeyBind('G', KeyBindType.Press))
                     .SetTooltip("just hold this key for combo"));
-            Menu.AddItem(new MenuItem("asd", "for combo with ultimate use CTRL").SetFontStyle(
+            Menu.AddItem(new MenuItem("asd", "for combo with Aghanim use CTRL").SetFontStyle(
                 FontStyle.Bold,
                 SharpDX.Color.Coral));
             Menu.AddItem(
