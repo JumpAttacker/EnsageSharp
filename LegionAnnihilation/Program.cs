@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Drawing.Text;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
 using SharpDX;
 
 namespace Legion_Annihilation
@@ -15,112 +16,47 @@ namespace Legion_Annihilation
         //============================================================
         private static bool _loaded;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        private const int WmKeyup = 0x0101;
-        private static bool _leftMouseIsPress;
-        private static bool _showMenu = true;
-        private static bool _inAction;
-        private static Vector2 _sizer = new Vector2(265, 300);
         //============================================================
-        private static ulong _myKey = 'F';
-        private static bool _timetochange;
-        private static bool _shoulUseBkb;
-        private static bool _shoulUseHeal;
-        private static bool _buffme = true;
-        private static bool _debuffenemy = true;
-        //============================================================
+        private static readonly Menu Menu = new Menu("LegionAnnihilation", "LegionAnnihilation", true);
+        private static Hero _globalTarget;
+
         #endregion
 
         private static void Main()
         {
             Game.OnUpdate += Game_OnUpdate;
+            Drawing.OnDraw += OnDraw;
             _loaded = false;
-            Drawing.OnDraw += Drawing_OnDraw;
-            Game.OnWndProc += Game_OnWndProc;
-        }
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (Game.IsChatOpen)
-                return;
-            if (_timetochange && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
+
+            Menu.AddItem(new MenuItem("combokey", "Combo key").SetValue(new KeyBind('F',KeyBindType.Press)).SetTooltip("just hold this key for combo"));
+            var dict = new Dictionary<string, bool>
             {
-                _timetochange = false;
-                _myKey = args.WParam;
-                return;
-            }
-            if (args.WParam == _myKey)
-            {
-                _inAction = args.Msg != WmKeyup;
-                Game.ExecuteCommand(string.Format("dota_player_units_auto_attack_after_spell {0}", _inAction ? 0 : 1));
-            }
-            if (args.WParam != 1 || !Utils.SleepCheck("clicker"))
-            {
-                _leftMouseIsPress = false;
-                return;
-            }
-            _leftMouseIsPress = true;
+                {"item_black_king_bar", false},
+                {"legion_commander_press_the_attack", true},
+                {"legion_commander_overwhelming_odds", true}
+            };
+            Menu.AddItem(new MenuItem("enabledAbilities", "Abilities:").SetValue(new AbilityToggler(dict)));
+            Menu.AddItem(new MenuItem("buff", "Buff Me").SetValue(true).SetTooltip("use items on myself"));
+            Menu.AddItem(new MenuItem("debuff", "Debuff enemy").SetValue(true).SetTooltip("use items on enemy"));
+            Menu.AddToMainMenu();
         }
 
-        private static void Drawing_OnDraw(EventArgs args)
+        private static void OnDraw(EventArgs args)
         {
-            var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer || !_loaded)
-            {
-                return;
-            }
-            if (ObjectMgr.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_Legion_Commander) return;
-            var startPos = new Vector2(50, 200);
-            var maxSize = new Vector2(120, 300);
-            if (_showMenu)
-            {
-                _sizer.X += 4;
-                _sizer.Y += 4;
-                _sizer.X = Math.Min(_sizer.X, maxSize.X);
-                _sizer.Y = Math.Min(_sizer.Y, maxSize.Y);
+            if (!_loaded || _globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
 
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
-                Drawing.DrawRect(startPos + new Vector2(-5, -5), _sizer + new Vector2(10, 10),
-                    new Color(0, 0, 0, 255), true);
-                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-                if (!Equals(_sizer, maxSize)) return;
-
-                DrawButton(startPos + new Vector2(10, 10), 100, 20, ref _shoulUseHeal, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Use heal");
-                DrawButton(startPos + new Vector2(10, 40), 100, 20, ref _shoulUseBkb, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Use bkb");
-                DrawButton(startPos + new Vector2(10, 70), 100, 20, ref _buffme, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Buff me");
-                DrawButton(startPos + new Vector2(10, 100), 100, 20, ref _debuffenemy, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "DeBuff enemy");
-                DrawButton(startPos + new Vector2(10, _sizer.Y - 70), 100, 20, ref _timetochange, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Change Hotkey");
-
-                Drawing.DrawText(
-                    string.Format("Status: [{0}]", _inAction ? "ON" : "OFF"),
-                    startPos + new Vector2(10, 280), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                Drawing.DrawText(string.Format("ComboKey {0}", (char)_myKey),
-                    startPos + new Vector2(10, 265), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-
-            }
-            else
-            {
-                _sizer.X -= 4;
-                _sizer.Y -= 4;
-                _sizer.X = Math.Max(_sizer.X, 20);
-                _sizer.Y = Math.Max(_sizer.Y, 0);
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
-                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-            }
+            var start = HUDInfo.GetHPbarPosition(_globalTarget) + new Vector2(-HUDInfo.GetHPBarSizeX(_globalTarget)/2, -HUDInfo.GetHpBarSizeY(_globalTarget)*5);
+            var size = new Vector2(HUDInfo.GetHPBarSizeX(_globalTarget), HUDInfo.GetHpBarSizeY(_globalTarget) / 2)*2;
+                            
+            const string text = "TARGET";
+            var textSize = Drawing.MeasureText(text, "Arial", new Vector2(size.Y * 2, size.X), FontFlags.AntiAlias);
+            var textPos = start + new Vector2(size.X / 2 - textSize.X / 2, -textSize.Y / 2 + 2);
+            Drawing.DrawText(
+                text,
+                textPos,
+                new Vector2(size.Y*2, size.X),
+                Color.White,
+                FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive);
         }
 
         private static void Game_OnUpdate(EventArgs args)
@@ -136,7 +72,10 @@ namespace Legion_Annihilation
                 }
                 _loaded = true;
 
-                PrintSuccess(string.Format("> Legion Annihilation Loaded v{0}", Ver));
+                PrintSuccess(string.Format("> {1} v{0}", Ver, Menu.DisplayName));
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName+
+                    " loaded!</font> <font color='#aa0000'>v" + Ver, MessageType.LogMessage);
             }
 
             if (!Game.IsInGame || me == null)
@@ -154,10 +93,19 @@ namespace Legion_Annihilation
 
             #region Lets combo
 
-            if (!_inAction) return;
-            var target = ClosestToMouse(me);
-            if (target != null && target.IsAlive)
-                ComboInAction(me, target);
+
+            if (!Menu.Item("combokey").GetValue<KeyBind>().Active)
+            {
+                _globalTarget = null;
+                return;
+            }
+            if (_globalTarget == null || !_globalTarget.IsValid)
+            {
+                _globalTarget = ClosestToMouse(me);
+            }
+            if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive || !me.CanCast()) return;
+            
+            ComboInAction(me, _globalTarget);
 
             #endregion
         }
@@ -169,7 +117,7 @@ namespace Legion_Annihilation
             if (duel==null) return;
             if (!duel.CanBeCasted()) return;
 
-            //var steal = me.Spellbook.Spell1;
+            var haras = me.Spellbook.Spell1;
             var heal = me.Spellbook.Spell2;
             
             var dagger = me.FindItem("item_blink");
@@ -197,39 +145,46 @@ namespace Legion_Annihilation
                 x =>
                     x.Name == "item_mjollnir");
             Item bkb = null;
-            if (_shoulUseBkb)
+            if (Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled("item_black_king_bar"))
             {
                 bkb = me.FindItem("item_black_king_bar");
             }
+            
             var distance = me.Distance2D(target);
             if (distance >= 1150)
             {
                 me.Move(target.Position);
-                Utils.Sleep(200, "nextAction");
+                Utils.Sleep(200 + Game.Ping, "nextAction");
                 return;
             }
-            if (!me.IsMagicImmune() && heal.CanBeCasted() && heal.ManaCost <= neededMana && _shoulUseHeal)
+            if (Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled("legion_commander_overwhelming_odds") && haras != null && haras.CanBeCasted() && distance <= haras.CastRange)
+            {
+                haras.UseAbility(target.Position);
+                Utils.Sleep(300 + Game.Ping, "nextAction");
+                return;
+            }
+            if (!me.IsMagicImmune() && heal.CanBeCasted() && heal.ManaCost <= neededMana && Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled("legion_commander_press_the_attack"))
             {
                 heal.UseAbility(me);
-                Utils.Sleep(500, "nextAction");
+                Utils.Sleep(200 + Game.Ping, "nextAction");
                 return;
             }
-            if (itemOnMySelf != null && _buffme)
+            if (itemOnMySelf != null && Menu.Item("buff").GetValue<bool>())
             {
                 itemOnMySelf.UseAbility(me);
-                Utils.Sleep(50, "nextAction");
+                Utils.Sleep(50 + Game.Ping, "nextAction");
                 return;
             }
-            if (itemWithOutTarget != null && _buffme)
+            if (itemWithOutTarget != null && Menu.Item("buff").GetValue<bool>())
             {
                 if (itemWithOutTarget.Name == "item_armlet")
                 {
                     itemWithOutTarget.ToggleAbility();
-                    Utils.Sleep(50, "nextAction");
+                    Utils.Sleep(50 + Game.Ping, "nextAction");
                     return;
                 }
                 itemWithOutTarget.UseAbility();
-                Utils.Sleep(100, "nextAction");
+                Utils.Sleep(100 + Game.Ping, "nextAction");
                 return;
             }
 
@@ -240,7 +195,7 @@ namespace Legion_Annihilation
                     (float)(target.Position.Y - 20 * Math.Sin(me.FindAngleBetween(target.Position, true))),
                     target.Position.Z);
                 dagger.UseAbility(point);
-                Utils.Sleep(200, "dagger");
+                Utils.Sleep(200 + Game.Ping, "dagger");
                 return;
             }
             if (distance > duel.CastRange + 100 && Utils.SleepCheck("moving"))
@@ -249,32 +204,35 @@ namespace Legion_Annihilation
                     me.Attack(target);
                 else
                     me.Move(target.Position);
-                Utils.Sleep(150, "moving");
+                Utils.Sleep(150 + Game.Ping, "moving");
                 return;
             }
-            if (itemOnTarget != null && !dpActivated && _debuffenemy && !isInvise)
+            if (itemOnTarget != null && !dpActivated && Menu.Item("debuff").GetValue<bool>() && !isInvise)
             {
                 itemOnTarget.UseAbility(target);
-                Utils.Sleep(50, "nextAction");
+                Utils.Sleep(50 + Game.Ping, "nextAction");
                 return;
             }
-            if (_shoulUseBkb && bkb != null && bkb.CanBeCasted() && Utils.SleepCheck("bkb") && !isInvise)
+            if (Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled("item_black_king_bar") && bkb != null && bkb.CanBeCasted() && Utils.SleepCheck("bkb") && !isInvise)
             {
                 bkb.UseAbility();
-                Utils.Sleep(35, "bkb");
+                Utils.Sleep(35+Game.Ping, "bkb");
                 return;
             }
             if (isInvise)
             {
                 me.Attack(target);
-                Utils.Sleep(200, "nextAction");
+                Utils.Sleep(200 + Game.Ping, "nextAction");
             }
-            else
+            else if (Utils.SleepCheck("ult"))
+            {
+                if (distance >= 100)
+                    Utils.Sleep(200 + Game.Ping, "ult");
                 duel.UseAbility(target);
-                
+            }
+
             Utils.Sleep(10, "nextAction");
         }
-
 
         public static Hero ClosestToMouse(Hero source, float range = 600)
         {
@@ -294,33 +252,6 @@ namespace Legion_Annihilation
         }
 
         #region Helpers
-        private static void DrawButton(Vector2 a, float w, float h, ref bool clicked, bool isActive, Color @on, Color off, string drawOnButtonText = "")
-        {
-            var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
-            if (isActive)
-            {
-                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
-                {
-                    clicked = !clicked;
-                    Utils.Sleep(250, "ClickButtonCd");
-                }
-                var newColor = isIn
-                    ? new Color((int)(clicked ? @on.R : off.R), clicked ? @on.G : off.G, clicked ? @on.B : off.B, 150)
-                    : clicked ? @on : off;
-                Drawing.DrawRect(a, new Vector2(w, h), newColor);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-                if (drawOnButtonText != "")
-                {
-                    Drawing.DrawText(drawOnButtonText, a + new Vector2(10, 2), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                }
-            }
-            else
-            {
-                Drawing.DrawRect(a, new Vector2(w, h), Color.Gray);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-            }
-        }
         public static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
