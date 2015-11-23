@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
-
+using Ensage.Common.Menu;
 using SharpDX;
-using SharpDX.Direct3D9;
+using Color = SharpDX.Color;
 
 namespace Techies_Annihilation
 {
@@ -16,12 +17,12 @@ namespace Techies_Annihilation
         #region Members
 
         private static bool _loaded;
-        private static Hero _me;
-        private static Player _player;
         private static readonly Dictionary<Unit, ParticleEffect> Effects = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Unit, ParticleEffect> Visible = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Unit, float> GlobalHealthAfterSuicide = new Dictionary<Unit, float>();
         private static readonly Dictionary<Unit, float> GlobalHealthAfterMines = new Dictionary<Unit, float>();
+        private static readonly Menu Menu = new Menu("Techies Annihilation", "Techies Annihilation", true, "npc_dota_hero_techies",true);
+        private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         private static ParticleEffect _forceStaffRange;
         private static readonly Dictionary<Unit, float> BombDamage = new Dictionary<Unit, float>();
         private static float _currentBombDamage;
@@ -30,23 +31,8 @@ namespace Techies_Annihilation
         public static uint LvlSpell6 { get; private set; }
         public static bool ExtraMenu { get; set; }
         private static Item _aghStatus;
-        private static Font _fontSize3;
-        private static Font _fontSize1;
-        private static Font _fontSize2;
-        private static Font _fontSize4;
-        private static Line _line;
-        //private static readonly Dictionary<Unit, int> DataWithCurrentHealth = new Dictionary<Unit, int>();
+        private static readonly Dictionary<uint, Hero> PlayersDictionary = new Dictionary<uint, Hero>();
         //private static readonly Dictionary<Unit, int> DataWithMaxHealth = new Dictionary<Unit, int>();
-        private static bool IsClose { get; set; }
-        private static bool WithAll { get; set; }
-        public static bool AutoDetonate = true;
-        public static bool ShowForceStaffRange=true;
-        public static bool AutoForceStaff;
-        public static bool LegitMode;
-        public static bool AutoSuicide;
-        public static bool DetonateOnAegisAndWk;
-        public static bool LeftMouseIsPress;
-        private static readonly int[] ErrorLevel = new int[8];
         #endregion
         #region Methods
 
@@ -57,324 +43,167 @@ namespace Techies_Annihilation
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
             Drawing.OnDraw += Drawing_OnDraw;
+            Menu.AddItem(new MenuItem("AutoDetonate", "Auto Detonate").SetValue(true));
+            Menu.AddItem(new MenuItem("AutoSuicide", "Auto Suicide").SetValue(false));
+            Menu.AddItem(new MenuItem("DetonateDang", "Detonate hero with Aegis").SetValue(false).SetTooltip("or similar"));
 
-            #region Init font & line
 
-            _fontSize3 = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = 13,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-            _fontSize1 = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = 20,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-            _fontSize2 = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = 16,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-            _fontSize4 = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = 16,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-            _line = new Line(Drawing.Direct3DDevice9);
-            #endregion
 
-            Drawing.OnPreReset += Drawing_OnPreReset;
-            Drawing.OnPostReset += Drawing_OnPostReset;
-            Drawing.OnEndScene += Drawing_OnEndScene;
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
-            Game.OnWndProc += Game_OnWndProc;
+            var force = new Menu("Forcestaff", "forcestaff", false, "item_force_staff", true);
+            force.AddItem(new MenuItem("forceHotkey", "Hotkey For Auto ForceStaff").SetValue(new KeyBind(0x11, KeyBindType.Press)));
+            force.AddItem(new MenuItem("showForceRange", "Auto forcestaff All TIme").SetValue(true));
+            Menu.AddSubMenu(force);
+
+            
+
+            var extraMenu = new Menu("Hero Panel", "extraMenu");
+            extraMenu.AddItem(new MenuItem("moveHotkey", "Hotkey For Moving").SetValue(new KeyBind(0x2D, KeyBindType.Toggle)).SetTooltip("toggle button for moving hero panel"));
+            extraMenu.AddItem(new MenuItem("showPanel", "Show Hero Panel").SetValue(true));
+            extraMenu.AddItem(new MenuItem("posX", "Hero Panel Position (x)").SetValue(new Slider(10, -2000, 2000)));
+            extraMenu.AddItem(new MenuItem("posY", "Hero Panel Position (y)").SetValue(new Slider(200, -2000, 2000)));
+            Menu.AddSubMenu(extraMenu);
+
+
+
+            var other = new Menu("Other", "other");
+            other.AddItem(new MenuItem("showDmgFromUlt", "Show Damage from ultimate").SetValue(true).SetTooltip("on hero"));
+            other.AddItem(new MenuItem("showDmgFromSuic", "Show Damage from suicide").SetValue(true).SetTooltip("on hero"));
+            other.AddItem(new MenuItem("fontSize", "Font Size on hero").SetValue(new Slider(15,1,30)));
+            Menu.AddSubMenu(other);
+
+
+            Menu.AddToMainMenu();
         }
 
         #endregion
         
-        #region Events
-
-        #region !
-
-        private static void CurrentDomainDomainUnload(object sender, EventArgs e)
-        {
-            _fontSize3.Dispose();
-            _fontSize2.Dispose();
-            _fontSize1.Dispose();
-            _fontSize4.Dispose();
-            _line.Dispose();
-        }
-
-        private static void Drawing_OnPostReset(EventArgs args)
-        {
-            _fontSize3.OnResetDevice();
-            _fontSize4.OnResetDevice();
-            _fontSize1.OnResetDevice();
-            _fontSize2.OnResetDevice();
-            _line.OnResetDevice();
-        }
-
-        private static void Drawing_OnPreReset(EventArgs args)
-        {
-            _fontSize4.OnLostDevice();
-            _fontSize3.OnLostDevice();
-            _fontSize2.OnLostDevice();
-            _fontSize1.OnLostDevice();
-            _line.OnLostDevice();
-        }
-
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (args.WParam != 1 || Game.IsChatOpen || !Utils.SleepCheck("clicker"))
-            {
-                LeftMouseIsPress = false;
-                return;
-            }
-            LeftMouseIsPress = true;
-            if (!IsClose && CheckMouse(145, 380, 60, 50))
-            {
-                WithAll = !WithAll;
-                Utils.Sleep(250, "clicker");
-            }
-            if (IsClose ? CheckMouse(20, 380, 50, 50) : CheckMouse(20, 380, 120, 50))
-            {
-                IsClose = !IsClose;
-                Utils.Sleep(250, "clicker");
-            }
-            if (!IsClose && CheckMouse(20, 435, 180, 25))
-            {
-                ExtraMenu = !ExtraMenu;
-                Utils.Sleep(250, "clicker");
-            }
-        }
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            if (!Game.IsInGame || _me==null || !_loaded) return;
-            var enemies =
-                ObjectMgr.GetEntities<Hero>()
-                    .Where(
-                        x =>
-                            x.Team != ObjectMgr.LocalPlayer.Team && !x.IsIllusion && _me.Distance2D(x)<=1500 && x.IsAlive)
-                    .ToList();
-            foreach (Hero enemy in enemies)
-            {
-                try
-                {
-                    Vector2 screenPos;
+            var me = ObjectMgr.LocalHero;
 
-                    var enemyPos = enemy.Position + new Vector3(0, 0, enemy.HealthBarOffset);
-                    if (!Drawing.WorldToScreen(enemyPos, out screenPos))
-                        continue;
-                    var start = screenPos + new Vector2(-51, -40);
-                    float suicide = 0;
-                    float minesDmg = 0;
-                    var text = string.Format("{0}                                   {1}",
-                        GlobalHealthAfterMines.TryGetValue(enemy, out minesDmg) ? (object) (int) minesDmg : "-",
-                        GlobalHealthAfterSuicide.TryGetValue(enemy, out suicide) ? (object) (int) suicide : "-");
-                    var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 150), FontFlags.None);
-                    var textPos = (start + new Vector2(51 - textSize.X/2, -textSize.Y/2 + 2));
-                    Drawing.DrawText(text, textPos, new Vector2(10, 150), Color.White,
-                        FontFlags.AntiAlias | FontFlags.DropShadow);
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
-        }
-
-        #endregion
-
-        private static void Drawing_OnEndScene(EventArgs args)
-        {
-            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame || !_loaded)
+            if (me==null || !me.IsValid) return;
+            if (Game.IsPaused || !Game.IsInGame || !_loaded || !Menu.Item("showPanel").GetValue<bool>())
             {
                 return;
             }
-            var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer)
+            if (Menu.Item("moveHotkey").GetValue<KeyBind>().Active)
             {
-                return;
+                Menu.Item("posX").SetValue(new Slider((int)Game.MouseScreenPosition.X, -2000, 2000));
+                Menu.Item("posY").SetValue(new Slider((int)Game.MouseScreenPosition.Y, -2000, 2000));
             }
-            /*var screenX = Drawing.Width / (float)1600 * (float)0.8;
-            Drawing.DrawRect(new Vector2(10, 200), new Vector2((float)15 * screenX, (float)15 * screenX), Drawing.GetTexture(@"vgui\hud\minimap_creep.vmat"));
-            Drawing.DrawRect(new Vector2(10, 300), new Vector2((float)15 * screenX, (float)15 * screenX), Drawing.GetTexture(@"vgui\hud\minimap_glow.vmat"));
-             * vgui\dashboard\dash_button_back
-             * root\materials\vgui\hud\heroportraits\portraitbackground_techies.vmat_c
-             * */
-            try
+            var percent = HUDInfo.RatioPercentage();
+            var pos = new Vector2(Menu.Item("posX").GetValue<Slider>().Value, Menu.Item("posY").GetValue<Slider>().Value);
+            var size=new Vector2(200*percent,300*percent);
+            Drawing.DrawRect(pos, size, new Color(0, 0, 0, 100));
+            Drawing.DrawRect(pos, size, new Color(0, 155, 255, 255), true);
+            Drawing.DrawLine(pos + new Vector2(0, size.Y / 7), pos + new Vector2(size.X, size.Y / 7), new Color(0, 155, 255, 255));
+            Drawing.DrawText("Techies Annihilation", pos + new Vector2(10, 10), new Vector2(20 * percent, 0), Color.LightBlue, FontFlags.AntiAlias | FontFlags.DropShadow);
+            Drawing.DrawText("v " + Ver, pos + new Vector2(10, size.Y / 9), new Vector2(10 * percent, 0), Color.LightBlue, FontFlags.AntiAlias | FontFlags.DropShadow);
+            var spellPos = pos + new Vector2(size.X/5 + 25, size.Y/7 + 10);
+            var spellSize = new Vector2(size.X/8, size.Y/12);
+            Drawing.DrawRect(spellPos, spellSize, new Color(0,0,0,155));
+            Drawing.DrawRect(spellPos + new Vector2(spellSize.X + 20 * percent, 0), spellSize, new Color(0, 0, 0, 155));
+            Drawing.DrawRect(spellPos + new Vector2(spellSize.X * 2 + 40 * percent, 0), spellSize, new Color(0, 0, 0, 155));
+            Drawing.DrawRect(spellPos, spellSize, Drawing.GetTexture("materials/ensage_ui/other/npc_dota_techies_land_mine" + ".vmat"));
+            Drawing.DrawRect(spellPos + new Vector2(spellSize.X + 20 * percent, 0), spellSize, Drawing.GetTexture("materials/ensage_ui/spellicons/techies_suicide" + ".vmat"));
+            Drawing.DrawRect(spellPos + new Vector2(spellSize.X * 2 + 40 * percent, 0), spellSize, Drawing.GetTexture("materials/ensage_ui/other/npc_dota_techies_remote_mine" + ".vmat"));
+            var i = 0;
+            foreach (var v in from hero in PlayersDictionary select hero.Value into v where v != null where v.IsValid where v.Team != me.Team select v)
             {
-                if (!IsClose)
+                i++;
+                var start = HUDInfo.GetHPbarPosition(v) + new Vector2(0, (float) (-HUDInfo.GetHpBarSizeY()*1.5));
+
+                if (v.IsAlive)
                 {
-                    DrawFilledBox(10, 200, 200, ExtraMenu ? 400 : 270, new ColorBGRA(0, 0, 0, 100));
-                    DrawLine(10, 250, 200, 250, 1, Color.Black);
-                    DrawShadowText("Damage Helper", 20, 210, Color.White, _fontSize1);
-                    var enemies =
-                        ObjectMgr.GetEntities<Hero>()
-                            .Where(
-                                x =>
-                                    x.Team != player.Team && !x.IsIllusion && x.ClassID != ClassID.CDOTA_Unit_Hero_Meepo)
-                            .ToList();
-                    var counter = 0;
-                    DrawFilledBox(20, 380, 120, 50,
-                        CheckMouse(20, 380, 120, 50) ? new ColorBGRA(255, 255, 0, 100) : new ColorBGRA(100, 255, 0, 100));
-                    DrawShadowText("Open / Hide", 30, 390, Color.White, _fontSize1);
-                    DrawFilledBox(145, 380, 55, 50,
-                        CheckMouse(145, 380, 55, 50)
-                            ? new ColorBGRA(255, 255, 0, 100)
-                            : WithAll ? new ColorBGRA(100, 255, 0, 100) : new ColorBGRA(255, 0, 0, 100));
-                    DrawShadowText(WithAll ? "AllHero" : "WithVis", 150, 390, Color.White, _fontSize2);
-
-                    DrawFilledBox(20, 435, 180, 25,
-                        CheckMouse(20, 435, 180, 25)
-                            ? new ColorBGRA(255, 255, 0, 100)
-                            : ExtraMenu ? new ColorBGRA(100, 255, 0, 100) : new ColorBGRA(255, 0, 0, 100));
-                    if (!ExtraMenu)
+                    if (Menu.Item("showDmgFromUlt").GetValue<bool>())
                     {
-                        DrawLine(90, 440, 100, 450, 3, Color.Black);
-                        DrawLine(100, 450, 110, 440, 3, Color.Black);
+                        float minesDmg;
+                        var dmgAfterUlt = string.Format("{0}",
+                            GlobalHealthAfterMines.TryGetValue(v, out minesDmg) ? (object) (int) minesDmg : "-");
+                        Drawing.DrawText(dmgAfterUlt, start + new Vector2(-10, 0),
+                            new Vector2(Menu.Item("fontSize").GetValue<Slider>().Value, 0), Color.White,
+                            FontFlags.AntiAlias | FontFlags.DropShadow);
                     }
-                    else
+                    if (Menu.Item("showDmgFromSuic").GetValue<bool>())
                     {
-                        DrawLine(100, 440, 90, 450, 3, Color.Black);
-                        DrawLine(110, 450, 100, 440, 3, Color.Black);
-
-
-                        DrawShadowText("Auto detonate", 20, 470, Color.White, _fontSize2);
-                        DrawShadowText("Auto suicide", 20, 490, Color.White, _fontSize2);
-                        DrawShadowText("Legit mode", 20, 510, Color.White, _fontSize2);
-                        DrawShadowText("Auto Force Staff", 20, 530, Color.White, _fontSize2);
-                        DrawShadowText("Show Force Staff Range", 20, 550, Color.White, _fontSize2);
-                        DrawShadowText("Detonate Aegis or Wk", 20, 570, Color.White, _fontSize2);
-
-                        DrawButton(180, 470, 15, 15, 2, ref AutoDetonate, true);
-                        DrawButton(180, 490, 15, 15, 2, ref AutoSuicide, true);
-                        DrawButton(180, 510, 15, 15, 2, ref LegitMode, false);
-                        DrawButton(180, 530, 15, 15, 2, ref AutoForceStaff, true);
-                        DrawButton(180, 550, 15, 15, 2, ref ShowForceStaffRange, true);
-                        DrawButton(180, 570, 15, 15, 2, ref DetonateOnAegisAndWk, true);
-
-                    }
-                    //DrawShadowText(WithAll ? "AllHero" : "WithVis", 150, 390, Color.White, _fontSize2);
-                    var dummy = false;
-                    if (!WithAll)
-                    {
-                        foreach (var v in enemies)
-                        {
-                            DrawShadowText(
-                                string.Format("  {0}: {3} | {1}/{2}", GetNameOfHero(v),
-                                    Math.Abs(_currentBombDamage) <= 0 ? 0 : GetCount(v, v.Health, _currentBombDamage),
-                                    Math.Abs(_currentBombDamage) <= 0
-                                        ? 0
-                                        : GetCount(v, v.MaximumHealth, _currentBombDamage),
-                                    CanKillSuic(v, ref dummy)),
-                                10, 250 + 25*counter++,
-                                Color.YellowGreen,
-                                _fontSize2);
-                        }
-                    }
-                    else
-                    {
-                        for (uint i = 0; i < 10; i++)
-                        {
-                            try
-                            {
-                                var v = ObjectMgr.GetPlayerById(i).Hero;
-                                if (v != null && v.Team != _me.Team && !Equals(v, _me))
-                                {
-                                    DrawShadowText(
-                                        string.Format("  {0}: {3} | {1}/{2}", GetNameOfHero(v),
-                                            Math.Abs(_currentBombDamage) <= 0
-                                                ? 0
-                                                : GetCount(v, v.Health, _currentBombDamage),
-                                            Math.Abs(_currentBombDamage) <= 0
-                                                ? 0
-                                                : GetCount(v, v.MaximumHealth, _currentBombDamage),
-                                            CanKillSuic(v, ref dummy)),
-                                        10, 250 + 25*counter++,
-                                        Color.YellowGreen,
-                                        _fontSize2);
-                                }
-                            }
-                            catch (Exception) //not all 10 players in a game!
-                            {
-                                ErrorLevel[6]++;
-                                //PrintError("ErrorLevel 6 ");
-                                // ignored
-                            }
-                        }
+                        float suicide;
+                        var dmgAfterSuic = string.Format("{0}",
+                            GlobalHealthAfterSuicide.TryGetValue(v, out suicide) ? (object) (int) suicide : "-");
+                        Drawing.DrawText(dmgAfterSuic, start + new Vector2(HUDInfo.GetHPBarSizeX(), 0),
+                            new Vector2(Menu.Item("fontSize").GetValue<Slider>().Value, 0), Color.White,
+                            FontFlags.AntiAlias | FontFlags.DropShadow);
                     }
                 }
-                else
-                {
-                    DrawFilledBox(20, 380, 50, 50,
-                        CheckMouse(20, 380, 50, 50) ? new ColorBGRA(255, 255, 0, 100) : new ColorBGRA(0, 0, 0, 100));
-                }
-            }
-            catch
-            {
-                // ignored
+                Drawing.DrawRect(pos + new Vector2(10, size.Y/7 + 10 + i*(size.Y/10 + 5)*percent),
+                    new Vector2(size.X/5, size.Y/10),
+                    Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" +
+                                       v.Name.Substring("npc_dota_hero_".Length) + ".vmat"));
+                Drawing.DrawRect(pos + new Vector2(10, size.Y/7 + 10 + i*(size.Y/10 + 5)*percent),
+                    new Vector2(size.X/5, size.Y/10), new Color(0, 0, 0, 255), true);
+
+                var ultDmg =
+                    string.Format("{0}/{1}",
+                        !v.IsAlive
+                            ? 0
+                            : Math.Abs(_currentBombDamage) <= 0 ? 0 : GetCount(v, v.Health, _currentBombDamage, me),
+                        Math.Abs(_currentBombDamage) <= 0
+                            ? 0
+                            : GetCount(v, v.MaximumHealth, _currentBombDamage, me));
+                Drawing.DrawText(ultDmg,
+                    new Vector2(spellPos.X + spellSize.X*2 + 40*percent,
+                        pos.Y + size.Y/7 + 10 + i*(size.Y/10 + 5)*percent), new Vector2(20*percent, 0), Color.LightBlue,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                var dummy = false;
+                CanKillSuic(v, ref dummy, me);
+                Drawing.DrawText(dummy ? "[+]" : "[-]",
+                    new Vector2(spellPos.X + spellSize.X * 1 + 20 * percent,
+                        pos.Y + size.Y / 7 + 10 + i * (size.Y / 10 + 5) * percent), new Vector2(20 * percent, 0), Color.LightBlue,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);
+
+                Drawing.DrawText("-",
+                    new Vector2(spellPos.X + 10 * percent,
+                        pos.Y + size.Y / 7 + 10 + i * (size.Y / 10 + 5) * percent), new Vector2(20 * percent, 0), Color.LightBlue,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);
             }
         }
 
         private static void Game_OnUpdate(EventArgs args)
         {
+            var me = ObjectMgr.LocalHero;
             if (!_loaded)
             {
-                _me = ObjectMgr.LocalHero;
-                _player = ObjectMgr.LocalPlayer;
-                if (!Game.IsInGame || _me == null || _me.ClassID != ClassID.CDOTA_Unit_Hero_Techies)
+
+                if (!Game.IsInGame || me == null)
                 {
                     return;
                 }
                 _loaded = true;
-                PrintSuccess("> Techies Annihilation loaded! v 1.4");
+                PrintSuccess(string.Format("> {1} Loaded v{0}", Ver, Menu.DisplayName));
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
+                    " loaded!</font> <font color='#aa0000'>v" + Ver, MessageType.LogMessage);
+                PlayersDictionary.Clear();
             }
 
-            if (!Game.IsInGame || _me == null || _me.ClassID != ClassID.CDOTA_Unit_Hero_Techies)
+            if (!Game.IsInGame || me == null)
             {
                 _loaded = false;
-                PrintInfo("> Techies Annihilation Unloaded!");
-                PrintSuccess("Stats: ");
-                PrintSuccess(string.Format("Error N {0}: {1}", 1, ErrorLevel[1].ToString()));
-                PrintSuccess(string.Format("Error N {0}: {1}", 2, ErrorLevel[2].ToString()));
-                PrintSuccess(string.Format("Error N {0}: {1}", 3, ErrorLevel[3].ToString()));
-                PrintSuccess(string.Format("Error N {0}: {1}", 4, ErrorLevel[4].ToString()));
-                PrintSuccess(string.Format("Error N {0}(2): {1}", 4, ErrorLevel[7].ToString()));
-                PrintSuccess(string.Format("Error N {0}: {1}", 5, ErrorLevel[5].ToString()));
-                PrintSuccess(string.Format("Error N {0}: {1}", 6, ErrorLevel[6].ToString()));
+                PrintInfo(string.Format("> {0} unLoaded", Menu.DisplayName));
                 return;
             }
             if (Game.IsPaused)
             {
                 return;
             }
+            SearchNewPlayers(me);
             try
             {
-                if (_player == null || _player.Team == Team.Observer)
-                    return;
 
                 #region UpdateInfo
 
-                var ultimate = _me.Spellbook.Spell6;
-                var suic = _me.Spellbook.Spell3;
+                var ultimate = me.Spellbook.Spell6;
+                var suic = me.Spellbook.Spell3;
 
                 var bombLevel = (ultimate != null) ? ultimate.Level : 0;
                 var suicideLevel = (suic != null) ? suic.Level : 0;
@@ -390,7 +219,7 @@ namespace Techies_Annihilation
                     }
                     LvlSpell3 = suicideLevel;
                 }
-                var agh = _me.FindItem("item_ultimate_scepter");
+                var agh = me.FindItem("item_ultimate_scepter");
                 if (LvlSpell6 != bombLevel || !Equals(_aghStatus, agh))
                 {
                     Debug.Assert(ultimate != null, "ultimate != null");
@@ -412,18 +241,18 @@ namespace Techies_Annihilation
                 var bombs = ObjectMgr.GetEntities<Unit>()
                     .Where(
                         x =>
-                            x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team == _player.Team);
+                            x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team == me.Team);
                 var bombsList = bombs as IList<Unit> ?? bombs.ToList();
                 var enumerable = bombs as IList<Unit> ?? bombsList.ToList();
                 //PrintError(Game.IsKeyDown(Key.RightCtrl).ToString());
 
                 #region ForceStaffRange
 
-                if ((Game.IsKeyDown(0x11) || AutoForceStaff) && ShowForceStaffRange)
+                if (Game.IsKeyDown(Menu.Item("forceHotkey").GetValue<KeyBind>().Key) || Menu.Item("showForceRange").GetValue<bool>())
                 {
                     if (_forceStaffRange == null)
                     {
-                        _forceStaffRange = _me.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                        _forceStaffRange = me.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
                         _forceStaffRange.SetControlPoint(1, new Vector3(800, 0, 0));
                     }
                 }
@@ -460,16 +289,16 @@ namespace Techies_Annihilation
                             x =>
                                 x.Team != ObjectMgr.LocalPlayer.Team && !x.IsIllusion)
                         .ToList();
-                var abilSuic = _me.Spellbook.Spell3;
-                var forcestaff = _me.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_ForceStaff);
-                for (uint i = 0; i < 10; i++)
+                var abilSuic = me.Spellbook.Spell3;
+                var forcestaff = me.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_ForceStaff);
+                foreach (var hero in from hero in PlayersDictionary let i = hero.Key select hero)
                 {
                     try
                     {
-                        var v = ObjectMgr.GetPlayerById(i).Hero;
-                        if (v == null || v.Team == _me.Team || Equals(v, _me)) continue;
-                        if (!AutoDetonate) continue;
-                        if (!DetonateOnAegisAndWk)
+                        var v = hero.Value;
+                        if (v == null || v.Team == me.Team || Equals(v, me)) continue;
+                        if (!Menu.Item("AutoDetonate").GetValue<bool>()) continue;
+                        if (!Menu.Item("DetonateDang").GetValue<bool>())
                         {
                             var aegis = v.FindItem("item_aegis");
                             if (v.ClassID == ClassID.CDOTA_Unit_Hero_SkeletonKing)
@@ -501,7 +330,7 @@ namespace Techies_Annihilation
                                 //PrintError("its templar: +" + extraBombs);
                             }
                         }
-                    foreach (var b in bombsList)
+                        foreach (var b in bombsList)
                         {
                             float dmg;
                             if (!(v.Distance2D(b) <= 425) || !BombDamage.TryGetValue(b, out dmg) || !v.IsAlive ||
@@ -514,13 +343,12 @@ namespace Techies_Annihilation
                                 }
                                 else
                                 {
-                                    inputDmg += v.DamageTaken(dmg, DamageType.Magical, _me, false);
+                                    inputDmg += v.DamageTaken(dmg, DamageType.Magical, me, false);
                                 }
                             }
                             catch
                             {
                                 //PrintError("ErrorLevel 2");
-                                ErrorLevel[2]++;
                             }
                             needToCastnew.Add(needToCastnew.Count + 1, b.Spellbook.Spell1);
                             //PrintError("NEED: "+needToCastnew.Count);
@@ -542,7 +370,6 @@ namespace Techies_Annihilation
                                 }
                                 catch
                                 {
-                                    ErrorLevel[1]++;
                                     //PrintError("ErrorLevel 1");
                                 }
                                 Utils.Sleep(250, ability.Value.Handle.ToString());
@@ -555,10 +382,10 @@ namespace Techies_Annihilation
                         // ignored
                     }
                 }
-                foreach (var v in enemies.Where(v => _me.IsAlive || v.IsAlive))
+                foreach (var v in enemies.Where(v => me.IsAlive || v.IsAlive))
                 {
-                    if ((Game.IsKeyDown(0x11) || AutoForceStaff) && forcestaff != null && forcestaff.CanBeCasted() &&
-                        CheckForceStaff(v) && _me.Distance2D(v) <= 800
+                    if ((Game.IsKeyDown(Menu.Item("forceHotkey").GetValue<KeyBind>().Key) || Menu.Item("showForceRange").GetValue<bool>()) && forcestaff != null && forcestaff.CanBeCasted() &&
+                        CheckForceStaff(v,me) && me.Distance2D(v) <= 800
                         /* && v.Modifiers.All(x => x.Name != "modifier_item_sphere_target")*/)
                     {
                         if (Utils.SleepCheck("force"))
@@ -567,9 +394,9 @@ namespace Techies_Annihilation
                             Utils.Sleep(250, "force");
                         }
                     }
-                    if (!(_me.Distance2D(v) <= 120) || abilSuic == null || !abilSuic.CanBeCasted() || !AutoSuicide)
+                    if (!(me.Distance2D(v) <= 120) || abilSuic == null || !abilSuic.CanBeCasted() || !Menu.Item("AutoSuicide").GetValue<bool>())
                         continue;
-                    if (CanKillSuic(v)) abilSuic.UseAbility(v);
+                    if (CanKillSuic(v, me)) abilSuic.UseAbility(v);
                 }
             }
             catch
@@ -580,96 +407,29 @@ namespace Techies_Annihilation
 
         #endregion
 
-        #endregion
-        #region Drawing Methods
-        public static void DrawCircle(int x, int y, int radius, int numSides, int thickness, Color color)
-        {
-            var vector2S = new Vector2[128];
-            var step = (float)Math.PI * 2.0f / numSides;
-            var count = 0;
-            for (float a = 0; a < (float)Math.PI * 2.0; a += step)
-            {
-                var x1 = radius * (float)Math.Cos(a) + x;
-                var y1 = radius * (float)Math.Sin(a) + y;
-                var x2 = radius * (float)Math.Cos(a + step) + x;
-                var y2 = radius * (float)Math.Sin(a + step) + y;
-                vector2S[count].X = x1;
-                vector2S[count].Y = y1;
-                vector2S[count + 1].X = x2;
-                vector2S[count + 1].Y = y2;
-
-                DrawLine(x1, y1, x2, y2, thickness, color);
-                count += 2;
-            }
-        }
-        public static void DrawFilledBox(float x, float y, float w, float h, Color color)
-        {
-            var vLine = new Vector2[2];
-
-            _line.GLLines = true;
-            _line.Antialias = false;
-            _line.Width = w;
-
-            vLine[0].X = x + w / 2;
-            vLine[0].Y = y;
-            vLine[1].X = x + w / 2;
-            vLine[1].Y = y + h;
-
-            _line.Begin();
-            _line.Draw(vLine, color);
-            _line.End();
-        }
-        public static void DrawLine(float x1, float y1, float x2, float y2, float w, Color color)
-        {
-            var vLine = new[] { new Vector2(x1, y1), new Vector2(x2, y2) };
-
-            _line.GLLines = true;
-            _line.Antialias = false;
-            _line.Width = w;
-
-            _line.Begin();
-            _line.Draw(vLine, color);
-            _line.End();
-
-        }
-        public static void DrawShadowText(string stext, int x, int y, Color color, Font f)
-        {
-            f.DrawText(null, stext, x + 1, y + 1, Color.Black);
-            f.DrawText(null, stext, x, y, color);
-        }
-        public static void DrawBox(float x, float y, float w, float h, float px, Color color)
-        {
-            DrawFilledBox(x, y + h, w, px, color);
-            DrawFilledBox(x - px, y, px, h, color);
-            DrawFilledBox(x, y - px, w, px, color);
-            DrawFilledBox(x + w, y, px, h, color);
-        }
-        private static void DrawButton(float x, float y, float w, float h, float px,ref bool clicked,bool isActive)
-        {
-            if (isActive)
-            {
-                var isIn = CheckMouse(x, y, w, h);
-                if (LeftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
-                {
-                    clicked = !clicked;
-                    Utils.Sleep(250, "ClickButtonCd");
-                }
-                Color newColor = isIn
-                    ? new ColorBGRA(255, 255, 0, 100)
-                    : clicked ? new ColorBGRA(100, 255, 0, 100) : new ColorBGRA(255, 0, 0, 100);
-                DrawFilledBox(x, y, w, h, newColor);
-                DrawBox(x, y, w, h, px, Color.Black);
-            }
-            else
-            {
-                DrawFilledBox(x, y, w, h, Color.Gray);
-                DrawBox(x, y, w, h, px, Color.Black); 
-            }
-        }
-        #endregion
+        
         #region Helpers
 
-        private static bool CheckForceStaff(Hero hero)
+        private static void SearchNewPlayers(Hero me)
+        {
+            for (uint i = 0; i < 10; i++)
+            {
+                try
+                {
+                    var v = ObjectMgr.GetPlayerById(i).Hero;
+                    if (v == null) continue;
+                    if (!v.IsValid) continue;
+                    if (v.Team == me.Team) continue;
+                    PlayersDictionary.Add(i, v);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+        }
+
+        private static bool CheckForceStaff(Hero hero,Hero me)
         {
             try
             {
@@ -680,14 +440,13 @@ namespace Techies_Annihilation
                 var bombs = ObjectMgr.GetEntities<Unit>()
                     .Where(
                         x =>
-                            x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team == _player.Team &&
+                            x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team == me.Team &&
                             x.Spellbook.Spell1.CanBeCasted() &&
                             x.Distance2D(new Vector3(pos.X, pos.Y, hero.NetworkPosition.Z)) <= 425 && x.IsAlive);
-                return (bombs.Count() >= GetCount(hero, hero.Health, _currentBombDamage));
+                return (bombs.Count() >= GetCount(hero, hero.Health, _currentBombDamage, me));
             }
             catch
             {
-                ErrorLevel[3]++;
                 //PrintError("ErrorLevel 3");
                 return false;
             }
@@ -741,36 +500,34 @@ namespace Techies_Annihilation
             return hero.NetworkName.Substring(hero.NetworkName.LastIndexOf('_') + 1);
         }
 
-        private static bool CanKillSuic(Unit target)
+        private static bool CanKillSuic(Unit target, Unit me)
         {
             float s;
             try
             {
-                s = target.Health - target.DamageTaken(_currentSuicDamage, DamageType.Physical, _me, true);
+                s = target.Health - target.DamageTaken(_currentSuicDamage, DamageType.Physical, me, true);
             }
             catch
             {
                 //PrintError("ErrorLevel 4 (2)");
-                ErrorLevel[7]++;
                 s = 1;
             }
             return s <= 0;
         }
 
-        private static string CanKillSuic(Unit target, ref bool killable)
+        private static string CanKillSuic(Unit target, ref bool killable, Unit me)
         {
             float s;
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (target == null || target.Health <= 0 || _currentSuicDamage == 0 || !_me.IsAlive) return " - ";
+            if (target == null || target.Health <= 0 || _currentSuicDamage == 0 || !me.IsAlive) return " - ";
             try
             {
-                s = target.Health - target.DamageTaken(_currentSuicDamage, DamageType.Physical, _me, true);
+                s = target.Health - target.DamageTaken(_currentSuicDamage, DamageType.Physical, me, true);
             }
             catch
             {
-                ErrorLevel[4]++;
                 //PrintError("ErrorLevel 4");
-                //PrintError(string.Format("me: {0} target{1} suicDamage: {2}", _me.Name, target.Name, _currentSuicDamage));
+                //PrintError(string.Format("me: {0} target{1} suicDamage: {2}", me.Name, target.Name, _currentSuicDamage));
                 s = 1;
             }
             if (GlobalHealthAfterSuicide.ContainsKey(target))
@@ -780,10 +537,11 @@ namespace Techies_Annihilation
             GlobalHealthAfterSuicide.Add(target, s);
             
             killable = s <= 0;
-            return (killable) ? string.Format("Killable: {0:N}", s) : string.Format("need: {0:N}", s);
+            //return (killable) ? string.Format("Killable: {0:N}", s) : string.Format("need: {0:N}", s);
+            return string.Format("{0:N}", s);
         }
 
-        private static int GetCount(Unit v, uint health, float damage)
+        private static int GetCount(Unit v, uint health, float damage, Unit me)
         {
             var n = 0;
             float dmg = 0;
@@ -796,11 +554,10 @@ namespace Techies_Annihilation
                     n++;
                     dmg += damage;
                     
-                } while (health - v.DamageTaken(dmg, DamageType.Magical, _me, false) > 0 && n < 30);
+                } while (health - v.DamageTaken(dmg, DamageType.Magical, me, false) > 0 && n < 30);
             }
             catch
             {
-                ErrorLevel[5]++;
                 //PrintError("ErrorLevel 5");
                 // ignored
             }
