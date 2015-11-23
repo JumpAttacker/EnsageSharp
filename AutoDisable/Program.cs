@@ -31,6 +31,7 @@ namespace Auto_Disable
         private static readonly Menu Menu = new Menu("Auto Disable", "autodisable", true);
         private static readonly Menu ItemMenu = new Menu("Item", "Items");
         private static readonly Menu AbilityMenu = new Menu("Ability", "Ability");
+        private static readonly Menu [,]ExtraSubMenu = new Menu[10,2];
         private static bool _loaded;
         //private static Hero me;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -41,6 +42,7 @@ namespace Auto_Disable
         private static readonly Dictionary<string, bool> PreLoadSpell = new Dictionary<string, bool>();
         private static readonly List<string> ItemList = new List<string>();
         private static readonly List<string> SpellList = new List<string>();
+        static bool[]Create=new bool[10];
         #endregion
 
         private static void Game_OnUpdate(EventArgs args)
@@ -61,6 +63,10 @@ namespace Auto_Disable
                     " loaded!</font> <font color='#aa0000'>v" + Ver, MessageType.LogMessage);
                 PreLoadItems.Clear();
                 PreLoadSpell.Clear();
+                for (var asd = 0; asd < 10; asd++)
+                {
+                    Create[asd] = false;
+                }
             }
 
             if (!Game.IsInGame || me == null)
@@ -110,7 +116,9 @@ namespace Auto_Disable
                 PreLoadSpell.Add(spell.Name, true);
                 Game.PrintMessage("[AutoDisable] [SPELL] " + spell.Name + " added to menu ", MessageType.LogMessage);
                 newSpells = true;
+                
             }
+            /*
             if (newSpells)
             {
 
@@ -122,10 +130,11 @@ namespace Auto_Disable
                 ItemMenu.AddItem(
                     new MenuItem("SelectedItems" + me.Name, "Items:").SetValue(new AbilityToggler(PreLoadItems)));
             }
+            */
             /*foreach (var ability in spells.Where(item => PreLoadSpell.ContainsKey(item.Name)))
             {
                 Game.PrintMessage(
-                    Menu.Item("SelectedSpells" + _me.Name).GetValue<AbilityToggler>().IsEnabled(ability.Name).ToString(),
+                    ExtraSubMenu[i, 1].Item("SelectedSpells" + _me.Name).GetValue<AbilityToggler>().IsEnabled(ability.Name).ToString(),
                     MessageType.ChatMessage);
             }*/
             for (i = 0; i < 10; i++)
@@ -143,7 +152,34 @@ namespace Auto_Disable
                     var isSilence = v.IsSilenced();
                     var isDisarm = v.IsDisarmed();
                     
-
+                    /*try
+                    {
+                        Game.PrintMessage("[AutoDisable] " + Menu.Item("ActiveSpell" + i).GetValue<bool>(), MessageType.LogMessage);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    */
+                    if (!Create[i])
+                    {
+                        ExtraSubMenu[i, 0] = new Menu("", i.ToString(), false, v.Name);
+                        ExtraSubMenu[i, 0].AddItem(new MenuItem("ActiveItem" + i, "Active For This Hero").SetValue(true));
+                        ItemMenu.AddSubMenu(ExtraSubMenu[i,0]);
+                        ExtraSubMenu[i, 1] = new Menu("", i.ToString(), false, v.Name);
+                        ExtraSubMenu[i, 1].AddItem(new MenuItem("ActiveSpell"+i, "Active For This Hero").SetValue(true));
+                        AbilityMenu.AddSubMenu(ExtraSubMenu[i,1]);
+                        Create[i] = true;
+                    }
+                    if (newSpells)
+                    {
+                        ExtraSubMenu[i, 1].AddItem(
+                            new MenuItem("SelectedSpells" + me.Name, "Abilities:").SetValue(new AbilityToggler(PreLoadSpell)));
+                    }
+                    if (newItems)
+                    {
+                        ExtraSubMenu[i, 0].AddItem(
+                            new MenuItem("SelectedItems" + me.Name, "Items:").SetValue(new AbilityToggler(PreLoadItems)));
+                    }
                     if ((isInvis && !me.IsVisibleToEnemies)|| isChannel) continue;
 
                     
@@ -164,19 +200,19 @@ namespace Auto_Disable
                         
                         if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                         {
-                            UseDisableStageOne(v, enumerable, null, false, true, me);
+                            UseDisableStageOne(v, enumerable, null, false, true, me, i);
                         }
                         else if (Menu.Item("onlyoninitiators").GetValue<StringList>().SelectedIndex == (int)DisableType.All)
                         {
                             
-                            UseDisableStageOne(v, enumerable, null, false, false, me);
+                            UseDisableStageOne(v, enumerable, null, false, false, me, i);
                         }
                         else if (Initiators.TryGetValue(v.ClassID, out spellString))
                         {
                             var initSpell = v.FindSpell(spellString);
                             if (initSpell != null && initSpell.Cooldown != 0)
                             {
-                                UseDisableStageOne(v, enumerable, null, false, true, me);
+                                UseDisableStageOne(v, enumerable, null, false, true, me, i);
                             }
                         }
                     }
@@ -206,24 +242,24 @@ namespace Auto_Disable
                         if ((r != null && r.IsInAbilityPhase) || (r2 != null && r2.IsInAbilityPhase) ||
                             mustHave && modifier && act || !mustHave && act)
                         {
-                            CounterSpellAndItems(v, enumerable, abilities, me);
+                            CounterSpellAndItems(v, enumerable, abilities, me, i);
                         }
                     }
                     
                     if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                     {
-                        UseDisableStageOne(v, enumerable, abilities, true, true, me);
+                        UseDisableStageOne(v, enumerable, abilities, true, true, me, i);
                     }
                     else if (Menu.Item("onlyoninitiators").GetValue<StringList>().SelectedIndex == (int)DisableType.All  && distance<=1200)
                     {
-                        UseDisableStageOne(v, enumerable, abilities, true, false, me);
+                        UseDisableStageOne(v, enumerable, abilities, true, false, me, i);
                     }
                     if (Initiators.TryGetValue(v.ClassID, out spellString) && distance < 1000)
                     {
                         var initSpell = v.FindSpell(spellString);
                         if (initSpell != null && initSpell.Cooldown != 0)
                         {
-                            UseDisableStageOne(v, enumerable, abilities, true, true, me);
+                            UseDisableStageOne(v, enumerable, abilities, true, true, me, i);
                         }
                     }
                 }
@@ -442,7 +478,7 @@ namespace Auto_Disable
 
         #endregion
 
-        private static void CounterSpellAndItems(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities, Unit me)
+        private static void CounterSpellAndItems(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities, Unit me, uint i)
         {
             if (!me.IsValid) return;
             var enumerable = items as Item[] ?? items.ToArray();
@@ -450,14 +486,14 @@ namespace Auto_Disable
             var safeItemSelf = enumerable.FirstOrDefault(
                 x =>
                     (x.Name == "item_blade_mail" /*|| x.Name == "item_black_king_bar" || x.Name == "item_ghost" ||
-                        x.Name == "item_manta"*/) && Menu.Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                        x.Name == "item_manta"*/) && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             var safeItemTargetSelf = enumerable.FirstOrDefault(
                 x =>
-                    (x.Name == "item_lotus_orb" || x.Name == "item_glimmer_cape") && Menu.Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                    (x.Name == "item_lotus_orb" || x.Name == "item_glimmer_cape") && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             var safeItemTargetEnemy = enumerable.FirstOrDefault(
                 x =>
                     (x.Name == "item_sheepstick" || x.Name == "item_orchid" || x.Name == "item_abyssal_blade" ||
-                    x.Name == "item_heavens_halberd" || x.Name == "item_cyclone") && Menu.Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                    x.Name == "item_heavens_halberd" || x.Name == "item_cyclone") && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             var safeItemPoint = enumerable.FirstOrDefault(
                 x =>
                     x.Name == "item_blink");
@@ -480,7 +516,7 @@ namespace Auto_Disable
                     x.Name == "templar_assassin_meld" /*|| x.Name == "phoenix_supernova" */||
                     x.Name == "juggernaut_blade_fury" || x.Name == "life_stealer_rage" || x.Name == "lion_voodoo" ||
                     x.Name == "shadow_shaman_voodoo" /*|| x.Name == "oracle_fates_edict" */||
-                    /* x.Name == "winter_wyvern_cold_embrace" ||*/ x.Name == "life_stealer_rage" || x.Name == "silencer_global_silence") && Menu.Item("SelectedSpells" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                    /* x.Name == "winter_wyvern_cold_embrace" ||*/ x.Name == "life_stealer_rage" || x.Name == "silencer_global_silence") && ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             /*local v = entityList:GetEntities({classId = CDOTA_Unit_Fountain,team = me.team})[1]
 				local vec = Vector((v.position.x - me.position.x) * 1100 / GetDistance2D(v,me) + me.position.x,(v.position.y - me.position.y) * 1100 / GetDistance2D(v,me) + me.position.y,v.position.z)
 				if blinkfront then
@@ -492,7 +528,7 @@ namespace Auto_Disable
             if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
                 Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyItems)
             {
-                if (safeItemSelf != null)
+                if (safeItemSelf != null && Menu.Item("ActiveItem" + i).GetValue<bool>())
                 {
                     safeItemSelf.UseAbility();
                     Utils.Sleep(250, target.GetHashCode().ToString());
@@ -508,7 +544,7 @@ namespace Auto_Disable
                         if (Menu.Item("oneenemy").GetValue<bool>()) return;
                     }
                 }
-                if (safeItemTargetEnemy != null && safeItemTargetEnemy.CanBeCasted(target))
+                if (safeItemTargetEnemy != null && safeItemTargetEnemy.CanBeCasted(target) && Menu.Item("ActiveItem" + i).GetValue<bool>())
                 {
                     if (me.Distance2D(target) <= safeItemTargetEnemy.CastRange)
                     {
@@ -517,7 +553,7 @@ namespace Auto_Disable
                         if (Menu.Item("oneenemy").GetValue<bool>()) return;
                     }
                 }
-                if (safeItemTargetSelf != null)
+                if (safeItemTargetSelf != null && Menu.Item("ActiveItem" + i).GetValue<bool>())
                 {
                     safeItemTargetSelf.UseAbility(me);
                     Utils.Sleep(250, target.GetHashCode().ToString());
@@ -525,7 +561,7 @@ namespace Auto_Disable
 
                 }
             }
-            if (safeSpell == null || !safeSpell.CanBeCasted() ||
+            if (!Menu.Item("ActiveSpell" + i).GetValue<bool>() || safeSpell == null || !safeSpell.CanBeCasted() ||
                 (Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.All &&
                  Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.OnlyAblities)) return;
             if (safeSpell.CastRange > 0)
@@ -542,7 +578,7 @@ namespace Auto_Disable
             Utils.Sleep(250, target.GetHashCode().ToString());
         }
 
-        private static void UseDisableStageOne(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities, bool stage, bool itsRealConterSpell, Hero me)
+        private static void UseDisableStageOne(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities, bool stage, bool itsRealConterSpell, Hero me, uint i)
         {
             if (!me.IsValid) return;
             Item disable;
@@ -559,7 +595,7 @@ namespace Auto_Disable
                             x.Name == "item_ethereal_blade" ||
                             x.Name == "item_rod_of_atos" || x.Name == "item_heavens_halberd" ||
                             x.Name == "item_medallion_of_courage" ||
-                            x.Name == "item_cyclone" || x.Name == "item_solar_crest") && Menu.Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                            x.Name == "item_cyclone" || x.Name == "item_solar_crest") && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
                 var enumerable1 = abilities as Ability[] ?? abilities.ToArray();
                 ab =
                     enumerable1.FirstOrDefault(
@@ -570,11 +606,11 @@ namespace Auto_Disable
                             x.Name == "dragon_knight_dragon_tail" ||
                             x.Name == "batrider_flaming_lasso" ||
                             x.Name == "legion_commander_duel" ||
-                            x.Name == "skywrath_mage_ancient_seal" /*|| x.Name == "vengefulspirit_magic_missile"*/ ) && Menu.Item("SelectedSpells" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                            x.Name == "skywrath_mage_ancient_seal" /*|| x.Name == "vengefulspirit_magic_missile"*/ ) && ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
                 withOutTarget =
                     enumerable1.FirstOrDefault(
                         x =>
-                            x.Name == "silencer_global_silence" && Menu.Item("SelectedSpells" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                            x.Name == "silencer_global_silence" && ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             }
             else
             {
@@ -582,12 +618,12 @@ namespace Auto_Disable
                     enumerable.FirstOrDefault(
                         x =>
                             (x.Name == "item_rod_of_atos" || x.Name == "item_medallion_of_courage" ||
-                            x.Name == "item_solar_crest") && Menu.Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                            x.Name == "item_solar_crest") && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             }
             if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
                 Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyItems)
             {
-                if (disable != null && me.Distance2D(target) <= disable.CastRange)
+                if (disable != null && me.Distance2D(target) <= disable.CastRange && Menu.Item("ActiveItem" + i).GetValue<bool>())
                 {
                     disable.UseAbility(target);
                     Utils.Sleep(250, target.GetHashCode().ToString());
@@ -597,17 +633,14 @@ namespace Auto_Disable
             if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
                 Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyAblities)
             {
-                if (ab != null && me.Distance2D(target) <= ab.CastRange)
+                if (ab != null && me.Distance2D(target) <= ab.CastRange && Menu.Item("ActiveSpell" + i).GetValue<bool>())
                 {
                     ab.UseAbility(target);
                     Utils.Sleep(250, target.GetHashCode().ToString());
                     if (Menu.Item("oneenemy").GetValue<bool>()) return;
-                    Game.PrintMessage(
-                    Menu.Item("ab" + me.Name).GetValue<AbilityToggler>().IsEnabled(ab.Name).ToString(),
-                    MessageType.ChatMessage);
                 }
 
-                if (withOutTarget != null)
+                if (withOutTarget != null && Menu.Item("ActiveSpell" + i).GetValue<bool>())
                 {
                     withOutTarget.UseAbility();
                     Utils.Sleep(250, target.GetHashCode().ToString());
