@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Menu;
+using Ensage.Items;
 using SharpDX;
 
 namespace ItemPanel
@@ -15,15 +16,11 @@ namespace ItemPanel
         //============================================================
         private static bool _loaded;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        private static bool _leftMouseIsPress;
-        private static bool _showMenu = true;
-        private static Vector2 _sizer = new Vector2(265, 300);
-        private static Vector2 _startPos = new Vector2(50, 500);
         private static readonly Hero[] Heroes=new Hero[10];
-        private static readonly float Con = Math.Max(1, HUDInfo.ScreenSizeX() / 1600);
+        private static bool _isMoving;
+        private static readonly float Percent = HUDInfo.RatioPercentage();
         //============================================================
-        private static bool _moving;
-        private static readonly Dictionary<string, DotaTexture> TextureCache = new Dictionary<string, DotaTexture>();
+        private static readonly Menu Menu = new Menu("Item Panel", "itempanel", true);
         //============================================================
         #endregion
 
@@ -32,105 +29,105 @@ namespace ItemPanel
             _loaded = false;
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnWndProc += Game_OnWndProc;
+            Menu.AddItem(new MenuItem("show", "Show Item Panel").SetValue(new KeyBind('I', KeyBindType.Toggle, true)));
+            Menu.AddItem(new MenuItem("showNumber", "Show cooldown (number)").SetValue(true));
+            Menu.AddItem(new MenuItem("showRect", "Show cooldown (rect)").SetValue(true));
+            var settings = new Menu("settings", "Settings");
+            settings.AddItem(new MenuItem("DisableMoving", "Disable moving").SetValue(false));
+            settings.AddItem(new MenuItem("posX", "Panel Position X").SetValue(new Slider(100,-2000,2000)));
+            settings.AddItem(new MenuItem("posY", "Panel Position Y").SetValue(new Slider(200, -2000, 2000)));
+            settings.AddItem(new MenuItem("trans", "Cooldown Transparency").SetValue(new Slider(100, 1, 255)));
+            settings.AddItem(new MenuItem("fontSize", "Cooldown Font Size").SetValue(new Slider(15, 1, 20)));
+            Menu.AddSubMenu(settings);
+
+
+            Menu.AddToMainMenu();
         }
         private static void Game_OnWndProc(WndEventArgs args)
         {
-            if (Game.IsChatOpen)
-                return;
-            if (args.WParam != 1 || !Utils.SleepCheck("clicker"))
+
+            if (args.WParam != 1 || Game.IsChatOpen || Menu.Item("DisableMoving").GetValue<bool>())
             {
-                _leftMouseIsPress = false;
                 return;
             }
-            _leftMouseIsPress = true;
+            var size = new Vector2(200 * Percent, 150 * Percent);
+            if (Utils.IsUnderRectangle(Game.MouseScreenPosition, Menu.Item("posX").GetValue<Slider>().Value,
+                Menu.Item("posY").GetValue<Slider>().Value, size.X, size.Y/6))
+                _isMoving = !_isMoving;
         }
-
         private static void Drawing_OnDraw(EventArgs args)
         {
             var me = ObjectMgr.LocalHero;
+
             if (!_loaded)
             {
                 if (!Game.IsInGame || me == null)
                 {
                     return;
                 }
-                Flush();
                 _loaded = true;
-                PrintSuccess(string.Format("> ItemPanel Loaded v{0}", Ver));
+                PrintSuccess(string.Format("> {1} Loaded v{0}", Ver, Menu.DisplayName));
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
+                    " loaded!</font> <font color='#aa0000'>v" + Ver, MessageType.LogMessage);
+                Flush();
             }
 
             if (!Game.IsInGame || me == null)
             {
                 _loaded = false;
-                PrintInfo("> ItemPanel unLoaded");
+                PrintInfo(string.Format("> {0} unLoaded", Menu.DisplayName));
                 return;
             }
-            if (_moving)
+            if (!Menu.Item("show").GetValue<KeyBind>().Active) return;
+            Utils.Sleep(100, "perf");
+            var pos = new Vector2(Menu.Item("posX").GetValue<Slider>().Value, Menu.Item("posY").GetValue<Slider>().Value);//new Vector2(Menu.Item("posX").GetValue<Slider>().Value, Menu.Item("posY").GetValue<Slider>().Value);
+            var size = new Vector2(200 * Percent, 150 * Percent);
+                
+            if (_isMoving)
             {
-                _startPos = Game.MouseScreenPosition+new Vector2(-30,15);
-            }
-            var maxSize = new Vector2(25 * Con*7, 18*Con*7);
-            if (_showMenu)
-            {
-                _sizer.X += 4;
-                _sizer.Y += 4;
-                _sizer.X = Math.Min(_sizer.X, maxSize.X);
-                _sizer.Y = Math.Min(_sizer.Y, maxSize.Y);
-
-                Drawing.DrawRect(_startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(_startPos, _sizer, new Color(0, 0, 0, 255), true);
-                Drawing.DrawRect(_startPos + new Vector2(-5, -5), _sizer + new Vector2(10, 10),
-                    new Color(0, 0, 0, 255), true);
-                DrawButton(_startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-                if (!Equals(_sizer, maxSize)) return;
-
-                DrawButton(_startPos + new Vector2(0, -20), _sizer.X-20, 20, ref _moving, true,
-                    new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Click to move");
-
-                Drawing.DrawText(
-                    string.Format("Item Panel v {0}", Ver),
-                    _startPos + new Vector2(5, 5), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                DrawItems(me);
-
+                Menu.Item("posX").SetValue(new Slider((int)Game.MouseScreenPosition.X-10, -2000, 2000));
+                Menu.Item("posY").SetValue(new Slider((int)Game.MouseScreenPosition.Y-10, -2000, 2000));
+                Drawing.DrawText("MOVING", pos + new Vector2(2, 2), new Vector2(20 * Percent, 0),
+                    Color.LightBlue, FontFlags.AntiAlias | FontFlags.DropShadow);
             }
             else
             {
-                _sizer.X -= 4;
-                _sizer.Y -= 4;
-                _sizer.X = Math.Max(_sizer.X, 20);
-                _sizer.Y = Math.Max(_sizer.Y, 0);
-                Drawing.DrawRect(_startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(_startPos, _sizer, new Color(0, 0, 0, 255), true);
-                DrawButton(_startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
+                Drawing.DrawText(Menu.DisplayName + " v " + Ver, pos + new Vector2(2, 2), new Vector2(20*Percent, 0),
+                    Color.LightBlue, FontFlags.AntiAlias | FontFlags.DropShadow);
             }
+            Drawing.DrawRect(pos, size, new Color(0, 0, 0, 100));
+            Drawing.DrawRect(pos, size, new Color(0, 155, 255, 255), true);
+            Drawing.DrawLine(pos + new Vector2(0, size.Y / 6), pos + new Vector2(size.X, size.Y / 6),
+                new Color(0, 155, 255, 255));
+            
+            DrawItems(me, pos, size, Percent);
+            
+            
         }
 
-        private static void DrawItems(Hero me)
+        private static void DrawItems(Hero me, Vector2 pos, Vector2 size, float percent)
         {
-
             uint i = 0;
             for (uint num = 0; num < 10; num++)
             {
-                if (Heroes[num] == null || !Heroes[num].IsValid)
+                try
                 {
-                    try
-                    {
+                    if (Heroes[num] == null || !Heroes[num].IsValid)
                         Heroes[num] = ObjectMgr.GetPlayerById(num).Hero;
-                    }
-                    catch
-                    {
-                        continue;
-                    }
                 }
-                if (Heroes[num].Team == me.Team) continue;
+                catch
+                {
+                    continue;
+                }
+                if (Heroes[num]==null || !Heroes[num].IsValid || Heroes[num].Team == me.Team) continue;
+                Drawing.DrawRect(pos + new Vector2(10, size.Y/7 + 10 + i*(size.Y/10 + 5)*percent),
+                    new Vector2(size.X/7, size.Y/8),
+                    Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" +
+                                       Heroes[num].Name.Substring("npc_dota_hero_".Length) + ".vmat"));
 
-                Drawing.DrawRect(_startPos + new Vector2(5, 18 * Con * (i + 1)), new Vector2(18 * Con, 18 * Con),
-                    GetTexture(string.Format("materials/ensage_ui/miniheroes/{0}.vmat",
-                        Heroes[num].Name.Replace("npc_dota_hero_", ""))));
+                Drawing.DrawRect(pos + new Vector2(10, size.Y/7 + 10 + i*(size.Y/10 + 5)*percent),
+                    new Vector2(size.X/7, size.Y/8), new Color(0, 0, 0, 255), true);
                 for (var i2 = 1; i2 <= 6; i2++)
                 {
                     try
@@ -150,30 +147,46 @@ namespace ItemPanel
                             texturename = string.Format("materials/ensage_ui/items/{0}.vmat",
                                 item.Name.Replace("item_", ""));
                         }
-                        Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), new Vector2(32 * Con, 18 * Con),
-                            GetTexture(texturename));
+                        if (item is Bottle)
+                        {
+                            var bottletype = item as Bottle;
+                            if (bottletype.StoredRune != RuneType.None)
+                            {
+                                texturename = string.Format("materials/ensage_ui/items/{0}.vmat",
+                                    item.Name.Replace("item_", "") + "_" + bottletype.StoredRune);
+                            }
+                        }
                         if (item == null) continue;
+                        var itemStartPos = pos +
+                                           new Vector2((size.X / 7) + (size.X / 9) * i2, size.Y / 7 + 10 + i * (size.Y / 10 + 5) * percent);
+                        Drawing.DrawRect(
+                            itemStartPos,
+                            new Vector2(size.X/7, size.Y/8),
+                            Drawing.GetTexture(texturename));
                         
-
                         if (item.AbilityState == AbilityState.NotEnoughMana)
                         {
-                            Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)),
-                                new Vector2(23 * Con, 18 * Con), new Color(0, 0, 255, 75));
+                            Drawing.DrawRect(itemStartPos,
+                            new Vector2(size.X / 9, size.Y / 8), new Color(0, 0, 255, 75));
                         }
 
                         if (item.AbilityState == AbilityState.OnCooldown)
                         {
-                            Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)),
-                                new Vector2((23 * Con), item.Cooldown / item.CooldownLength * (19 * Con)), new Color(255, 255, 255, 100));
-                            /*Drawing.DrawText(((int)item.Cooldown).ToString(CultureInfo.InvariantCulture),
-                                _startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), Color.Black,
-                                FontFlags.AntiAlias | FontFlags.DropShadow);*/
+                            if (Menu.Item("showRect").GetValue<bool>())
+                                Drawing.DrawRect(itemStartPos,
+                                    new Vector2(size.X/9, item.Cooldown/item.CooldownLength*(size.Y/8)),
+                                    new Color(255, 255, 255, Menu.Item("trans").GetValue<Slider>().Value));
+                            if (Menu.Item("showNumber").GetValue<bool>())
+                                Drawing.DrawText(((int) item.Cooldown).ToString(CultureInfo.InvariantCulture),
+                                    itemStartPos, new Vector2(Menu.Item("fontSize").GetValue<Slider>().Value*percent),
+                                    Color.Gold,
+                                    FontFlags.AntiAlias | FontFlags.DropShadow);
                         }
                     }
                     catch (Exception)
                     {
-                        Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), new Vector2(32 * Con, 18 * Con),
-                        GetTexture("materials/ensage_ui/items/emptyitembg.vmat"));
+                        /*Drawing.DrawRect(_startPos + new Vector2(25 * Con * i2, 18 * Con * (i + 1)), new Vector2(32 * Con, 18 * Con),
+                        Drawing.GetTexture("materials/ensage_ui/items/emptyitembg.vmat"));*/
                     }
                 }
                 i++;
@@ -185,41 +198,10 @@ namespace ItemPanel
             for (uint i = 0; i < 10; i++)
                 Heroes[i] = null;
         }
-        private static DotaTexture GetTexture(string name)
-        {
-            if (TextureCache.ContainsKey(name)) return TextureCache[name];
-
-            return TextureCache[name] = Drawing.GetTexture(name);
-        }
+        
 
         #region Helpers
-        private static void DrawButton(Vector2 a, float w, float h, ref bool clicked, bool isActive, Color @on, Color off, string drawOnButtonText = "")
-        {
-            var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
-            if (isActive)
-            {
-                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
-                {
-                    clicked = !clicked;
-                    Utils.Sleep(250, "ClickButtonCd");
-                }
-                var newColor = isIn
-                    ? new Color((int)(clicked ? @on.R : off.R), clicked ? @on.G : off.G, clicked ? @on.B : off.B, 150)
-                    : clicked ? @on : off;
-                Drawing.DrawRect(a, new Vector2(w, h), newColor);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-                if (drawOnButtonText != "")
-                {
-                    Drawing.DrawText(drawOnButtonText, a + new Vector2(10, 2), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                }
-            }
-            else
-            {
-                Drawing.DrawRect(a, new Vector2(w, h), Color.Gray);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-            }
-        }
+        
         public static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
