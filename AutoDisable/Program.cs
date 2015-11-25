@@ -42,7 +42,10 @@ namespace Auto_Disable
         private static readonly Dictionary<string, bool> PreLoadSpell = new Dictionary<string, bool>();
         private static readonly List<string> ItemList = new List<string>();
         private static readonly List<string> SpellList = new List<string>();
-        static bool[]Create=new bool[10];
+        public static readonly bool[]Create=new bool[10];
+        private static bool[] firstTimeItem = new bool[10];
+        private static bool[] firstTimeSpell = new bool[10];
+
         #endregion
 
         private static void Game_OnUpdate(EventArgs args)
@@ -66,6 +69,8 @@ namespace Auto_Disable
                 for (var asd = 0; asd < 10; asd++)
                 {
                     Create[asd] = false;
+                    firstTimeItem[asd] = true;
+                    firstTimeSpell[asd] = true;
                 }
             }
 
@@ -99,11 +104,11 @@ namespace Auto_Disable
             uint i;
             var isInvis = me.IsInvisible();
             var isChannel = me.IsChanneling();
-            var items = me.Inventory.Items.Where(x => x.CanBeCasted() && ItemList.Contains(x.Name));
+            var items = me.Inventory.Items.Where(x => x.CanBeCasted());
             var spells = me.Spellbook.Spells.Where(x => x.CanBeCasted() && SpellList.Contains(x.Name));
             var newItems = false;
-            
-            foreach (var item in items.Where(item => !PreLoadItems.ContainsKey(item.Name)))
+
+            foreach (var item in items.Where(item => !PreLoadItems.ContainsKey(item.Name) && ItemList.Contains(item.Name)))
             {
                 PreLoadItems.Add(item.Name, true);
                 Game.PrintMessage("[AutoDisable] [ITEM] " + item.Name + " added to menu", MessageType.LogMessage);
@@ -142,7 +147,7 @@ namespace Auto_Disable
                 try
                 {
                     var v = ObjectMgr.GetPlayerById(i).Hero;
-                    if (v == null || v.Team == me.Team || Equals(v, me) || !v.IsAlive || !v.IsVisible ||
+                    if (v == null || v.Team == me.Team || Equals(v, me) ||
                         !Utils.SleepCheck(v.GetHashCode().ToString())) continue;
                     var isInvul = v.IsInvul();
                     var magicImmnune = v.IsMagicImmune();
@@ -170,16 +175,27 @@ namespace Auto_Disable
                         AbilityMenu.AddSubMenu(ExtraSubMenu[i,1]);
                         Create[i] = true;
                     }
-                    if (newSpells)
+                    if (PreLoadItems.Count > 0 && firstTimeItem[i])
                     {
-                        ExtraSubMenu[i, 1].AddItem(
-                            new MenuItem("SelectedSpells" + me.Name, "Abilities:").SetValue(new AbilityToggler(PreLoadSpell)));
-                    }
-                    if (newItems)
-                    {
+                        firstTimeItem[i] = false;
                         ExtraSubMenu[i, 0].AddItem(
                             new MenuItem("SelectedItems" + me.Name, "Items:").SetValue(new AbilityToggler(PreLoadItems)));
                     }
+                    if (PreLoadSpell.Count > 0 && firstTimeSpell[i])
+                    {
+                        firstTimeSpell[i] = false;
+                        ExtraSubMenu[i, 1].AddItem(
+                            new MenuItem("SelectedSpells" + me.Name, "Abilities:").SetValue(new AbilityToggler(PreLoadSpell)));
+                    }
+                    if (newSpells)
+                    {
+                        ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name).SetValue((new AbilityToggler(PreLoadSpell)));
+                    }
+                    if (newItems)
+                    {
+                        ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name).SetValue((new AbilityToggler(PreLoadItems)));
+                    }
+                    if (!v.IsAlive || !v.IsVisible) continue;
                     if ((isInvis && !me.IsVisibleToEnemies)|| isChannel) continue;
 
                     
@@ -201,6 +217,7 @@ namespace Auto_Disable
                         if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
                         {
                             UseDisableStageOne(v, enumerable, null, false, true, me, i);
+                            
                         }
                         else if (Menu.Item("onlyoninitiators").GetValue<StringList>().SelectedIndex == (int)DisableType.All)
                         {
@@ -333,7 +350,7 @@ namespace Auto_Disable
             SpellList.Add("naga_siren_mirror_image");
             SpellList.Add("alchemist_chemical_rage");
             SpellList.Add("bounty_hunter_wind_walk");
-            SpellList.Add("clinkz_skeleton_walk");
+            SpellList.Add("clinkz_wind_walk");
             SpellList.Add("sandking_sandstorm");
             SpellList.Add("weaver_shukuchi");
             SpellList.Add("nyx_assassin_vendetta");
@@ -647,7 +664,7 @@ namespace Auto_Disable
                     if (Menu.Item("oneenemy").GetValue<bool>()) return;
                 }
             }
-            if (Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.All ||
+            if (Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.All &&
                 Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.OnlyItems) return;
             if (!itsRealConterSpell) return;
             var
@@ -655,11 +672,15 @@ namespace Auto_Disable
                     enumerable.FirstOrDefault(
                         x =>
                             x.Name == "item_blink");
+            
             var v =
                 ObjectMgr.GetEntities<Unit>()
                     .FirstOrDefault(x => x.Team == me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
-            if (safeItemPoint == null || !Menu.Item("usedagger").GetValue<bool>() || !(me.Distance2D(target) <= 1000))
+            //Game.PrintMessage(String.Format("1: {0} 2: {1} 3: {2}", safeItemPoint == null, !Menu.Item("usedagger").GetValue<bool>(), (me.Distance2D(target) >= 1000)), MessageType.ChatMessage);
+            if (safeItemPoint == null || !Menu.Item("usedagger").GetValue<bool>() ||
+                (me.Distance2D(target) >= 1000))
                 return;
+            
             if (v != null)
             {
                 safeItemPoint.UseAbility(v.Position);
