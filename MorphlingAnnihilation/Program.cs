@@ -33,6 +33,7 @@ namespace MorphlingAnnihilation
             {
                 {"item_ethereal_blade",true},
                 {"morphling_adaptive_strike",true},
+                {"item_dagon",true},
                 {"morphling_waveform",true}
             };
             Menu.AddItem(new MenuItem("Use", "List of Use").SetValue(new AbilityToggler(dick)));
@@ -149,7 +150,7 @@ namespace MorphlingAnnihilation
                 }
                 Utils.Sleep(300, "orderTimer2");
             }
-
+            if (!me.IsAlive) return;
             if (Menu.Item("autoBalance").GetValue<bool>() && Utils.SleepCheck("trans"))
             {
                 var toAgi = me.Spellbook.Spell3;
@@ -164,13 +165,13 @@ namespace MorphlingAnnihilation
                     {
                         if (me.Modifiers.All(x => x.Name != "modifier_morphling_morph_str"))
                         {
-                            Game.PrintMessage("need more hp", MessageType.ChatMessage);
+                            //Game.PrintMessage("need more hp", MessageType.ChatMessage);
                             toStr.ToggleAbility();
                         }
                     }
                     else if (me.Modifiers.Any(x => x.Name == "modifier_morphling_morph_str"))
                     {
-                        Game.PrintMessage("disable hp", MessageType.ChatMessage);
+                        //Game.PrintMessage("disable hp", MessageType.ChatMessage);
                         toStr.ToggleAbility();
                     }
                 }
@@ -189,6 +190,7 @@ namespace MorphlingAnnihilation
                     Utils.Sleep(repka.Cooldown*1000, "safetp");
                 }
             }
+            
             if (!Menu.Item("hotkey").GetValue<KeyBind>().Active || !Utils.SleepCheck("comboAct")) return;
 
             target = ClosestToMouse(me,350);
@@ -199,7 +201,7 @@ namespace MorphlingAnnihilation
             var dist = me.Distance2D(target);
             if (eb != null && eb.CanBeCasted() && Menu.Item("Use").GetValue<AbilityToggler>().IsEnabled(eb.Name))
             {
-                if (dist >= 1000)
+                if (dist >= 800)
                 {
                     me.Move(target.Position);
                     Utils.Sleep(150, "comboAct");
@@ -207,21 +209,44 @@ namespace MorphlingAnnihilation
                 }
                 eb.UseAbility(target);
                 Utils.Sleep(100+Game.Ping, "comboAct");
-                
                 return;
             }
             var wave = me.Spellbook.Spell1;
             var strike = me.Spellbook.Spell2;
+            var dagon = me.GetDagon();
             if (strike != null && strike.CanBeCasted() && dist <= strike.CastRange && Menu.Item("Use").GetValue<AbilityToggler>().IsEnabled(strike.Name))
             {
+                if (dist >= strike.CastRange)
+                {
+                    me.Move(target.Position);
+                    Utils.Sleep(150, "comboAct");
+                    return;
+                }
                 strike.UseAbility(target);
                 Utils.Sleep(Game.Ping + 350, "comboAct");
                 return;
             }
-            if (wave == null || !wave.CanBeCasted() || !Menu.Item("Use").GetValue<AbilityToggler>().IsEnabled(wave.Name)) return;
-            wave.UseAbility(target.Position);
-            me.Attack(target,true);
-            Utils.Sleep(800 + Game.Ping, "comboAct");
+            if (dagon != null && dagon.CanBeCasted() && Menu.Item("Use").GetValue<AbilityToggler>().IsEnabled(dagon.Name.Substring(0,10)))
+            {
+                if (dist >= dagon.CastRange)
+                {
+                    me.Move(target.Position);
+                    Utils.Sleep(150, "comboAct");
+                    return;
+                }
+                dagon.UseAbility(target);
+                Utils.Sleep(Game.Ping + 100, "comboAct");
+                return;
+            }
+            if (wave != null && wave.CanBeCasted() && Menu.Item("Use").GetValue<AbilityToggler>().IsEnabled(wave.Name))
+            {
+                wave.UseAbility(target.Position);
+                me.Attack(target, true);
+                Utils.Sleep(800 + Game.Ping, "comboAct");
+                return;
+            }
+            me.Move(Game.MousePosition);
+            Utils.Sleep(250 + Game.Ping, "comboAct");
         }
 
         private static float GetRealCastRange(Ability ability)
