@@ -2,11 +2,13 @@
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using SharpDX;
+using Color = SharpDX.Color;
 
 namespace EarthSpirit
 {
@@ -25,7 +27,9 @@ namespace EarthSpirit
         private static int _stage;
         private static Hero _globalTarget;
         public static int Combo { get; set; }
-        private static readonly Menu Menu = new Menu("Earth Spirit", "earthspirit", true);
+        private static readonly Menu Menu = new Menu("Earth Spirit", "earthspirit", true, "npc_dota_hero_earth_spirit",true);
+        private static Vector3 globalPos;
+        private static ParticleEffect _predictionEffect;
 
         //============================================================
         enum DaggerStage
@@ -39,6 +43,7 @@ namespace EarthSpirit
         private static void Main()
         {
             Game.OnUpdate += Game_OnUpdate;
+            //Drawing.OnDraw += OnDrawing;
             _loaded = false;
 
             Menu.AddItem(
@@ -61,7 +66,7 @@ namespace EarthSpirit
             Menu.AddItem(new MenuItem("dagger", "Use Dagger").SetValue(new StringList(new[] { "on start combo", "after smash", "never" })));
             Menu.AddItem(new MenuItem("dsa", "only if you so far from enemy").SetFontStyle(
                 FontStyle.Bold,
-                SharpDX.Color.Coral));
+                Color.Coral));
 
             Menu.AddItem(new MenuItem("items", "Use Items").SetValue(true));
 
@@ -69,6 +74,31 @@ namespace EarthSpirit
 
             Menu.AddItem(new MenuItem("debug", "Print Debug Messages").SetValue(false));
             Menu.AddToMainMenu();
+        }
+
+        private static void OnDrawing(EventArgs args)
+        {
+            if (!_loaded) return;
+
+            if (_globalTarget== null) return;
+            var pos = Drawing.WorldToScreen(_globalTarget.Position);
+            Drawing.DrawText("Target", pos,new Vector2(25,0), Color.Black, FontFlags.AntiAlias | FontFlags.DropShadow);
+
+            var last = GetLastRemnant(ObjectMgr.LocalHero);
+            if (last==null) return;
+
+            pos = Drawing.WorldToScreen(last.Position);
+            Drawing.DrawText("Last: " + string.Format("Distance: {0}", last.Distance2D(_globalTarget)), pos,
+                new Vector2(25, 0), Color.Black, FontFlags.AntiAlias | FontFlags.DropShadow);
+
+
+            if (_predictionEffect == null)
+            {
+                _predictionEffect = new ParticleEffect(@"particles\ui_mouseactions\range_display.vpcf",
+                    globalPos);
+                _predictionEffect.SetControlPoint(1, new Vector3(175, 0, 0));
+            }
+            _predictionEffect.SetControlPoint(0, globalPos);
         }
 
         private static void LetsPull()
@@ -156,6 +186,10 @@ namespace EarthSpirit
                 _loaded = true;
 
                 PrintSuccess(string.Format("> EarthSpirit Annihilation Loaded v{0}", Ver));
+
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
+                    " loaded!</font> <font color='#aa0000'>v" + Ver, MessageType.LogMessage);
 
                 Remnant = me.FindSpell("earth_spirit_stone_caller");
                 Push = me.FindSpell("earth_spirit_boulder_smash");
@@ -341,14 +375,31 @@ namespace EarthSpirit
                         var last = GetLastRemnant(me);
                         if (last != null)
                         {
-                            if (target.Distance2D(last) <= 200)
+                            if (target.Distance2D(last) <= 400)
                             {
                                 if (me.Distance2D(target) <= Pull.CastRange)
                                 {
-                                    Pull.UseAbility(target.Position);
-                                    //PrintInfo("last pos: "+last.Position.X);
-                                    if (Menu.Item("debug").GetValue<bool>()) PrintInfo("pull casted");
-                                    Utils.Sleep(100 + Pull.FindCastPoint(), "nextAction");
+                                    /*var pos =
+                                        new Vector3(
+                                            (float)
+                                                (last.Position.X +
+                                                 (1200*Game.Ping/1000+30)*
+                                                 Math.Cos(me.FindAngleBetween(last.Position))),
+                                            (float)
+                                                (last.Position.Y +
+                                                 (1200*Game.Ping/1000+30)*
+                                                 Math.Sin(me.FindAngleBetween(last.Position))), 0);
+                                    */
+                                    Pull.UseAbility(Prediction.InFront(me, (float) (me.Distance2D(last) + (1200 * 0.1 + Game.Ping / 1000))));
+                                    
+                                    if (Menu.Item("debug").GetValue<bool>())
+                                    {
+                                        Game.PrintMessage((1200*0.1 + Game.Ping / 1000).ToString(), MessageType.ChatMessage);
+                                        //globalPos = pos;
+                                        PrintInfo("last pos: " + last.Position.X);
+                                        PrintInfo("pull casted. Distance: " + target.Distance2D(last));
+                                    }
+                                    //Utils.Sleep(Game.Ping + Pull.FindCastPoint(), "nextAction");
 
                                 }
                                 else /*if (_shouldUseDagger)*/
@@ -480,7 +531,6 @@ namespace EarthSpirit
                 dagon.UseAbility(target);
             }
         }
-
 
         private static bool CanCastCombo()
         {
