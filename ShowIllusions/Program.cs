@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Ensage;
-using SharpDX;
 
 namespace ShowIllusions
 {
@@ -14,9 +13,8 @@ namespace ShowIllusions
         private static bool _loaded;
         private static Hero _me;
         private static Player _player;
-        private static readonly Dictionary<Unit, ParticleEffect> Effects = new Dictionary<Unit, ParticleEffect>();
-        private static readonly Dictionary<Unit, ParticleEffect> Visible = new Dictionary<Unit, ParticleEffect>();
-
+        private static readonly Dictionary<Unit, ParticleEffect> Effects2 = new Dictionary<Unit, ParticleEffect>();
+        private static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
         #endregion
 
 
@@ -24,7 +22,11 @@ namespace ShowIllusions
         {
             Game.OnUpdate += Game_OnUpdate;
             _loaded = false;
+            
         }
+
+        
+        
         private static void Game_OnUpdate(EventArgs args)
         {
             if (!_loaded)
@@ -66,17 +68,22 @@ namespace ShowIllusions
         private static void HandleEffect(Unit unit)
         {
             ParticleEffect effect;
+            ParticleEffect effect2;
             if (unit.IsAlive && unit.IsVisibleToEnemies)
             {
-                if (Visible.TryGetValue(unit, out effect)) return;
+                if (Effects1.TryGetValue(unit, out effect)) return;
                 effect = unit.AddParticleEffect("particles/items2_fx/smoke_of_deceit_buff.vpcf"); //particles/items_fx/diffusal_slow.vpcf
-                Visible.Add(unit, effect);
+                effect2 = unit.AddParticleEffect("particles/items2_fx/shadow_amulet_active_ground_proj.vpcf");
+                Effects1.Add(unit, effect);
+                Effects2.Add(unit, effect2);
             }
             else
             {
-                if (!Visible.TryGetValue(unit, out effect)) return;
+                if (!Effects1.TryGetValue(unit, out effect)) return;
+                if (!Effects2.TryGetValue(unit, out effect2)) return;
                 effect.Dispose();
-                Visible.Remove(unit);
+                effect2.Dispose();
+                Effects1.Remove(unit);
             }
         }
 

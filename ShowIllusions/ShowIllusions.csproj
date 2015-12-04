@@ -36,10 +36,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp\System\Ensage.dll</HintPath>
+      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp\System\SharpDX.dll</HintPath>
+      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
