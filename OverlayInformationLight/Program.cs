@@ -1,22 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
 using SharpDX;
 using SharpDX.Direct3D9;
+using Color = SharpDX.Color;
+using Font = SharpDX.Direct3D9.Font;
 
 // ReSharper disable EmptyGeneralCatchClause
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace OverlayInformationLight
 {
-    internal class Program
+    internal static class Program
     {
         #region Members
 
@@ -24,7 +26,9 @@ namespace OverlayInformationLight
         private static Hero _me;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version+" light";
         private static Unit _arrowUnit;
+/*
         private static bool _isOpen=true;
+*/
         private static bool _leftMouseIsPress;
         private static readonly Dictionary<Unit, ParticleEffect> Effects2 = new Dictionary<Unit, ParticleEffect>();
         private static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
@@ -34,24 +38,18 @@ namespace OverlayInformationLight
         //======================================
         private static readonly StatusInfo[] SInfo=new StatusInfo[10];
         //======================================
-        public static bool ShowHealthOnTopPanel = true;
-        public static bool ShowManaOnTopPanel = true;
-        public static bool ShowRoshanTimer = true;
-        public static bool ShowIllusions = true;
-        public static bool ShowMeMore= true;
-        public static bool DangItems = true;
-        public static bool AutoItemsMenu;
-        public static bool AutoItemsActive;
-        public static bool AutoItemsMidas = true;
-        public static bool AutoItemsPhase = true;
-        public static bool AutoItemsStick = true;
-        public static bool ShowUltimateCd = true;
-        public static bool ExtraVisionPanel;
-        public static bool StatusEnemyTimer;
-        public static bool ShowStatusInfo;
-        public static bool ShowStatusInfoActivated;
-        public static bool ShowExtraVisionPanel;
-        public static bool StatusEnemyOnMinimap;
+        private static bool _showHealthOnTopPanel = true;
+        private static bool _showManaOnTopPanel = true;
+        private static bool _showRoshanTimer = true;
+        private static bool _showIllusions = true;
+        private static bool _showMeMore = true;
+        private static bool _dangItems = true;
+        private static bool _autoItemsActive;
+        private static bool _showUltimateCd = true;
+        private static bool _showRunes = true;
+        private static bool _statusEnemyOnMinimap;
+        private static bool _statusEnemyTimer;
+        private static bool _showStatusInfoActivated;
 
         private static bool _showPAonMinimap;
         //=====================================
@@ -65,7 +63,7 @@ namespace OverlayInformationLight
             new Dictionary<Unit, ParticleEffect>();
 
         private static readonly Dictionary<Unit, ParticleEffect>[] Eff = new Dictionary<Unit, ParticleEffect>[141];
-        private static readonly List<Unit> InSystem = new List<Unit>();
+        private static readonly List<Entity> InSystem = new List<Entity>();
         private static Vector3 _arrowS;
         /*private static Unit Bara;
         private static Vector3 BaraStartPos;*/
@@ -73,22 +71,53 @@ namespace OverlayInformationLight
         //private static readonly InitHelper SaveLoadSysHelper = new InitHelper("C:"+ "\\jOverlay.ini");
         //=====================================
         private static float _deathTime;
+/*
         private static float _aegisTime;
+*/
         private static double _roshanMinutes;
         private static double _roshanSeconds;
         private static bool _roshIsAlive;
+
         //=====================================
         private static readonly Font[] FontArray = new Font[21];
         private static Line _line;
-        private static Vector2 _sizer = new Vector2(110, 500);
+        //private static Vector2 _sizer = new Vector2(110, 500);
         private static bool _letsDraw = true;
 
-        private static bool _saveSettings;
-        private static bool _printPathLoc;
-        private static readonly string MyPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-        static readonly InitHelper SaveLoadSysHelper = new InitHelper(MyPath + "\\jOverlayLight.ini");
+        //private static bool _saveSettings;
+        //private static bool _printPathLoc;
+        //private static readonly string MyPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+        //static readonly InitHelper SaveLoadSysHelper = new InitHelper(MyPath + "\\jOverlayLight.ini");
         private static bool _findAa;
+        private static readonly HeroCollector[] Recorder=new HeroCollector[10];
+        private static readonly Menu Menu = new Menu("OverlayInformation", "OverlayInformation", true);
 
+        private struct HeroCollector
+        {
+            public readonly Hero Hero;
+            public float Health;
+            public float Mana;
+            public float MaximumMana;
+            public float MaximumHealth;
+            public bool IsAlive;
+            public readonly float SizeX;
+            public readonly float SizeY;
+            public Inventory Inventory;
+
+            public HeroCollector(Hero hero, float health, float mana, bool isAlive, float maximumMana, float maximumMana1, Inventory inventory)
+                : this()
+            {
+                Hero = hero;
+                Health = health;
+                IsAlive = isAlive;
+                MaximumMana = maximumMana;
+                MaximumMana = maximumMana1;
+                Inventory = inventory;
+                Mana = mana;
+                SizeX = (float)HUDInfo.GetTopPanelSizeX(hero);
+                SizeY = (float)HUDInfo.GetTopPanelSizeY(hero);
+            }
+        }
         #endregion
 
         #region Methods
@@ -126,6 +155,69 @@ namespace OverlayInformationLight
             AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
             Game.OnWndProc += Game_OnWndProc;
             Game.OnFireEvent += Game_OnGameEvent;
+            //ObjectMgr.OnAddEntity += ObjectMgr_OnAddEntity;
+            //ObjectMgr.OnRemoveEntity += ObjectMgr_OnRemoveEntity;
+
+            Menu.AddItem(new MenuItem("ShowHealthOnTopPanel", "Show Health on Top").SetValue(true));
+            Menu.AddItem(new MenuItem("ShowManaOnTopPanel", "Show Mana on Top").SetValue(true));
+            Menu.AddItem(new MenuItem("ShowRoshanTimer", "Show Roshan Timer").SetValue(true));
+            Menu.AddItem(new MenuItem("ShowMeMore", "Show Me More").SetValue(true));
+            Menu.AddItem(new MenuItem("ShowIllusions", "Show Illusions").SetValue(true));
+            Menu.AddItem(new MenuItem("perfomance", "Perfomance").SetValue(new Slider(1,1,500)).SetTooltip("1 - good PC, 500 - wooden PC"));
+
+            var enemyStatus = new Menu("Enemy Status", "enemystatus");
+            enemyStatus.AddItem(new MenuItem("ShowStatusInfoActivated", "Activated").SetValue(true));
+            enemyStatus.AddItem(new MenuItem("StatusEnemyTimer", "Show Enemy Status").SetValue(true).SetTooltip("show how long enemy in current status (in fog, in invis, under vision)"));
+            enemyStatus.AddItem(new MenuItem("_showPAonMinimap", "Show PhantomAssasin on minimap").SetValue(true).SetFontStyle(FontStyle.Bold, Color.Gray));
+            
+            var dangitems=new Menu("Dangerous Items","dangitems");
+            dangitems.AddItem(new MenuItem("DangItems", "Show Dangerous Items").SetValue(true));
+            //dangitems.AddItem(new MenuItem("dangItemEnemy", "Only For Enemy").SetValue(true));
+            var dict = new Dictionary<string, bool>
+            {
+                {"item_gem", true},
+                {"item_dust", true},
+                {"item_sphere", true},
+                {"item_blink", true},
+                {"item_ward_observer", true},
+                {"item_ward_sentry", true},
+                {"item_ward_dispenser", true}
+            };
+            dangitems.AddItem(new MenuItem("dangItemsUsage", "Item List: ").SetValue(new AbilityToggler(dict)));
+
+            var ultimates = new Menu("Ultimates", "ultimates");
+            ultimates.AddItem(new MenuItem("ShowUltimateCd", "Show ultimate Icon").SetValue(true));
+            ultimates.AddItem(new MenuItem("ShowUltimateCdText", "Show ultimate Text").SetValue(true).SetFontStyle(FontStyle.Bold, Color.Gray));
+
+            var autoItems = new Menu("Auto Items", "autoitems");
+            autoItems.AddItem(new MenuItem("AutoItemsActive", "Auto Items Active").SetValue(false));
+            var autoitemlist = new Dictionary<string, bool>
+            {
+                {"item_magic_wand", false},
+                {"item_phase_boots", true},
+                {"item_hand_of_midas", true}
+            };
+            autoItems.AddItem(new MenuItem("autoitemsList", "Item List: ").SetValue(new AbilityToggler(autoitemlist)));
+            autoItems.AddItem(new MenuItem("autoitemlistHealth", "Minimum Health (%)").SetValue(new Slider(30, 1)));
+            autoItems.AddItem(new MenuItem("autoitemlistMana", "Minimum Mana (%)").SetValue(new Slider(30, 1)));
+
+            var runes = new Menu("Rune Notification", "runenotification");
+            runes.AddItem(new MenuItem("ShowRunes", "Print Info").SetValue(true));
+            runes.AddItem(new MenuItem("ShowRunesMinimap", "Show on Minimap").SetValue(false).SetFontStyle(FontStyle.Bold, Color.Gray));
+
+            var settings = new Menu("Settings", "settings");
+            settings.AddItem(new MenuItem("BarPosX", "HP/MP bar Position X").SetValue(new Slider(0, -300, 300)));
+            settings.AddItem(new MenuItem("BarPosY", "HP/MP bar Position Y").SetValue(new Slider(0, -300, 300)));
+            settings.AddItem(new MenuItem("BarSizeY", "HP/MP bar Size Y").SetValue(new Slider(0, -10, 10)));
+
+            Menu.AddSubMenu(dangitems);
+            Menu.AddSubMenu(ultimates);
+            Menu.AddSubMenu(autoItems);
+            Menu.AddSubMenu(runes);
+            Menu.AddSubMenu(enemyStatus);
+            Menu.AddSubMenu(settings);
+            
+            Menu.AddToMainMenu();
 
             #endregion
 
@@ -156,7 +248,7 @@ namespace OverlayInformationLight
             #endregion
 
             #region SaveLoadSys
-
+            /*
             try
             {
                 LoadThis(out ShowHealthOnTopPanel, "ShowHealthOnTopPanel");
@@ -177,6 +269,7 @@ namespace OverlayInformationLight
                 LoadThis(out ShowStatusInfoActivated, "ShowStatusInfoActivated");
                 LoadThis(out ShowExtraVisionPanel, "ShowExtraVisionPanel");
                 LoadThis(out StatusEnemyOnMinimap, "StatusEnemyOnMinimap");
+                LoadThis(out ShowRunes, "ShowRunes");
             }
             catch
             {
@@ -186,12 +279,32 @@ namespace OverlayInformationLight
                 Console.Beep(1000, 100);
                 Console.Beep(1000, 100);
             }
-
+            */
             #endregion
         }
+        /*
+        private static void ObjectMgr_OnRemoveEntity(EntityEventArgs args)
+        {
+            var entity = args.Entity as Rune;
+            if (entity == null) return;
+            var rune = entity;
+            Game.PrintMessage("Rune: " + rune.RuneType + " taken", MessageType.LogMessage);
+        }
 
+        private static void ObjectMgr_OnAddEntity(EntityEventArgs args)
+        {
+            var entity = args.Entity as Rune;
+            if (entity == null) return;
+            var rune = entity;
+            /*while (rune.RuneType == RuneType.None)
+            {
+                
+            }*/
+            
+        //}
+    
         #region saveload staff
-
+        /*
         private static void SaveAll()
         {
             SaveThis(ShowHealthOnTopPanel, "ShowHealthOnTopPanel");
@@ -212,6 +325,7 @@ namespace OverlayInformationLight
             SaveThis(ShowStatusInfoActivated, "ShowStatusInfoActivated");
             SaveThis(ShowExtraVisionPanel, "ShowExtraVisionPanel");
             SaveThis(StatusEnemyOnMinimap, "StatusEnemyOnMinimap");
+            SaveThis(ShowRunes, "ShowRunes");
         }
 
         private static void LoadThis(out bool boolka, string empty)
@@ -223,7 +337,7 @@ namespace OverlayInformationLight
         {
             SaveLoadSysHelper.IniWriteValue("Booleans", empty, boolka.ToString());
         }
-
+        */
         #endregion
 
         private static void Game_OnGameEvent(FireEventEventArgs args)
@@ -299,7 +413,10 @@ namespace OverlayInformationLight
                 }
                 _loaded = true;
                 PrintSuccess("> OverlayInformation loaded! v" + Ver);
-                
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#ff0000'>" +
+                    "OverlayInformation loaded!</font><font color='#0055FF'> v" + Ver, MessageType.LogMessage);
+                InSystem.Clear();
             }
             
             if (!Game.IsInGame || _me == null)
@@ -308,6 +425,7 @@ namespace OverlayInformationLight
                 PrintInfo("> OverlayInformation unLoaded");
             }
 
+            /*
             if (_saveSettings)
             {
                 _saveSettings = false;
@@ -330,15 +448,83 @@ namespace OverlayInformationLight
                     Utils.Sleep(1000, "path");
                 }
             }
-
+            */
+            _showHealthOnTopPanel = Menu.Item("ShowHealthOnTopPanel").GetValue<bool>();
+            _showManaOnTopPanel = Menu.Item("ShowManaOnTopPanel").GetValue<bool>();
+            _showRoshanTimer = Menu.Item("ShowRoshanTimer").GetValue<bool>();
+            _showIllusions = Menu.Item("ShowIllusions").GetValue<bool>();
+            _showMeMore = Menu.Item("ShowMeMore").GetValue<bool>();
+            _dangItems = Menu.Item("DangItems").GetValue<bool>();
+            _autoItemsActive = Menu.Item("AutoItemsActive").GetValue<bool>();
+            _showUltimateCd = Menu.Item("ShowUltimateCd").GetValue<bool>();
+            _showRunes = Menu.Item("ShowRunes").GetValue<bool>();
+            _statusEnemyTimer = Menu.Item("StatusEnemyTimer").GetValue<bool>();
+            _showStatusInfoActivated = Menu.Item("ShowStatusInfoActivated").GetValue<bool>();
+            _showPAonMinimap = Menu.Item("_showPAonMinimap").GetValue<bool>();
+            /*
+            enemyStatus.AddItem(new MenuItem("ShowStatusInfoActivated", "Activated").SetValue(true));
+            enemyStatus.AddItem(new MenuItem("StatusEnemyTimer", "Show Enemy Status").SetValue(true).SetTooltip("show how long enemy in current status (in fog, in invis, under vision)"));
+            enemyStatus.AddItem(new MenuItem("_showPAonMinimap", "Show PhantomAssasin on minimap").SetFontStyle(FontStyle.Bold, Color.Gray));*/
             #endregion
-            //_data = new List<DataMaster>();
+
+            if (Utils.SleepCheck("performance"))
+            {
+
+                #region Rune Notification
+
+                if (_showRunes)
+                {
+                    var runes =
+                        ObjectMgr.GetEntities<Rune>()
+                            .Where(x => x.RuneType != RuneType.None && !InSystem.Contains(x))
+                            .ToList();
+                    foreach (var rune in runes)
+                    {
+                        InSystem.Add(rune);
+                        Game.PrintMessage(
+                            "<font size='20'> Rune: " + "<font face='Comic Sans MS, cursive'><font color='#00aaff'>"
+                            + rune.RuneType + " on <font color='#FF0000'>" + (rune.Position.X < 0 ? "TOP" : "BOT") +
+                            " </font>",
+                            MessageType.LogMessage);
+
+                    }
+                }
+
+                #endregion
+
+                for (uint i = 0; i < 10; i++)
+                {
+                    Hero v;
+                    try
+                    {
+                        v = ObjectMgr.GetPlayerById(i).Hero;
+                        if (v == null) continue;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                    if (!Equals(Recorder[i].Hero, v))
+                    {
+                        Recorder[i] = new HeroCollector(v, v.Health, v.Mana, v.IsAlive, v.MaximumHealth, v.MaximumMana,
+                            v.Inventory);
+                    }
+                    Recorder[i].Health = v.Health;
+                    Recorder[i].Mana = v.Mana;
+                    Recorder[i].MaximumHealth = v.MaximumHealth;
+                    Recorder[i].MaximumMana = v.MaximumMana;
+                    Recorder[i].IsAlive = v.IsAlive;
+                    Recorder[i].Inventory = v.Inventory;
+                }
+                Utils.Sleep(Menu.Item("perfomance").GetValue<Slider>().Value, "perfomance");
+            }
+
             #region Show me more cast
             
             //List<Unit> dummy;
-            if (ShowMeMore)
+            if (_showMeMore)
             {
-                var dummy = ObjectMgr.GetEntities<Unit>().Where(x => x.ClassID == ClassID.CDOTA_BaseNPC).ToList();
+                var dummy = ObjectMgr.GetEntities<Unit>().Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team!=_me.Team).ToList();
                 foreach (var t in dummy)
                 {
                     for (var n = 0; n <= 4; n++)
@@ -396,7 +582,7 @@ namespace OverlayInformationLight
             
             #region ShowRoshanTimer
 
-            if (ShowRoshanTimer)
+            if (_showRoshanTimer)
             {
                 var tickDelta = Game.GameTime - _deathTime;
                 _roshanMinutes = Math.Floor(tickDelta / 60);
@@ -417,7 +603,7 @@ namespace OverlayInformationLight
 
             #region ShowIllusions
 
-            if (ShowIllusions)
+            if (_showIllusions)
             {
                 var illusions = ObjectMgr.GetEntities<Hero>()
                     .Where(
@@ -433,8 +619,8 @@ namespace OverlayInformationLight
 
             #region AutoItems
 
-            if (!AutoItemsActive || !Utils.SleepCheck("AutoItems")) return;
-            if (AutoItemsMidas)
+            if (!_autoItemsActive || !Utils.SleepCheck("AutoItems") || !_me.IsAlive) return;
+            if (Menu.Item("autoitemsList").GetValue<AbilityToggler>().IsEnabled("item_hand_of_midas"))
             {
                 var midas = _me.FindItem("item_hand_of_midas");
                 if (midas != null && midas.CanBeCasted() && !_me.IsInvisible())
@@ -449,18 +635,20 @@ namespace OverlayInformationLight
                     //PrintError("midas.CastRange: " + midas.CastRange);
                 }
             }
-            if (AutoItemsPhase)
+            if (Menu.Item("autoitemsList").GetValue<AbilityToggler>().IsEnabled("item_phase_boots"))
             {
                 var phase = _me.FindItem("item_phase_boots");
-                if (phase != null && phase.CanBeCasted() && !_me.IsAttacking() && !_me.IsInvisible())
+                if (phase != null && phase.CanBeCasted() && !_me.IsAttacking() && !_me.IsInvisible() && !_me.IsChanneling() && _me.NetworkActivity==NetworkActivity.Move)
                 {
                     phase.UseAbility();
                     Utils.Sleep(250, "AutoItems");
                 }
             }
-            if (!AutoItemsStick) return;
+            if (!Menu.Item("autoitemsList").GetValue<AbilityToggler>().IsEnabled("item_magic_wand")) return;
             var stick = _me.Inventory.Items.FirstOrDefault(x => (x.Name == "item_magic_stick" || x.Name == "item_magic_wand") && x.CanBeCasted() && x.CurrentCharges>0);
-            if (_me.Health * 100 / _me.MaximumHealth > 30 || !_me.IsAlive) return;
+            if (!_me.IsAlive) return;
+            if (_me.Health*100/_me.MaximumHealth >= Menu.Item("autoitemlistHealth").GetValue<Slider>().Value &&
+                !(_me.Mana*100/_me.MaximumMana < Menu.Item("autoitemlistMana").GetValue<Slider>().Value)) return;
             if (stick == null || _me.IsInvisible()) return;
             stick.UseAbility();
             Utils.Sleep(250, "AutoItems");
@@ -490,39 +678,37 @@ namespace OverlayInformationLight
 
             #region ShowRoshanTimer
 
-            if (ShowRoshanTimer)
+            if (!_showRoshanTimer) return;
+            var text = "";
+            if (!_roshIsAlive)
             {
-                var text = "";
-                if (!_roshIsAlive)
+                if (_roshanMinutes < 8)
+                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 7 - _roshanMinutes, 59 - _roshanSeconds,
+                        10 - _roshanMinutes,
+                        59 - _roshanSeconds);
+                else if (_roshanMinutes == 8)
                 {
-                    if (_roshanMinutes < 8)
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 7 - _roshanMinutes, 59 - _roshanSeconds,
-                            10 - _roshanMinutes,
-                            59 - _roshanSeconds);
-                    else if (_roshanMinutes == 8)
+                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 8 - _roshanMinutes, 59 - _roshanSeconds,
+                        10 - _roshanMinutes,
+                        59 - _roshanSeconds);
+                }
+                else if (_roshanMinutes == 9)
+                {
+                    text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 9 - _roshanMinutes, 59 - _roshanSeconds,
+                        10 - _roshanMinutes,
+                        59 - _roshanSeconds);
+                }
+                else
+                {
+                    text = string.Format("Roshan: {0}:{1:0.}", 0, 59 - _roshanSeconds);
+                    if (59 - _roshanSeconds <= 1)
                     {
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 8 - _roshanMinutes, 59 - _roshanSeconds,
-                            10 - _roshanMinutes,
-                            59 - _roshanSeconds);
-                    }
-                    else if (_roshanMinutes == 9)
-                    {
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 9 - _roshanMinutes, 59 - _roshanSeconds,
-                            10 - _roshanMinutes,
-                            59 - _roshanSeconds);
-                    }
-                    else
-                    {
-                        text = string.Format("Roshan: {0}:{1:0.}", 0, 59 - _roshanSeconds);
-                        if (59 - _roshanSeconds <= 1)
-                        {
-                            _roshIsAlive = true;
-                        }
+                        _roshIsAlive = true;
                     }
                 }
-                DrawShadowText(_roshIsAlive ? "Roshan alive" : _deathTime == 0 ? "Roshan death" : text, 217, 10,
-                    _roshIsAlive ? Color.Green : Color.Red, FontArray[5]);
             }
+            DrawShadowText(_roshIsAlive ? "Roshan alive" : _deathTime == 0 ? "Roshan death" : text, 217, 10,
+                _roshIsAlive ? Color.Green : Color.Red, FontArray[5]);
 
             #endregion
 
@@ -622,7 +808,7 @@ namespace OverlayInformationLight
             if (!Game.IsInGame || _me == null || !_loaded || Game.IsPaused) return;
 
             #region J - overlay
-
+            /*
             var startLoc = new Vector2(Drawing.Width - 120, 50);
             var maxSize = new Vector2(110, 500);
 
@@ -683,6 +869,9 @@ namespace OverlayInformationLight
                         DrawButton(startLoc - new Vector2(_sizer.X + 2, 0) + new Vector2(5, pos2), _sizer.X - 10, 20,
                             ref _showPAonMinimap, false, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Show PA");
                     }
+                    pos += 22;
+                    DrawButton(startLoc + new Vector2(5, pos), _sizer.X - 10, 20, ref ShowRunes, true, new Color(0, 200, 0, 50), new Color(200, 0, 0, 50), "Rune Notification");
+
                     DrawButton(startLoc + new Vector2(5, _sizer.Y - 35), _sizer.X - 10, 30, ref _saveSettings, true, new Color(0, 200, 0, 50), new Color(200, 200, 0, 50), "Save Settings");
                     DrawButton(startLoc + new Vector2(5, _sizer.Y - 57), _sizer.X - 10, 22, ref _printPathLoc, true, new Color(0, 200, 0, 50), new Color(200, 200, 0, 50), "Print Path Loc");
                 }
@@ -694,12 +883,13 @@ namespace OverlayInformationLight
                 Drawing.DrawRect(startLoc, _sizer, new Color(0, 0, 0, 100));
             }
             DrawButton(startLoc, _sizer.X, 30, ref _isOpen, true, new Color(0, 0, 0, 50), new Color(0, 0, 0, 125), "J-Overlay Light");
-            
+            */
             #endregion
+
             for (uint i = 0; i < 10; i++)
             {
                 #region Init
-
+                /*
                 Hero v;
                 try
                 {
@@ -709,19 +899,22 @@ namespace OverlayInformationLight
                 {
                     continue;
                 }
-                if (v == null) continue;
-                var pos = HUDInfo.GetTopPanelPosition(v);
-                var sizeX = (float) HUDInfo.GetTopPanelSizeX(v);
-                var sizeY = (float) HUDInfo.GetTopPanelSizeY(v);
-                var healthDelta = new Vector2(v.Health*sizeX/v.MaximumHealth, 0);
-                var manaDelta = new Vector2(v.Mana*sizeX/v.MaximumMana, 0);
+                if (v == null) continue;*/
+                if (Recorder[i].Hero == null || !Recorder[i].Hero.IsValid) continue;
+
+                var v = Recorder[i];
+                var pos = HUDInfo.GetTopPanelPosition(v.Hero) + new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value, Menu.Item("BarPosY").GetValue<Slider>().Value);
+                var sizeX = Recorder[i].SizeX;
+                var sizeY = Recorder[i].SizeY+(Menu.Item("BarSizeY").GetValue<Slider>().Value);
+                var healthDelta = new Vector2(Recorder[i].Health * sizeX / v.MaximumHealth, 0);
+                var manaDelta = new Vector2(Recorder[i].Mana * sizeX / v.MaximumMana, 0);
                 const int height = 7;
 
                 #endregion
 
                 #region Health
 
-                if (ShowHealthOnTopPanel)
+                if (_showHealthOnTopPanel)
                 {
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + 1), new Vector2(sizeX, height),
                         new Color(255, 0, 0, 255));
@@ -735,7 +928,7 @@ namespace OverlayInformationLight
                 #region Mana
 
 
-                if (ShowManaOnTopPanel)
+                if (_showManaOnTopPanel)
                 {
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(sizeX, height), Color.Gray);
                     Drawing.DrawRect(pos + new Vector2(0, sizeY + height), new Vector2(manaDelta.X, height),
@@ -747,15 +940,15 @@ namespace OverlayInformationLight
 
                 #region StatusInfo
 
-                if (ShowStatusInfoActivated)
+                if (_showStatusInfoActivated)
                 {
-                    if (v.Team != _me.Team)
+                    if (v.Hero.Team != _me.Team)
                     {
-                        if (StatusEnemyTimer)
+                        if (_statusEnemyTimer)
                         {
-                            if (SInfo[i] == null)
+                            if (SInfo[i] == null || !SInfo[i].GetHero().IsValid)
                             {
-                                SInfo[i] = new StatusInfo(v, Game.GameTime);
+                                SInfo[i] = new StatusInfo(v.Hero, Game.GameTime);
                             }
                             Drawing.DrawRect(pos + new Vector2(0, sizeY + height*2), new Vector2(sizeX, height*2),
                                 new Color(0, 0, 0, 100));
@@ -765,7 +958,7 @@ namespace OverlayInformationLight
                             Drawing.DrawText(text, pos + new Vector2(5, sizeY + height*2), Color.White,
                                 FontFlags.AntiAlias | FontFlags.DropShadow);
                         }
-                        if (StatusEnemyOnMinimap)
+                        if (_statusEnemyOnMinimap)
                         {
 
                         }
@@ -780,19 +973,18 @@ namespace OverlayInformationLight
 
                 #region Dang Items & Ultimates
 
-                if (v.Team != _me.Team)
+                if (v.Hero.Team != _me.Team)
                 {
                     #region DangBang
 
-                    if (DangItems && v.IsVisible && v.IsAlive)
+                    if (_dangItems && v.Hero.IsVisible && v.IsAlive)
                     {
                         var invetory =
                             v.Inventory.Items.Where(
                                 x =>
-                                    x.Name == "item_gem" || x.Name == "item_dust" || x.Name == "item_sphere" ||
-                                    x.Name == "item_blink");
-                        var iPos = HUDInfo.GetHPbarPosition(v);
-                        var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v), HUDInfo.GetHpBarSizeY(v));
+                                    (Menu.Item("dangItemsUsage").GetValue<AbilityToggler>().IsEnabled(x.Name)));
+                        var iPos = HUDInfo.GetHPbarPosition(v.Hero);
+                        var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v.Hero), HUDInfo.GetHpBarSizeY(v.Hero));
                         float count = 0;
                         foreach (var item in invetory)
                         {
@@ -820,33 +1012,41 @@ namespace OverlayInformationLight
 
                     #region ShowUltimate
 
-                    if (ShowUltimateCd)
+                    if (_showUltimateCd)
                     {
-                        Ability ultimate;
-                        if (!UltimateAbilities.TryGetValue(v, out ultimate))
+                        try
                         {
-                            var ult = v.Spellbook.Spells.First(x => x.AbilityType == AbilityType.Ultimate);
-                            if (ult != null) UltimateAbilities.Add(v, ult);
-                        }
-                        else if (ultimate.Level > 0 && ultimate.AbilityBehavior != AbilityBehavior.Passive)
-                        {
-                            var ultPos = pos + new Vector2(sizeX/2 - 5, sizeY + 1);
-                            string path;
-
-                            switch (ultimate.AbilityState)
+                            Ability ultimate;
+                            if (!UltimateAbilities.TryGetValue(v.Hero, out ultimate))
                             {
-                                case AbilityState.NotEnoughMana:
-                                    path = "materials/ensage_ui/other/ulti_nomana.vmat";
-                                    break;
-                                case AbilityState.OnCooldown:
-                                    path = "materials/ensage_ui/other/ulti_cooldown.vmat";
-                                    break;
-                                default:
-                                    path = "materials/ensage_ui/other/ulti_ready.vmat";
-                                    break;
+                                var ult = v.Hero.Spellbook.Spells.First(x => x.AbilityType == AbilityType.Ultimate);
+                                if (ult != null) UltimateAbilities.Add(v.Hero, ult);
                             }
-                            Drawing.DrawRect(ultPos, new Vector2(14, 14), GetTexture(path));
+                            else if (ultimate != null && ultimate.Level > 0 && ultimate.AbilityBehavior != AbilityBehavior.Passive)
+                            {
+                                var ultPos = pos + new Vector2(sizeX / 2 - 5, sizeY + 1);
+                                string path;
+
+                                switch (ultimate.AbilityState)
+                                {
+                                    case AbilityState.NotEnoughMana:
+                                        path = "materials/ensage_ui/other/ulti_nomana.vmat";
+                                        break;
+                                    case AbilityState.OnCooldown:
+                                        path = "materials/ensage_ui/other/ulti_cooldown.vmat";
+                                        break;
+                                    default:
+                                        path = "materials/ensage_ui/other/ulti_ready.vmat";
+                                        break;
+                                }
+                                Drawing.DrawRect(ultPos, new Vector2(14, 14), GetTexture(path));
+                            }
                         }
+                        catch (Exception)
+                        {
+
+                        }
+                        
                     }
 
                     #endregion
@@ -856,61 +1056,44 @@ namespace OverlayInformationLight
                 #endregion
 
                 #region ShowMeMore
-                if (ShowMeMore && v.Team == _me.Team)
+                if (_showMeMore)
                 {
-                    var mod = v.Modifiers.Any(x => x.Name == "modifier_spirit_breaker_charge_of_darkness_vision");
+                    var mod = v.Hero.Modifiers.Any(x => x.Name == "modifier_spirit_breaker_charge_of_darkness_vision");
                     if (mod /* && Bara!=null*/)
                     {
-                        /*Vector2 vPos;
-                    if (Drawing.WorldToScreen(v.Position, out vPos))
-                    {
-                        Vector2 targetPos;
-                        if (Drawing.WorldToScreen(Bara.Position, out targetPos))
-                        {
-                            Drawing.DrawLine(vPos,targetPos,Color.AliceBlue);
-                        }
-                    }
-                    var dist = Bara.Distance2D(v);
-                    var startDist = v.Distance2D(BaraStartPos);
-                    var spellDelta =
-                                new Vector2(
-                                    dist * sizeX / startDist, 0);
-                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(sizeX, height), Color.Gray);
-                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(spellDelta.X, height), Color.Yellow);
-                    Drawing.DrawRect(pos + new Vector2(0, sizeY + height * 2), new Vector2(sizeX, height), Color.Black, true);*/
                         var textPos = (pos + new Vector2(0, sizeY + height*2));
                         Drawing.DrawText("Spirit Breaker", textPos, new Vector2(15, 150), Color.White,
                             FontFlags.AntiAlias | FontFlags.DropShadow);
-                        if (Equals(_me, v))
+                        if (Equals(_me, v.Hero))
                         {
                             Drawing.DrawRect(new Vector2(0, 0), new Vector2(Drawing.Width, Drawing.Height),
                                 new Color(255, 0, 0, 2));
                         }
                         ParticleEffect eff;
-                        if (!BaraIndicator.TryGetValue(v, out eff))
+                        if (!BaraIndicator.TryGetValue(v.Hero, out eff))
                         {
-                            eff = new ParticleEffect("particles/hw_fx/cursed_rapier.vpcf", v);
-                            eff.SetControlPointEntity(1,v);
-                            BaraIndicator.Add(v,eff);
-                            GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""), "spirit_breaker_charge_of_darkness");
+                            eff = new ParticleEffect("particles/hw_fx/cursed_rapier.vpcf", v.Hero);
+                            eff.SetControlPointEntity(1, v.Hero);
+                            BaraIndicator.Add(v.Hero, eff);
+                            GenerateSideMessage(v.Hero.Name.Replace("npc_dota_hero_", ""), "spirit_breaker_charge_of_darkness");
                         }
                     }
                     else
                     {
                         ParticleEffect eff;
-                        if (BaraIndicator.TryGetValue(v, out eff))
+                        if (BaraIndicator.TryGetValue(v.Hero, out eff))
                         {
                             eff.Dispose();
-                            BaraIndicator.Remove(v);
+                            BaraIndicator.Remove(v.Hero);
                         }
                     }
                 }
 
                 
 
-                if (ShowMeMore && v.Team != _me.Team)
+                if (_showMeMore && v.Hero.Team != _me.Team)
                 {
-                    switch (v.ClassID)
+                    switch (v.Hero.ClassID)
                     {
                         case ClassID.CDOTA_Unit_Hero_Mirana:
                             if (_arrowUnit == null)
@@ -945,7 +1128,7 @@ namespace OverlayInformationLight
                                     _arrowS = _arrowUnit.Position;
                                     InSystem.Add(_arrowUnit);
                                     Utils.Sleep(100,"kek");
-                                    GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""), "mirana_arrow");
+                                    GenerateSideMessage(v.Hero.Name.Replace("npc_dota_hero_", ""), "mirana_arrow");
                                 }
                                 else if (_letsDraw && Utils.SleepCheck("kek"))
                                 {
@@ -970,13 +1153,13 @@ namespace OverlayInformationLight
                         case ClassID.CDOTA_Unit_Hero_Windrunner:
                             if (true) //(Utils.SleepCheck("ArrowWindRun"))
                             {
-                                var spell = v.Spellbook.Spell2;
+                                var spell = v.Hero.Spellbook.Spell2;
                                 if (spell != null && spell.Cooldown != 0)
                                 {
                                     var cd = Math.Floor(spell.Cooldown * 100);
                                     if (cd < 880)
                                     {
-                                        if (!InSystem.Contains(v))
+                                        if (!InSystem.Contains(v.Hero))
                                         {
                                             if (cd > 720)
                                             {
@@ -986,8 +1169,8 @@ namespace OverlayInformationLight
                                                     try
                                                     {
                                                         var p = new Vector3(
-                                                            v.Position.X + 100 * z * (float)Math.Cos(v.RotationRad),
-                                                            v.Position.Y + 100 * z * (float)Math.Sin(v.RotationRad),
+                                                            v.Hero.Position.X + 100 * z * (float)Math.Cos(v.Hero.RotationRad),
+                                                            v.Hero.Position.Y + 100 * z * (float)Math.Sin(v.Hero.RotationRad),
                                                             100);
                                                         eff[z] =
                                                             new ParticleEffect(
@@ -995,7 +1178,7 @@ namespace OverlayInformationLight
                                                                 p);
                                                         eff[z].SetControlPoint(1, new Vector3(255, 255, 255));
                                                         eff[z].SetControlPoint(0, p);
-                                                        Eff[z].Add(v, eff[z]);
+                                                        Eff[z].Add(v.Hero, eff[z]);
                                                     }
                                                     catch (Exception ex)
                                                     {
@@ -1003,16 +1186,16 @@ namespace OverlayInformationLight
                                                     }
 
                                                 }
-                                                InSystem.Add(v);
+                                                InSystem.Add(v.Hero);
                                             }
                                         }
-                                        else if (cd < 720 || !v.IsAlive)
+                                        else if (cd < 720 || !v.Hero.IsAlive)
                                         {
-                                            InSystem.Remove(v);
+                                            InSystem.Remove(v.Hero);
                                             for (var z = 1; z <= 140; z++)
                                             {
                                                 ParticleEffect eff;
-                                                if (Eff[z].TryGetValue(v, out eff))
+                                                if (Eff[z].TryGetValue(v.Hero, out eff))
                                                 {
                                                     eff.Dispose();
                                                     Eff[z].Clear();
