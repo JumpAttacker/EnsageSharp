@@ -2,58 +2,48 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.AbilityInfo;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
 using SharpDX;
 
 namespace InvokerAnnihilation
 {
-    internal class Program
+    internal static class Program
     {
         #region Members
-
+        private static readonly Menu Menu = new Menu("Invoker Annihilation", "InvokerAnnihilation", true, "npc_dota_hero_invoker", true);
         private static bool _loaded;
-        private const string Ver = "0.6";
+        private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         private const int WmKeyup = 0x0101;
-        private static bool _leftMouseIsPress;
         private static int _combo;
-        private static bool _showMenu = true;
         //private static readonly SpellStruct[] Spells = new SpellStruct[12];
         private static readonly ComboStruct[] Combos = new ComboStruct[10];
+        private static int _maxCombo;
         private static bool _inAction;
         private static bool _initNewCombo;
         private static byte _stage;
         private static readonly Dictionary<string, SpellStruct> SpellInfo = new Dictionary<string, SpellStruct>();
         private static ParticleEffect _predictionEffect;
-        private static byte _balstStage = 1;
         private static Ability _spellForCast;
         private static bool _startInitSpell;
-        private static Vector2 _sizer = new Vector2(265, 300);
+        private static readonly float Percent = HUDInfo.RatioPercentage();
         private static NetworkActivity _lastAct=NetworkActivity.Idle;
+        private static bool _lastAction;
         //============================================================
-        private static bool _smartSphere;
-        private static bool _autoUseRefresher;
-        private static bool _autoMoveToTarget;
-        private static bool _autoUseDagger;
-        private static bool _ssprediction;
-        private static bool _extraMenu = true;
-        private static bool _showsSsDamage;
-        private static bool _showDamageOnHeroPanel=true;
         //============================================================
         private static ulong _myKey='G';
         private static bool _timetochange;
         private static bool _sunstrikekill;
         //============================================================
-        private static Hero _globalTarget = null;
+        private static Hero _globalTarget;
         //============================================================
-        public static byte BalstStage
+        private enum SmartSphereEnum
         {
-            get { return _balstStage; }
-            set { _balstStage = value; }
+           Quas=0,Wex=1,Exort=2 
         }
-
         #endregion
 
 
@@ -68,25 +58,167 @@ namespace InvokerAnnihilation
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;*/
+            var sunStrikeSettings=new Menu("Sun Strike Settings","ssSettings");
+            /*sunStrikeSettings.AddItem(
+                new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('T', KeyBindType.Press))
+                    .SetTooltip("press hotkey for auto SunStrike"));
+            sunStrikeSettings.AddItem(new MenuItem("ssShift", "Use Shift With Hotkey").SetValue(true));*/
+            sunStrikeSettings.AddItem(new MenuItem("ssDamageontop", "Show Damage on Top Panel").SetValue(false));
+            sunStrikeSettings.AddItem(new MenuItem("ssDamageonhero", "Show Damage on Hero").SetValue(false));
+            sunStrikeSettings.AddItem(new MenuItem("ssPrediction", "Show Prediction").SetValue(false));
+            
+
+
+            var combo = new Menu("Combos", "combos");
+            combo.AddItem(
+                new MenuItem("hotkeyPrev", "Previous Combo").SetValue(new KeyBind(0x6B, KeyBindType.Press))
+                    .SetTooltip("default hotkey is notepad [+]"));
+            combo.AddItem(
+                new MenuItem("hotkeyNext", "Next Combo").SetValue(new KeyBind(0x6D, KeyBindType.Press))
+                    .SetTooltip("default hotkey is notepad [-]"));
+            combo.AddItem(new MenuItem("ShowComboMenu", "Show Combo Menu").SetValue(true));
+            //combo.AddItem(new MenuItem("ShowCurrentCombo", "Show Current Combo").SetValue(true));
+
+
+
+            var showComboMenuPos = new Menu("Combo menu position", "ShowComboMenuPos");
+            showComboMenuPos.AddItem(
+                new MenuItem("MenuPosX", "Pos X").SetValue(new Slider(100, 0, 3000)));
+            showComboMenuPos.AddItem(
+                new MenuItem("MenuPosY", "Pos Y").SetValue(new Slider(100, 0, 3000)));
+
+
+
+            /*var showCurrentCombo = new Menu("Current Combo position", "showCurrentCombo");
+            showCurrentCombo.AddItem(
+                new MenuItem("MenuPosX", "Extra Pos X").SetValue(new Slider(0, -2500, 2500)));
+            showCurrentCombo.AddItem(
+                new MenuItem("MenuPosY", "Extra Pos Y").SetValue(new Slider(0, -2500, 2500)));
+            */
+            var smart = new Menu("Smart Sphere", "Smart");
+
+            /*var onmov = new Dictionary<string, bool>()
+            {
+                {"invoker_exort",false},
+                {"invoker_wex",false},
+                {"invoker_quas",true}
+            };
+            var onatt = new Dictionary<string, bool>()
+            {
+                {"invoker_exort",false},
+                {"invoker_wex",false},
+                {"invoker_quas",true}
+            };*/
+            smart.AddItem(new MenuItem("smartIsActive", "Is Active").SetValue(true));
+            smart.AddItem(new MenuItem("OnMoving", "On moving").SetValue(new StringList(new[] {"quas", "wex"})));
+            smart.AddItem(
+                new MenuItem("OnAttacking", "On attacking").SetValue(new StringList(new[] {"quas", "wex", "exort"}, 2)));
+
+            //om.ValueChanged += OnMoveChange;
+            //ot.ValueChanged += OnAttackChange;
+
+            var items = new Dictionary<string, bool>()
+            {
+                {"item_blink",true},
+                {"item_refresher",true},
+                {"item_sheepstick",true}
+            };
+            var settings = new Menu("Settings", "Settings");
+            settings.AddItem(new MenuItem("items", "Items:").SetValue(new AbilityToggler(items)));
+            settings.AddItem(new MenuItem("moving", "MoveToEnemy").SetValue(true).SetTooltip("while combing"));
+
+
+            combo.AddSubMenu(showComboMenuPos);
+            //combo.AddSubMenu(showCurrentCombo);
+            Menu.AddSubMenu(settings);
+            Menu.AddSubMenu(smart);
+            Menu.AddSubMenu(sunStrikeSettings);
+            Menu.AddSubMenu(combo);
+            Menu.AddToMainMenu();
         }
-        static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
+
+/*
+        private static void OnAttackChange(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
         {
-            if (!_smartSphere) return;
+            var oldValue = onValueChangeEventArgs.GetOldValue<AbilityToggler>();
+            var oldQ = oldValue.IsEnabled("invoker_quas");
+            var oldW = oldValue.IsEnabled("invoker_wex");
+            var oldE = oldValue.IsEnabled("invoker_exort");
+
+            var newValue = onValueChangeEventArgs.GetNewValue<AbilityToggler>();
+            var newQ = newValue.IsEnabled("invoker_quas");
+            var newW = newValue.IsEnabled("invoker_wex");
+            var newE = newValue.IsEnabled("invoker_exort");
+            Game.PrintMessage(string.Format("old q {0} w {1} e {2}. new q {3} w {4} e {5}", oldQ,oldW,oldE,newQ,newW,newE), MessageType.ChatMessage);
+            if (newQ != oldQ)
+            {
+                Game.PrintMessage("q",MessageType.ChatMessage);
+                var onatt = new Dictionary<string, bool>()
+                {
+                    {"invoker_exort", false},
+                    {"invoker_wex", false},
+                    {"invoker_quas", true}
+                };
+                Menu.Item("OnAttacking").SetValue(new AbilityToggler(onatt));
+            }
+            if (newW != oldW)
+            {
+                Game.PrintMessage("w", MessageType.ChatMessage);
+                var onatt = new Dictionary<string, bool>()
+                {
+                    {"invoker_exort", false},
+                    {"invoker_wex", true},
+                    {"invoker_quas", false}
+                };
+                Menu.Item("OnAttacking").SetValue(new AbilityToggler(onatt));
+            }
+            if (newE != oldE)
+            {
+                Game.PrintMessage("e", MessageType.ChatMessage);
+                var onatt = new Dictionary<string, bool>()
+                {
+                    {"invoker_exort", true},
+                    {"invoker_wex", false},
+                    {"invoker_quas", false}
+                };
+                Menu.Item("OnAttacking").SetValue(new AbilityToggler(onatt));
+            }
+        }
+*/
+
+/*
+        private static void OnMoveChange(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
+        {
+        }
+*/
+
+        private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
+        {
+            if (!Menu.Item("smartIsActive").GetValue<bool>()) return;
             if (args.Order != Order.AttackTarget && args.Order != Order.MoveLocation && _inAction) return;
             var me = sender.Hero;
-            var exort = me.Spellbook.SpellE;
-            if (!me.IsAlive || args.Order != Order.AttackTarget || !(me.Distance2D(args.Target) <= 650) || exort == null ||
-                exort.Level <= 0) return;
-            exort.UseAbility();
-            exort.UseAbility();
-            exort.UseAbility();
+            Ability spell = null;
+            switch (Menu.Item("OnAttacking").GetValue<StringList>().SelectedIndex)
+            {
+                case (int)SmartSphereEnum.Quas:
+                    spell = me.Spellbook.SpellQ;
+                    break;
+                case (int)SmartSphereEnum.Wex:
+                    spell = me.Spellbook.SpellW;
+                    break;
+                case (int)SmartSphereEnum.Exort:
+                    spell = me.Spellbook.SpellE;
+                    break;
+            }
+            if (!me.IsAlive || args.Order != Order.AttackTarget || !(me.Distance2D(args.Target) <= 650)) return;
+            if (spell == null || !spell.CanBeCasted()) return;
+            spell.UseAbility();
+            spell.UseAbility();
+            spell.UseAbility();
             Utils.Sleep(200, "act");
-            /*wex.UseAbility();
-            wex.UseAbility();
-            wex.UseAbility();*/
-
         }
-        struct ComboStruct
+
+        private struct ComboStruct
         {
             private readonly bool _isNeedEul;
             private readonly Ability _s1;
@@ -95,7 +227,7 @@ namespace InvokerAnnihilation
             private readonly Ability _s4;
             private readonly Ability _s5;
 
-            public ComboStruct(bool useEul, Ability s1, Ability s2, Ability s3, Ability s4, Ability s5)
+            public ComboStruct(bool useEul, Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null)
             {
                 _isNeedEul = useEul;
                 _s1 = s1;
@@ -103,9 +235,10 @@ namespace InvokerAnnihilation
                 _s3 = s3;
                 _s4 = s4;
                 _s5 = s5;
+                _maxCombo++;
             }
 
-            public ComboStruct(Ability s1, Ability s2, Ability s3, Ability s4, Ability s5)
+            public ComboStruct(Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null)
                 : this()
             {
                 _s1 = s1;
@@ -113,6 +246,7 @@ namespace InvokerAnnihilation
                 _s3 = s3;
                 _s4 = s4;
                 _s5 = s5;
+                _maxCombo++;
             }
 
             public Ability[] GetComboAbilities()
@@ -131,7 +265,8 @@ namespace InvokerAnnihilation
                     _s2.Name, _s3 != null ? _s3.Name : "", _s4 != null ? _s4.Name : "", _s5 != null ? _s5.Name : "");
             }
         }
-        struct SpellStruct
+
+        private struct SpellStruct
         {
             private readonly Ability _oneAbility;
             private readonly Ability _twoAbility;
@@ -149,6 +284,7 @@ namespace InvokerAnnihilation
                 return new[] { _oneAbility, _twoAbility, _threeAbility };
             }
         }
+
         private static void Game_OnWndProc(WndEventArgs args)
         {
             if (Game.IsChatOpen)
@@ -171,17 +307,27 @@ namespace InvokerAnnihilation
                 else
                 {
                     _inAction = args.Msg != WmKeyup;
-                    Game.ExecuteCommand(string.Format("dota_player_units_auto_attack_after_spell {0}", _inAction ? 0 : 1));
-                    if (!_inAction) _initNewCombo = false;
+                    if (_inAction != _lastAction)
+                        Game.ExecuteCommand(string.Format("dota_player_units_auto_attack_after_spell {0}",
+                            _inAction ? 0 : 1));
+                    if (!_inAction)
+                    {
+                        _stage = 0;
+                        _initNewCombo = false;
+                    }
+                    _lastAction = _inAction;
                 }
             }
-
-            if (args.WParam != 1 || !Utils.SleepCheck("clicker"))
+            if (args.WParam == Menu.Item("hotkeyPrev").GetValue<KeyBind>().Key && args.Msg == WmKeyup)
             {
-                _leftMouseIsPress = false;
-                return;
+                _combo = _combo == _maxCombo - 1 ? _combo = 0 : _combo + 1;
+                args.Process = false;
             }
-            _leftMouseIsPress = true;
+            if (args.WParam == Menu.Item("hotkeyNext").GetValue<KeyBind>().Key && args.Msg == WmKeyup)
+            {
+                _combo = _combo == 0 ? _combo = _maxCombo - 1 : _combo - 1;
+                args.Process = false;
+            }
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -191,40 +337,52 @@ namespace InvokerAnnihilation
             {
                 return;
             }
-            if (ObjectMgr.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_Invoker) return;
             var me = player.Hero;
+
+            #region SS ACTION
+
             var exort = me.Spellbook.SpellE;
-            if (exort != null)
+            var topDamage = Menu.Item("ssDamageontop").GetValue<bool>();
+            var heroDamage = Menu.Item("ssDamageonhero").GetValue<bool>();
+            var predDamage = Menu.Item("ssPrediction").GetValue<bool>();
+            if (exort != null && (topDamage || heroDamage || predDamage))
             {
-                var damage = 100 + 62.5 * (exort.Level - 1);
-                if (_showDamageOnHeroPanel)
+                var damage = 100 + 62.5*(exort.Level - 1);
+                if (topDamage)
                 {
-                    var enemy = ObjectMgr.GetEntities<Hero>().Where(x => x.IsAlive && x.Team != me.Team && !x.IsIllusion);
+                    var enemy = ObjectMgr.GetEntities<Hero>()
+                        .Where(x => x.IsAlive && x.Team != me.Team && !x.IsIllusion);
                     if (me.AghanimState())
                     {
                         damage += 62.5;
                     }
                     foreach (var hero in enemy)
                     {
-
                         Drawing.DrawText((hero.Health - damage).ToString(CultureInfo.InvariantCulture),
                             HUDInfo.GetTopPanelPosition(hero) + new Vector2(0, 60), Color.White,
                             FontFlags.AntiAlias | FontFlags.DropShadow);
                     }
                 }
-                if (_globalTarget != null && _globalTarget.IsAlive)
+                var target = ClosestToMouse(me);
+                if (target != null && target.IsValid)
                 {
-                    if (_showsSsDamage)
+                    if (heroDamage)
                     {
-                        Drawing.DrawText((_globalTarget.Health - damage).ToString(CultureInfo.InvariantCulture),
-                            HUDInfo.GetHPbarPosition(_globalTarget) + new Vector2(0, -35), Color.White,
-                            FontFlags.AntiAlias | FontFlags.DropShadow);
-
+                        try
+                        {
+                            Drawing.DrawText((target.Health - damage).ToString(CultureInfo.InvariantCulture),
+                                HUDInfo.GetHPbarPosition(target) + new Vector2(0, -35), Color.White,
+                                FontFlags.AntiAlias | FontFlags.DropShadow);
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
-                    var predVector3 = _globalTarget.NetworkActivity == NetworkActivity.Move
-                        ? Prediction.InFront(_globalTarget, (float) (_globalTarget.MovementSpeed*1.7+Game.Ping/1000))
-                        : _globalTarget.Position;
-                    if (_ssprediction)
+                    var predVector3 = target.NetworkActivity == NetworkActivity.Move
+                        ? Prediction.InFront(target, (float)(target.MovementSpeed * 1.7 + Game.Ping / 1000))
+                        : target.Position;
+                    if (predDamage)
                     {
                         if (_predictionEffect == null)
                         {
@@ -247,9 +405,7 @@ namespace InvokerAnnihilation
                         var sunstrike = me.FindSpell("invoker_sun_strike");
                         var active1 = me.Spellbook.Spell4;
                         var active2 = me.Spellbook.Spell5;
-                        if (active2 != null &&
-                            (active1 != null &&
-                             (sunstrike != null && (Equals(sunstrike, active1) || Equals(sunstrike, active2)))))
+                        if (active2 != null && active1 != null && sunstrike != null && (Equals(sunstrike, active1) || Equals(sunstrike, active2)))
                         {
                             if (sunstrike.CanBeCasted())
                             {
@@ -268,122 +424,79 @@ namespace InvokerAnnihilation
                     }
                 }
             }
-            var startPos = new Vector2(10, 200);
-            var maxSize = new Vector2(265, 300);
+
+            #endregion
 
             #region Menu
+            if (!Menu.Item("ShowComboMenu").GetValue<bool>()) return;
+            var pos = new Vector2(Menu.Item("MenuPosX").GetValue<Slider>().Value, Menu.Item("MenuPosY").GetValue<Slider>().Value);
+            var size = new Vector2(150*Percent, 200*Percent);
 
-            if (_showMenu)
+            Drawing.DrawRect(pos, size, new Color(0, 0, 0, 100));
+            Drawing.DrawRect(pos, size, new Color(0, 155, 255, 255), true);
+            var i = 0;
+            
+            
+            foreach (var comboStruct in Combos)
             {
-                _sizer.X += 4;
-                _sizer.Y += 4;
-                _sizer.X = Math.Min(_sizer.X, maxSize.X);
-                _sizer.Y = Math.Min(_sizer.Y, maxSize.Y);
-
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 155, 255, 100));
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
-                Drawing.DrawRect(startPos + new Vector2(-5, -5), _sizer + new Vector2(10, 10),
-                    new Color(0, 0, 0, 255), true);
-                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-                if (!Equals(_sizer, maxSize)) return;
-                /*
-                Tornado > EMP > Meteor > Blast (Requiers Aghanims)
-                Tornado > Meteor > Blast
-                Tornado > EMP > Blast
-                Tornado > EMP > Ica Wall
-                 */
-                const int boxSize = 20;
-                DrawButton(startPos + new Vector2(10, 10), boxSize, boxSize, 0, true, new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Eul > SS > Meteor > Blast > cSnap > fg");
-                DrawButton(startPos + new Vector2(10, 30), boxSize, boxSize, 1, true, new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Tornado > EMP > Meteor > Blast");
-                DrawButton(startPos + new Vector2(10, 50), boxSize, boxSize, 2, true, new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Tornado > Meteor > Blast");
-                DrawButton(startPos + new Vector2(10, 70), boxSize, boxSize, 3, true, new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Tornado > EMP > Blast");
-                DrawButton(startPos + new Vector2(10, 90), boxSize, boxSize, 4, true, new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Tornado > EMP > Ica Wall");
-                DrawButton(startPos + new Vector2(10, 110), boxSize, boxSize, 5, true, new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Tornado > SunStrike > Ica Wall");
-                DrawButton(startPos + new Vector2(10, 130), boxSize, boxSize, 6, true, new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100), "Tornado > Blast > ColdSnap");
-
-                if (_extraMenu)
+                var sizeY = 10 + i*(size.Y/9);
+                var eul = comboStruct.CheckEul();
+                var texturename = "materials/ensage_ui/items/cyclone.vmat";
+                var selected = _combo == i;
+                Vector2 itemStartPos;
+                if (eul)
                 {
-                    var extramenuSizer = new Vector2(_sizer.X - _sizer.X/2, _sizer.Y);
-                    var startPosExtraMEnu = startPos + new Vector2(_sizer.X, 0) + new Vector2(10, 0);
-                    Drawing.DrawRect(startPosExtraMEnu, extramenuSizer, new Color(0, 155, 255, 100));
-                    Drawing.DrawRect(startPosExtraMEnu, extramenuSizer, new Color(0, 0, 0, 255), true);
-                    Drawing.DrawRect(startPosExtraMEnu + new Vector2(-5, -5), extramenuSizer + new Vector2(10, 10),
-                        new Color(0, 0, 0, 255), true);
-                    DrawButton(startPosExtraMEnu + new Vector2(10, 10), 100, 20, ref _smartSphere, true,
-                        new Color(0, 200, 150),
-                        new Color(200, 0, 0, 100), "Smart Sphere");
+                    itemStartPos = pos + new Vector2(10, sizeY);
+                    
+                    Drawing.DrawRect(
+                        itemStartPos,
+                        new Vector2((float)(size.X / 7 + size.X / 7 * 0.16), size.Y / 11),
+                        Drawing.GetTexture(texturename));
+                    if (_stage == 1 && selected)
+                        Drawing.DrawRect(
+                            itemStartPos + new Vector2(1, 1),
+                            new Vector2(size.X/7 - 6, size.Y/11-2),
+                            Color.Red, true);
 
-                    DrawButton(startPosExtraMEnu + new Vector2(10, 40), 100, 20, ref _autoUseRefresher, true,
-                        new Color(0, 200, 150),
-                        new Color(200, 0, 0, 100), "Use Refresher");
-                    DrawButton(startPosExtraMEnu + new Vector2(10, 70), 100, 20, ref _autoMoveToTarget, true,
-                        new Color(0, 200, 150),
-                        new Color(200, 0, 0, 100), "Move to enemy");
-                    DrawButton(startPosExtraMEnu + new Vector2(10, 100), 100, 20, ref _autoUseDagger, true,
-                        new Color(0, 200, 150),
-                        new Color(200, 0, 0, 100), "Use Dagger");
-                    DrawButton(startPosExtraMEnu + new Vector2(10, 130), 100, 20, ref _showsSsDamage, true,
-                        new Color(0, 200, 150),
-                        new Color(200, 0, 0, 100), "SS Dmg");
-                    DrawButton(startPosExtraMEnu + new Vector2(10, 160), 100, 20, ref _ssprediction, true,
-                        new Color(0, 200, 150),
-                        new Color(200, 0, 0, 100), "SS Prediction");
-                    DrawButton(startPosExtraMEnu + new Vector2(10, 190), 100, 20, ref _showDamageOnHeroPanel, true,
-                        new Color(0, 200, 150),
-                        new Color(200, 0, 0, 100), "SS Dmg on top");
-
-
-                    DrawButton(startPosExtraMEnu + new Vector2(10, _sizer.Y - 30), 100, 20, ref _timetochange, true,
-                        new Color(0, 200, 150),
-                        new Color(200, 0, 0, 100), "Change Hotkey");
                 }
-                DrawButton(startPos + new Vector2(_sizer.X - 22, _sizer.Y/2 - _sizer.Y/4), 30, _sizer.Y/2,
-                    ref _extraMenu, true, new Color(0, 0, 0, 200),
-                    new Color(0, 0, 0, 200));
-                Drawing.DrawText(_extraMenu ? "<<" : ">>", startPos + new Vector2(_sizer.X - 15, _sizer.Y/2),
-                    Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-
-                var spellName = "empty";
-                if (_inAction && _spellForCast != null)
-                    spellName = _spellForCast.NetworkName.Substring(_spellForCast.NetworkName.LastIndexOf('_') + 1);
-                Drawing.DrawText(
-                    string.Format("Status: [{0}] Current Spell [{1}] ", _inAction ? "ON" : "OFF", spellName),
-                    startPos + new Vector2(10, 280), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-
-                Drawing.DrawText(string.Format("ComboKey {0}  PrepareKey [ctrl+{0}]", (char)_myKey),
-                    startPos + new Vector2(10, 265), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                Drawing.DrawText(string.Format("Auto Sun Stike Cast [{1}] Hotkey [ctrl+{0}]", 'T', _sunstrikekill ? "ON" : "OFF"),
-                    startPos + new Vector2(10, 250), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-
+                var j = 0;//eul ? 0 : 0;
+                var legal = 1;
+                for (; j < 6; j++)
+                {
+                    try
+                    {
+                        texturename = string.Format("materials/ensage_ui/spellicons/{0}.vmat",
+                            comboStruct.GetComboAbilities()[j].Name);
+                        var sizeX = size.X / 7 * (j + (eul?1:0)) + 10;
+                        itemStartPos = pos + new Vector2(sizeX, sizeY);
+                        Drawing.DrawRect(
+                            itemStartPos,
+                            new Vector2(size.X/7-6, size.Y/11),
+                            Drawing.GetTexture(texturename));
+                        legal++;
+                        if (Equals(comboStruct.GetComboAbilities()[j], Combos[_combo].GetComboAbilities()[_stage-2]) && selected)
+                        {
+                            Drawing.DrawRect(
+                                itemStartPos,
+                                new Vector2(size.X/7 - 3, size.Y/11),
+                                Color.Red, true);
+                        }
+                        
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                }
+                if (selected)
+                {
+                    Drawing.DrawRect(
+                        pos + new Vector2(10, sizeY),
+                        new Vector2(size.X / 7 * (legal - (eul ? 0 : 1)) - 6, size.Y / 11),
+                        Color.YellowGreen, true);
+                }
+                i++;
             }
-            else
-            {
-                _sizer.X -= 4;
-                _sizer.Y -= 4;
-                _sizer.X = Math.Max(_sizer.X, 20);
-                _sizer.Y = Math.Max(_sizer.Y, 0);
-                Drawing.DrawRect(startPos, _sizer, new Color(0, 0, 0, 255), true);
-                /*Drawing.DrawRect(startPos + new Vector2(-5, -5), Sizer + new Vector2(10, 10),
-                    new Color(0, 0, 0, 255), true);*/
-                DrawButton(startPos + new Vector2(_sizer.X - 20, -20), 20, 20, ref _showMenu, true, Color.Gray,
-                    Color.Gray);
-                /*
-                DrawButton(startPos, 25, 25, ref _showMenu, true, new Color(0, 200, 150),
-                    new Color(200, 0, 0, 100));*/
-            }
-
             #endregion
 
         }
@@ -429,20 +542,22 @@ namespace InvokerAnnihilation
                 SpellInfo.Add(alacrity.Name, new SpellStruct(w, w, e));
                 SpellInfo.Add(meteor.Name, new SpellStruct(e, e, w));
 
-                Combos[0] = new ComboStruct(true, ss, meteor, blast, coldsnap, forge);
-                Combos[1] = new ComboStruct(tornado, emp, meteor, blast, coldsnap);
-                Combos[2] = new ComboStruct(tornado, meteor, blast, null, null);
-                Combos[3] = new ComboStruct(tornado, emp, blast, null, null);
-                Combos[4] = new ComboStruct(tornado, emp, icewall, null, null);
-                Combos[5] = new ComboStruct(tornado, ss, icewall, null, null);
-                Combos[6] = new ComboStruct(tornado, blast, coldsnap, null, null);
-
-                PrintSuccess(string.Format("> Invorker Annihilation Loaded v{0}", Ver));
-                PrintInfo("===============Combo selection===============");
-                for (var i = 0; i <= 6; i++)
+                Combos[_maxCombo] = new ComboStruct(true, ss, meteor, blast, coldsnap, forge);
+                Combos[_maxCombo] = new ComboStruct(tornado, emp, meteor, blast, coldsnap);
+                Combos[_maxCombo] = new ComboStruct(tornado, meteor, blast);
+                Combos[_maxCombo] = new ComboStruct(tornado, emp, blast);
+                Combos[_maxCombo] = new ComboStruct(tornado, emp, icewall);
+                Combos[_maxCombo] = new ComboStruct(tornado, ss, icewall);
+                Combos[_maxCombo] = new ComboStruct(tornado, blast, coldsnap);
+                Combos[_maxCombo] = new ComboStruct(tornado, emp, coldsnap);
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
+                    " loaded!</font> <font color='#aa0000'>v" + Ver, MessageType.LogMessage);
+                PrintSuccess(string.Format("> {1} Loaded v{0}", Ver, Menu.DisplayName));
+                /*PrintInfo("===============Combo selection===============");
+                for (var i = 0; i < _maxCombo; i++)
                     PrintInfo(string.Format("Init new combo--> {0}", Combos[i]));
-                PrintInfo("============================================");
-
+                PrintInfo("============================================");*/
             }
 
             if (!Game.IsInGame || me == null)
@@ -457,42 +572,26 @@ namespace InvokerAnnihilation
                 return;
             }
             //PrintInfo(me.NetworkActivity.ToString());
-            if (Utils.SleepCheck("act") && !_inAction && _smartSphere)
+            if (Utils.SleepCheck("act") && !_inAction && Menu.Item("smartIsActive").GetValue<bool>())
             {
-                var quas = me.Spellbook.SpellQ;
-                var wex = me.Spellbook.SpellW;
-                //if (me.NetworkActivity == NetworkActivity.Attack2 && me.NetworkActivity != LastAct)
-
-                if ((me.NetworkActivity == NetworkActivity.Attack || me.NetworkActivity == NetworkActivity.Attack2) &&
-                    me.NetworkActivity != _lastAct)
+                Ability spell = null;
+                switch (Menu.Item("OnMoving").GetValue<StringList>().SelectedIndex)
                 {
-                    //exort.UseAbility();
-                    //exort.UseAbility();
-                    //exort.UseAbility();
-                    //Utils.Sleep(me.AttackSpeedValue+2000, "act");
+                    case (int) SmartSphereEnum.Quas:
+                        spell = me.Spellbook.SpellQ;
+                        break;
+                    case (int) SmartSphereEnum.Wex:
+                        spell = me.Spellbook.SpellW;
+                        break;
                 }
-                //else if ((me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != LastAct))
-                else if (me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != _lastAct && !me.IsInvisible())
+                if (me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != _lastAct && !me.IsInvisible())
                 {
-                    if (wex != null && wex.Level > quas.Level && wex.CanBeCasted())
+                    if (spell != null && spell.CanBeCasted())
                     {
-                        wex.UseAbility();
-                        wex.UseAbility();
-                        wex.UseAbility();
+                        spell.UseAbility();
+                        spell.UseAbility();
+                        spell.UseAbility();
                     }
-                    else if (quas!=null && quas.CanBeCasted())
-                    {
-                        quas.UseAbility();
-                        quas.UseAbility();
-                        quas.UseAbility();
-                    }
-                }
-                else if (me.NetworkActivity == NetworkActivity.Idle && me.NetworkActivity != _lastAct)
-                {
-                    /*quas.UseAbility();
-                quas.UseAbility();
-                quas.UseAbility();
-                Utils.Sleep(150, "act");*/
                 }
                 _lastAct = me.NetworkActivity;
             }
@@ -511,6 +610,19 @@ namespace InvokerAnnihilation
 
             #region Starting Combo
 
+            if (!_inAction)
+            {
+                _globalTarget = null;
+                return;
+            }
+            if (_globalTarget == null || !_globalTarget.IsValid)
+            {
+                _globalTarget = ClosestToMouse(me);
+            }
+            if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive || !me.CanCast()) return;
+
+            ComboInAction(me, _globalTarget);
+            /*
             var target = ClosestToMouse(me);
             if (_ssprediction || _showsSsDamage || _sunstrikekill)
             {
@@ -526,7 +638,7 @@ namespace InvokerAnnihilation
             }
             if (_inAction && target != null && target.IsAlive)
                 ComboInAction(me, target);
-
+            */
             #endregion
         }
 
@@ -585,19 +697,21 @@ namespace InvokerAnnihilation
             var dagger = me.FindItem("item_blink");
             var refresher = me.FindItem("item_refresher");
             var icewall = me.FindSpell("invoker_ice_wall");
-
+            var deafblast = me.FindSpell("invoker_deafening_blast");
             var hex = me.FindItem("item_sheepstick");
+            var meteor = me.FindSpell("invoker_chaos_meteor");
+            //var emp = me.FindSpell("invoker_emp");
             /*
             var ss = me.FindSpell("invoker_sun_strike");
             var coldsnap = me.FindSpell("invoker_cold_snap");
             var ghostwalk = me.FindSpell("invoker_ghost_walk");
             
             var tornado = me.FindSpell("invoker_tornado");
-            var deafblast = me.FindSpell("invoker_deafening_blast");
+            
             var forge = me.FindSpell("invoker_forge_spirit");
-            var emp = me.FindSpell("invoker_emp");
+            
             var alacrity = me.FindSpell("invoker_alacrity");
-            var chaosmeteor = me.FindSpell("invoker_chaos_meteor");
+            
             */
             if (!_initNewCombo)
             {
@@ -608,7 +722,6 @@ namespace InvokerAnnihilation
             if (!Utils.SleepCheck("StageCheck")) return;
             #endregion
 
-            
             /*var modif = target.Modifiers.Where(x=>x.IsDebuff);
             PrintInfo("===========================");
             foreach (var s in modif)
@@ -617,8 +730,27 @@ namespace InvokerAnnihilation
             }*/
             if (_stage > 2 && !target.IsHexed() && !target.IsStunned())
             {
-                if (hex != null && hex.CanBeCasted(target))
+                if (hex != null && hex.CanBeCasted(target) && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.Name))
                     hex.UseAbility(target);
+            }
+            if (dagger != null && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(dagger.Name) &&
+                dagger.CanBeCasted() && Utils.SleepCheck("blinker") && me.Distance2D(target)>= 700)
+            {
+                var dist = 300;
+                var angle = me.FindAngleBetween(target.Position, true);
+                var point =
+                    new Vector3(
+                        (float) (target.Position.X -
+                                 dist *
+                                 Math.Cos(angle)),
+                        (float) (target.Position.Y -
+                                 dist *
+                                 Math.Sin(angle)), 0);
+                if (me.Distance2D(target) <= 1150+700)
+                    dagger.UseAbility(point);
+                else
+                    me.Move(target.Position);
+                Utils.Sleep(250, "blinker");
             }
             switch (_stage)
             {
@@ -632,22 +764,10 @@ namespace InvokerAnnihilation
                             _stage++;
                             Utils.Sleep(250, "StageCheck");
                         }
-                        else if (_autoUseDagger && dagger != null && dagger.CanBeCasted() && Utils.SleepCheck("blinker"))
+                        else if (Utils.SleepCheck("move"))
                         {
-                            var dist = eul.CastRange - 100;
-                            var point =
-                                new Vector3(
-                                    (float) (target.Position.X -
-                                             dist *
-                                             Math.Cos(me.FindAngleBetween(target.Position, true))),
-                                    (float) (target.Position.Y -
-                                             dist *
-                                             Math.Sin(me.FindAngleBetween(target.Position, true))), 0);
-                            if (me.Distance2D(point) <= 1100)
-                            {
-                                dagger.UseAbility(point);
-                                Utils.Sleep(250, "blinker");
-                            }
+                            me.Move(!target.IsValid ? Game.MousePosition : target.Position);
+                            Utils.Sleep(250, "move");
                         }
                     }
                     else
@@ -674,7 +794,7 @@ namespace InvokerAnnihilation
                     }
                     if (nextSpell != null && nextSpell.AbilityState == AbilityState.Ready)
                     {
-                        if (Equals(nextSpell, icewall) || _autoMoveToTarget)
+                        if (Equals(nextSpell, icewall) || Menu.Item("moving").GetValue<bool>())
                         {
                             CastIceWall(me, target, false, icewall);
                         }
@@ -685,7 +805,15 @@ namespace InvokerAnnihilation
                         {
                             if (_spellForCast.CanBeCasted())
                             {
-                                LetsTryCastSpell(me, target, _spellForCast);
+                                if (_spellForCast.Name == "invoker_cold_snap")
+                                {
+                                    if (_spellForCast.CanBeCasted(target))
+                                        LetsTryCastSpell(me, target, _spellForCast);
+                                }
+                                else
+                                {
+                                    LetsTryCastSpell(me, target, _spellForCast, Equals(nextSpell, deafblast) || Equals(nextSpell, meteor) /*|| Equals(nextSpell, emp)*/);
+                                }
                             }
                             else
                             {
@@ -727,189 +855,24 @@ namespace InvokerAnnihilation
                         return;
                     }
                     break;
-                    #region Old
-
-                    /*
-                case 1:
-                    if (Combos[_combo].CheckEul())
-                    {
-                        if (eul == null || eul.AbilityState != AbilityState.Ready) return;
-                        eul.UseAbility(target);
-                        _stage++;
-                        Utils.Sleep(250, "StageCheck");
-                    }
-                    else
-                    {
-                        _stage++;
-                    }
-                    break;
-                default:
-                    if (Combos[_combo].GetComboAbilities().Length < _stage - 1) return;
-                    _spellForCast = Combos[_combo].GetComboAbilities()[_stage - 2];
-                    if (_spellForCast != null)
-                    {
-                        if (_spellForCast.AbilityState != AbilityState.Ready)
-                        {
-                            PrintInfo(string.Format("spell {0} cant be casted, go next [{1}]", _spellForCast.Name, _stage));
-                            _stage++;
-                            return;
-                        }
-                        if (_spellForCast.CanBeCasted())
-                        {
-                            if (Combos[_combo].CheckEul())
-                            {
-                                var eulmodif = target.Modifiers.FirstOrDefault(x => x.Name == "modifier_eul_cyclone" || x.Name == "modifier_invoker_tornado");
-                                if (Equals(_spellForCast, deafblast))
-                                {
-                                    if (eulmodif != null && eulmodif.RemainingTime <= me.Distance2D(target) / 1100  + Game.Ping / 1000)
-                                    {
-                                        UseSpell(_spellForCast, target);
-                                        _stage++;
-                                        Utils.Sleep(250, "StageCheck");
-                                    }
-                                    else if (eulmodif == null)
-                                    {
-                                        UseSpell(_spellForCast, target);
-                                        _stage++;
-                                        Utils.Sleep(250, "StageCheck");
-                                    }
-                                }
-                                else if (!Equals(_spellForCast, ss) && !Equals(_spellForCast, chaosmeteor))
-                                {
-                                    UseSpell(_spellForCast, target);
-                                    _stage++;
-                                    Utils.Sleep(250, "StageCheck");
-                                }
-
-
-                                var timing = (Equals(_spellForCast, ss))
-                                    ? 1.7
-                                    : (Equals(_spellForCast, chaosmeteor)) ? 1.3 : 0;
-                                timing += Game.Ping / 1000 - 0.005;
-                                //PrintInfo(timing.ToString(CultureInfo.InvariantCulture));
-                                if (eulmodif != null && eulmodif.RemainingTime < timing)
-                                {
-                                    UseSpell(_spellForCast, target);
-                                    _stage++;
-                                    Utils.Sleep(250, "StageCheck");
-                                }
-                            }
-                            else if (Equals(_spellForCast, icewall))
-                            {
-                                var dist = me.Distance2D(target) <= 300;
-                                if (!dist)
-                                {
-                                    if (me.CanMove() && Utils.SleepCheck("icewallmove"))
-                                    {
-                                        var point =
-                                            new Vector3(
-                                                (float) (target.Position.X -
-                                                         200*
-                                                         Math.Cos(me.FindAngleBetween(target.Position, true))),
-                                                (float) (target.Position.Y -
-                                                         200*
-                                                         Math.Sin(me.FindAngleBetween(target.Position, true))), 0);
-                                        me.Move(point);
-                                        Utils.Sleep(300, "icewallmove");
-                                    }
-                                
-                                }
-                                else
-                                {
-                                    _spellForCast.UseAbility();
-                                    _stage++;
-                                    Utils.Sleep(250, "StageCheck");
-                                }
-                            }
-                            else
-                            {
-                                var tornadoMod = target.Modifiers.FirstOrDefault(x => x.Name == "modifier_invoker_tornado");
-                                if (Equals(_spellForCast, deafblast))
-                                {
-                                    if (tornadoMod != null &&
-                                        tornadoMod.RemainingTime <= me.Distance2D(target) / 1100 - .1 - Game.Ping / 1000)
-                                    {
-                                        UseSpell(_spellForCast, target);
-                                        _stage++;
-                                        Utils.Sleep(250, "StageCheck");
-                                    }
-                                    else if (tornadoMod == null)
-                                    {
-                                        UseSpell(_spellForCast, target);
-                                        _stage++;
-                                        Utils.Sleep(250, "StageCheck");
-                                    }
-                                }
-                                else if (!Equals(_spellForCast, ss) && !Equals(_spellForCast, chaosmeteor))
-                                {
-                                    UseSpell(_spellForCast, target);
-                                    _stage++;
-                                    Utils.Sleep(250, "StageCheck");
-                                }
-
-
-                                var timing = (Equals(_spellForCast, ss))
-                                    ? 1.7
-                                    : (Equals(_spellForCast, chaosmeteor)) ? 1.3 : 0;
-                                timing += Game.Ping / 1000 - 0.005;
-                                //PrintInfo(timing.ToString(CultureInfo.InvariantCulture));
-                                if (tornadoMod != null && tornadoMod.RemainingTime < timing)
-                                {
-                                    UseSpell(_spellForCast, target);
-                                    _stage++;
-                                    Utils.Sleep(250, "StageCheck");
-                                }
-                            }
-
-                        }
-                        else
-                        {
-                            SpellStruct s;
-                            if (SpellInfo.TryGetValue(_spellForCast.Name, out s))
-                            {
-                                if (invoke.CanBeCasted())
-                                {
-                                    var spells = s.GetNeededAbilities();
-                                    if (spells[0] != null) spells[0].UseAbility();
-                                    if (spells[1] != null) spells[1].UseAbility();
-                                    if (spells[2] != null) spells[2].UseAbility();
-                                    invoke.UseAbility();
-                                    Utils.Sleep(70, "StageCheck");
-                                }
-                            }
-                            else
-                                try
-                                {
-                                    PrintError("couldnt find data for spell: " + _spellForCast.Name);
-                                }
-                                catch (Exception)
-                                {
-                                    PrintError("couldnt find data for spell: ERROR");
-                                }
-                        }
-                    }
-                    break;*/
-
-                    #endregion
             }
-            if (_autoUseRefresher && refresher != null && refresher.AbilityState == AbilityState.Ready && _stage>=5)
-            {
-                refresher.UseAbility();
-                _stage = 3;
-
-            }
-            
+            if (refresher == null || !Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(refresher.Name) || refresher.AbilityState != AbilityState.Ready || _stage < 5)
+                return;
+            refresher.UseAbility();
+            _stage = 3;
         }
 
-        private static void LetsTryCastSpell(Hero me, Hero target, Ability spellForCast)
+        private static void LetsTryCastSpell(Hero me, Hero target, Ability spellForCast, bool nextSpell=false)
         {
             var ss = me.FindSpell("invoker_sun_strike");
             var icewall = me.FindSpell("invoker_ice_wall");
             var blast = me.FindSpell("invoker_deafening_blast");
+            var tornado = me.FindSpell("invoker_tornado");
+            var emp = me.FindSpell("invoker_emp");
             /*
             var coldsnap = me.FindSpell("invoker_cold_snap");
             var ghostwalk = me.FindSpell("invoker_ghost_walk");
-            var tornado = me.FindSpell("invoker_tornado");
+            
             var forge = me.FindSpell("invoker_forge_spirit");
             var emp = me.FindSpell("invoker_emp");
             var alacrity = me.FindSpell("invoker_alacrity");
@@ -920,9 +883,12 @@ namespace InvokerAnnihilation
                 ? 1.7
                 : (Equals(spellForCast, meteor))
                     ? 1.3
-                    : (Equals(spellForCast, blast))
+                    : Equals(spellForCast, blast)
                         ? me.Distance2D(target)/1100 + Game.Ping/1000
-                        : (Equals(spellForCast, icewall)) ? 2.5: 0;
+                        : (Equals(spellForCast, icewall))
+                            ? 2.5
+                            : Equals(spellForCast, emp) ? 2.9 : 0;
+                        
             if (eulmodif!=null && eulmodif.RemainingTime<=timing)
             {
                 if (icewall != null && Equals(spellForCast, icewall))
@@ -932,6 +898,7 @@ namespace InvokerAnnihilation
                 else
                 {
                     UseSpell(spellForCast, target);
+                    //Game.PrintMessage(spellForCast.Name+" (2)", MessageType.ChatMessage);
                     //PrintInfo("caster "+spellForCast.Name+" with timing "+timing);
                     Utils.Sleep(250, "StageCheck");
                     _stage++;
@@ -946,8 +913,14 @@ namespace InvokerAnnihilation
                 else
                 {
                     UseSpell(spellForCast, target);
-                    //PrintInfo(spellForCast.Name);
-                    Utils.Sleep(250, "StageCheck");
+                    
+                    var time = 250f;
+                    if (Equals(spellForCast, tornado) && nextSpell)
+                    {
+                        //Game.PrintMessage(spellForCast.Name, MessageType.ChatMessage);
+                        time += me.Distance2D(target)/spellForCast.GetProjectileSpeed()*1000 + Game.Ping;
+                    }
+                    Utils.Sleep(time, "StageCheck");
                     _stage++;
                 }
             }
@@ -958,14 +931,15 @@ namespace InvokerAnnihilation
             if (!b)
             {
                 if (!me.CanMove() || !Utils.SleepCheck("icewallmove")) return;
+                var angle = me.FindAngleBetween(target.Position, true);
                 var point =
                     new Vector3(
                         (float)(target.Position.X -
                                  200 *
-                                 Math.Cos(me.FindAngleBetween(target.Position, true))),
+                                 Math.Cos(angle)),
                         (float)(target.Position.Y -
                                  200 *
-                                 Math.Sin(me.FindAngleBetween(target.Position, true))), 0);
+                                 Math.Sin(angle)), 0);
                 me.Move(point);
                 Utils.Sleep(300, "icewallmove");
             }
@@ -987,7 +961,7 @@ namespace InvokerAnnihilation
             spellForCast.UseAbility(target.Position);
         }
 
-        public static Hero ClosestToMouse(Hero source, float range = 1000)
+        private static Hero ClosestToMouse(Hero source, float range = 1000)
         {
             var mousePosition = Game.MousePosition;
             var enemyHeroes =
@@ -1005,72 +979,22 @@ namespace InvokerAnnihilation
         }
 
         #region Helpers
-        private static void DrawButton(Vector2 a, float w, float h, int numberOfCombo, bool isActive, Color @on, Color off, string des)
-        {
-            var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
-            if (isActive)
-            {
-                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
-                {
-                    _combo = numberOfCombo;
-                    Utils.Sleep(250, "ClickButtonCd");
-                }
-                var newColor = isIn
-                    ? new Color((int)(_combo == numberOfCombo ? @on.R : off.R), _combo == numberOfCombo ? @on.G : off.G, _combo == numberOfCombo ? @on.B : off.B, 150)
-                    : _combo == numberOfCombo ? @on : off;
-                Drawing.DrawRect(a, new Vector2(w, h), newColor);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-                Drawing.DrawText(des, a + new Vector2(w + 10, 0), Color.White, FontFlags.AntiAlias | FontFlags.DropShadow);
-            }
-            else
-            {
-                Drawing.DrawRect(a, new Vector2(w, h), Color.Gray);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-            }
-        }
-        private static void DrawButton(Vector2 a, float w, float h, ref bool clicked, bool isActive, Color @on, Color off,string drawOnButtonText="")
-        {
-            var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, a.X, a.Y, w, h);
-            if (isActive)
-            {
-                if (_leftMouseIsPress && Utils.SleepCheck("ClickButtonCd") && isIn)
-                {
-                    clicked = !clicked;
-                    Utils.Sleep(250, "ClickButtonCd");
-                }
-                var newColor = isIn
-                    ? new Color((int)(clicked ? @on.R : off.R), clicked ? @on.G : off.G, clicked ? @on.B : off.B, 150)
-                    : clicked ? @on : off;
-                Drawing.DrawRect(a, new Vector2(w, h), newColor);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-                if (drawOnButtonText!="")
-                {
-                    Drawing.DrawText(drawOnButtonText, a + new Vector2(10, 2), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                }
-            }
-            else
-            {
-                Drawing.DrawRect(a, new Vector2(w, h), Color.Gray);
-                Drawing.DrawRect(a, new Vector2(w, h), new Color(0, 0, 0, 255), true);
-            }
-        }
-        public static void PrintInfo(string text, params object[] arguments)
+        private static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
         }
 
-        public static void PrintSuccess(string text, params object[] arguments)
+        private static void PrintSuccess(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.Green, arguments);
         }
 
-        public static void PrintError(string text, params object[] arguments)
+        private static void PrintError(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.Red, arguments);
         }
 
-        public static void PrintEncolored(string text, ConsoleColor color, params object[] arguments)
+        private static void PrintEncolored(string text, ConsoleColor color, params object[] arguments)
         {
             var clr = Console.ForegroundColor;
             Console.ForegroundColor = color;
