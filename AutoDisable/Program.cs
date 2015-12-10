@@ -12,15 +12,15 @@ using Ensage.Common.Menu;
 
 namespace Auto_Disable
 {
-    internal class Program
+    internal static class Program
     {
-        enum DisableType
+        private enum DisableType
         {
             OnlyInitiators,
             All
         }
 
-        enum Using
+        private enum Using
         {
             All,
             OnlyItems,
@@ -42,7 +42,7 @@ namespace Auto_Disable
         private static readonly Dictionary<string, bool> PreLoadSpell = new Dictionary<string, bool>();
         private static readonly List<string> ItemList = new List<string>();
         private static readonly List<string> SpellList = new List<string>();
-        public static readonly bool[]Create=new bool[10];
+        private static readonly bool[] Create = new bool[10];
         private static readonly bool[] FirstTimeItem = new bool[10];
         private static readonly bool[] FirstTimeSpell = new bool[10];
 
@@ -90,8 +90,8 @@ namespace Auto_Disable
                     me.Modifiers.FirstOrDefault(
                         x =>
                             x.Name == "modifier_orchid_malevolence_debuff" || x.Name == "modifier_lina_laguna_blade" ||
-                        x.Name == "modifier_pudge_meat_hook" || x.Name == "modifier_skywrath_mage_ancient_seal" ||
-                        x.Name == "modifier_lion_finger_of_death");
+                            x.Name == "modifier_pudge_meat_hook" || x.Name == "modifier_skywrath_mage_ancient_seal" ||
+                            x.Name == "modifier_lion_finger_of_death");
                 if (dodgeByManta != null && dodgeByManta.CanBeCasted() && mod != null)
                 {
                     dodgeByManta.UseAbility();
@@ -104,14 +104,16 @@ namespace Auto_Disable
             uint i;
             var isInvis = me.IsInvisible();
             var isChannel = me.IsChanneling();
-            var items = me.Inventory.Items.Where(x => x.CanBeCasted());
-            var spells = me.Spellbook.Spells.Where(x => SpellList.Contains(x.Name));
+            var items = me.Inventory.Items.Where(x => x.CanBeCasted()).ToList();
+            var spells = me.Spellbook.Spells.Where(x => SpellList.Contains(x.Name)).ToList();
             var newItems = false;
+
+            //Game.PrintMessage(me.Spellbook.Spell4.Name,MessageType.ChatMessage);
 
             foreach (var item in items.Where(item => !PreLoadItems.ContainsKey(item.Name) && ItemList.Contains(item.Name)))
             {
                 PreLoadItems.Add(item.Name, true);
-                Game.PrintMessage("[AutoDisable] [ITEM] " + item.Name + " added to menu", MessageType.LogMessage);
+                //Game.PrintMessage("[AutoDisable] [ITEM] " + item.Name + " added to menu", MessageType.LogMessage);
                 newItems = true;
             }
             
@@ -119,10 +121,10 @@ namespace Auto_Disable
             foreach (var spell in spells.Where(item => !PreLoadSpell.ContainsKey(item.Name)))
             {
                 PreLoadSpell.Add(spell.Name, true);
-                Game.PrintMessage("[AutoDisable] [SPELL] " + spell.Name + " added to menu ", MessageType.LogMessage);
+                //Game.PrintMessage("[AutoDisable] [SPELL] " + spell.Name + " added to menu ", MessageType.LogMessage);
                 newSpells = true;
             }
-            spells = spells.Where(x => x.CanBeCasted());
+            spells = spells.Where(x => x.CanBeCasted()).ToList();
             /*
             if (newSpells)
             {
@@ -302,11 +304,10 @@ namespace Auto_Disable
             public readonly string StrKey;
             public readonly int IntKey;
             public readonly ClassID Hero;
-            public readonly float ExtraRange;
             public readonly NetworkActivity Activity;
             public readonly string Modifer;
 
-            public CounterHelp(ClassID hero, string strKey = "", int intKey = 0, float extraRange = 0,
+            public CounterHelp(ClassID hero, string strKey = "", int intKey = 0,
                 NetworkActivity activity = 0, string modifer = "")
                 : this()
             {
@@ -315,7 +316,6 @@ namespace Auto_Disable
                 Activity = activity;
                 IntKey = intKey;
                 StrKey = strKey;
-                ExtraRange = extraRange;
             }
         }
 
@@ -339,6 +339,8 @@ namespace Auto_Disable
             ItemList.Add("item_blade_mail");
             ItemList.Add("item_lotus_orb");
             ItemList.Add("item_glimmer_cape");
+            ItemList.Add("item_ghost");
+            
 
             SpellList.Add("lion_voodoo");
             SpellList.Add("shadow_shaman_voodoo");
@@ -371,6 +373,9 @@ namespace Auto_Disable
             SpellList.Add("silencer_global_silence");
             SpellList.Add("nyx_assassin_spiked_carapace");
 
+            SpellList.Add("phantom_lancer_doppelwalk");
+            SpellList.Add("winter_wyvern_winters_curse");
+            SpellList.Add("puck_phase_shift");
             
             Initiators.Add(ClassID.CDOTA_Unit_Hero_FacelessVoid, "faceless_void_time_walk");
             Initiators.Add(ClassID.CDOTA_Unit_Hero_Shredder, "shredder_timber_chain");
@@ -434,7 +439,7 @@ namespace Auto_Disable
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Bloodseeker, "r");
             c++;
-            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_QueenOfPain, "r", 0, -0.70f);
+            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_QueenOfPain, "r");
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Lina, "r");
             c++;
@@ -452,14 +457,14 @@ namespace Auto_Disable
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Zuus, "r", 2);
             c++;
-            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_PhantomAssassin, "", 0, 0, NetworkActivity.Crit);
+            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_PhantomAssassin, "", 0, NetworkActivity.Crit);
             c++;
-            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Clinkz, "", 0, 0, NetworkActivity.Attack,
+            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Clinkz, "", 0, NetworkActivity.Attack,
                 "modifier_clinkz_strafe");
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Tusk, "r");
             c++;
-            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Ursa, "", 0, 0, NetworkActivity.Attack,
+            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Ursa, "", 0, NetworkActivity.Attack,
                 "modifier_ursa_overpower");
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Undying, "q");
@@ -507,12 +512,13 @@ namespace Auto_Disable
 
         private static void CounterSpellAndItems(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities, Unit me, uint i)
         {
+            
             if (!me.IsValid) return;
             var enumerable = items as Item[] ?? items.ToArray();
             
             var safeItemSelf = enumerable.FirstOrDefault(
                 x =>
-                    (x.Name == "item_blade_mail" /*|| x.Name == "item_black_king_bar" || x.Name == "item_ghost" ||
+                    (x.Name == "item_blade_mail" || x.Name == "item_ghost" /*|| x.Name == "item_black_king_bar" || 
                         x.Name == "item_manta"*/) && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name + target.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             var safeItemTargetSelf = enumerable.FirstOrDefault(
                 x =>
@@ -525,25 +531,30 @@ namespace Auto_Disable
                 x =>
                     x.Name == "item_blink");
 
-
             var safeSpell = abilities.FirstOrDefault(
                 x =>
-                    (/*x.Name == "antimage_blink" || x.Name == "queenofpain_blink" ||*/
-                    x.Name == "nyx_assassin_spiked_carapace" || x.Name == "silencer_last_word" ||
-                    x.Name == "shadow_demon_disruption" || x.Name == "obsidian_destroyer_astral_imprisonment" ||
-                    x.Name == "slark_shadow_dance" || x.Name == "slark_dark_pact" || x.Name == "puck_waning_rift" ||
-                    x.Name == "axe_berserkers_call" || x.Name == "abaddon_aphotic_shield" ||
-                    /*x.Name == "ember_spirit_flame_guard" ||*/ x.Name == "skywrath_mage_ancient_seal" ||
-                    x.Name == "juggernaut_omni_slash" || x.Name == "doombringer_doom" ||
-                    x.Name == "tusk_snowball" || x.Name == "naga_siren_mirror_image" ||
-                    x.Name == "alchemist_chemical_rage" || x.Name == "bounty_hunter_wind_walk" ||
-                    /*x.Name == "phantom_lancer_doppelwalk" ||*/ x.Name == "clinkz_skeleton_walk" ||
-                    x.Name == "sandking_sandstorm" || x.Name == "weaver_shukuchi" ||
-                    x.Name == "nyx_assassin_vendetta" || x.Name == "templar_assassin_refraction" ||
-                    x.Name == "templar_assassin_meld" /*|| x.Name == "phoenix_supernova" */||
-                    x.Name == "juggernaut_blade_fury" || x.Name == "life_stealer_rage" || x.Name == "lion_voodoo" ||
-                    x.Name == "shadow_shaman_voodoo" /*|| x.Name == "oracle_fates_edict" */||
-                    /* x.Name == "winter_wyvern_cold_embrace" ||*/ x.Name == "life_stealer_rage" || x.Name == "silencer_global_silence") && ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name + target.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                    ( /*x.Name == "antimage_blink" || x.Name == "queenofpain_blink" ||*/
+                        x.Name == "nyx_assassin_spiked_carapace" || x.Name == "silencer_last_word" ||
+                        x.Name == "shadow_demon_disruption" || x.Name == "obsidian_destroyer_astral_imprisonment" ||
+                        x.Name == "slark_shadow_dance" || x.Name == "slark_dark_pact" || x.Name == "puck_waning_rift" ||
+                        x.Name == "axe_berserkers_call" || x.Name == "abaddon_aphotic_shield" ||
+                        /*x.Name == "ember_spirit_flame_guard" ||*/ x.Name == "skywrath_mage_ancient_seal" ||
+                        x.Name == "juggernaut_omni_slash" || x.Name == "doombringer_doom" ||
+                        x.Name == "tusk_snowball" || x.Name == "naga_siren_mirror_image" ||
+                        x.Name == "alchemist_chemical_rage" || x.Name == "bounty_hunter_wind_walk" ||
+                        /*x.Name == "phantom_lancer_doppelwalk" ||*/ x.Name == "clinkz_skeleton_walk" ||
+                        x.Name == "sandking_sandstorm" || x.Name == "weaver_shukuchi" ||
+                        x.Name == "nyx_assassin_vendetta" || x.Name == "templar_assassin_refraction" ||
+                        x.Name == "templar_assassin_meld" /*|| x.Name == "phoenix_supernova" */||
+                        x.Name == "juggernaut_blade_fury" || x.Name == "life_stealer_rage" || x.Name == "lion_voodoo" ||
+                        x.Name == "puck_phase_shift" || x.Name == "phantom_lancer_doppelwalk" ||
+                        x.Name == "winter_wyvern_winters_curse" ||
+                        x.Name == "shadow_shaman_voodoo" /*|| x.Name == "oracle_fates_edict" */||
+                        /* x.Name == "winter_wyvern_cold_embrace" ||*/ x.Name == "life_stealer_rage" ||
+                        x.Name == "silencer_global_silence") &&
+                    ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name + target.Name)
+                        .GetValue<AbilityToggler>()
+                        .IsEnabled(x.Name));
             /*local v = entityList:GetEntities({classId = CDOTA_Unit_Fountain,team = me.team})[1]
 				local vec = Vector((v.position.x - me.position.x) * 1100 / GetDistance2D(v,me) + me.position.x,(v.position.y - me.position.y) * 1100 / GetDistance2D(v,me) + me.position.y,v.position.z)
 				if blinkfront then
@@ -573,7 +584,7 @@ namespace Auto_Disable
                 }
                 if (safeItemTargetEnemy != null && safeItemTargetEnemy.CanBeCasted(target) && Menu.Item("ActiveItem" + i).GetValue<bool>())
                 {
-                    if (me.Distance2D(target) <= safeItemTargetEnemy.CastRange)
+                    if (me.Distance2D(target) <= GetRealCastRange(safeItemTargetEnemy))
                     {
                         safeItemTargetEnemy.UseAbility(target);
                         Utils.Sleep(250, target.GetHashCode().ToString());
@@ -591,16 +602,12 @@ namespace Auto_Disable
             if (!Menu.Item("ActiveSpell" + i).GetValue<bool>() || safeSpell == null || !safeSpell.CanBeCasted() ||
                 (Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.All &&
                  Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.OnlyAblities)) return;
-            if (safeSpell.CastRange > 0)
-            {
-                if (me.Distance2D(target) <= safeSpell.CastRange)
-                {
-                    safeSpell.UseAbility(target);
-                }
-            }
-            else
+            //Game.PrintMessage(safeSpell.Name+" "+safeSpell.AbilityBehavior,MessageType.ChatMessage);
+            if (GetRealCastRange(safeSpell) >= me.Distance2D(target) || safeSpell.AbilityBehavior == AbilityBehavior.NoTarget || safeSpell.AbilityBehavior == AbilityBehavior.Point || safeSpell.ClassID==ClassID.CDOTA_Ability_PhantomLancer_Doppelwalk)
             {
                 safeSpell.UseAbility();
+                safeSpell.UseAbility(target);
+                safeSpell.UseAbility(me.Position);
             }
             Utils.Sleep(250, target.GetHashCode().ToString());
         }
@@ -618,26 +625,39 @@ namespace Auto_Disable
                     enumerable.FirstOrDefault( // wo puck_waning_rift
                         x =>
                             (x.Name == "item_sheepstick" || x.Name == "item_orchid" ||
-                            x.Name == "item_abyssal_blade" ||
-                            x.Name == "item_ethereal_blade" ||
-                            x.Name == "item_rod_of_atos" || x.Name == "item_heavens_halberd" ||
-                            x.Name == "item_medallion_of_courage" ||
-                            x.Name == "item_cyclone" || x.Name == "item_solar_crest") && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name + target.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                             x.Name == "item_abyssal_blade" ||
+                             x.Name == "item_ethereal_blade" ||
+                             x.Name == "item_rod_of_atos" || x.Name == "item_heavens_halberd" ||
+                             x.Name == "item_medallion_of_courage" ||
+                             x.Name == "item_cyclone" || x.Name == "item_solar_crest") &&
+                            ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name + target.Name)
+                                .GetValue<AbilityToggler>()
+                                .IsEnabled(x.Name));
                 var enumerable1 = abilities as Ability[] ?? abilities.ToArray();
                 ab =
                     enumerable1.FirstOrDefault(
                         x =>
                             (x.Name == "lion_voodoo" || x.Name == "shadow_shaman_voodoo" ||
-                            x.Name == "obsidian_destroyer_astral_imprisonment" || x.Name == "shadow_demon_disruption" ||
-                            x.Name == "rubick_telekinesis" ||
-                            x.Name == "dragon_knight_dragon_tail" ||
-                            x.Name == "batrider_flaming_lasso" ||
-                            x.Name == "legion_commander_duel" ||
-                            x.Name == "skywrath_mage_ancient_seal" /*|| x.Name == "vengefulspirit_magic_missile"*/ ) && ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name + target.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                             x.Name == "obsidian_destroyer_astral_imprisonment" || x.Name == "shadow_demon_disruption" ||
+                             x.Name == "rubick_telekinesis" ||
+                             x.Name == "dragon_knight_dragon_tail" ||
+                             x.Name == "batrider_flaming_lasso" ||
+                             x.Name == "legion_commander_duel" || x.Name == "phantom_lancer_doppelwalk" ||
+                             x.Name == "winter_wyvern_winters_curse" ||
+                             x.Name == "skywrath_mage_ancient_seal" /*|| x.Name == "vengefulspirit_magic_missile"*/) &&
+                            ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name + target.Name)
+                                .GetValue<AbilityToggler>()
+                                .IsEnabled(x.Name));
                 withOutTarget =
                     enumerable1.FirstOrDefault(
                         x =>
-                            x.Name == "silencer_global_silence" && ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name + target.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
+                            (x.Name == "silencer_global_silence" || x.Name == "puck_phase_shift" ||
+                             x.Name == "puck_waning_rift" || x.Name == "axe_berserkers_call") &&
+                            ExtraSubMenu[i, 1].Item("SelectedSpells" + me.Name + target.Name)
+                                .GetValue<AbilityToggler>()
+                                .IsEnabled(x.Name));
+                /*if (withOutTarget != null)
+                    Game.PrintMessage("realCastRange: " + withOutTarget.Name + " " + GetRealCastRange(withOutTarget), MessageType.ChatMessage);*/
             }
             else
             {
@@ -650,28 +670,35 @@ namespace Auto_Disable
             if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
                 Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyItems)
             {
-                if (disable != null && me.Distance2D(target) <= disable.CastRange && Menu.Item("ActiveItem" + i).GetValue<bool>())
+                if (disable != null && me.Distance2D(target) <= GetRealCastRange(disable) && Menu.Item("ActiveItem" + i).GetValue<bool>())
                 {
                     disable.UseAbility(target);
                     Utils.Sleep(250, target.GetHashCode().ToString());
                     if (Menu.Item("oneenemy").GetValue<bool>()) return;
                 }
             }
+            
             if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
                 Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyAblities)
             {
-                if (ab != null && me.Distance2D(target) <= ab.CastRange && Menu.Item("ActiveSpell" + i).GetValue<bool>())
+                
+                if (ab != null && me.Distance2D(target) <= GetRealCastRange(ab) && Menu.Item("ActiveSpell" + i).GetValue<bool>())
                 {
                     ab.UseAbility(target);
+                    ab.UseAbility(me.Position);
                     Utils.Sleep(250, target.GetHashCode().ToString());
                     if (Menu.Item("oneenemy").GetValue<bool>()) return;
                 }
-
+                
                 if (withOutTarget != null && Menu.Item("ActiveSpell" + i).GetValue<bool>())
                 {
-                    withOutTarget.UseAbility();
-                    Utils.Sleep(250, target.GetHashCode().ToString());
-                    if (Menu.Item("oneenemy").GetValue<bool>()) return;
+                    var r = GetRealCastRange(withOutTarget);
+                    if (r > 0 && r >= me.Distance2D(target) || r == 0)
+                    {
+                        withOutTarget.UseAbility();
+                        Utils.Sleep(250, target.GetHashCode().ToString());
+                        if (Menu.Item("oneenemy").GetValue<bool>()) return;
+                    }
                 }
             }
             if (Menu.Item("using").GetValue<StringList>().SelectedIndex != (int) Using.All &&
@@ -790,6 +817,17 @@ namespace Auto_Disable
             }
             //PrintInfo("Return: 0" );
             return null;
+        }
+
+        private static float GetRealCastRange(Ability ability)
+        {
+            var range = ability.CastRange;
+            if (range >= 1) return range;
+            var data = ability.AbilityData.FirstOrDefault(x => x.Name.Contains("radius") || (x.Name.Contains("range") && !x.Name.Contains("ranged")));
+            if (data == null) return range;
+            var level = ability.Level == 0 ? 0 : ability.Level - 1;
+            range = (uint)(data.Count > 1 ? data.GetValue(level) : data.Value);
+            return range;
         }
 
         private static void PrintInfo(string text, params object[] arguments)
