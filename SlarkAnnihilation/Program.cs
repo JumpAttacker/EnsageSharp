@@ -51,7 +51,6 @@ namespace SlarkAnnihilation
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!_loaded) return;
-            var me = ObjectMgr.LocalHero;
 
             if (_globalTarget == null || !_globalTarget.IsAlive) return;
             var pos = Drawing.WorldToScreen(_globalTarget.Position);
@@ -129,7 +128,7 @@ namespace SlarkAnnihilation
                         case ClassID.CDOTA_Item_BlinkDagger:
                             var p = Prediction.InFront(target, 100);
                             var dist = me.Distance2D(p);
-                            if (dist <= 1150 && dist >= 400)
+                            if (dist <= 1150 && dist >= 400 && pounce != null && pounce.CanBeCasted())
                             {
                                 item.UseAbility(p);
                                 Utils.Sleep(200, item.Name);
