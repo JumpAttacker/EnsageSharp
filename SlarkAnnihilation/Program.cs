@@ -24,6 +24,7 @@ namespace SlarkAnnihilation
             "item_mjollnir",
             "item_abyssal_blade",
             "item_blink",
+            "item_orchid",
             "item_sheepstick"
         };
 
@@ -38,7 +39,8 @@ namespace SlarkAnnihilation
                 {Items[1],true},
                 {Items[2],true},
                 {Items[3],true},
-                {Items[4],true}
+                {Items[4],true},
+                {Items[5],true}
             };
             Menu.AddItem(new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('G', KeyBindType.Press)));
             Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
@@ -137,7 +139,10 @@ namespace SlarkAnnihilation
                         default:
                             if (item.IsAbilityBehavior(AbilityBehavior.UnitTarget))
                             {
-                                item.UseAbility(target);
+                                if (!target.IsStunned() && !target.IsHexed())
+                                {
+                                    item.UseAbility(target);
+                                }
                                 item.UseAbility(me);
                             }
                             else
