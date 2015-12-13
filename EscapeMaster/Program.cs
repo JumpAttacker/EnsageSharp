@@ -62,12 +62,12 @@ namespace EscapeMaster
                     " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version, MessageType.LogMessage);
             }
 
-            if (!Game.IsInGame || me == null || !Utils.SleepCheck("kek"))
+            if (!Game.IsInGame || me == null)
             {
                 _loaded = false;
                 return;
             }
-            if (!me.IsAlive || Game.IsPaused || !Menu.Item("isActive").GetValue<bool>()) return;
+            if (!me.IsAlive || Game.IsPaused || !Menu.Item("isActive").GetValue<bool>() || !Utils.SleepCheck("kek")) return;
 
             /*foreach (var m in me.Modifiers.AsEnumerable())
             {
