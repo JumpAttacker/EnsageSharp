@@ -1,26 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Ensage;
+using Ensage.Common;
 using SharpDX;
 
 namespace SpellPanel
 {
     internal class Program
     {
-        private const string Ver = "1.0";
+        private const string Ver = "1.1";
+        private const string Spellpanel = "SpellPanel";
         private static bool _loaded;
+
+        private static Hero[] _heroes = new Hero[0];
 
         private static void Main(string[] args)
         {
             _loaded = false;
             Drawing.OnDraw += Drawing_OnDraw;
+            Game.OnUpdate += Game_OnUpdate;
         }
 
-        private static void Drawing_OnDraw(EventArgs args)
+        private static void Game_OnUpdate(EventArgs args)
         {
+            if (!Utils.SleepCheck(Spellpanel))
+                return;
+
+            _heroes = new Hero[0];
+
             var me = ObjectMgr.LocalHero;
             if (!_loaded)
             {
@@ -39,18 +47,24 @@ namespace SpellPanel
                 return;
             }
             if (!Game.IsInGame || !_loaded) return;
-            uint i;
-            for (i = 0; i < 10; i++)
+
+            _heroes = Enumerable.Range(0, 10)
+                .Select(i => ObjectMgr.GetPlayerById((uint)i).Hero)
+                .Where(v => !Equals(v, me))
+                .ToArray();
+
+            Utils.Sleep(200, Spellpanel);
+        }
+
+        private static void Drawing_OnDraw(EventArgs args)
+        {
+            foreach (var v in _heroes)
             {
                 try
                 {
-                    var v = ObjectMgr.GetPlayerById(i).Hero;
-                    if (Equals(v, me)) continue;
                     Vector2 screenPos;
 
                     #region GettingSPells
-
-
                     var spells = new Ability[7];
                     spells[1] = v.Spellbook.Spell1;
                     spells[2] = v.Spellbook.Spell2;
@@ -65,22 +79,14 @@ namespace SpellPanel
                     for (var g = 1; g <= 6; g++)
                     {
                         if (spells[g] == null) continue;
-                        /*try
 
-                        {
-                            PrintError(String.Format("Spell # {0}:{1}", g, spells[g].ManaCost));
-                        }
-                        catch (Exception e)
-                        {
-                            PrintInfo(e.ToString());
-                        }*/
                         var cd = spells[g].Cooldown;
                         Drawing.DrawRect(start + new Vector2(g * 20 - 5, 0), new Vector2(20, (int)cd == 0 ? 6 : 20),
                             new ColorBGRA(0, 0, 0, 100), true);
-                        //PrintError(String.Format("Spell # {0}:{1}", g, spells[g].AbilityState));
-                        if (spells[g].ManaCost > v.Mana)//spells[g].AbilityState == AbilityState.NotEnoughMana)
+
+                        if (spells[g].ManaCost > v.Mana)
                         {
-                            Drawing.DrawRect(start + new Vector2(g*20 - 5, 0),
+                            Drawing.DrawRect(start + new Vector2(g * 20 - 5, 0),
                                 new Vector2(20, (int)cd == 0 ? 6 : 20),
                                 new ColorBGRA(0, 0, 150, 150));
                         }
@@ -89,16 +95,15 @@ namespace SpellPanel
                             var text = string.Format("{0:0.#}", cd);
                             var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200),
                                 FontFlags.None);
-                            var textPos = (start + new Vector2(g*20 - 5, 0) +
-                                           new Vector2(10 - textSize.X/2, -textSize.Y/2 + 12));
+                            var textPos = (start + new Vector2(g * 20 - 5, 0) +
+                                           new Vector2(10 - textSize.X / 2, -textSize.Y / 2 + 12));
                             Drawing.DrawText(text, textPos, new Vector2(10, 150), Color.White,
                                 FontFlags.AntiAlias | FontFlags.DropShadow);
                         }
                         if (spells[g].Level == 0) continue;
                         for (var lvl = 1; lvl <= spells[g].Level; lvl++)
                         {
-
-                            Drawing.DrawRect(start + new Vector2(g*20 - 5 + 3*lvl, 2), new Vector2(2, 2),
+                            Drawing.DrawRect(start + new Vector2(g * 20 - 5 + 3 * lvl, 2), new Vector2(2, 2),
                                 new ColorBGRA(255, 255, 0, 255), true);
                         }
 
@@ -141,6 +146,3 @@ namespace SpellPanel
 
     }
 }
-
-
-
