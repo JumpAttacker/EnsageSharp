@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -20,7 +21,7 @@ namespace InvokerAnnihilation
         private const int WmKeyup = 0x0101;
         private static int _combo;
         //private static readonly SpellStruct[] Spells = new SpellStruct[12];
-        private static readonly ComboStruct[] Combos = new ComboStruct[10];
+        private static readonly ComboStruct[] Combos = new ComboStruct[11];
         private static int _maxCombo;
         private static bool _inAction;
         private static bool _initNewCombo;
@@ -29,7 +30,6 @@ namespace InvokerAnnihilation
         private static ParticleEffect _predictionEffect;
         private static Ability _spellForCast;
         private static bool _startInitSpell;
-        private static readonly float Percent = HUDInfo.RatioPercentage();
         private static NetworkActivity _lastAct=NetworkActivity.Idle;
         private static bool _lastAction;
         //============================================================
@@ -121,6 +121,7 @@ namespace InvokerAnnihilation
             {
                 {"item_blink",true},
                 {"item_refresher",true},
+                {"item_orchid",true},
                 {"item_sheepstick",true}
             };
             var settings = new Menu("Settings", "Settings");
@@ -218,40 +219,69 @@ namespace InvokerAnnihilation
             Utils.Sleep(200, "act");
         }
 
+        private static int _maxComboSpells;
         private struct ComboStruct
         {
             private readonly bool _isNeedEul;
-            private readonly Ability _s1;
+            private readonly Ability []_spells;
+            private readonly int _refreshPos;
+            /*private readonly Ability _s1;
             private readonly Ability _s2;
             private readonly Ability _s3;
             private readonly Ability _s4;
             private readonly Ability _s5;
-
-            public ComboStruct(bool useEul, Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null)
+            private readonly Ability _s6;*/
+            /// <summary>
+            /// add new combo to sys
+            /// </summary>
+            /// <param name="spells">array of spells</param>
+            /// <param name="refreshPos">min spell pos for refresher (type -1 to disable refresher)</param>
+            /// <param name="useEul">use uel in this combo</param>
+            public ComboStruct(Ability[] spells, int refreshPos,bool useEul=false)
+            {
+                _isNeedEul = useEul;
+                _spells = spells;
+                _maxCombo++;
+                _refreshPos = refreshPos;
+                _maxComboSpells = Math.Max(_spells.Length, _maxComboSpells);
+            }
+            /*public ComboStruct(bool useEul, Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null, Ability s6=null)
             {
                 _isNeedEul = useEul;
                 _s1 = s1;
                 _s2 = s2;
+                _s6 = s6;
                 _s3 = s3;
                 _s4 = s4;
                 _s5 = s5;
+                _s6 = s6;
                 _maxCombo++;
             }
 
-            public ComboStruct(Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null)
+            public ComboStruct(Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null, Ability s6 = null)
                 : this()
             {
                 _s1 = s1;
                 _s2 = s2;
+                _s6 = s6;
                 _s3 = s3;
                 _s4 = s4;
                 _s5 = s5;
+                _s6 = s6;
                 _maxCombo++;
+            }*/
+            public int GetRefreshPos()
+            {
+                return _refreshPos;
             }
-
+            public int GetSpellsInCombo()
+            {
+                return _spells.Length;
+            }
             public Ability[] GetComboAbilities()
             {
-                return new[] { _s1, _s2, _s3, _s4, _s5 };
+                //return new[] { _s1, _s2, _s3, _s4, _s5, _s6 };
+                return _spells;
             }
 
             public bool CheckEul()
@@ -261,8 +291,12 @@ namespace InvokerAnnihilation
 
             public override string ToString()
             {
-                return string.Format("Eul? {0} -> {1} -> {2} -> {3} -> {4}-> {5}", _isNeedEul, _s1.Name,
-                    _s2.Name, _s3 != null ? _s3.Name : "", _s4 != null ? _s4.Name : "", _s5 != null ? _s5.Name : "");
+                var s=new StringBuilder();
+                foreach (var ability in _spells)
+                {
+                    s.AppendLine(ability.Name);
+                }
+                return s.ToString();
             }
         }
 
@@ -308,8 +342,7 @@ namespace InvokerAnnihilation
                 {
                     _inAction = args.Msg != WmKeyup;
                     if (_inAction != _lastAction)
-                        Game.ExecuteCommand(string.Format("dota_player_units_auto_attack_after_spell {0}",
-                            _inAction ? 0 : 1));
+                        Game.ExecuteCommand($"dota_player_units_auto_attack_after_spell {(_inAction ? 0 : 1)}");
                     if (!_inAction)
                     {
                         _stage = 0;
@@ -330,6 +363,7 @@ namespace InvokerAnnihilation
             }
         }
 
+        private static Vector2 _size = new Vector2(HUDInfo.GetHPBarSizeX() / 4, HUDInfo.GetHPBarSizeX() / 4);
         private static void Drawing_OnDraw(EventArgs args)
         {
             var player = ObjectMgr.LocalPlayer;
@@ -345,7 +379,7 @@ namespace InvokerAnnihilation
             var topDamage = Menu.Item("ssDamageontop").GetValue<bool>();
             var heroDamage = Menu.Item("ssDamageonhero").GetValue<bool>();
             var predDamage = Menu.Item("ssPrediction").GetValue<bool>();
-            if (exort != null && (topDamage || heroDamage || predDamage))
+            if (exort != null && exort.Level>0 && (topDamage || heroDamage || predDamage))
             {
                 var damage = 100 + 62.5*(exort.Level - 1);
                 if (topDamage)
@@ -359,7 +393,7 @@ namespace InvokerAnnihilation
                     foreach (var hero in enemy)
                     {
                         Drawing.DrawText((hero.Health - damage).ToString(CultureInfo.InvariantCulture),
-                            HUDInfo.GetTopPanelPosition(hero) + new Vector2(0, 60), Color.White,
+                            HUDInfo.GetTopPanelPosition(hero) + new Vector2(0, 90), Color.White,
                             FontFlags.AntiAlias | FontFlags.DropShadow);
                     }
                 }
@@ -430,16 +464,16 @@ namespace InvokerAnnihilation
             #region Menu
             if (!Menu.Item("ShowComboMenu").GetValue<bool>()) return;
             var pos = new Vector2(Menu.Item("MenuPosX").GetValue<Slider>().Value, Menu.Item("MenuPosY").GetValue<Slider>().Value);
-            var size = new Vector2(150*Percent, 200*Percent);
+            var size2 = new Vector2(_size.X * _maxComboSpells + 10/*150 * Percent*/, 10 + _maxCombo * (_size.Y + 2)/*250 * Percent*/);
 
-            Drawing.DrawRect(pos, size, new Color(0, 0, 0, 100));
-            Drawing.DrawRect(pos, size, new Color(0, 155, 255, 255), true);
+            Drawing.DrawRect(pos, size2, new Color(0, 0, 0, 100));
+            Drawing.DrawRect(pos, size2, new Color(0, 155, 255, 255), true);
             var i = 0;
-            
-            
+
+            //var max = Combos.Length;
             foreach (var comboStruct in Combos)
             {
-                var sizeY = 10 + i*(size.Y/9);
+                var sizeY = 4 + i*(_size.Y + 2);
                 var eul = comboStruct.CheckEul();
                 var texturename = "materials/ensage_ui/items/cyclone.vmat";
                 var selected = _combo == i;
@@ -450,35 +484,36 @@ namespace InvokerAnnihilation
                     
                     Drawing.DrawRect(
                         itemStartPos,
-                        new Vector2((float)(size.X / 7 + size.X / 7 * 0.16), size.Y / 11),
+                        new Vector2((float)(_size.X + _size.X * 0.16), _size.Y),
                         Drawing.GetTexture(texturename));
                     if (_stage == 1 && selected)
                         Drawing.DrawRect(
                             itemStartPos + new Vector2(1, 1),
-                            new Vector2(size.X/7 - 6, size.Y/11-2),
+                            new Vector2(_size.X - 6, _size.Y-2),
                             Color.Red, true);
 
                 }
                 var j = 0;//eul ? 0 : 0;
                 var legal = 1;
-                for (; j < 6; j++)
+                //PrintInfo(i.ToString());
+                //PrintInfo(i+": "+Combos[i]);
+                for (; j <= Combos[i].GetSpellsInCombo(); j++)
                 {
                     try
                     {
-                        texturename = string.Format("materials/ensage_ui/spellicons/{0}.vmat",
-                            comboStruct.GetComboAbilities()[j].Name);
-                        var sizeX = size.X / 7 * (j + (eul?1:0)) + 10;
+                        texturename = $"materials/ensage_ui/spellicons/{comboStruct.GetComboAbilities()[j].Name}.vmat";
+                        var sizeX = _size.X * (j + (eul?1:0)) + 10;
                         itemStartPos = pos + new Vector2(sizeX, sizeY);
                         Drawing.DrawRect(
                             itemStartPos,
-                            new Vector2(size.X/7-6, size.Y/11),
+                            new Vector2(_size.X-6, _size.Y),
                             Drawing.GetTexture(texturename));
                         legal++;
                         if (Equals(comboStruct.GetComboAbilities()[j], Combos[_combo].GetComboAbilities()[_stage-2]) && selected)
                         {
                             Drawing.DrawRect(
                                 itemStartPos,
-                                new Vector2(size.X/7 - 3, size.Y/11),
+                                new Vector2(_size.X - 3, _size.Y),
                                 Color.Red, true);
                         }
                         
@@ -492,7 +527,7 @@ namespace InvokerAnnihilation
                 {
                     Drawing.DrawRect(
                         pos + new Vector2(10, sizeY),
-                        new Vector2(size.X / 7 * (legal - (eul ? 0 : 1)) - 6, size.Y / 11),
+                        new Vector2(_size.X * (legal - (eul ? 0 : 1)) - 6, _size.Y),
                         Color.YellowGreen, true);
                 }
                 i++;
@@ -526,7 +561,7 @@ namespace InvokerAnnihilation
                 var icewall = me.FindSpell("invoker_ice_wall");
                 var tornado = me.FindSpell("invoker_tornado");
                 var blast = me.FindSpell("invoker_deafening_blast");
-                var forge = me.FindSpell("invoker_forge_spirit");
+                var forgeSpirit = me.FindSpell("invoker_forge_spirit");
                 var emp = me.FindSpell("invoker_emp");
                 var alacrity = me.FindSpell("invoker_alacrity");
                 var meteor = me.FindSpell("invoker_chaos_meteor");
@@ -537,22 +572,27 @@ namespace InvokerAnnihilation
                 SpellInfo.Add(icewall.Name, new SpellStruct(q, q, e));
                 SpellInfo.Add(tornado.Name, new SpellStruct(w, w, q));
                 SpellInfo.Add(blast.Name, new SpellStruct(q, w, e));
-                SpellInfo.Add(forge.Name, new SpellStruct(e, e, q));
+                SpellInfo.Add(forgeSpirit.Name, new SpellStruct(e, e, q));
                 SpellInfo.Add(emp.Name, new SpellStruct(w, w, w));
                 SpellInfo.Add(alacrity.Name, new SpellStruct(w, w, e));
                 SpellInfo.Add(meteor.Name, new SpellStruct(e, e, w));
 
-                Combos[_maxCombo] = new ComboStruct(true, ss, meteor, blast, coldsnap, forge);
-                Combos[_maxCombo] = new ComboStruct(tornado, emp, meteor, blast, coldsnap);
-                Combos[_maxCombo] = new ComboStruct(tornado, meteor, blast);
-                Combos[_maxCombo] = new ComboStruct(tornado, emp, blast);
-                Combos[_maxCombo] = new ComboStruct(tornado, emp, icewall);
-                Combos[_maxCombo] = new ComboStruct(tornado, ss, icewall);
-                Combos[_maxCombo] = new ComboStruct(tornado, blast, coldsnap);
-                Combos[_maxCombo] = new ComboStruct(tornado, emp, coldsnap);
+                Combos[_maxCombo] = new ComboStruct(new[] {ss, meteor, blast, coldsnap, forgeSpirit}, 5, true);
+                Combos[_maxCombo] =
+                    new ComboStruct(new[] {tornado, ss, meteor, blast, tornado, coldsnap, alacrity, forgeSpirit},5);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, ss, meteor, blast, tornado, coldsnap},5);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, meteor, blast, coldsnap},5);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, meteor, blast},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, blast},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, icewall},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, ss, icewall},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, blast, coldsnap},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, coldsnap},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {coldsnap, alacrity, forgeSpirit},3);
+
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v" + Ver, MessageType.LogMessage);
+                    " loaded!</font> <font color='#aa0000'>v"  + Ver, MessageType.LogMessage);
                 PrintSuccess(string.Format("> {1} Loaded v{0}", Ver, Menu.DisplayName));
                 /*PrintInfo("===============Combo selection===============");
                 for (var i = 0; i < _maxCombo; i++)
@@ -673,9 +713,9 @@ namespace InvokerAnnihilation
                 var invoke = me.FindSpell("invoker_invoke");
                 if (!invoke.CanBeCasted()) return;
                 var spells = s.GetNeededAbilities();
-                if (spells[0] != null) spells[0].UseAbility();
-                if (spells[1] != null) spells[1].UseAbility();
-                if (spells[2] != null) spells[2].UseAbility();
+                spells[0]?.UseAbility();
+                spells[1]?.UseAbility();
+                spells[2]?.UseAbility();
                 invoke.UseAbility();
                 Utils.Sleep(Game.Ping + 50, "GettingNeededSpells");
             }
@@ -699,6 +739,7 @@ namespace InvokerAnnihilation
             var icewall = me.FindSpell("invoker_ice_wall");
             var deafblast = me.FindSpell("invoker_deafening_blast");
             var hex = me.FindItem("item_sheepstick");
+            var orchid = me.FindItem("item_orchid");
             var meteor = me.FindSpell("invoker_chaos_meteor");
             //var emp = me.FindSpell("invoker_emp");
             /*
@@ -717,7 +758,7 @@ namespace InvokerAnnihilation
             {
                 _initNewCombo = true;
                 _stage = 1;
-                PrintInfo("Starting new combo! " + string.Format("[{0}] target: {1}", _combo + 1, target.Name));
+                PrintInfo("Starting new combo! " + $"[{_combo + 1}] target: {target.Name}");
             }
             if (!Utils.SleepCheck("StageCheck")) return;
             #endregion
@@ -728,10 +769,26 @@ namespace InvokerAnnihilation
             {
                 PrintInfo(s.Name);
             }*/
+            var myBoys = ObjectMgr.GetEntities<Unit>().Where(x => x.Team == me.Team && x.IsControllable && x.IsAlive && Utils.SleepCheck(x.Handle.ToString()));
+            foreach (var myBoy in myBoys)
+            {
+                myBoy.Attack(target);
+                Utils.Sleep(300, myBoy.Handle.ToString());
+            }
             if (_stage > 2 && !target.IsHexed() && !target.IsStunned())
             {
-                if (hex != null && hex.CanBeCasted(target) && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.Name))
+                if (hex != null && hex.CanBeCasted(target) &&
+                    Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.Name) && Utils.SleepCheck("items"))
+                {
                     hex.UseAbility(target);
+                    Utils.Sleep(300,"items");
+                }
+                if (orchid != null && orchid.CanBeCasted(target) &&
+                    Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(orchid.Name) && Utils.SleepCheck("items"))
+                {
+                    orchid.UseAbility(target);
+                    Utils.Sleep(300,"items");
+                }
             }
             if (dagger != null && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(dagger.Name) &&
                 dagger.CanBeCasted() && Utils.SleepCheck("blinker") && me.Distance2D(target)>= 700)
@@ -823,9 +880,9 @@ namespace InvokerAnnihilation
                                     if (invoke.CanBeCasted())
                                     {
                                         var spells = s.GetNeededAbilities();
-                                        if (spells[0] != null) spells[0].UseAbility();
-                                        if (spells[1] != null) spells[1].UseAbility();
-                                        if (spells[2] != null) spells[2].UseAbility();
+                                        spells[0]?.UseAbility();
+                                        spells[1]?.UseAbility();
+                                        spells[2]?.UseAbility();
                                         invoke.UseAbility();
                                         Utils.Sleep(100, "StageCheck");
                                     }
@@ -843,7 +900,7 @@ namespace InvokerAnnihilation
                         }
                         else
                         {
-                            PrintInfo(string.Format("spell {0} cant be casted, go next [{1}]", _spellForCast.Name, _stage));
+                            PrintInfo($"spell {_spellForCast.Name} cant be casted, go next [{_stage}]");
                             _stage++;
                             return;
                         }
@@ -856,8 +913,9 @@ namespace InvokerAnnihilation
                     }
                     break;
             }
-            if (refresher == null || !Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(refresher.Name) || refresher.AbilityState != AbilityState.Ready || _stage < 5)
+            if (refresher == null || !Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(refresher.Name) || refresher.AbilityState != AbilityState.Ready || _stage < Combos[_combo].GetRefreshPos()|| Combos[_combo].GetRefreshPos()==-1)
                 return;
+            //Game.PrintMessage($"refreshPos {Combos[_combo].GetRefreshPos()} Combo: {_combo} Stage: {_stage}",MessageType.ChatMessage);
             refresher.UseAbility();
             _stage = 3;
         }
@@ -897,7 +955,7 @@ namespace InvokerAnnihilation
                 }
                 else
                 {
-                    UseSpell(spellForCast, target);
+                    UseSpell(spellForCast, target,me);
                     //Game.PrintMessage(spellForCast.Name+" (2)", MessageType.ChatMessage);
                     //PrintInfo("caster "+spellForCast.Name+" with timing "+timing);
                     Utils.Sleep(250, "StageCheck");
@@ -912,13 +970,17 @@ namespace InvokerAnnihilation
                 }
                 else
                 {
-                    UseSpell(spellForCast, target);
-                    
                     var time = 250f;
-                    if (Equals(spellForCast, tornado) && nextSpell)
+                    if (Equals(spellForCast, tornado))
                     {
-                        //Game.PrintMessage(spellForCast.Name, MessageType.ChatMessage);
-                        time += me.Distance2D(target)/spellForCast.GetProjectileSpeed()*1000 + Game.Ping;
+                        if (nextSpell) time += me.Distance2D(target)/spellForCast.GetProjectileSpeed()*1000 + Game.Ping;
+
+                        spellForCast.CastSkillShot(target, me.Position,spellForCast.Name);
+                        //Game.PrintMessage("CastSkillShot "+spellForCast.CastSkillShot(target, me.Position,spellForCast.Name),MessageType.ChatMessage);
+                    }
+                    else
+                    {
+                        UseSpell(spellForCast, target,me);
                     }
                     Utils.Sleep(time, "StageCheck");
                     _stage++;
@@ -951,7 +1013,7 @@ namespace InvokerAnnihilation
             }
         }
 
-        private static void UseSpell(Ability spellForCast, Hero target)
+        private static void UseSpell(Ability spellForCast, Hero target,Hero me)
         {
             if (spellForCast.CanBeCasted(target))
             {
@@ -959,6 +1021,7 @@ namespace InvokerAnnihilation
             }
             spellForCast.UseAbility();
             spellForCast.UseAbility(target.Position);
+            spellForCast.UseAbility(me);
         }
 
         private static Hero ClosestToMouse(Hero source, float range = 1000)
