@@ -81,28 +81,21 @@ namespace EscapeMaster
             }
             if (mod!=null && !me.IsInvul())
             {
-                var kun = ObjectMgr.GetEntities<Hero>().FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka && x.IsVisible && x.IsAlive);
+                var kun = ObjectMgr.GetEntities<Hero>().FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka && x.IsVisible && x.IsAlive && x.Team!=me.Team);
                 if (kun != null)
                 {
                     var spell = kun.FindSpell("kunkka_return");
                     if (spell != null && spell.IsInAbilityPhase)
                     {
-                        if (_eul != null && _eul.CanBeCasted() && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(_eul.Name))
-                        {
-                            _eul.UseAbility(me);
-                            Utils.Sleep(250, "kek");
-                            _isIn = false;
-                            return;
-                        }
+                        TryToHideMyAss(me);
+                        return;
                     }
                 }
                 if (mod.RemainingTime <= 0.2)
                 {
                     if (_eul != null && _eul.CanBeCasted() && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(_eul.Name))
                     {
-                        _eul.UseAbility(me);
-                        Utils.Sleep(250, "kek");
-                        _isIn = false;
+                        TryToHideMyAss(me);
                         return;
                     }
                 }
@@ -118,23 +111,57 @@ namespace EscapeMaster
             {
                 _forceStaff = me.FindItem("item_force_staff");
             }
-            
+            var spellList = new List<string>
+            {
+                "puck_phase_shift",
+                "slark_pounce",
+                "mirana_leap"
+            };
+            var safeSpell = me.Spellbook.Spells.FirstOrDefault(x => spellList.Contains(x.Name));
+
             if (_dagger != null && _dagger.CanBeCasted() && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(_dagger.Name))
             {
                 _dagger.UseAbility(Game.MousePosition);
-                Utils.Sleep(250, "kek");
+                Utils.Sleep(400, "kek");
             }
             else if (_forceStaff != null && _forceStaff.CanBeCasted() && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(_forceStaff.Name))
             {
                 _forceStaff.UseAbility(me);
-                Utils.Sleep(250, "kek");
+                Utils.Sleep(400, "kek");
             }
             else if (_eul != null && _eul.CanBeCasted() && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(_eul.Name))
             {
                 _eul.UseAbility(me);
-                Utils.Sleep(250, "kek");
+                Utils.Sleep(400, "kek");
+            }
+            else if (safeSpell != null && safeSpell.CanBeCasted())
+            {
+                safeSpell.UseAbility();
+                Utils.Sleep(400, "kek");  
             }
             _isIn = false;
+        }
+
+        private static void TryToHideMyAss(Hero me)
+        {
+            if (_eul != null && _eul.CanBeCasted() && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(_eul.Name))
+            {
+                _eul.UseAbility(me);
+                Utils.Sleep(400, "kek");
+                _isIn = false;
+                return;
+            }
+            var spellList = new List<string>
+            {
+                "puck_phase_shift",
+                "shadow_demon_disruption",
+                "obsidian_destroyer_astral_imprisonment"
+            };
+            var spell = me.Spellbook.Spells.FirstOrDefault(x=>spellList.Contains(x.Name));
+            if (spell == null) return;
+            spell.UseAbility(me);
+            spell.UseAbility();
+            Utils.Sleep(400,"kek");
         }
     }
 }
