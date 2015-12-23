@@ -52,6 +52,13 @@ namespace ArcAnnihilation
             Caster,
             Nothing
         }
+        private enum BkbUsage
+        {
+            Me, 
+            Clones, 
+            All,
+            NoOne
+        }
         private static void Main()
         {
             Game.OnUpdate += Game_OnUpdate;
@@ -64,6 +71,8 @@ namespace ArcAnnihilation
             //Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
             Menu.AddItem(new MenuItem("LockTarget", "Lock Target").SetValue(true));
             Menu.AddItem(new MenuItem("AutoMidas", "Auto Midas").SetValue(true));
+            Menu.AddItem(new MenuItem("usePrediction", "Use Prediction For Spark").SetValue(true));
+            Menu.AddItem(new MenuItem("BkbUsage", "Bkb Selection").SetValue(new StringList(new[] { "me", "clones", "all","no one" }, 1)));
             //var il=new Menu("Illusion","il");
             //il.AddItem(new MenuItem("orderList", "Use order list").SetValue(false));
             Menu.AddItem(new MenuItem("order", "Clone Order Selection").SetValue(new StringList(new[] { "monkey", "caster", "nothing" }, 1)));
@@ -293,7 +302,7 @@ namespace ArcAnnihilation
                 foreach (var hero in GetCloneList(me))
                 {
                     SpellsUsage(hero, target, distance);
-                    ItemUsage(hero, target, distance);
+                    ItemUsage(hero, target, distance, Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones || Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All);
                     
                     if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) break;
                     hero.Attack(target);
@@ -314,7 +323,9 @@ namespace ArcAnnihilation
             }
 
             SpellsUsage(me, target, distance);
-            ItemUsage(me, target, distance);
+            ItemUsage(me, target, distance,
+                Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Me ||
+                Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All);
             
             if (!Utils.SleepCheck("attacking")) return;
             me.Attack(target);
@@ -339,7 +350,10 @@ namespace ArcAnnihilation
             }
             if (e != null && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name))
             {
-                e.UseAbility(target.Position);
+                var predVector3 = target.NetworkActivity == NetworkActivity.Move && Menu.Item("usePrediction").GetValue<bool>()
+                        ? Prediction.InFront(target, target.MovementSpeed * 3 + Game.Ping / 1000)
+                        : target.Position;
+                e.UseAbility(predVector3);
                 Utils.Sleep(500, me.Handle + e.Name);
             }
             var r = me.Spellbook.SpellR;
@@ -365,7 +379,7 @@ namespace ArcAnnihilation
 
         }
 
-        private static void ItemUsage(Hero me, Hero target, float distance)
+        private static void ItemUsage(Hero me, Hero target, float distance,bool useBkb)
         {
             if (me.IsChanneling()) return;
             var inventory = me.Inventory.Items.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted()/* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
@@ -384,6 +398,13 @@ namespace ArcAnnihilation
                 var refresher = inventory.FirstOrDefault(x => x.Name == "item_refresher");
                 refresher?.UseAbility();
                 Utils.Sleep(500, refresher?.Name + me.Handle);
+            }
+            if (!useBkb) return;
+            {
+                var bkb = inventory.FirstOrDefault(x => x.Name == "item_black_king_bar");
+                if (bkb == null || !bkb.CanBeCasted() || !Utils.SleepCheck(bkb.Name + me.Handle)) return;
+                bkb.UseAbility();
+                Utils.Sleep(500, bkb.Name + me.Handle);
             }
         }
 
