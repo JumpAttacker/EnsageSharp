@@ -18,6 +18,7 @@ namespace ArcAnnihilation
         private static bool _loaded;
         private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true, "npc_dota_hero_arc_warden", true);
         private static Hero _globalTarget;
+        private static Hero _globalTarget2;
 
         private static readonly List<string> Items = new List<string>
         {
@@ -46,6 +47,22 @@ namespace ArcAnnihilation
             "item_sheepstick"
             /*"item_refresher"*/
         };
+
+        private static readonly List<string> CloneOnlyItems = new List<string>
+        {
+            "item_diffusal_blade",
+            "item_flask",
+            "item_clarity",
+            "item_enchanted_mango",
+            "item_bottle",
+            "item_diffusal_blade_2"
+        };
+
+        private static readonly List<string> CloneOnlyComboItems = new List<string>
+        {
+            "item_diffusal_blade",
+            "item_diffusal_blade_2"
+        };
         private enum Orders
         {
             Monkey,
@@ -66,11 +83,14 @@ namespace ArcAnnihilation
             Player.OnExecuteOrder += Player_OnExecuteAction;
             //var dict = Items.ToDictionary(item => item, item => true);
 
-            Menu.AddItem(new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('G', KeyBindType.Press)));
-            Menu.AddItem(new MenuItem("spamHotkey", "Spark Spam").SetValue(new KeyBind('H', KeyBindType.Press)));
+            Menu.AddItem(new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('G', KeyBindType.Press)).DontSave());
+            Menu.AddItem(new MenuItem("spamHotkey", "Spark Spam").SetValue(new KeyBind('H', KeyBindType.Press)).DontSave());
+            Menu.AddItem(new MenuItem("hotkeyClone", "ComboKey with Clones").SetValue(new KeyBind('Z', KeyBindType.Toggle)).DontSave());
             //Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
             Menu.AddItem(new MenuItem("LockTarget", "Lock Target").SetValue(true));
             Menu.AddItem(new MenuItem("AutoMidas", "Auto Midas").SetValue(true));
+            Menu.AddItem(new MenuItem("FirstClone", "All in one").SetValue(true).SetTooltip("when you use any spell/item, at the beginning of the clone will use this"));
+            //Menu.AddItem(new MenuItem("AutoHeal", "Auto Heal/Bottle").SetValue(true).SetTooltip("clone use heal items on main hero if there are no enemies in 500(800) range"));
             Menu.AddItem(new MenuItem("usePrediction", "Use Prediction For Spark").SetValue(true));
             Menu.AddItem(new MenuItem("BkbUsage", "Bkb Selection").SetValue(new StringList(new[] { "me", "clones", "all","no one" }, 1)));
             //var il=new Menu("Illusion","il");
@@ -83,105 +103,151 @@ namespace ArcAnnihilation
 
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
-            if (Menu.Item("order").GetValue<StringList>().SelectedIndex != (int)Orders.Monkey) return;
-            //Game.PrintMessage(args.Order.ToString(), MessageType.ChatMessage);
-            if (args.Order != Order.Stop && args.Order != Order.AttackLocation && args.Order != Order.AttackTarget &&
-                args.Order != Order.Ability && args.Order != Order.AbilityTarget && args.Order != Order.AbilityLocation &&
-                args.Order != Order.MoveLocation && args.Order != Order.MoveTarget && args.Order != Order.Hold) return;
-            
-            foreach (var hero in GetCloneList(sender.Hero))
+            if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int) Orders.Monkey)
             {
-                Ability spell;
-                Ability needed;
-                switch (args.Order)
+                //Game.PrintMessage(args.Order.ToString(), MessageType.ChatMessage);
+                if (args.Order != Order.Stop && args.Order != Order.AttackLocation && args.Order != Order.AttackTarget &&
+                    args.Order != Order.Ability && args.Order != Order.AbilityTarget &&
+                    args.Order != Order.AbilityLocation &&
+                    args.Order != Order.MoveLocation && args.Order != Order.MoveTarget && args.Order != Order.Hold)
+                    return;
+
+                foreach (var hero in GetCloneList(sender.Hero))
                 {
-                    case Order.Stop:
-                        hero.Stop();
-                        break;
-                    case Order.AttackLocation:
-                        hero.Attack(args.TargetPosition);
-                        break;
-                    case Order.AttackTarget:
-                        var target = args.Target;
-                        hero.Attack(target as Unit);
-                        break;
-                    case Order.Ability:
-                        spell = args.Ability;
-                        needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
-                        if (needed != null && needed.CanBeCasted())
-                        {
-                            needed.UseAbility();
-                        }
-                        break;
-                    case Order.AbilityTarget:
-                        spell = args.Ability;
-                        needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
-                        if (needed != null && needed.CanBeCasted())
-                        {
-                            needed.UseAbility(args.Target as Unit);
-                        }
-                        break;
-                    case Order.AbilityLocation:
-                        spell = args.Ability;
-                        needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
-                        if (needed != null && needed.CanBeCasted())
-                        {
-                            needed.UseAbility(args.TargetPosition);
-                        }
-                        break;
-                    case Order.None:
-                        break;
-                    case Order.MoveLocation:
-                        hero.Move(args.TargetPosition);
-                        break;
-                    case Order.MoveTarget:
-                        hero.Move(args.TargetPosition);
-                        break;
-                    case Order.AbilityTargetTree:
-                        break;
-                    case Order.ToggleAbility:
-                        break;
-                    case Order.Hold:
-                        hero.Stop();
-                        break;
-                    case Order.UpgradeAbility:
-                        break;
-                    case Order.DropItem:
-                        break;
-                    case Order.TransferItem:
-                        break;
-                    case Order.PickItem:
-                        break;
-                    case Order.ConsumeRune:
-                        break;
-                    case Order.BuyItem:
-                        break;
-                    case Order.SellItem:
-                        break;
-                    case Order.DisassembleItem:
-                        break;
-                    case Order.MoveItem:
-                        break;
-                    case Order.ToggleAutoCast:
-                        break;
-                    case Order.Taunt:
-                        break;
-                    case Order.Buyback:
-                        break;
-                    case Order.GlyphOfFortification:
-                        break;
-                    case Order.DropFromStash:
-                        break;
-                    case Order.AbilityTargetRune:
-                        break;
-                    case Order.Announce:
-                        break;
-                    case Order.MoveToDirection:
-                        break;
-                    case Order.Patrol:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    Ability spell;
+                    Ability needed;
+                    switch (args.Order)
+                    {
+                        case Order.Stop:
+                            hero.Stop();
+                            break;
+                        case Order.AttackLocation:
+                            hero.Attack(args.TargetPosition);
+                            break;
+                        case Order.AttackTarget:
+                            var target = args.Target;
+                            hero.Attack(target as Unit);
+                            break;
+                        case Order.Ability:
+                            spell = args.Ability;
+                            needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
+                            if (needed != null && needed.CanBeCasted())
+                            {
+                                needed.UseAbility();
+                            }
+                            break;
+                        case Order.AbilityTarget:
+                            spell = args.Ability;
+                            needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
+                            if (needed != null && needed.CanBeCasted())
+                            {
+                                needed.UseAbility(args.Target as Unit);
+                            }
+                            break;
+                        case Order.AbilityLocation:
+                            spell = args.Ability;
+                            needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
+                            if (needed != null && needed.CanBeCasted())
+                            {
+                                needed.UseAbility(args.TargetPosition);
+                            }
+                            break;
+                        case Order.None:
+                            break;
+                        case Order.MoveLocation:
+                            hero.Move(args.TargetPosition);
+                            break;
+                        case Order.MoveTarget:
+                            hero.Move(args.TargetPosition);
+                            break;
+                        case Order.AbilityTargetTree:
+                            break;
+                        case Order.ToggleAbility:
+                            break;
+                        case Order.Hold:
+                            hero.Stop();
+                            break;
+                        case Order.UpgradeAbility:
+                            break;
+                        case Order.DropItem:
+                            break;
+                        case Order.TransferItem:
+                            break;
+                        case Order.PickItem:
+                            break;
+                        case Order.ConsumeRune:
+                            break;
+                        case Order.BuyItem:
+                            break;
+                        case Order.SellItem:
+                            break;
+                        case Order.DisassembleItem:
+                            break;
+                        case Order.MoveItem:
+                            break;
+                        case Order.ToggleAutoCast:
+                            break;
+                        case Order.Taunt:
+                            break;
+                        case Order.Buyback:
+                            break;
+                        case Order.GlyphOfFortification:
+                            break;
+                        case Order.DropFromStash:
+                            break;
+                        case Order.AbilityTargetRune:
+                            break;
+                        case Order.Announce:
+                            break;
+                        case Order.MoveToDirection:
+                            break;
+                        case Order.Patrol:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
+            else if (Menu.Item("FirstClone").GetValue<bool>())
+            {
+                if (args.Order != Order.Ability && args.Order != Order.AbilityTarget &&
+                    args.Order != Order.AbilityLocation)
+                    return;
+                if (!CloneOnlyItems.Contains(args.Ability.Name)) return;
+                foreach (var hero in GetCloneList(sender.Hero).Where(x=>x.Distance2D(sender.Hero)<=1000))
+                {
+                    Ability spell;
+                    Ability needed;
+                    switch (args.Order)
+                    {
+                        case Order.Ability:
+                            spell = args.Ability;
+                            needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
+                            if (needed != null && needed.CanBeCasted())
+                            {
+                                needed.UseAbility(sender.Hero);
+                                args.Process = false;
+                            }
+                            break;
+                        case Order.AbilityTarget:
+                            spell = args.Ability;
+                            needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
+                            if (needed != null && needed.CanBeCasted())
+                            {
+                                needed.UseAbility(args.Target as Unit);
+                                args.Process = false;
+                            }
+                            break;
+                        case Order.AbilityLocation:
+                            spell = args.Ability;
+                            needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
+                            if (needed != null && needed.CanBeCasted())
+                            {
+                                needed.UseAbility(args.TargetPosition);
+                                args.Process = false;
+                            }
+                            break;
+                    }
                 }
             }
         }
@@ -190,8 +256,16 @@ namespace ArcAnnihilation
         {
             if (!_loaded) return;
 
+            Vector2 pos;
+            if (_globalTarget2 != null && _globalTarget2.IsAlive)
+            {
+                pos = Drawing.WorldToScreen(_globalTarget2.Position);
+                Drawing.DrawText("CloneTarget", pos, new Vector2(0, 50), Color.Red,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);
+            }
+
             if (_globalTarget == null || !_globalTarget.IsAlive) return;
-            var pos = Drawing.WorldToScreen(_globalTarget.Position);
+            pos = Drawing.WorldToScreen(_globalTarget.Position);
             Drawing.DrawText("Target", pos, new Vector2(0, 50), Color.Red, FontFlags.AntiAlias | FontFlags.DropShadow);
         }
 
@@ -221,8 +295,25 @@ namespace ArcAnnihilation
                 SparkSpam(me);
                 return;
             }
-            
-            if (!me.IsAlive) return;
+
+            if (Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
+            {
+                if (_globalTarget2 == null || !_globalTarget2.IsValid)
+                {
+                    _globalTarget2 = ClosestToMouse(me, 300);
+                }
+                if (_globalTarget2 != null && _globalTarget2.IsValid && _globalTarget2.IsAlive)
+                {
+                    DoCombo2(me, _globalTarget2);
+                }
+            }
+            else
+            {
+                _globalTarget2 = null;
+            }
+
+            //if (!me.IsAlive) return;
+
             var midas = me.FindItem("item_hand_of_midas");
             if (midas != null && Menu.Item("AutoMidas").GetValue<bool>())
             {
@@ -271,9 +362,51 @@ namespace ArcAnnihilation
             {
                 _globalTarget = ClosestToMouse(me, 300);
             }
-            if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive || !me.CanCast()) return;
+            if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
 
             DoCombo(me, _globalTarget);
+        }
+
+        private static void DoCombo2(Hero me, Hero target)
+        {
+            foreach (var hero in GetCloneList(me))
+            {
+                var d = hero.Distance2D(target);
+                SpellsUsage(hero, target, d);
+                ItemUsage(hero, target, d,
+                    Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
+                    Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
+                if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) continue;
+                hero.Attack(target);
+                Utils.Sleep(350, "clone_attacking" + hero.Handle);
+                /*
+                if (Utils.SleepCheck("clone_attacking" + hero.Handle))
+                {
+                    hero.Attack(target);
+                    Utils.Sleep(UnitDatabase.GetAttackPoint(me) * 1000 - Game.Ping + 50, "clone_attacking" + hero.Handle);
+                }
+                else if (Utils.SleepCheck("clone_moving" + hero.Handle) && me.NetworkActivity != NetworkActivity.Attack && me.NetworkActivity != NetworkActivity.Attack2)
+                {
+                    hero.Move(target.Position);
+                    Utils.Sleep(300, "clone_moving" + hero.Handle);
+                }
+                else
+                {
+                    break;
+                }*/
+            }
+            var illusions = ObjectMgr.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && x.Modifiers.Any(y => y.Name != "modifier_kill")).ToList();
+            foreach (var illusion in illusions.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle) && illusion.Distance2D(target) <= 1500))
+            {
+                illusion.Attack(target);
+                Utils.Sleep(350, "clone_attacking" + illusion.Handle);
+            }
+            var necr = ObjectMgr.GetEntities<Unit>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team).ToList();
+            foreach (var illusion in necr.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle) && illusion.Distance2D(target) <= 1500 && !Equals(illusion, me)))
+            {
+                illusion.Attack(target);
+                Utils.Sleep(350, "clone_attacking" + illusion.Handle);
+            }
         }
 
         private static void SparkSpam(Hero me)
@@ -297,14 +430,16 @@ namespace ArcAnnihilation
         private static void DoCombo(Hero me, Hero target)
         {
             var distance = me.Distance2D(target);
-            if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int) Orders.Caster)
+            if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int)Orders.Caster && !Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
                 foreach (var hero in GetCloneList(me))
                 {
-                    SpellsUsage(hero, target, distance);
-                    ItemUsage(hero, target, distance, Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones || Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All);
-                    
-                    if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) break;
+                    var d = hero.Distance2D(target);
+                    SpellsUsage(hero, target, d);
+                    ItemUsage(hero, target, d,
+                        Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
+                        Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
+                    if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) continue;
                     hero.Attack(target);
                     Utils.Sleep(350, "clone_attacking" + hero.Handle);
                 }
@@ -379,17 +514,28 @@ namespace ArcAnnihilation
 
         }
 
-        private static void ItemUsage(Hero me, Hero target, float distance,bool useBkb)
+        private static void ItemUsage(Hero me, Hero target, float distance, bool useBkb, bool byIllusion=false)
         {
             if (me.IsChanneling()) return;
             var inventory = me.Inventory.Items.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted()/* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
-            var items = inventory.Where(x => Items.Contains(x.Name) && ((x.CastRange == 0 && distance <= 700) || x.CastRange >= distance)).ToList();
+            var items = inventory.Where(x => Items.Contains(x.Name) && ((x.CastRange == 0 && distance <= 1150) || x.CastRange >= distance)).ToList();
             foreach (var item in items)
             {
                 item.UseAbility();
                 item.UseAbility(target);
                 item.UseAbility(target.Position);
                 Utils.Sleep(500, item.Name + me.Handle);
+            }
+            var underDiff = target.Modifiers.Any(x => x.Name == "modifier_item_diffusal_blade_slow");
+            //Game.PrintMessage("Under SLow?: "+target.Modifiers.Any(x=>x.Name=="modifier_item_diffusal_blade_slow"),MessageType.ChatMessage);
+            if (byIllusion && !underDiff && !target.IsStunned() && !target.IsHexed())
+            {
+                var items2 = inventory.Where(x => CloneOnlyComboItems.Contains(x.Name) && ((x.CastRange == 0 && distance <= 650) || x.CastRange >= distance)).ToList();
+                foreach (var item in items2)
+                {
+                    item.UseAbility(target);
+                    Utils.Sleep(500, item.Name + me.Handle);
+                }
             }
             if (!items.Any()) return;
             {
@@ -411,7 +557,7 @@ namespace ArcAnnihilation
         private static Hero ClosestToMouse(Hero source, float range = 600)
         {
             var mousePosition = Game.MousePosition;
-            var enemyHeroes = ObjectMgr.GetEntities<Hero>().Where(x => x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible && x.Distance2D(mousePosition) <= range && !x.IsMagicImmune()).OrderBy(source.Distance2D);
+            var enemyHeroes = ObjectMgr.GetEntities<Hero>().Where(x => x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible && x.Distance2D(mousePosition) <= range /*&& !x.IsMagicImmune()*/).OrderBy(source.Distance2D);
             return enemyHeroes.FirstOrDefault();
         }
 
