@@ -21,11 +21,11 @@ namespace InvokerAnnihilation
         private const int WmKeyup = 0x0101;
         private static int _combo;
         //private static readonly SpellStruct[] Spells = new SpellStruct[12];
-        private static readonly ComboStruct[] Combos = new ComboStruct[11];
+        private static readonly ComboStruct[] Combos = new ComboStruct[12];
         private static int _maxCombo;
         private static bool _inAction;
         private static bool _initNewCombo;
-        private static byte _stage;
+        private static uint _stage;
         private static readonly Dictionary<string, SpellStruct> SpellInfo = new Dictionary<string, SpellStruct>();
         private static ParticleEffect _predictionEffect;
         private static Ability _spellForCast;
@@ -121,7 +121,8 @@ namespace InvokerAnnihilation
                 {"item_blink",true},
                 {"item_refresher",true},
                 {"item_orchid",true},
-                {"item_sheepstick",true}
+                {"item_sheepstick",true},
+                {"item_urn_of_shadows",true}
             };
             var settings = new Menu("Settings", "Settings");
             settings.AddItem(new MenuItem("items", "Items:").SetValue(new AbilityToggler(items)));
@@ -583,6 +584,7 @@ namespace InvokerAnnihilation
                 Combos[_maxCombo] = new ComboStruct(new[] {tornado, blast, coldsnap},3);
                 Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, coldsnap},3);
                 Combos[_maxCombo] = new ComboStruct(new[] {coldsnap, alacrity, forgeSpirit},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, meteor,blast,ss,icewall},5);
 
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
@@ -733,11 +735,13 @@ namespace InvokerAnnihilation
             var icewall = me.FindSpell("invoker_ice_wall");
             var deafblast = me.FindSpell("invoker_deafening_blast");
             var hex = me.FindItem("item_sheepstick");
+            var urn = me.FindItem("item_urn_of_shadows");
             var orchid = me.FindItem("item_orchid");
             var meteor = me.FindSpell("invoker_chaos_meteor");
+            var ss = me.FindSpell("invoker_sun_strike");
             //var emp = me.FindSpell("invoker_emp");
             /*
-            var ss = me.FindSpell("invoker_sun_strike");
+            
             var coldsnap = me.FindSpell("invoker_cold_snap");
             var ghostwalk = me.FindSpell("invoker_ghost_walk");
             
@@ -769,39 +773,54 @@ namespace InvokerAnnihilation
                 myBoy.Attack(target);
                 Utils.Sleep(300, myBoy.Handle.ToString());
             }
-            if (_stage > 2 && !target.IsHexed() && !target.IsStunned())
+            if (me.CanUseItems())
             {
-                if (hex != null && hex.CanBeCasted(target) &&
-                    Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.Name) && Utils.SleepCheck("items"))
+                if (urn != null && urn.CanBeCasted(target))
                 {
-                    hex.UseAbility(target);
-                    Utils.Sleep(300,"items");
+                    var urnMod = target.Modifiers.Any(x => x.Name == "modifier_item_urn_damage") &&
+                                 Utils.SleepCheck(urn.Name);
+                    if (!urnMod)
+                    {
+                        urn.UseAbility(target);
+                        Utils.Sleep(300, urn.Name);
+                    }
                 }
-                if (orchid != null && orchid.CanBeCasted(target) &&
-                    Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(orchid.Name) && Utils.SleepCheck("items"))
+                if (_stage > 2 && !target.IsHexed() && !target.IsStunned())
                 {
-                    orchid.UseAbility(target);
-                    Utils.Sleep(300,"items");
+                    if (hex != null && hex.CanBeCasted(target) &&
+                        Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.Name) &&
+                        Utils.SleepCheck("items"))
+                    {
+                        hex.UseAbility(target);
+                        Utils.Sleep(300, "items");
+                    }
+                    if (orchid != null && orchid.CanBeCasted(target) &&
+                        Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(orchid.Name) &&
+                        Utils.SleepCheck("items"))
+                    {
+                        orchid.UseAbility(target);
+                        Utils.Sleep(300, "items");
+                    }
                 }
-            }
-            if (dagger != null && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(dagger.Name) &&
-                dagger.CanBeCasted() && Utils.SleepCheck("blinker") && me.Distance2D(target)>= 700)
-            {
-                var dist = 300;
-                var angle = me.FindAngleBetween(target.Position, true);
-                var point =
-                    new Vector3(
-                        (float) (target.Position.X -
-                                 dist *
-                                 Math.Cos(angle)),
-                        (float) (target.Position.Y -
-                                 dist *
-                                 Math.Sin(angle)), 0);
-                if (me.Distance2D(target) <= 1150+700)
-                    dagger.UseAbility(point);
-                else
-                    me.Move(target.Position);
-                Utils.Sleep(250, "blinker");
+                if (dagger != null && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(dagger.Name) &&
+                    dagger.CanBeCasted() && Utils.SleepCheck("blinker") && me.Distance2D(target) >= 700)
+                {
+                    var dist = 300;
+                    var angle = me.FindAngleBetween(target.Position, true);
+                    var point =
+                        new Vector3(
+                            (float) (target.Position.X -
+                                     dist*
+                                     Math.Cos(angle)),
+                            (float) (target.Position.Y -
+                                     dist*
+                                     Math.Sin(angle)), 0);
+                    if (me.Distance2D(target) <= 1150 + 700)
+                        dagger.UseAbility(point);
+                    else
+                        me.Move(target.Position);
+                    Utils.Sleep(250, "blinker");
+                }
             }
             switch (_stage)
             {
@@ -863,7 +882,7 @@ namespace InvokerAnnihilation
                                 }
                                 else
                                 {
-                                    LetsTryCastSpell(me, target, _spellForCast, Equals(nextSpell, deafblast) || Equals(nextSpell, meteor) /*|| Equals(nextSpell, emp)*/);
+                                    LetsTryCastSpell(me, target, _spellForCast, Equals(nextSpell, deafblast) || Equals(nextSpell, meteor)|| Equals(nextSpell, ss) /*|| Equals(nextSpell, emp)*/);
                                 }
                             }
                             else
@@ -907,11 +926,13 @@ namespace InvokerAnnihilation
                     }
                     break;
             }
-            if (refresher == null || !Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(refresher.Name) || refresher.AbilityState != AbilityState.Ready || _stage < Combos[_combo].GetRefreshPos()|| Combos[_combo].GetRefreshPos()==-1)
+            if (refresher == null || !Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(refresher.Name) ||
+                refresher.AbilityState != AbilityState.Ready || _stage < Combos[_combo].GetRefreshPos() ||
+                Combos[_combo].GetRefreshPos() == -1)
                 return;
             //Game.PrintMessage($"refreshPos {Combos[_combo].GetRefreshPos()} Combo: {_combo} Stage: {_stage}",MessageType.ChatMessage);
             refresher.UseAbility();
-            _stage = 3;
+            _stage --;
         }
 
         private static void LetsTryCastSpell(Hero me, Hero target, Ability spellForCast, bool nextSpell=false)
@@ -960,7 +981,7 @@ namespace InvokerAnnihilation
                     _stage++;
                 }
             }
-            else if (eulmodif == null && !Equals(spellForCast, ss))
+            else if (eulmodif == null /*&& !Equals(spellForCast, ss)*/)
             {
                 if (icewall != null && Equals(spellForCast, icewall))
                 {
@@ -978,7 +999,7 @@ namespace InvokerAnnihilation
                     }
                     else
                     {
-                        //Game.PrintMessage("suka",MessageType.ChatMessage);
+                        //Game.PrintMessage("suka: " + spellForCast.Name,MessageType.ChatMessage);
                         UseSpell(spellForCast, target,me);
                     }
                     Utils.Sleep(time, "StageCheck");
