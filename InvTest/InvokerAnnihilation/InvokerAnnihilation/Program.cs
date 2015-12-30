@@ -34,8 +34,6 @@ namespace InvokerAnnihilation
         private static bool _lastAction;
         //============================================================
         //============================================================
-        private static ulong _myKey='G';
-        private static bool _timetochange;
         private static bool _sunstrikekill;
         //============================================================
         private static Hero _globalTarget;
@@ -58,6 +56,7 @@ namespace InvokerAnnihilation
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;*/
+            Menu.AddItem(new MenuItem("Hotkey", "Combo Key").SetValue(new KeyBind('G', KeyBindType.Press)));
             var sunStrikeSettings=new Menu("Sun Strike Settings","ssSettings");
             /*sunStrikeSettings.AddItem(
                 new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('T', KeyBindType.Press))
@@ -327,12 +326,7 @@ namespace InvokerAnnihilation
             {
                 _sunstrikekill = args.Msg != WmKeyup;
             }
-            if (_timetochange && args.Msg == WmKeyup && args.WParam >= 0x41 && args.WParam <= 0x5A)
-            {
-                _timetochange = false;
-                _myKey = args.WParam;
-            }
-            if (args.WParam == _myKey)
+            if (args.WParam == Menu.Item("Hotkey").GetValue<KeyBind>().Key)
             {
                 if (Game.IsKeyDown(0x11))
                 {
@@ -758,7 +752,7 @@ namespace InvokerAnnihilation
             {
                 _initNewCombo = true;
                 _stage = 1;
-                PrintInfo("Starting new combo! " + $"[{_combo + 1}] target: {target.Name}");
+                //PrintInfo("Starting new combo! " + $"[{_combo + 1}] target: {target.Name}");
             }
             if (!Utils.SleepCheck("StageCheck")) return;
             #endregion
@@ -937,16 +931,20 @@ namespace InvokerAnnihilation
             */
             var meteor = me.FindSpell("invoker_chaos_meteor");
             var eulmodif = target.Modifiers.FirstOrDefault(x => x.Name == "modifier_eul_cyclone" || x.Name == "modifier_invoker_tornado");
-            var timing = (Equals(spellForCast, ss))
+            /*foreach (var source in target.Modifiers.ToList())
+            {
+                PrintInfo(source.Name+": "+source.RemainingTime);
+            }*/
+            var timing = Equals(spellForCast, ss)
                 ? 1.7
-                : (Equals(spellForCast, meteor))
+                : Equals(spellForCast, meteor)
                     ? 1.3
                     : Equals(spellForCast, blast)
                         ? me.Distance2D(target)/1100 + Game.Ping/1000
                         : (Equals(spellForCast, icewall))
                             ? 2.5
                             : Equals(spellForCast, emp) ? 2.9 : 0;
-                        
+
             if (eulmodif!=null && eulmodif.RemainingTime<=timing)
             {
                 if (icewall != null && Equals(spellForCast, icewall))
@@ -980,6 +978,7 @@ namespace InvokerAnnihilation
                     }
                     else
                     {
+                        //Game.PrintMessage("suka",MessageType.ChatMessage);
                         UseSpell(spellForCast, target,me);
                     }
                     Utils.Sleep(time, "StageCheck");
