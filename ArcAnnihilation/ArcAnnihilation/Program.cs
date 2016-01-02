@@ -617,7 +617,7 @@ namespace ArcAnnihilation
         private static void Orbwalk(
             Hero me,
             Unit target,
-            float bonusWindupMs = 0,
+            float bonusWindupMs = 100,
             float bonusRange = 0)
         {
             if (me == null)
@@ -646,23 +646,23 @@ namespace ArcAnnihilation
             {
                 var canAttack = !AttackOnCooldown(me,target, bonusWindupMs)
                                 && !target.IsAttackImmune() && !target.IsInvul() && me.CanAttack();
-                if (canAttack && Utils.SleepCheck("Orbwalk.Attack"))
+                if (canAttack && Utils.SleepCheck("!Orbwalk.Attack"))
                 {
                     me.Attack(target);
                     Utils.Sleep(
                         UnitDatabase.GetAttackPoint(me) * 1000 + me.GetTurnTime(target) * 1000,
-                        "Orbwalk.Attack");
+                        "!Orbwalk.Attack");
                     return;
                 }
             }
             var canCancel = (CanCancelAnimation(me) && AttackOnCooldown(me,target, bonusWindupMs))
                             || (!isValid && !me.IsAttacking() && CanCancelAnimation(me));
-            if (!canCancel || !Utils.SleepCheck("Orbwalk.Move") || !Utils.SleepCheck("Orbwalk.Attack"))
+            if (!canCancel || !Utils.SleepCheck("!Orbwalk.Move") || !Utils.SleepCheck("!Orbwalk.Attack"))
             {
                 return;
             }
             if (target != null) me.Move(target.Position);
-            Utils.Sleep(100, "Orbwalk.Move");
+            Utils.Sleep(100, "!Orbwalk.Move");
         }
 
         private static bool AttackOnCooldown(Hero me, Entity target = null, float bonusWindupMs = 0)
