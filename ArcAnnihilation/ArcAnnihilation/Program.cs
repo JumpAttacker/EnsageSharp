@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Ensage;
@@ -36,6 +37,7 @@ namespace ArcAnnihilation
             "item_arcane_boots",
             "item_guardian_greaves",
             "item_shivas_guard",
+            "item_ethereal_blade",
 
             "item_soul_ring",
             "item_blade_mail",
@@ -49,6 +51,17 @@ namespace ArcAnnihilation
 
             "item_sheepstick"
             /*"item_refresher"*/
+        };
+
+        private static readonly List<string> CloneHealItems = new List<string>
+        {
+            "item_flask",
+            "item_clarity",
+            "item_enchanted_mango",
+            "item_guardian_greaves",
+            "item_arcane_boots",
+            "item_sphere",
+            "item_bottle"
         };
 
         private static readonly List<string> CloneOnlyItems = new List<string>
@@ -87,19 +100,54 @@ namespace ArcAnnihilation
             //var dict = Items.ToDictionary(item => item, item => true);
             Menu.AddItem(new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('G', KeyBindType.Press)));
             Menu.AddItem(new MenuItem("spamHotkey", "Spark Spam").SetValue(new KeyBind('H', KeyBindType.Press)));
-            Menu.AddItem(new MenuItem("hotkeyClone", "ComboKey with Clones").SetValue(new KeyBind('Z', KeyBindType.Toggle)));
+            Menu.AddItem(
+                new MenuItem("hotkeyClone", "ComboKey with Clones").SetValue(new KeyBind('Z', KeyBindType.Toggle)));
             //Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
             Menu.AddItem(new MenuItem("LockTarget", "Lock Target").SetValue(true));
             Menu.AddItem(new MenuItem("AutoMidas", "Auto Midas").SetValue(true));
-            Menu.AddItem(new MenuItem("FirstClone", "Ez Heal").SetValue(true).SetTooltip("when you use some heal-items, at the beginning of the clone will use this"));
+            Menu.AddItem(
+                new MenuItem("FirstClone", "Ez Heal").SetValue(true)
+                    .SetTooltip("when you use some heal-items, at the beginning of the clone will use this"));
             //Menu.AddItem(new MenuItem("AutoHeal", "Auto Heal/Bottle").SetValue(true).SetTooltip("clone use heal items on main hero if there are no enemies in 500(800) range"));
+            var autoheal=new Menu("Auto Heal","aheal");
+            autoheal.AddItem(
+                new MenuItem("AutoHeal.Enable", "Auto Heal").SetValue(new KeyBind('X', KeyBindType.Toggle))
+                    .SetTooltip(
+                        "clone use heal items on main hero if there are no enemies in selected range. But ll still use insta heal items"));
+            autoheal.AddItem(
+                            new MenuItem("AutoHeal.Range", "Enemy checker").SetValue(new Slider(500, 0, 1000)).SetTooltip("check enemy in selected range"));
+
+
+            var orbwalnking = new Menu("OrbWalking", "ow");
+            orbwalnking.AddItem(
+                            new MenuItem("OrbWalking.Enable", "Enable OrbWalking").SetValue(true));
+            orbwalnking.AddItem(
+                new MenuItem("OrbWalking.bonusWindupMs", "Bonus Windup Time").SetValue(new Slider(100, 100, 1000))
+                    .SetTooltip("Time between attacks"));
+
+            var daggerSelection = new Menu("Dagger", "dagger");
+            /*daggerSelection.AddItem(
+                            new MenuItem("Dagger.Enable", "Enable Dagger").SetValue(true));*/
+            daggerSelection.AddItem(
+                new MenuItem("Dagger.CloseRange", "Min distance between target and blink position").SetValue(
+                    new Slider(200, 100, 800)));
+            daggerSelection.AddItem(
+                new MenuItem("Dagger.MinDistance", "Min distance for blink").SetValue(new Slider(400, 100, 800)));
+
+
             Menu.AddItem(new MenuItem("usePrediction", "Use Prediction For Spark").SetValue(true));
-            Menu.AddItem(new MenuItem("BkbUsage", "Bkb Selection").SetValue(new StringList(new[] { "me", "clones", "all","no one" }, 1)));
+            Menu.AddItem(
+                new MenuItem("BkbUsage", "Bkb Selection").SetValue(
+                    new StringList(new[] {"me", "clones", "all", "no one"}, 1)));
             //var il=new Menu("Illusion","il");
             //il.AddItem(new MenuItem("orderList", "Use order list").SetValue(false));
-            Menu.AddItem(new MenuItem("order", "Clone Order Selection").SetValue(new StringList(new[] { "monkey", "caster", "nothing" }, 1)));
-            
-            //Menu.AddSubMenu(il);
+            Menu.AddItem(
+                new MenuItem("order", "Clone Order Selection").SetValue(
+                    new StringList(new[] {"monkey", "caster", "nothing"}, 1)));
+
+            Menu.AddSubMenu(daggerSelection);
+            Menu.AddSubMenu(autoheal);
+            Menu.AddSubMenu(orbwalnking);
             Menu.AddToMainMenu();
         }
 
@@ -259,11 +307,37 @@ namespace ArcAnnihilation
             if (!_loaded) return;
 
             Vector2 pos;
-            if (_globalTarget2 != null && _globalTarget2.IsAlive)
+            if (Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
-                pos = Drawing.WorldToScreen(_globalTarget2.Position);
-                Drawing.DrawText("CloneTarget", pos, new Vector2(0, 50), Color.Red,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                var startPos = new Vector2(Drawing.Width - 250, 100);
+                var size = new Vector2(180, 90);
+                Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
+                Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
+                Drawing.DrawText("Clone Mode is Active", startPos + new Vector2(10, 10),new Vector2(20), new Color(0, 155, 255),
+                    FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
+                    FontFlags.StrikeOut);
+                if (_globalTarget2 != null && _globalTarget2.IsAlive)
+                {
+                    pos = Drawing.WorldToScreen(_globalTarget2.Position);
+                    Drawing.DrawText("CloneTarget", pos, new Vector2(0, 50), Color.Red,
+                        FontFlags.AntiAlias | FontFlags.DropShadow);
+                    var name = "materials/ensage_ui/heroes_horizontal/" + _globalTarget2.Name.Replace("npc_dota_hero_", "") + ".vmat";
+                    size=new Vector2(50,50);
+                    Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(13, -6),
+                        Drawing.GetTexture(name));
+                    Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(14, -5),
+                        new Color(0, 0, 0, 255), true);
+                }
+            }
+            if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
+            {
+                var startPos = new Vector2(Drawing.Width - 250, 190);
+                var size = new Vector2(180, 30);
+                Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
+                Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
+                Drawing.DrawText("AutoHeal is Active", startPos + new Vector2(10, 10), new Vector2(20), new Color(0, 155, 255),
+                    FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
+                    FontFlags.StrikeOut);
             }
 
             if (_globalTarget == null || !_globalTarget.IsAlive) return;
@@ -309,6 +383,19 @@ namespace ArcAnnihilation
             }
             foreach (var clone in GetCloneList(me))
             {
+                if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
+                {
+                    var enemy =
+                        ObjectMgr.GetEntities<Unit>()
+                            .Any(
+                                x =>
+                                    x.Team == me.GetEnemyTeam() && x.IsAlive && x.IsVisible &&
+                                    x.Distance2D(me) < Menu.Item("AutoHeal.Range").GetValue<Slider>().Value);
+                    if (!enemy)
+                    {
+                        CloneUseHealItems(clone, me, clone.Distance2D(me));
+                    }
+                }
                 handle = clone.Handle;
                 if (LastActivity.TryGetValue(handle, out act) && clone.NetworkActivity == act) continue;
                 LastActivity.Remove(handle);
@@ -326,7 +413,7 @@ namespace ArcAnnihilation
             {
                 if (_globalTarget2 == null || !_globalTarget2.IsValid)
                 {
-                    _globalTarget2 = ClosestToMouse(me, 300);
+                    _globalTarget2 = ClosestToMouse(me, 500);
                 }
                 if (_globalTarget2 != null && _globalTarget2.IsValid && _globalTarget2.IsAlive)
                 {
@@ -343,17 +430,22 @@ namespace ArcAnnihilation
             var midas = me.FindItem("item_hand_of_midas");
             if (midas != null && Menu.Item("AutoMidas").GetValue<bool>())
             {
-                if (midas.CanBeCasted() && Utils.SleepCheck(me.Handle + "midas") && me.IsAlive)
+                if (midas.CanBeCasted() && Utils.SleepCheck(me.Handle + "midas") && me.IsAlive && !me.IsInvisible())
                 {
                     var enemy =
                         ObjectMgr.GetEntities<Unit>()
-                            .FirstOrDefault(
+                            .Where(
                                 x =>
-                                    x.Team != me.Team && (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane || x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege || x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
-                                    x.Distance2D(me) <= 600);
+                                    x.Team != me.Team &&
+                                    (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
+                                    x.Distance2D(me) <= 600).OrderByDescending(x => x.Health)
+                            .DefaultIfEmpty(null)
+                            .FirstOrDefault();
                     if (enemy != null)
                     {
-                        Utils.Sleep(1000, me.Handle + "midas");
+                        Utils.Sleep(500, me.Handle + "midas");
                         midas.UseAbility(enemy);
                     }
                 }
@@ -363,12 +455,17 @@ namespace ArcAnnihilation
                     if (midas == null || !midas.CanBeCasted()) continue;
                     var enemy =
                         ObjectMgr.GetEntities<Unit>()
-                            .FirstOrDefault(
+                            .Where(
                                 x =>
-                                    x.Team != me.Team && (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane || x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege || x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
-                                    x.Distance2D(clone) <= 600);
+                                    x.Team != me.Team &&
+                                    (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
+                                    x.Distance2D(clone) <= 600).OrderByDescending(x => x.Health)
+                            .DefaultIfEmpty(null)
+                            .FirstOrDefault();
                     if (enemy == null) continue;
-                    Utils.Sleep(1000, clone.Handle + "midas");
+                    Utils.Sleep(500, clone.Handle + "midas");
                     midas.UseAbility(enemy);
                 }
             }
@@ -393,6 +490,47 @@ namespace ArcAnnihilation
             DoCombo(me, _globalTarget);
         }
 
+        private static void CloneUseHealItems(Hero clone, Hero me, float distance)
+        {
+            var handle = clone.Handle;
+            
+            var items = clone.Inventory.Items.Where(x => CloneHealItems.Contains(x.Name) && x.CanBeCasted() && x.CastRange+200>distance && Utils.SleepCheck(handle+x.Name));
+            foreach (var item in items)
+            {
+                switch (item.Name)
+                {
+                    case "item_flask":
+                        item.UseAbility(me);
+                        Utils.Sleep(500,(handle+item.Name).ToString(CultureInfo.InvariantCulture));
+                        break;
+                    case "item_clarity":
+                        item.UseAbility(me);
+                        Utils.Sleep(500, (handle + item.Name).ToString(CultureInfo.InvariantCulture));
+                        break;
+                    case "item_enchanted_mango":
+                        item.UseAbility(me);
+                        Utils.Sleep(500, (handle + item.Name).ToString(CultureInfo.InvariantCulture));
+                        break;
+                    case "item_sphere":
+                        item.UseAbility(me);
+                        Utils.Sleep(500, (handle + item.Name).ToString(CultureInfo.InvariantCulture));
+                        break;
+                    case "item_bottle":
+                        var bottlemod = me.Modifiers.Any(x => x.Name == "modifier_bottle_regeneration");
+                        if (!bottlemod && item.CurrentCharges > 0)
+                        {
+                            item.UseAbility(me);
+                            Utils.Sleep(500, (handle + item.Name).ToString(CultureInfo.InvariantCulture));
+                        }
+                        break;
+                    default:
+                        item.UseAbility();
+                        Utils.Sleep(500, (handle + item.Name).ToString(CultureInfo.InvariantCulture));
+                        break;
+                }
+            }
+        }
+
         private static void DoCombo2(Hero me, Hero target)
         {
             foreach (var hero in GetCloneList(me))
@@ -401,15 +539,22 @@ namespace ArcAnnihilation
                 var inv = hero.Inventory.Items;
                 var enumerable = inv as Item[] ?? inv.ToArray();
                 var dagger = enumerable.Any(x => x.Name == "item_blink" && x.Cooldown == 0);
+
                 SpellsUsage(hero, target, d, dagger);
                 ItemUsage(hero, enumerable, target, d,
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
+                if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
+                {
+                    Orbwalk(hero, target, Menu.Item("OrbWalking.bonusWindupMs").GetValue<Slider>().Value);
+                }
+                else
+                {
+                    if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) continue;
+                    hero.Attack(target);
+                    Utils.Sleep(350, "clone_attacking" + hero.Handle);
+                }
                 
-                Orbwalk(hero, target);/*
-                if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) continue;
-                hero.Attack(target);
-                Utils.Sleep(350, "clone_attacking" + hero.Handle);*/
 
                 /*
                 if (Utils.SleepCheck("clone_attacking" + hero.Handle))
@@ -483,11 +628,15 @@ namespace ArcAnnihilation
                     ItemUsage(hero, enumerable, target, d,
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
-                    Orbwalk(hero, target);
-                    /*
-                    if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) continue;
-                    hero.Attack(target);
-                    Utils.Sleep(350, "clone_attacking" + hero.Handle);*/
+                    if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
+                    {
+                        Orbwalk(hero, target, Menu.Item("OrbWalking.bonusWindupMs").GetValue<Slider>().Value);
+                    }
+                    {
+                        if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) continue;
+                        hero.Attack(target);
+                        Utils.Sleep(350, "clone_attacking" + hero.Handle);
+                    }
                 }
             }
             var illusions = ObjectMgr.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && x.Modifiers.Any(y => y.Name != "modifier_kill")).ToList();
@@ -570,14 +719,46 @@ namespace ArcAnnihilation
             return _clones;
 
         }
-
         private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, float distance, bool useBkb, bool byIllusion = false)
         {
             if (me.IsChanneling()) return;
             var inventory = inv.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted()/* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
-            var items = inventory.Where(x => Items.Contains(x.Name) && ((x.CastRange == 0 && distance <= 1150) || x.CastRange >= distance)).ToList();
+            var items =
+                inventory.Where(
+                    x =>
+                        Items.Contains(x.Name) &&
+                        ((x.CastRange == 0 && distance <= 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value) ||
+                         x.CastRange >= distance)).ToList();
             foreach (var item in items)
             {
+                if (item.Name == "item_blink")
+                {
+                    if (distance > 1150)
+                    {
+                        var point = new Vector3(
+                            (float)
+                                (target.Position.X -
+                                 Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value*
+                                 Math.Cos(me.FindAngleBetween(target.Position, true))),
+                            (float)
+                                (target.Position.Y -
+                                 Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value*
+                                 Math.Sin(me.FindAngleBetween(target.Position, true))),
+                            target.Position.Z);
+                        var dist = me.Distance2D(point);
+                        if (dist >= Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value && dist <= 1150)
+                        {
+                            item.UseAbility(point);
+                            Utils.Sleep(500, item.Name + me.Handle);
+                        }
+                    }
+                    else if (distance>Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value)
+                    {
+                        item.UseAbility(target.Position);
+                        Utils.Sleep(500, item.Name + me.Handle);
+                    }
+                    continue;
+                }
                 item.UseAbility();
                 item.UseAbility(target);
                 item.UseAbility(target.Position);
@@ -595,7 +776,7 @@ namespace ArcAnnihilation
                     Utils.Sleep(500, item.Name + me.Handle);
                 }
             }
-            if (useBkb)
+            if (useBkb && distance<650)
             {
                 var bkb = inventory.FirstOrDefault(x => x.Name == "item_black_king_bar");
                 if (bkb != null && bkb.CanBeCasted() && Utils.SleepCheck(bkb.Name + me.Handle))
