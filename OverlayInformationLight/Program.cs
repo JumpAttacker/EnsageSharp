@@ -181,6 +181,7 @@ namespace OverlayInformationLight
                 {"item_blink", true},
                 {"item_ward_observer", true},
                 {"item_ward_sentry", true},
+                {"item_black_king_bar", true},
                 {"item_ward_dispenser", true}
             };
             dangitems.AddItem(new MenuItem("dangItemsUsage", "Item List: ").SetValue(new AbilityToggler(dict)));
@@ -210,6 +211,14 @@ namespace OverlayInformationLight
             settings.AddItem(new MenuItem("BarPosY", "HP/MP bar Position Y").SetValue(new Slider(0, -300, 300)));
             settings.AddItem(new MenuItem("BarSizeY", "HP/MP bar Size Y").SetValue(new Slider(0, -10, 10)));
 
+            var visibility = new Menu("Visibility", "Visibility");
+            visibility.AddItem(new MenuItem("Visibility.Enable", "Enable").SetValue(true));
+            visibility.AddItem(new MenuItem("Visibility.Red", "Red").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Red));
+            visibility.AddItem(new MenuItem("Visibility.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Green));
+            visibility.AddItem(new MenuItem("Visibility.Blue", "Blue").SetValue(new Slider(100, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Blue));
+            visibility.AddItem(new MenuItem("Visibility.Alpha", "Alpha").SetValue(new Slider(50, 0, 255)).SetFontStyle(FontStyle.Bold, Color.WhiteSmoke));
+
+            Menu.AddSubMenu(visibility);
             Menu.AddSubMenu(dangitems);
             Menu.AddSubMenu(ultimates);
             Menu.AddSubMenu(autoItems);
@@ -498,7 +507,7 @@ namespace OverlayInformationLight
                     try
                     {
                         v = ObjectMgr.GetPlayerById(i).Hero;
-                        if (v == null) continue;
+                        if (v == null || !v.IsValid || !v.Player.IsValid || v.Player.ConnectionState != ConnectionState.Connected) continue;
                     }
                     catch
                     {
@@ -626,10 +635,14 @@ namespace OverlayInformationLight
                 if (midas != null && midas.CanBeCasted() && !_me.IsInvisible())
                 {
                     var creep =
-                        ObjectMgr
-                            .GetEntities<Unit>(
-                            ).FirstOrDefault(x => x is Creep && x.IsSpawned && x.IsAlive &&
-                                                  x.IsVisible && _me.Distance2D(x) <= midas.CastRange && x.Team != _me.Team && midas.CanBeCasted(x));
+                        ObjectMgr.GetEntities<Unit>()
+                            .FirstOrDefault(
+                                x =>
+                                    x.Team != _me.Team &&
+                                    (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
+                                    x.Distance2D(_me) <= 600);
                     midas.UseAbility(creep);
                     Utils.Sleep(250, "AutoItems");
                     //PrintError("midas.CastRange: " + midas.CastRange);
@@ -797,6 +810,36 @@ namespace OverlayInformationLight
             }
             */
             #endregion
+
+            #region Testing
+
+            if (Menu.Item("Visibility.Enable").GetValue<bool>())
+            {
+                for (uint i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        if (Recorder[i].Hero == null || !Recorder[i].Hero.IsValid || !Recorder[i].Hero.Player.IsValid ||
+                            Recorder[i].Hero.Player.ConnectionState != ConnectionState.Connected ||
+                            !Recorder[i].Hero.IsVisibleToEnemies || Recorder[i].Hero.Team != _me.Team) continue;
+                        var v = Recorder[i].Hero; //ObjectMgr.GetPlayerById(i).Hero;
+                        var pos = HUDInfo.GetTopPanelPosition(v);
+                        var size = new Vector2((float) HUDInfo.GetTopPanelSizeX(v), (float) HUDInfo.GetTopPanelSizeY(v));
+                        DrawFilledBox(pos, size,
+                            new Color(Menu.Item("Visibility.Red").GetValue<Slider>().Value,
+                                Menu.Item("Visibility.Green").GetValue<Slider>().Value,
+                                Menu.Item("Visibility.Blue").GetValue<Slider>().Value,
+                                Menu.Item("Visibility.Alpha").GetValue<Slider>().Value));
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+
+            #endregion
+
         }
 
         #endregion
@@ -900,7 +943,7 @@ namespace OverlayInformationLight
                     continue;
                 }
                 if (v == null) continue;*/
-                if (Recorder[i].Hero == null || !Recorder[i].Hero.IsValid) continue;
+                if (Recorder[i].Hero == null || !Recorder[i].Hero.IsValid || !Recorder[i].Hero.Player.IsValid || Recorder[i].Hero.Player.ConnectionState!=ConnectionState.Connected) continue;
 
                 var v = Recorder[i];
                 var pos = HUDInfo.GetTopPanelPosition(v.Hero) + new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value, Menu.Item("BarPosY").GetValue<Slider>().Value);
@@ -1347,10 +1390,10 @@ namespace OverlayInformationLight
             _line.Antialias = false;
             _line.Width = b.X + 1;
 
-            vLine[0].X = b.X + (b.X + 1)/2;
-            vLine[0].Y = b.Y;
-            vLine[1].X = b.X + (b.X + 1)/2;
-            vLine[1].Y = b.Y + b.Y;
+            vLine[0].X = a.X + (b.X + 1)/2;
+            vLine[0].Y = a.Y;
+            vLine[1].X = a.X + (b.X + 1)/2;
+            vLine[1].Y = a.Y + b.Y;
 
             _line.Begin();
             _line.Draw(vLine, color);
