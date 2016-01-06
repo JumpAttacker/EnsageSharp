@@ -212,7 +212,7 @@ namespace OverlayInformationLight
             settings.AddItem(new MenuItem("BarSizeY", "HP/MP bar Size Y").SetValue(new Slider(0, -10, 10)));
 
             var visibility = new Menu("Visibility", "Visibility");
-            visibility.AddItem(new MenuItem("Visibility.Enable", "Enable").SetValue(true));
+            visibility.AddItem(new MenuItem("Visibility.Enable", "Enable").SetValue(false));
             visibility.AddItem(new MenuItem("Visibility.Red", "Red").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Red));
             visibility.AddItem(new MenuItem("Visibility.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Green));
             visibility.AddItem(new MenuItem("Visibility.Blue", "Blue").SetValue(new Slider(100, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Blue));
