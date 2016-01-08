@@ -215,14 +215,14 @@ namespace OverlayInformationLight
             settings.AddItem(new MenuItem("BarPosY", "HP/MP bar Position Y").SetValue(new Slider(0, -300, 300)));
             settings.AddItem(new MenuItem("BarSizeY", "HP/MP bar Size Y").SetValue(new Slider(0, -10, 10)));
 
-            var visibility = new Menu("Visibility", "Visibility");
+            /*var visibility = new Menu("Visibility", "Visibility");
             visibility.AddItem(new MenuItem("Visibility.Enable", "Enable").SetValue(false).SetFontStyle(FontStyle.Bold, Color.Gray).SetTooltip("can cause game crashing"));
             visibility.AddItem(new MenuItem("Visibility.Red", "Red").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Red));
             visibility.AddItem(new MenuItem("Visibility.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Green));
             visibility.AddItem(new MenuItem("Visibility.Blue", "Blue").SetValue(new Slider(100, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Blue));
-            visibility.AddItem(new MenuItem("Visibility.Alpha", "Alpha").SetValue(new Slider(50, 0, 255)).SetFontStyle(FontStyle.Bold, Color.WhiteSmoke));
+            visibility.AddItem(new MenuItem("Visibility.Alpha", "Alpha").SetValue(new Slider(50, 0, 255)).SetFontStyle(FontStyle.Bold, Color.WhiteSmoke));*/
 
-            Menu.AddSubMenu(visibility);
+            //Menu.AddSubMenu(visibility);
             Menu.AddSubMenu(dangitems);
             Menu.AddSubMenu(ultimates);
             Menu.AddSubMenu(autoItems);
@@ -819,7 +819,7 @@ namespace OverlayInformationLight
 
             #region Testing
 
-            if (Menu.Item("Visibility.Enable").GetValue<bool>())
+            /*if (Menu.Item("Visibility.Enable").GetValue<bool>())
             {
                 for (uint i = 0; i < 10; i++)
                 {
@@ -842,7 +842,7 @@ namespace OverlayInformationLight
 
                     }
                 }
-            }
+            }*/
 
             #endregion
 
