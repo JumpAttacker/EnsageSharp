@@ -48,6 +48,8 @@ namespace OverlayInformationLight
         private static bool _showUltimateCd = true;
         private static bool _showRunes = true;
         private static bool _statusEnemyOnMinimap;
+        private static bool _visionStatus;
+        private static bool _statusEnemyOnMap;
         private static bool _statusEnemyTimer;
         private static bool _showStatusInfoActivated;
 
@@ -169,6 +171,8 @@ namespace OverlayInformationLight
             enemyStatus.AddItem(new MenuItem("ShowStatusInfoActivated", "Activated").SetValue(true));
             enemyStatus.AddItem(new MenuItem("StatusEnemyTimer", "Show Enemy Status").SetValue(true).SetTooltip("show how long enemy in current status (in fog, in invis, under vision)"));
             enemyStatus.AddItem(new MenuItem("_showPAonMinimap", "Show PhantomAssasin on minimap").SetValue(true).SetFontStyle(FontStyle.Bold, Color.Gray));
+            enemyStatus.AddItem(new MenuItem("_statusEnemyOnMap", "Show Enemy Last Position on Map").SetValue(true));
+            enemyStatus.AddItem(new MenuItem("_visionStatus", "Show on top panel Ally's vision status").SetValue(true));
             
             var dangitems=new Menu("Dangerous Items","dangitems");
             dangitems.AddItem(new MenuItem("DangItems", "Show Dangerous Items").SetValue(true));
@@ -212,7 +216,7 @@ namespace OverlayInformationLight
             settings.AddItem(new MenuItem("BarSizeY", "HP/MP bar Size Y").SetValue(new Slider(0, -10, 10)));
 
             var visibility = new Menu("Visibility", "Visibility");
-            visibility.AddItem(new MenuItem("Visibility.Enable", "Enable").SetValue(false));
+            visibility.AddItem(new MenuItem("Visibility.Enable", "Enable").SetValue(false).SetFontStyle(FontStyle.Bold, Color.Gray).SetTooltip("can cause game crashing"));
             visibility.AddItem(new MenuItem("Visibility.Red", "Red").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Red));
             visibility.AddItem(new MenuItem("Visibility.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Green));
             visibility.AddItem(new MenuItem("Visibility.Blue", "Blue").SetValue(new Slider(100, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Blue));
@@ -470,6 +474,8 @@ namespace OverlayInformationLight
             _statusEnemyTimer = Menu.Item("StatusEnemyTimer").GetValue<bool>();
             _showStatusInfoActivated = Menu.Item("ShowStatusInfoActivated").GetValue<bool>();
             _showPAonMinimap = Menu.Item("_showPAonMinimap").GetValue<bool>();
+            _statusEnemyOnMap = Menu.Item("_statusEnemyOnMap").GetValue<bool>();
+            _visionStatus = Menu.Item("_visionStatus").GetValue<bool>();
             /*
             enemyStatus.AddItem(new MenuItem("ShowStatusInfoActivated", "Activated").SetValue(true));
             enemyStatus.AddItem(new MenuItem("StatusEnemyTimer", "Show Enemy Status").SetValue(true).SetTooltip("show how long enemy in current status (in fog, in invis, under vision)"));
@@ -1005,10 +1011,34 @@ namespace OverlayInformationLight
                         {
 
                         }
+                        if (_statusEnemyOnMap)
+                        {
+                            if (v.Hero.IsAlive && !v.Hero.IsVisible)
+                            {
+                                Vector2 newPos;
+                                if (Drawing.WorldToScreen(v.Hero.Position, out newPos))
+                                {
+                                    var name = "materials/ensage_ui/heroes_horizontal/" +
+                                               v.Hero.Name.Replace("npc_dota_hero_", "") + ".vmat";
+                                    var size = new Vector2(50, 50);
+                                    Drawing.DrawRect(newPos + new Vector2(10, 35), size + new Vector2(13, -6),
+                                        Drawing.GetTexture(name));
+                                }
+                            }
+                        }
                         if (_showPAonMinimap)
                         {
 
                         }
+                    }
+                    else if (_visionStatus && v.Hero.IsVisibleToEnemies)
+                    {
+                        Drawing.DrawRect(pos + new Vector2(0, sizeY + height*2), new Vector2(sizeX, height*2),
+                            new Color(0, 0, 0, 100));
+                        Drawing.DrawRect(pos + new Vector2(0, sizeY + height*2), new Vector2(sizeX, height*2),
+                            new Color(0, 0, 0, 255), true);
+                        Drawing.DrawText("under vision", pos + new Vector2(5, sizeY + height*2), Color.White,
+                            FontFlags.AntiAlias | FontFlags.DropShadow);
                     }
                 }
 
@@ -1104,7 +1134,7 @@ namespace OverlayInformationLight
                     var mod = v.Hero.Modifiers.Any(x => x.Name == "modifier_spirit_breaker_charge_of_darkness_vision");
                     if (mod /* && Bara!=null*/)
                     {
-                        var textPos = (pos + new Vector2(0, sizeY + height*2));
+                        var textPos = (pos + new Vector2(0, sizeY + height*3));
                         Drawing.DrawText("Spirit Breaker", textPos, new Vector2(15, 150), Color.White,
                             FontFlags.AntiAlias | FontFlags.DropShadow);
                         if (Equals(_me, v.Hero))
@@ -1115,7 +1145,8 @@ namespace OverlayInformationLight
                         ParticleEffect eff;
                         if (!BaraIndicator.TryGetValue(v.Hero, out eff))
                         {
-                            eff = new ParticleEffect("particles/hw_fx/cursed_rapier.vpcf", v.Hero);
+                            //"particles/hw_fx/cursed_rapier.vpcf"
+                            eff = new ParticleEffect("", v.Hero);
                             eff.SetControlPointEntity(1, v.Hero);
                             BaraIndicator.Add(v.Hero, eff);
                             GenerateSideMessage(v.Hero.Name.Replace("npc_dota_hero_", ""), "spirit_breaker_charge_of_darkness");
