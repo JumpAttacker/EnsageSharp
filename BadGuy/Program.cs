@@ -156,7 +156,7 @@ namespace BadGuy
             if (Utils.SleepCheck("laugh.Cd") && Menu.Item("laugh.Enable").GetValue<bool>())
             {
                 Game.ExecuteCommand("say \"/laugh \"");
-                Utils.Sleep(Menu.Item("laugh.Cd").GetValue<Slider>().Value, "laugh.Cd");
+                Utils.Sleep(Menu.Item("laugh.Cd").GetValue<Slider>().Value*1000, "laugh.Cd");
                 if (Menu.Item("laugh.Message").GetValue<bool>())
                 {
                     Game.PrintMessage("Laugh!", MessageType.ChatMessage);
