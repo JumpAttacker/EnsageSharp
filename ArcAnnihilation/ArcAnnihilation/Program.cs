@@ -11,11 +11,17 @@ using Ensage.Common.Menu;
 using SharpDX;
 // ReSharper disable UnusedMember.Local
 
+//TODO дифуза от иллюзии на себя и на иллюзию и добавить спам дифузов на врагов [done]
+//TODO пофиксить баг хила от иллюзий, когда иллюзия без зарядов
+//TODO fix midas on ancient creeps [done]
+//TODO fix closest to mouse function [done]
+
 namespace ArcAnnihilation
 {
     [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
     internal static class Program
     {
+        private static Hero _mainHero;
         private static bool _loaded;
         private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true, "npc_dota_hero_arc_warden", true);
         private static Hero _globalTarget;
@@ -85,6 +91,19 @@ namespace ArcAnnihilation
             Caster,
             Nothing
         }
+        private enum PurgeSelection
+        {
+            MainTarget,
+            AllEnemies,
+            Noone
+        }
+        private enum DispelSelection
+        {
+            Me,
+            Tempest,
+            Both,
+            Noone
+        }
         private enum BkbUsage
         {
             Me, 
@@ -94,6 +113,7 @@ namespace ArcAnnihilation
         }
         private static void Main()
         {
+            
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Player.OnExecuteOrder += Player_OnExecuteAction;
@@ -134,6 +154,22 @@ namespace ArcAnnihilation
             daggerSelection.AddItem(
                 new MenuItem("Dagger.MinDistance", "Min distance for blink").SetValue(new Slider(400, 100, 800)));
 
+            var difblade = new Menu("Diffusal blade", "item_diffusal_blade", false, "item_diffusal_blade",true);
+            difblade.AddItem(
+                new MenuItem("Diffusal.Dispel", "Dispel Selection").SetValue(new StringList(new[]
+                {
+                    "Me",
+                    "Tempest",
+                    "Both",
+                    "Noone"
+                }, 2)));
+            difblade.AddItem(
+                new MenuItem("Diffusal.PurgEnemy", "Purge Selection").SetValue(new StringList(new[]
+                {
+                    "Only on Main Target",
+                    "For all Enemies in cast range",
+                    "No one"
+                }, 1)));
 
             Menu.AddItem(new MenuItem("usePrediction", "Use Prediction For Spark").SetValue(true));
             Menu.AddItem(
@@ -145,6 +181,7 @@ namespace ArcAnnihilation
                 new MenuItem("order", "Clone Order Selection").SetValue(
                     new StringList(new[] {"monkey", "caster", "nothing"}, 1)));
 
+            Menu.AddSubMenu(difblade);
             Menu.AddSubMenu(daggerSelection);
             Menu.AddSubMenu(autoheal);
             Menu.AddSubMenu(orbwalnking);
@@ -305,7 +342,7 @@ namespace ArcAnnihilation
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!_loaded) return;
-
+            
             Vector2 pos;
             if (Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
@@ -347,10 +384,10 @@ namespace ArcAnnihilation
 
         private static void Game_OnUpdate(EventArgs args)
         {
-            var me = ObjectMgr.LocalHero;
+            _mainHero = ObjectMgr.LocalHero;
             if (!_loaded)
             {
-                if (!Game.IsInGame || me == null || me.ClassID != ClassID.CDOTA_Unit_Hero_ArcWarden)
+                if (!Game.IsInGame || _mainHero == null || _mainHero.ClassID != ClassID.CDOTA_Unit_Hero_ArcWarden)
                 {
                     return;
                 }
@@ -361,7 +398,7 @@ namespace ArcAnnihilation
                     MessageType.LogMessage);
             }
 
-            if (!Game.IsInGame || me == null)
+            if (!Game.IsInGame || _mainHero == null)
             {
                 _loaded = false;
                 return;
@@ -370,18 +407,18 @@ namespace ArcAnnihilation
 
             _tick = Environment.TickCount;
             NetworkActivity act;
-            var handle = me.Handle;
-            if (!LastActivity.TryGetValue(handle, out act) || me.NetworkActivity != act)
+            var handle = _mainHero.Handle;
+            if (!LastActivity.TryGetValue(handle, out act) || _mainHero.NetworkActivity != act)
             {
                 LastActivity.Remove(handle);
-                LastActivity.Add(handle, me.NetworkActivity);
-                if (me.IsAttacking())
+                LastActivity.Add(handle, _mainHero.NetworkActivity);
+                if (_mainHero.IsAttacking())
                 {
                     LastAttackStart.Remove(handle);
                     LastAttackStart.Add(handle,_tick);
                 }
             }
-            foreach (var clone in GetCloneList(me))
+            foreach (var clone in GetCloneList(_mainHero))
             {
                 if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
                 {
@@ -389,11 +426,11 @@ namespace ArcAnnihilation
                         ObjectMgr.GetEntities<Unit>()
                             .Any(
                                 x =>
-                                    x.Team == me.GetEnemyTeam() && x.IsAlive && x.IsVisible &&
-                                    x.Distance2D(me) < Menu.Item("AutoHeal.Range").GetValue<Slider>().Value);
-                    if (!enemy)
+                                    x.Team == _mainHero.GetEnemyTeam() && x.IsAlive && x.IsVisible &&
+                                    x.Distance2D(_mainHero) < Menu.Item("AutoHeal.Range").GetValue<Slider>().Value);
+                    if (!enemy) 
                     {
-                        CloneUseHealItems(clone, me, clone.Distance2D(me));
+                        CloneUseHealItems(clone, _mainHero, clone.Distance2D(_mainHero));
                     }
                 }
                 handle = clone.Handle;
@@ -406,18 +443,18 @@ namespace ArcAnnihilation
             }
             if (Menu.Item("spamHotkey").GetValue<KeyBind>().Active)
             {
-                SparkSpam(me);
+                SparkSpam(_mainHero);
                 return;
             }
             if (Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
                 if (_globalTarget2 == null || !_globalTarget2.IsValid)
                 {
-                    _globalTarget2 = ClosestToMouse(me, 500);
+                    _globalTarget2 = ClosestToMouse(_mainHero, 500);
                 }
                 if (_globalTarget2 != null && _globalTarget2.IsValid && _globalTarget2.IsAlive)
                 {
-                    DoCombo2(me, _globalTarget2);
+                    DoCombo2(_mainHero, _globalTarget2);
                 }
             }
             else
@@ -427,29 +464,29 @@ namespace ArcAnnihilation
 
             //if (!me.IsAlive) return;
 
-            var midas = me.FindItem("item_hand_of_midas");
+            var midas = _mainHero.FindItem("item_hand_of_midas");
             if (midas != null && Menu.Item("AutoMidas").GetValue<bool>())
             {
-                if (midas.CanBeCasted() && Utils.SleepCheck(me.Handle + "midas") && me.IsAlive && !me.IsInvisible())
+                if (midas.CanBeCasted() && Utils.SleepCheck(_mainHero.Handle + "midas") && _mainHero.IsAlive && !_mainHero.IsInvisible())
                 {
                     var enemy =
                         ObjectMgr.GetEntities<Unit>()
                             .Where(
                                 x =>
-                                    x.Team != me.Team &&
+                                    !x.IsMagicImmune() && x.Team != _mainHero.Team &&
                                     (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
                                      x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
                                      x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
-                                    x.Distance2D(me) <= 600).OrderByDescending(x => x.Health)
+                                    x.Distance2D(_mainHero) <= 600).OrderByDescending(x => x.Health)
                             .DefaultIfEmpty(null)
                             .FirstOrDefault();
                     if (enemy != null)
                     {
-                        Utils.Sleep(500, me.Handle + "midas");
+                        Utils.Sleep(500, _mainHero.Handle + "midas");
                         midas.UseAbility(enemy);
                     }
                 }
-                foreach (var clone in GetCloneList(me).Where(x=>Utils.SleepCheck(x.Handle+"midas")))
+                foreach (var clone in GetCloneList(_mainHero).Where(x=>Utils.SleepCheck(x.Handle+"midas")))
                 {
                     midas = clone.FindItem("item_hand_of_midas");
                     if (midas == null || !midas.CanBeCasted()) continue;
@@ -457,7 +494,7 @@ namespace ArcAnnihilation
                         ObjectMgr.GetEntities<Unit>()
                             .Where(
                                 x =>
-                                    x.Team != me.Team &&
+                                    !x.IsMagicImmune() && x.Team != _mainHero.Team &&
                                     (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
                                      x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
                                      x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
@@ -483,11 +520,11 @@ namespace ArcAnnihilation
 
             if (_globalTarget == null || !_globalTarget.IsValid || !Menu.Item("LockTarget").GetValue<bool>())
             {
-                _globalTarget = ClosestToMouse(me, 300);
+                _globalTarget = ClosestToMouse(_mainHero, 300);
             }
             if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
 
-            DoCombo(me, _globalTarget);
+            DoCombo(_mainHero, _globalTarget);
         }
 
         private static void CloneUseHealItems(Hero clone, Hero me, float distance)
@@ -765,16 +802,48 @@ namespace ArcAnnihilation
                 item.UseAbility(me);
                 Utils.Sleep(500, item.Name + me.Handle);
             }
-            var underDiff = target.Modifiers.Any(x => x.Name == "modifier_item_diffusal_blade_slow");
+            //var underDiff = target.Modifiers.Any(x => x.Name == "modifier_item_diffusal_blade_slow");
             //Game.PrintMessage("Under SLow?: "+target.Modifiers.Any(x=>x.Name=="modifier_item_diffusal_blade_slow"),MessageType.ChatMessage);
-            if (byIllusion && !underDiff && !target.IsStunned() && !target.IsHexed())
+            
+            //var PurgeMain = Menu.Item("Diffusal.PurgEnemy").GetValue<StringList>().SelectedIndex == (int)PurgeSelection.MainTarget;
+            var purgeAll = Menu.Item("Diffusal.PurgEnemy").GetValue<StringList>().SelectedIndex == (int)PurgeSelection.AllEnemies;
+
+            
+            if (byIllusion)
             {
-                var items2 = inventory.Where(x => CloneOnlyComboItems.Contains(x.Name) && ((x.CastRange == 0 && distance <= 650) || x.CastRange >= distance)).ToList();
-                foreach (var item in items2)
+                var targets =
+                ObjectMgr.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            x.IsValid && x.IsAlive && x.IsVisible && x.Team!=me.Team && x.Distance2D(me) <= 650 &&
+                            (purgeAll || Equals(target, x)) &&
+                             !x.IsStunned() && !x.IsHexed())
+                    .ToList();
+                foreach (var hero in targets)
                 {
-                    item.UseAbility(target);
-                    Utils.Sleep(500, item.Name + me.Handle);
+                    var mod =
+                        hero.Modifiers.Any(modifierName => modifierName.Name == "modifier_item_diffusal_blade_slow");
+                    if (mod) continue;
+                    var items2 =
+                    inventory.Where(
+                        x =>
+                            CloneOnlyComboItems.Contains(x.Name) &&
+                            (me.Distance2D(hero) <= 650)).ToList();
+                    foreach (var item in items2)
+                    {
+                        item.UseAbility(hero);
+                        Utils.Sleep(500, item.Name + me.Handle);
+                    }
                 }
+            }
+            var both = Menu.Item("Diffusal.Dispel").GetValue<StringList>().SelectedIndex == (int)DispelSelection.Both;
+            var main = Menu.Item("Diffusal.Dispel").GetValue<StringList>().SelectedIndex == (int)DispelSelection.Me;
+            var tempest = Menu.Item("Diffusal.Dispel").GetValue<StringList>().SelectedIndex == (int)DispelSelection.Tempest;
+            if (byIllusion&& (both || main || tempest))
+            {
+                TryToDispell(me, inventory.Where(
+                    x =>
+                        CloneOnlyComboItems.Contains(x.Name)).ToList(),both,main,tempest);
             }
             if (useBkb && distance<650)
             {
@@ -792,6 +861,42 @@ namespace ArcAnnihilation
                 var refresher = inventory.FirstOrDefault(x => x.Name == "item_refresher");
                 refresher?.UseAbility();
                 Utils.Sleep(500, refresher?.Name + me.Handle);
+            }
+        }
+
+        private static void TryToDispell(Hero me, List<Item> toList, bool both, bool main, bool tempest)
+        {
+            var target = main ? _mainHero : tempest ? me : null;
+            if (both)
+            {
+                var isSilenced = me.IsSilenced();
+                var isSilenced2 = _mainHero.IsSilenced();
+                if (isSilenced2)
+                {
+                    foreach (var item in toList.Where(item => me.Distance2D(_mainHero) <= 600))
+                    {
+                        item.UseAbility(_mainHero);
+                        Utils.Sleep(500, item.Name + me.Handle);
+                    }
+                }
+                if (!isSilenced) return;
+                {
+                    foreach (var item in toList)
+                    {
+                        item.UseAbility(me);
+                        Utils.Sleep(500, item.Name + me.Handle);
+                    }
+                }
+            }
+            else
+            {
+                var isSilenced = target.IsSilenced();
+                if (!isSilenced) return;
+                foreach (var item in toList.Where(x => me.Distance2D(target) <= 600))
+                {
+                    item.UseAbility(target);
+                    Utils.Sleep(500, item.Name + me.Handle);
+                }
             }
         }
 
@@ -875,7 +980,13 @@ namespace ArcAnnihilation
         private static Hero ClosestToMouse(Hero source, float range = 600)
         {
             var mousePosition = Game.MousePosition;
-            var enemyHeroes = ObjectMgr.GetEntities<Hero>().Where(x => x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible && x.Distance2D(mousePosition) <= range /*&& !x.IsMagicImmune()*/).OrderBy(source.Distance2D);
+            var enemyHeroes =
+                ObjectMgr.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible &&
+                            x.Distance2D(mousePosition) <= range /*&& !x.IsMagicImmune()*/)
+                    .OrderBy(x => x.Distance2D(mousePosition));
             return enemyHeroes.FirstOrDefault();
         }
 
