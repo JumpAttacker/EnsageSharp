@@ -160,9 +160,9 @@ namespace ArcAnnihilation
                 {
                     "Me",
                     "Tempest",
-                    "Both",
+                    "All",
                     "Noone"
-                }, 2)));
+                }, 2))).SetTooltip("All include ally heroes too");
             difblade.AddItem(
                 new MenuItem("Diffusal.PurgEnemy", "Purge Selection").SetValue(new StringList(new[]
                 {
@@ -385,6 +385,7 @@ namespace ArcAnnihilation
         private static void Game_OnUpdate(EventArgs args)
         {
             _mainHero = ObjectMgr.LocalHero;
+            //Print(_mainHero.DebuffState.ToString());
             if (!_loaded)
             {
                 if (!Game.IsInGame || _mainHero == null || _mainHero.ClassID != ClassID.CDOTA_Unit_Hero_ArcWarden)
@@ -525,6 +526,11 @@ namespace ArcAnnihilation
             if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
 
             DoCombo(_mainHero, _globalTarget);
+        }
+
+        private static void Print(string toString, MessageType type = MessageType.ChatMessage)
+        {
+            Game.PrintMessage(toString, type);
         }
 
         private static void CloneUseHealItems(Hero clone, Hero me, float distance)
@@ -863,13 +869,12 @@ namespace ArcAnnihilation
                 Utils.Sleep(500, refresher?.Name + me.Handle);
             }
         }
-
         private static void TryToDispell(Hero me, List<Item> toList, bool both, bool main, bool tempest)
         {
             var target = main ? _mainHero : tempest ? me : null;
             if (both)
             {
-                var isSilenced = me.IsSilenced();
+                var underShit = me.IsSilenced() || me.IsHexed() /*|| me.DebuffState*/;
                 var isSilenced2 = _mainHero.IsSilenced();
                 if (isSilenced2)
                 {
@@ -879,11 +884,19 @@ namespace ArcAnnihilation
                         Utils.Sleep(500, item.Name + me.Handle);
                     }
                 }
-                if (!isSilenced) return;
+                if (underShit)
                 {
                     foreach (var item in toList)
                     {
                         item.UseAbility(me);
+                        Utils.Sleep(500, item.Name + me.Handle);
+                    }
+                }
+                foreach (var hero in Ensage.Common.Objects.Heroes.GetByTeam(me.Team).Where(x=>x.IsAlive && x.Distance2D(me)<=600 && (x.IsHexed() || x.IsSilenced())))
+                {
+                    foreach (var item in toList)
+                    {
+                        item.UseAbility(hero);
                         Utils.Sleep(500, item.Name + me.Handle);
                     }
                 }
