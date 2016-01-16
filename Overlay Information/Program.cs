@@ -412,19 +412,21 @@ namespace OverlayInformation
             stick.UseAbility();
             #endregion
 
-            #region Show me more
-            ShowMeMore(Menu.Item("showMeMore.Enable").GetValue<bool>());
-            #endregion
+            
         }
 
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!Game.IsInGame) return;
+
             DrawForAllHero();
             DrawForEnemyHero();
             DrawForAllyHero();
             DrawForViableHero();
-            DrawShowMeMore(Menu.Item("showMeMore.Enable").GetValue<bool>());
+
+            #region Show me more
+            ShowMeMore(Menu.Item("showMeMore.Enable").GetValue<bool>());
+            #endregion
         }
 
         private static void DrawShowMeMore(bool showMeMore)
@@ -441,6 +443,7 @@ namespace OverlayInformation
         private static void ShowMeMore(bool showMeMore)
         {
             #region Show me more cast
+            DrawShowMeMore(showMeMore);
             if (!showMeMore || !Utils.SleepCheck("showMeMore.Rate")) return;
             Utils.Sleep(250, "showMeMore.Rate");
             var dummy = ObjectMgr.GetEntities<Unit>().Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team != MeHero.Team).ToList();
