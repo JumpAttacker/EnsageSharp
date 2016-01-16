@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -15,6 +16,8 @@ using SharpDX;
 //TODO пофиксить баг хила от иллюзий, когда иллюзия без зарядов
 //TODO fix midas on ancient creeps [done]
 //TODO fix closest to mouse function [done]
+// -5895 5402 384
+//  5827 -5229 384
 
 namespace ArcAnnihilation
 {
@@ -23,6 +26,8 @@ namespace ArcAnnihilation
     {
         private static Hero _mainHero;
         private static bool _loaded;
+        private static Vector3 _pushLaneTop=new Vector3(-5895, 5402, 384);
+        private static Vector3 _pushLaneBot=new Vector3(5827, -5229, 384);
         private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true, "npc_dota_hero_arc_warden", true);
         private static Hero _globalTarget;
         private static Hero _globalTarget2;
@@ -57,6 +62,13 @@ namespace ArcAnnihilation
 
             "item_sheepstick"
             /*"item_refresher"*/
+        };
+        private static readonly List<string> AutoPushItems = new List<string>
+        {
+            "item_necronomicon",
+            "item_necronomicon_2",
+            "item_necronomicon_3",
+            "item_mjollnir"
         };
 
         private static readonly List<string> CloneHealItems = new List<string>
@@ -113,7 +125,6 @@ namespace ArcAnnihilation
         }
         private static void Main()
         {
-            
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Player.OnExecuteOrder += Player_OnExecuteAction;
@@ -136,6 +147,8 @@ namespace ArcAnnihilation
                         "clone use heal items on main hero if there are no enemies in selected range. But ll still use insta heal items"));
             autoheal.AddItem(
                             new MenuItem("AutoHeal.Range", "Enemy checker").SetValue(new Slider(500, 0, 1000)).SetTooltip("check enemy in selected range"));
+            var autoPush = new Menu("Auto Push", "AutoPush");
+            autoPush.AddItem(new MenuItem("AutoPush.Enable", "Enable").SetValue(new KeyBind('V',KeyBindType.Toggle)));
 
 
             var orbwalnking = new Menu("OrbWalking", "ow");
@@ -181,10 +194,12 @@ namespace ArcAnnihilation
                 new MenuItem("order", "Clone Order Selection").SetValue(
                     new StringList(new[] {"monkey", "caster", "nothing"}, 1)));
 
+
             Menu.AddSubMenu(difblade);
             Menu.AddSubMenu(daggerSelection);
             Menu.AddSubMenu(autoheal);
             Menu.AddSubMenu(orbwalnking);
+            Menu.AddSubMenu(autoPush);
             Menu.AddToMainMenu();
         }
 
@@ -199,7 +214,7 @@ namespace ArcAnnihilation
                     args.Order != Order.MoveLocation && args.Order != Order.MoveTarget && args.Order != Order.Hold)
                     return;
 
-                foreach (var hero in GetCloneList(sender.Hero))
+                foreach (var hero in Objects.Tempest.GetCloneList(sender.Hero))
                 {
                     Ability spell;
                     Ability needed;
@@ -239,8 +254,6 @@ namespace ArcAnnihilation
                                 needed.UseAbility(args.TargetPosition);
                             }
                             break;
-                        case Order.None:
-                            break;
                         case Order.MoveLocation:
                             hero.Move(args.TargetPosition);
                             break;
@@ -254,44 +267,6 @@ namespace ArcAnnihilation
                         case Order.Hold:
                             hero.Stop();
                             break;
-                        case Order.UpgradeAbility:
-                            break;
-                        case Order.DropItem:
-                            break;
-                        case Order.TransferItem:
-                            break;
-                        case Order.PickItem:
-                            break;
-                        case Order.ConsumeRune:
-                            break;
-                        case Order.BuyItem:
-                            break;
-                        case Order.SellItem:
-                            break;
-                        case Order.DisassembleItem:
-                            break;
-                        case Order.MoveItem:
-                            break;
-                        case Order.ToggleAutoCast:
-                            break;
-                        case Order.Taunt:
-                            break;
-                        case Order.Buyback:
-                            break;
-                        case Order.GlyphOfFortification:
-                            break;
-                        case Order.DropFromStash:
-                            break;
-                        case Order.AbilityTargetRune:
-                            break;
-                        case Order.Announce:
-                            break;
-                        case Order.MoveToDirection:
-                            break;
-                        case Order.Patrol:
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
                     }
                 }
             }
@@ -301,7 +276,7 @@ namespace ArcAnnihilation
                     args.Order != Order.AbilityLocation)
                     return;
                 if (!CloneOnlyItems.Contains(args.Ability.Name)) return;
-                foreach (var hero in GetCloneList(sender.Hero).Where(x=>x.Distance2D(sender.Hero)<=1000))
+                foreach (var hero in Objects.Tempest.GetCloneList(sender.Hero).Where(x => x.Distance2D(sender.Hero) <= 1000))
                 {
                     Ability spell;
                     Ability needed;
@@ -342,7 +317,9 @@ namespace ArcAnnihilation
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!_loaded) return;
-            
+            /*var position = Game.MousePosition;
+            Drawing.DrawText($"{position.X},{position.Y},{position.Z}", Game.MouseScreenPosition, new Vector2(0, 50), Color.Red,
+                        FontFlags.AntiAlias | FontFlags.DropShadow);*/
             Vector2 pos;
             if (Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
@@ -366,6 +343,16 @@ namespace ArcAnnihilation
                         new Color(0, 0, 0, 255), true);
                 }
             }
+            else if (Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
+            {
+                var startPos = new Vector2(Drawing.Width - 250, 100);
+                var size = new Vector2(180, 40);
+                Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
+                Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
+                Drawing.DrawText("AutoPush is Active", startPos + new Vector2(10, 10), new Vector2(20), new Color(0, 155, 255),
+                    FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
+                    FontFlags.StrikeOut);
+            }
             if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
             {
                 var startPos = new Vector2(Drawing.Width - 250, 190);
@@ -385,7 +372,7 @@ namespace ArcAnnihilation
         private static void Game_OnUpdate(EventArgs args)
         {
             _mainHero = ObjectMgr.LocalHero;
-            //Print(_mainHero.DebuffState.ToString());
+            //Print($"_mainHero: {_mainHero.Position.X}/{_mainHero.Position.Y}/{_mainHero.Position.Z}");
             if (!_loaded)
             {
                 if (!Game.IsInGame || _mainHero == null || _mainHero.ClassID != ClassID.CDOTA_Unit_Hero_ArcWarden)
@@ -397,6 +384,8 @@ namespace ArcAnnihilation
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
                     " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
                     MessageType.LogMessage);
+                LastAttackStart.Clear();
+                LastActivity.Clear();
             }
 
             if (!Game.IsInGame || _mainHero == null)
@@ -419,7 +408,7 @@ namespace ArcAnnihilation
                     LastAttackStart.Add(handle,_tick);
                 }
             }
-            foreach (var clone in GetCloneList(_mainHero))
+            foreach (var clone in Objects.Tempest.GetCloneList(_mainHero))
             {
                 if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
                 {
@@ -461,6 +450,8 @@ namespace ArcAnnihilation
             else
             {
                 _globalTarget2 = null;
+                if (Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
+                    AutoPush(_mainHero);
             }
 
             //if (!me.IsAlive) return;
@@ -487,7 +478,7 @@ namespace ArcAnnihilation
                         midas.UseAbility(enemy);
                     }
                 }
-                foreach (var clone in GetCloneList(_mainHero).Where(x=>Utils.SleepCheck(x.Handle+"midas")))
+                foreach (var clone in Objects.Tempest.GetCloneList(_mainHero).Where(x => Utils.SleepCheck(x.Handle + "midas")))
                 {
                     midas = clone.FindItem("item_hand_of_midas");
                     if (midas == null || !midas.CanBeCasted()) continue;
@@ -526,6 +517,103 @@ namespace ArcAnnihilation
             if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
 
             DoCombo(_mainHero, _globalTarget);
+        }
+
+        private static void AutoPush(Hero me)
+        {
+            foreach (var hero in Objects.Tempest.GetCloneList(me))
+            {
+                var handle = hero.Handle;
+                var items = hero.Inventory.Items.ToList();
+                var travelBoots =
+                    items.FirstOrDefault(
+                        x =>
+                            (x.Name == "item_travel_boots" ||
+                            x.Name == "item_travel_boots_2") && x.CanBeCasted() &&
+                            Utils.SleepCheck("Tempest.Travels.Cd" + handle));
+                var autoPushItems =
+                    items.Where(
+                        x =>
+                            AutoPushItems.Contains(x.Name) && x.CanBeCasted() &&
+                            Utils.SleepCheck("Tempest.AutoPush.Cd" + handle+x.Name));
+                var myCreeps = Objects.LaneCreeps.GetCreeps().Where(x=>x.Team==me.Team);
+                var enemyCreeps = Objects.LaneCreeps.GetCreeps().Where(x=>x.Team!=me.Team);
+                var creepWithEnemy =
+                    myCreeps.FirstOrDefault(
+                        x => x.MaximumHealth*65/100 < x.Health && enemyCreeps.Any(y => y.Distance2D(x) <= 1000));
+                if (travelBoots != null && !enemyCreeps.Any(x=>x.Distance2D(hero)<=1000) && !hero.IsChanneling())
+                {
+                    if (creepWithEnemy != null)
+                    {
+                        travelBoots.UseAbility(creepWithEnemy);
+                        Utils.Sleep(500, "Tempest.Travels.Cd" + handle);
+                        return;
+                    }
+                }
+                var nearestTower = Objects.Towers.GetTowers().Where(x=>x.Team==me.GetEnemyTeam()).OrderBy(y=>y.Distance2D(hero)).FirstOrDefault()??Objects.Fountains.GetEnemyFountain();
+                var distTop = _pushLaneTop.Distance2D(hero);
+                var distBot = _pushLaneBot.Distance2D(hero);
+                var getCurrentLane = distTop<=3500?_pushLaneTop:distBot<=3500?_pushLaneBot:new Vector3();
+                var fountain = Objects.Fountains.GetAllyFountain();
+                var useThisShit = getCurrentLane.Distance2D(fountain) > hero.Distance2D(fountain);
+                //Print("im on " + (distTop <= 3500 ? "top" : distBot <= 3500 ? "bot" : "middle"));
+                //Print($"Dist: Pos->{getCurrentLane.Distance2D(fountain)} Hero->{hero.Distance2D(fountain)}");
+                if (nearestTower != null)
+                {
+                    var pos = getCurrentLane.IsZero || !useThisShit ? nearestTower.Position : getCurrentLane;
+                    if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && hero.NetworkActivity != NetworkActivity.Attack && hero.NetworkActivity != NetworkActivity.Attack2 && hero.NetworkActivity != NetworkActivity.Move)
+                    {
+                        //Print(hero.NetworkActivity.ToString());
+                        if (nearestTower.Distance2D(hero) <= 1000)
+                        {
+                            var spell = hero.Spellbook.Spell2;
+                            if (spell != null && spell.CanBeCasted() && Utils.SleepCheck(spell.Name + handle))
+                            {
+                                spell.UseAbility(Prediction.InFront(hero,300));
+                                Utils.Sleep(250,spell.Name+handle);
+                                hero.Attack(nearestTower);
+                                //Print("shield");
+                            }
+                        }
+                        else
+                        {
+                            hero.Attack(pos);
+                        }
+                        Utils.Sleep(350, "Tempest.Attack.Cd" + handle);
+                    }
+                    if (creepWithEnemy.Distance2D(hero) <= 500)
+                    {
+                        foreach (var item in autoPushItems)
+                        {
+                            if (item.Name != "item_mjollnir")
+                            {
+                                item.UseAbility();
+                            }
+                            else
+                            {
+                                var necros =
+                                    Objects.Necronomicon.GetNecronomicons(me)
+                                        .FirstOrDefault(x => x.Distance2D(hero) <= 500);
+                                if (necros != null) item.UseAbility(necros);
+                            }
+                            Utils.Sleep(350, "Tempest.AutoPush.Cd" + handle + item.Name);
+                        }
+                    }
+
+                    foreach (
+                        var necr in
+                            Objects.Necronomicon.GetNecronomicons(me)
+                                .Where(
+                                    x =>
+                                        x.Distance2D(hero) <= 1500 && Utils.SleepCheck(x.Handle + "AutoPush.Attack") &&
+                                        x.NetworkActivity != NetworkActivity.Attack &&
+                                        x.NetworkActivity != NetworkActivity.Attack2))
+                    {
+                        necr.Attack(pos);
+                        Utils.Sleep(300, necr.Handle + "AutoPush.Attack");
+                    }
+                }
+            }
         }
 
         private static void Print(string toString, MessageType type = MessageType.ChatMessage)
@@ -576,7 +664,7 @@ namespace ArcAnnihilation
 
         private static void DoCombo2(Hero me, Hero target)
         {
-            foreach (var hero in GetCloneList(me))
+            foreach (var hero in Objects.Tempest.GetCloneList(me))
             {
                 var d = hero.Distance2D(target);
                 var inv = hero.Inventory.Items;
@@ -621,7 +709,7 @@ namespace ArcAnnihilation
                 illusion.Attack(target);
                 Utils.Sleep(350, "clone_attacking" + illusion.Handle);
             }
-            var necr = ObjectMgr.GetEntities<Unit>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsSummoned).ToList();
+            var necr = Objects.Necronomicon.GetNecronomicons(me);
             foreach (var necronomicon in necr.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle) && illusion.Distance2D(target) <= 1500 && !Equals(illusion, me)))
             {
                 necronomicon.Attack(target);
@@ -637,7 +725,7 @@ namespace ArcAnnihilation
 
         private static void SparkSpam(Hero me)
         {
-            foreach (var hero in GetCloneList(me))
+            foreach (var hero in Objects.Tempest.GetCloneList(me))
             {
                 var spell = hero.Spellbook.Spell3;
                 if (spell == null || !spell.CanBeCasted() || !Utils.SleepCheck("spam" + hero.Handle)) continue;
@@ -661,7 +749,7 @@ namespace ArcAnnihilation
             bool dagger;
             if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int)Orders.Caster && !Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
-                foreach (var hero in GetCloneList(me))
+                foreach (var hero in Objects.Tempest.GetCloneList(me))
                 {
                     var d = hero.Distance2D(target);
                     inv = hero.Inventory.Items;
@@ -688,7 +776,7 @@ namespace ArcAnnihilation
                 illusion.Attack(target);
                 Utils.Sleep(350, "clone_attacking" + illusion.Handle);
             }
-            var necr = ObjectMgr.GetEntities<Unit>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsSummoned).ToList();
+            var necr = Objects.Necronomicon.GetNecronomicons(me);
             foreach (var necronomicon in necr.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle) && illusion.Distance2D(target) <= 1500 && !Equals(illusion, me)))
             {
                 necronomicon.Attack(target);
@@ -745,7 +833,7 @@ namespace ArcAnnihilation
             Utils.Sleep(500, me.Handle + r.Name);
         }
 
-        private static IEnumerable<Hero> _clones;
+        /*private static IEnumerable<Hero> _clones;
 
         private static IEnumerable<Hero> GetCloneList(Hero me)
         {
@@ -761,7 +849,7 @@ namespace ArcAnnihilation
                 Utils.Sleep(100, "get_clones");
             return _clones;
 
-        }
+        }*/
         private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, float distance, bool useBkb, bool byIllusion = false)
         {
             if (me.IsChanneling()) return;
@@ -869,6 +957,7 @@ namespace ArcAnnihilation
                 Utils.Sleep(500, refresher?.Name + me.Handle);
             }
         }
+
         private static void TryToDispell(Hero me, List<Item> toList, bool both, bool main, bool tempest)
         {
             var target = main ? _mainHero : tempest ? me : null;
@@ -913,11 +1002,7 @@ namespace ArcAnnihilation
             }
         }
 
-        private static void Orbwalk(
-            Hero me,
-            Unit target,
-            float bonusWindupMs = 100,
-            float bonusRange = 0)
+        private static void Orbwalk(Hero me,Unit target,float bonusWindupMs = 100,float bonusRange = 0)
         {
             if (me == null)
             {
@@ -986,7 +1071,7 @@ namespace ArcAnnihilation
             int lastAttackStart;
             LastAttackStart.TryGetValue(me.Handle, out lastAttackStart);
             var time = _tick - lastAttackStart;
-            var cancelDur = UnitDatabase.GetAttackPoint(me) * 1000 - Game.Ping + 50 - delay;
+            var cancelDur = UnitDatabase.GetAttackPoint(me) * 1000 - Game.Ping + 100 - delay;
             return time > cancelDur;
         }
 
