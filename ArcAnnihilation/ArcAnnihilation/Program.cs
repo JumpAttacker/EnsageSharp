@@ -28,6 +28,24 @@ namespace ArcAnnihilation
         private static bool _loaded;
         private static Vector3 _pushLaneTop=new Vector3(-5895, 5402, 384);
         private static Vector3 _pushLaneBot=new Vector3(5827, -5229, 384);
+        private static Vector3 _pushLaneMid=new Vector3(1,1,384);
+        private static readonly Dictionary<Vector3,string> LaneDictionary=new Dictionary<Vector3, string>()
+        {
+            {new Vector3(-5895, 5402, 384),"top"},
+            {new Vector3(-6600, -3000, 384),"top"},
+            {new Vector3(2700, 5600, 384),"top"},
+
+
+            {new Vector3(5827, -5229, 384),"bot"},
+            {new Vector3(-3200, -6200, 384),"bot"},
+            {new Vector3(6200, 2200, 384),"bot"},
+
+
+            {new Vector3(-600,-300,384),"middle"},
+            {new Vector3(3600, 3200, 384),"middle"},
+            {new Vector3(-4400, -3900, 384),"middle"}
+            
+        };
         private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true, "npc_dota_hero_arc_warden", true);
         private static Hero _globalTarget;
         private static Hero _globalTarget2;
@@ -68,6 +86,7 @@ namespace ArcAnnihilation
             "item_necronomicon",
             "item_necronomicon_2",
             "item_necronomicon_3",
+            "item_manta",
             "item_mjollnir"
         };
 
@@ -148,7 +167,11 @@ namespace ArcAnnihilation
             autoheal.AddItem(
                             new MenuItem("AutoHeal.Range", "Enemy checker").SetValue(new Slider(500, 0, 1000)).SetTooltip("check enemy in selected range"));
             var autoPush = new Menu("Auto Push", "AutoPush");
-            autoPush.AddItem(new MenuItem("AutoPush.Enable", "Enable").SetValue(new KeyBind('V',KeyBindType.Toggle)));
+            autoPush.AddItem(new MenuItem("AutoPush.Enable", "Enable").SetValue(new KeyBind('V', KeyBindType.Toggle)));
+            autoPush.AddItem(new MenuItem("AutoPush.DrawLine", "Draw line").SetValue(false));
+            var antiFeed = new Menu("Anti Feed", "AntiFeed", false, "item_necronomicon_3", true);
+            antiFeed.AddItem(new MenuItem("AntiFeed.Enable", "Ebable").SetValue(true).SetTooltip("if u have any enemy hero in range, ur necro will run on base"));
+            antiFeed.AddItem(new MenuItem("AntiFeed.Range", "Range Checker").SetValue(new Slider(800,0,1500)));
 
 
             var orbwalnking = new Menu("OrbWalking", "ow");
@@ -200,6 +223,7 @@ namespace ArcAnnihilation
             Menu.AddSubMenu(autoheal);
             Menu.AddSubMenu(orbwalnking);
             Menu.AddSubMenu(autoPush);
+            autoPush.AddSubMenu(antiFeed);
             Menu.AddToMainMenu();
         }
 
@@ -317,6 +341,32 @@ namespace ArcAnnihilation
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!_loaded) return;
+            if (Menu.Item("AutoPush.DrawLine").GetValue<bool>())
+            {
+                var me = ObjectMgr.LocalHero;
+                foreach (var hero in Objects.Tempest.GetCloneList(me))
+                {
+                    var nearestTower =
+                        Objects.Towers.GetTowers()
+                            .Where(x => x.Team == hero.GetEnemyTeam())
+                            .OrderBy(y => y.Distance2D(hero))
+                            .FirstOrDefault() ?? Objects.Fountains.GetEnemyFountain();
+                    var fountain = Objects.Fountains.GetAllyFountain();
+                    var curlane = GetCurrentLane(hero);
+                    var clospoint = GetClosestPoint(curlane);
+                    var useThisShit = clospoint.Distance2D(fountain)-250 > hero.Distance2D(fountain);
+
+                    if (nearestTower != null)
+                    {
+                        var pos222 = curlane == "mid" || !useThisShit ? nearestTower.Position : clospoint;
+                        var w2Shero = Drawing.WorldToScreen(hero.Position);
+                        var w2SPos = Drawing.WorldToScreen(pos222);
+                        //Print($"w2shero: {w2shero.X}/{w2shero.Y}");
+                        //Print($"w2sPos: {w2sPos.X}/{w2sPos.Y}");
+                        Drawing.DrawLine(w2Shero, w2SPos, Color.YellowGreen);
+                    }
+                }
+            }
             /*var position = Game.MousePosition;
             Drawing.DrawText($"{position.X},{position.Y},{position.Z}", Game.MouseScreenPosition, new Vector2(0, 50), Color.Red,
                         FontFlags.AntiAlias | FontFlags.DropShadow);*/
@@ -521,6 +571,9 @@ namespace ArcAnnihilation
 
         private static void AutoPush(Hero me)
         {
+            /*var curlane2 = GetCurrentLane(me);
+            var clospoint2 = GetClosestPoint(curlane2);
+            Print($"{curlane2}: to: x:{clospoint2.X}/ y:{clospoint2.Y}");*/
             foreach (var hero in Objects.Tempest.GetCloneList(me))
             {
                 var handle = hero.Handle;
@@ -536,13 +589,18 @@ namespace ArcAnnihilation
                         x =>
                             AutoPushItems.Contains(x.Name) && x.CanBeCasted() &&
                             Utils.SleepCheck("Tempest.AutoPush.Cd" + handle+x.Name));
-                var myCreeps = Objects.LaneCreeps.GetCreeps().Where(x=>x.Team==me.Team);
-                var enemyCreeps = Objects.LaneCreeps.GetCreeps().Where(x=>x.Team!=me.Team);
+                var myCreeps = Objects.LaneCreeps.GetCreeps().Where(x=>x.Team==me.Team).ToList();
+                var enemyCreeps = Objects.LaneCreeps.GetCreeps().Where(x=>x.Team!=me.Team).ToList();
                 var creepWithEnemy =
                     myCreeps.FirstOrDefault(
                         x => x.MaximumHealth*65/100 < x.Health && enemyCreeps.Any(y => y.Distance2D(x) <= 1000));
-                if (travelBoots != null && !enemyCreeps.Any(x=>x.Distance2D(hero)<=1000) && !hero.IsChanneling())
+                var isChannel = hero.IsChanneling();
+                if (travelBoots != null && !enemyCreeps.Any(x => x.Distance2D(hero) <= 1000) && !isChannel)
                 {
+                    if (creepWithEnemy == null)
+                    {
+                        creepWithEnemy = myCreeps.OrderByDescending(x => x.Distance2D(hero)).FirstOrDefault();
+                    }
                     if (creepWithEnemy != null)
                     {
                         travelBoots.UseAbility(creepWithEnemy);
@@ -550,38 +608,41 @@ namespace ArcAnnihilation
                         return;
                     }
                 }
-                var nearestTower = Objects.Towers.GetTowers().Where(x=>x.Team==me.GetEnemyTeam()).OrderBy(y=>y.Distance2D(hero)).FirstOrDefault()??Objects.Fountains.GetEnemyFountain();
-                var distTop = _pushLaneTop.Distance2D(hero);
-                var distBot = _pushLaneBot.Distance2D(hero);
-                var getCurrentLane = distTop<=3500?_pushLaneTop:distBot<=3500?_pushLaneBot:new Vector3();
+                if (isChannel) return;
+                var nearestTower =
+                        Objects.Towers.GetTowers()
+                            .Where(x => x.Team == hero.GetEnemyTeam())
+                            .OrderBy(y => y.Distance2D(hero))
+                            .FirstOrDefault() ?? Objects.Fountains.GetEnemyFountain();
                 var fountain = Objects.Fountains.GetAllyFountain();
-                var useThisShit = getCurrentLane.Distance2D(fountain) > hero.Distance2D(fountain);
-                //Print("im on " + (distTop <= 3500 ? "top" : distBot <= 3500 ? "bot" : "middle"));
-                //Print($"Dist: Pos->{getCurrentLane.Distance2D(fountain)} Hero->{hero.Distance2D(fountain)}");
+                var curlane = GetCurrentLane(hero);
+                var clospoint = GetClosestPoint(curlane);
+                var useThisShit = clospoint.Distance2D(fountain)-250 > hero.Distance2D(fountain);
+                //Print($"{clospoint.Distance2D(fountain)} ??? {hero.Distance2D(fountain)}");
                 if (nearestTower != null)
                 {
-                    var pos = getCurrentLane.IsZero || !useThisShit ? nearestTower.Position : getCurrentLane;
-                    if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && hero.NetworkActivity != NetworkActivity.Attack && hero.NetworkActivity != NetworkActivity.Attack2 && hero.NetworkActivity != NetworkActivity.Move)
+                    var pos = curlane == "mid" || !useThisShit ? nearestTower.Position : clospoint;
+                    if (nearestTower.Distance2D(hero) <= 1000 && Utils.SleepCheck("Tempest.Attack.Tower.Cd" + handle) &&
+                        Utils.SleepCheck("shield" + handle))
                     {
-                        //Print(hero.NetworkActivity.ToString());
-                        if (nearestTower.Distance2D(hero) <= 1000)
+                        var spell = hero.Spellbook.Spell2;
+                        if (spell != null && spell.CanBeCasted())
                         {
-                            var spell = hero.Spellbook.Spell2;
-                            if (spell != null && spell.CanBeCasted() && Utils.SleepCheck(spell.Name + handle))
-                            {
-                                spell.UseAbility(Prediction.InFront(hero,300));
-                                Utils.Sleep(250,spell.Name+handle);
-                                hero.Attack(nearestTower);
-                                //Print("shield");
-                            }
+                            spell.UseAbility(Prediction.InFront(hero, 100));
+                            Utils.Sleep(1500, "shield" + handle);
                         }
-                        else
+                        else if (!hero.IsAttacking())
                         {
-                            hero.Attack(pos);
+                            hero.Attack(nearestTower);
                         }
-                        Utils.Sleep(350, "Tempest.Attack.Cd" + handle);
+                        Utils.Sleep(1000, "Tempest.Attack.Tower.Cd" + handle);
                     }
-                    if (creepWithEnemy.Distance2D(hero) <= 500)
+                    else if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && !hero.IsAttacking())
+                    {
+                        hero.Attack(pos);
+                        Utils.Sleep(1000, "Tempest.Attack.Cd" + handle);
+                    }
+                    if (enemyCreeps.Any(x=>x.Distance2D(hero)<=800))
                     {
                         foreach (var item in autoPushItems)
                         {
@@ -593,26 +654,65 @@ namespace ArcAnnihilation
                             {
                                 var necros =
                                     Objects.Necronomicon.GetNecronomicons(me)
-                                        .FirstOrDefault(x => x.Distance2D(hero) <= 500);
+                                        .FirstOrDefault(x => x.Distance2D(hero) <= 500 && x.Name.Contains("warrior"));
                                 if (necros != null) item.UseAbility(necros);
                             }
                             Utils.Sleep(350, "Tempest.AutoPush.Cd" + handle + item.Name);
                         }
                     }
-
+                    foreach (
+                        var source in
+                            ObjectMgr.GetEntities<Hero>()
+                                .Where(x => x.IsIllusion && x.Distance2D(hero) <= 1500 &&
+                                            Utils.SleepCheck("Tempest.Attack.Cd" + x.Handle) && !x.IsAttacking()))
+                    {
+                        source.Attack(pos);
+                        Utils.Sleep(350, "Tempest.Attack.Cd" + source.Handle);
+                    }
                     foreach (
                         var necr in
                             Objects.Necronomicon.GetNecronomicons(me)
                                 .Where(
                                     x =>
                                         x.Distance2D(hero) <= 1500 && Utils.SleepCheck(x.Handle + "AutoPush.Attack") &&
-                                        x.NetworkActivity != NetworkActivity.Attack &&
-                                        x.NetworkActivity != NetworkActivity.Attack2))
+                                        !x.IsAttacking()))
                     {
-                        necr.Attack(pos);
-                        Utils.Sleep(300, necr.Handle + "AutoPush.Attack");
+                        if (Menu.Item("AntiFeed.Enable").GetValue<bool>() &&
+                            Ensage.Common.Objects.Heroes.GetByTeam(hero.GetEnemyTeam())
+                                .Any(x => x.IsAlive && x.IsVisible && x.Distance2D(necr) <= Menu.Item("AntiFeed.Range").GetValue<Slider>().Value))
+                        {
+                            necr.Move(Objects.Fountains.GetAllyFountain().Position);
+                        }
+                        else
+                        {
+                            necr.Attack(pos);
+                        }
+
+                        Utils.Sleep(1000, necr.Handle + "AutoPush.Attack");
                     }
                 }
+            }
+        }
+
+        private static string GetCurrentLane(Hero me)
+        {
+            return LaneDictionary.OrderBy(x => x.Key.Distance2D(me)).First().Value;
+        }
+        private static Vector3 GetClosestPoint(string pos)
+        {
+            /*return LaneDictionary.Where(
+                y => y.Value == pos && y.Key.Distance2D(Objects.Fountains.GetAllyFountain()) <= y.Key.Distance2D(me))
+                .OrderBy(x => x.Key.Distance2D(me)).First().Key;*/
+            
+            var list=LaneDictionary.Keys.ToList();
+            switch (pos)
+            {
+                case "top":
+                    return list[0];
+                case "bot":
+                    return list[3];
+                default:
+                    return list[6];
             }
         }
 
