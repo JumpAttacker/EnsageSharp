@@ -8,6 +8,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
+using Ensage.Items;
 using SharpDX;
 using SharpDX.Direct3D9;
 using Color = SharpDX.Color;
@@ -120,7 +121,7 @@ namespace OverlayInformation
             enemyStatus.AddItem(new MenuItem("EnemyStatus.Vision.Enable", "Show on top panel Ally's vision status").SetValue(true));
             
             var dangitems=new Menu("Dangerous Items","dangitems");
-            dangitems.AddItem(new MenuItem("DangItems.Enable", "Show Dangerous Items").SetValue(true));
+            dangitems.AddItem(new MenuItem("DangItems.Enable", "Show Dangerous Items").SetValue(false));
             //dangitems.AddItem(new MenuItem("dangItemEnemy", "Only For Enemy").SetValue(true));
             var dict = new Dictionary<string, bool>
             {
@@ -157,6 +158,7 @@ namespace OverlayInformation
 
             var spellpanel = new Menu("SpellPanel", "SpellPanel");
             spellpanel.AddItem(new MenuItem("SpellPanel.Enable", "Show Ability").SetValue(true));
+            spellpanel.AddItem(new MenuItem("SpellPanel.EnableForAlly", "Enable For Ally").SetValue(true));
             spellpanel.AddItem(new MenuItem("SpellPanel.distBetweenSpells", "Distance spells").SetValue(new Slider(0, 0, 200)));
             spellpanel.AddItem(new MenuItem("SpellPanel.DistBwtweenLvls", "Distance lvls").SetValue(new Slider(0, 0, 200)));
             spellpanel.AddItem(new MenuItem("SpellPanel.SizeSpell", "Level size").SetValue(new Slider(0, 1, 25)));
@@ -449,10 +451,10 @@ namespace OverlayInformation
             var dummy = ObjectMgr.GetEntities<Unit>().Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team != MeHero.Team).ToList();
             foreach (var t in dummy)
             {
-                for (var n = 0; n <= 4; n++)
+                for (var n = 0; n <= 3; n++)
                 {
-                    var mod = t.Modifiers.FirstOrDefault(x => x.Name == ShowMeMoreEffects[n].Modifier);
-                    if (mod == null) continue;
+                    var mod = t.Modifiers.Any(x => x.Name == ShowMeMoreEffects[n].Modifier);
+                    if (!mod) continue;
 
                     ParticleEffect effect;
                     if (!ShowMeMoreEffect.TryGetValue(t, out effect))
@@ -535,22 +537,23 @@ namespace OverlayInformation
 
                 #region Spells
 
-                if (Menu.Item("SpellPanel.Enable").GetValue<bool>() && !Equals(v, MeHero))
+                if (Menu.Item("SpellPanel.Enable").GetValue<bool>() && !Equals(v, MeHero) &&
+                    (v.Team == MeHero.GetEnemyTeam() || Menu.Item("SpellPanel.EnableForAlly").GetValue<bool>()))
                 {
                     Vector2 mypos;
                     if (Drawing.WorldToScreen(v.Position, out mypos))
                     {
                         if (mypos.X <= -5000 || mypos.X >= 5000) continue;
                         if (mypos.Y <= -5000 || mypos.Y >= 5000) continue;
-                        var start = HUDInfo.GetHPbarPosition(v) + new Vector2(-Menu.Item("SpellPanel.ExtraPosX").GetValue<Slider>().Value, Menu.Item("SpellPanel.ExtraPosY").GetValue<Slider>().Value);//new Vector2(mypos.X-100, mypos.Y);
+                        var start = HUDInfo.GetHPbarPosition(v) +
+                                    new Vector2(-Menu.Item("SpellPanel.ExtraPosX").GetValue<Slider>().Value,
+                                        Menu.Item("SpellPanel.ExtraPosY").GetValue<Slider>().Value);
+                            //new Vector2(mypos.X-100, mypos.Y);
 
                         var distBetweenSpells = Menu.Item("SpellPanel.distBetweenSpells").GetValue<Slider>().Value;
                         var distBwtweenLvls = Menu.Item("SpellPanel.DistBwtweenLvls").GetValue<Slider>().Value;
                         var sizeSpell = Menu.Item("SpellPanel.SizeSpell").GetValue<Slider>().Value;
-                        //(iSize.X / 3);
                         const int sizey = 9;
-
-
                         foreach (
                             var spell in
                                 v.Spellbook.Spells.Where(
@@ -560,7 +563,7 @@ namespace OverlayInformation
                             var size2 = distBetweenSpells;
                             var extrarange = spell.Level > 4 ? spell.Level - 4 : 0;
 
-                            size2 = (int)(size2 + extrarange * 7);
+                            size2 = (int) (size2 + extrarange*7);
                             var cd = spell.Cooldown;
 
                             Drawing.DrawRect(start,
@@ -581,7 +584,7 @@ namespace OverlayInformation
                                 var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200),
                                     FontFlags.None);
                                 var textPos = start +
-                                              new Vector2(10 - textSize.X / 2, -textSize.Y / 2 + 12);
+                                              new Vector2(10 - textSize.X/2, -textSize.Y/2 + 12);
                                 Drawing.DrawText(text, textPos, /*new Vector2(10, 150),*/ Color.White,
                                     FontFlags.AntiAlias | FontFlags.DropShadow);
                             }
@@ -590,7 +593,7 @@ namespace OverlayInformation
                             {
                                 for (var lvl = 1; lvl <= spell.Level; lvl++)
                                 {
-                                    Drawing.DrawRect(start + new Vector2(distBwtweenLvls * lvl, sizey - 6),
+                                    Drawing.DrawRect(start + new Vector2(distBwtweenLvls*lvl, sizey - 6),
                                         new Vector2(sizeSpell, sizey - 6),
                                         new ColorBGRA(255, 255, 0, 255));
                                 }
