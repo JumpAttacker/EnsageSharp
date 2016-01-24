@@ -1,30 +1,41 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
 using SharpDX;
 
 namespace PerfectBlink
 {
-    class Program
+    internal static class Program
     {
-        private const string Ver = "1.1";
-
-        static void Main()
+        private static readonly Menu Menu=new Menu("Perfect Blink","PerfectBlink",true,"item_blink",true);
+        private static void Main()
         {
             Player.OnExecuteOrder += Player_OnExecuteAction;
-            PrintSuccess(string.Format("> Perfect Blink Loaded v{0}", Ver));
+            PrintSuccess(string.Format("> {1} Loaded v{0}", Assembly.GetExecutingAssembly().GetName().Version, Menu.DisplayName));
+            Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
+                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
+                    MessageType.LogMessage);
+            Menu.AddItem(new MenuItem("PB.Enable", "Enable")).SetValue(true);
+            Menu.AddToMainMenu();
         }
-        static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
+
+        private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
-            if ((args.Order == Order.AbilityTarget || args.Order == Order.AbilityLocation))
+            if (!Menu.Item("PB.Enable").GetValue<bool>()) return;
+            if (args.Order == Order.AbilityTarget || args.Order == Order.AbilityLocation)
                 if (args.Ability.Name == "item_tpscroll" || args.Ability.Name == "item_travel_boots" ||
                     args.Ability.Name == "item_travel_boots_2")
                     TpPos = args.TargetPosition;
+                    
             if (args.Order != Order.AbilityLocation) return;
 
             if (args.Ability.Name != "item_blink") return;
-            var me = ObjectMgr.LocalHero;
+            var me = args.Entities.FirstOrDefault() as Hero;//ObjectMgr.LocalHero);
+            if (me==null) return;
             if (!(me.Distance2D(args.TargetPosition) > 1200))
                 return;
             var tpos = me.Position;
@@ -46,7 +57,7 @@ namespace PerfectBlink
             args.Process = false;
         }
 
-        public static Vector3 TpPos { get; set; }
+        private static Vector3 TpPos { get; set; }
 
 
         private static void PrintInfo(string text, params object[] arguments)
