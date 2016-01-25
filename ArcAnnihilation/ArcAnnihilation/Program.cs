@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -251,7 +251,8 @@ namespace ArcAnnihilation
                 if (args.Order != Order.Stop && args.Order != Order.AttackLocation && args.Order != Order.AttackTarget &&
                     args.Order != Order.Ability && args.Order != Order.AbilityTarget &&
                     args.Order != Order.AbilityLocation &&
-                    args.Order != Order.MoveLocation && args.Order != Order.MoveTarget && args.Order != Order.Hold)
+                    args.Order != Order.MoveLocation && args.Order != Order.MoveTarget && args.Order != Order.Hold
+					)
                     return;
 
                 foreach (var hero in Objects.Tempest.GetCloneList(sender.Hero))
@@ -294,11 +295,18 @@ namespace ArcAnnihilation
                                 needed.UseAbility(args.TargetPosition);
                             }
                             break;
+							
                         case Order.MoveLocation:
-                            hero.Move(args.TargetPosition);
+							if (hero.NetworkActivity != NetworkActivity.Attack)
+							{
+								hero.Move(args.TargetPosition);
+							}
                             break;
                         case Order.MoveTarget:
-                            hero.Move(args.TargetPosition);
+							if (hero.NetworkActivity != NetworkActivity.Attack)
+							{
+								hero.Move(args.TargetPosition);
+							}
                             break;
                         case Order.AbilityTargetTree:
                             break;
@@ -873,7 +881,7 @@ namespace ArcAnnihilation
                     ItemUsage(hero, enumerable, target, d,
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
-                    if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
+                    if (Menu.Item("OrbWalking.Enable").GetValue<bool>() && me.NetworkActivity != NetworkActivity.Attack)
                     {
                         Orbwalk(hero, target, Menu.Item("OrbWalking.bonusWindupMs").GetValue<Slider>().Value);
                     }
@@ -886,7 +894,7 @@ namespace ArcAnnihilation
             }
             var illusions = ObjectMgr.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && x.Modifiers.Any(y => y.Name != "modifier_kill")).ToList();
             foreach (var illusion in illusions.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle)))
-            {
+            { if(illusion.NetworkActivity != NetworkActivity.Attack)
                 illusion.Attack(target);
                 Utils.Sleep(350, "clone_attacking" + illusion.Handle);
             }
@@ -928,7 +936,8 @@ namespace ArcAnnihilation
                 q.UseAbility(target);
                 Utils.Sleep(500, me.Handle + q.Name);
             }
-            if (w != null && w.CanBeCasted() && Utils.SleepCheck(w.Name) && me.Modifiers.All(x => x.Name != "modifier_arc_warden_magnetic_field") && distance <= 600 && !daggerIsReady)
+            if (w != null && w.CanBeCasted() && Utils.SleepCheck(w.Name) && me.Modifiers.All(x => x.Name != "modifier_arc_warden_magnetic_field") 
+				&& me.Distance2D(target)<= target.AttackRange+200 && target.NetworkActivity == NetworkActivity.Attack && distance <= 600 && !daggerIsReady)
             {
                 w.UseAbility(Prediction.InFront(me,200));
                 Utils.Sleep(500, w.Name);
@@ -987,7 +996,16 @@ namespace ArcAnnihilation
                     }
                     continue;
                 }
-                item.UseAbility();
+				if (item.Name == "item_medallion_of_courage" || item.Name == "item_solar_crest")
+				{
+					if (distance < 650)
+					{
+							item.UseAbility(target);
+							Utils.Sleep(500, item.Name + me.Handle);
+					}
+					continue;
+				}
+				item.UseAbility();
                 item.UseAbility(target);
                 item.UseAbility(target.Position);
                 item.UseAbility(me);
@@ -1050,8 +1068,8 @@ namespace ArcAnnihilation
                 var r = me.Spellbook.SpellR;
                 if (r == null || r.CanBeCasted()) return;
                 var refresher = inventory.FirstOrDefault(x => x.Name == "item_refresher");
-                refresher?.UseAbility();
-                Utils.Sleep(500, refresher?.Name + me.Handle);
+                refresher.UseAbility();
+                Utils.Sleep(500, refresher.Name + me.Handle);
             }
         }
 
@@ -1127,7 +1145,7 @@ namespace ArcAnnihilation
             {
                 var canAttack = !AttackOnCooldown(me,target, bonusWindupMs)
                                 && !target.IsAttackImmune() && !target.IsInvul() && me.CanAttack();
-                if (canAttack && Utils.SleepCheck("!Orbwalk.Attack"))
+                if (canAttack && me.NetworkActivity != NetworkActivity.Attack && Utils.SleepCheck("!Orbwalk.Attack"))
                 {
                     me.Attack(target);
                     Utils.Sleep(
@@ -1142,7 +1160,7 @@ namespace ArcAnnihilation
             {
                 return;
             }
-            if (target != null) me.Move(target.Position);
+            if (target != null && me.NetworkActivity != NetworkActivity.Attack) me.Move(target.Position);
             Utils.Sleep(100, "!Orbwalk.Move");
         }
 
