@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -24,34 +23,39 @@ namespace ArcAnnihilation
     [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
     internal static class Program
     {
+        #region Variables
+
         private static Hero _mainHero;
         private static bool _loaded;
-        private static Vector3 _pushLaneTop=new Vector3(-5895, 5402, 384);
-        private static Vector3 _pushLaneBot=new Vector3(5827, -5229, 384);
-        private static Vector3 _pushLaneMid=new Vector3(1,1,384);
-        private static readonly Dictionary<Vector3,string> LaneDictionary=new Dictionary<Vector3, string>()
+        private static Vector3 _pushLaneTop = new Vector3(-5895, 5402, 384);
+        private static Vector3 _pushLaneBot = new Vector3(5827, -5229, 384);
+        private static Vector3 _pushLaneMid = new Vector3(1, 1, 384);
+
+        private static readonly Dictionary<Vector3, string> LaneDictionary = new Dictionary<Vector3, string>()
         {
-            {new Vector3(-5895, 5402, 384),"top"},
-            {new Vector3(-6600, -3000, 384),"top"},
-            {new Vector3(2700, 5600, 384),"top"},
+            {new Vector3(-5895, 5402, 384), "top"},
+            {new Vector3(-6600, -3000, 384), "top"},
+            {new Vector3(2700, 5600, 384), "top"},
 
 
-            {new Vector3(5827, -5229, 384),"bot"},
-            {new Vector3(-3200, -6200, 384),"bot"},
-            {new Vector3(6200, 2200, 384),"bot"},
+            {new Vector3(5827, -5229, 384), "bot"},
+            {new Vector3(-3200, -6200, 384), "bot"},
+            {new Vector3(6200, 2200, 384), "bot"},
 
 
-            {new Vector3(-600,-300,384),"middle"},
-            {new Vector3(3600, 3200, 384),"middle"},
-            {new Vector3(-4400, -3900, 384),"middle"}
-            
+            {new Vector3(-600, -300, 384), "middle"},
+            {new Vector3(3600, 3200, 384), "middle"},
+            {new Vector3(-4400, -3900, 384), "middle"}
+
         };
+
         private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true, "npc_dota_hero_arc_warden", true);
         private static Hero _globalTarget;
         private static Hero _globalTarget2;
         private static int _tick;
-        private static readonly Dictionary<uint,int> LastAttackStart = new Dictionary<uint, int>();
+        private static readonly Dictionary<uint, int> LastAttackStart = new Dictionary<uint, int>();
         private static readonly Dictionary<uint, NetworkActivity> LastActivity = new Dictionary<uint, NetworkActivity>();
+
         private static readonly List<string> Items = new List<string>
         {
             "item_mask_of_madness",
@@ -81,6 +85,7 @@ namespace ArcAnnihilation
             "item_sheepstick"
             /*"item_refresher"*/
         };
+
         private static readonly List<string> AutoPushItems = new List<string>
         {
             "item_necronomicon",
@@ -116,18 +121,25 @@ namespace ArcAnnihilation
             "item_diffusal_blade",
             "item_diffusal_blade_2"
         };
+
+        #endregion
+
+        #region Enums
+
         private enum Orders
         {
             Monkey,
             Caster,
             Nothing
         }
+
         private enum PurgeSelection
         {
             MainTarget,
             AllEnemies,
             Noone
         }
+
         private enum DispelSelection
         {
             Me,
@@ -135,13 +147,17 @@ namespace ArcAnnihilation
             Both,
             Noone
         }
+
         private enum BkbUsage
         {
-            Me, 
-            Clones, 
+            Me,
+            Clones,
             All,
             NoOne
         }
+
+        #endregion
+
         private static void Main()
         {
             Game.OnUpdate += Game_OnUpdate;
@@ -341,7 +357,9 @@ namespace ArcAnnihilation
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!_loaded) return;
-            if (Menu.Item("AutoPush.DrawLine").GetValue<bool>())
+            if (Menu.Item("AutoPush.DrawLine").GetValue<bool>() &&
+                Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active &&
+                !Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
                 var me = ObjectMgr.LocalHero;
                 foreach (var hero in Objects.Tempest.GetCloneList(me))
@@ -354,17 +372,16 @@ namespace ArcAnnihilation
                     var fountain = Objects.Fountains.GetAllyFountain();
                     var curlane = GetCurrentLane(hero);
                     var clospoint = GetClosestPoint(curlane);
-                    var useThisShit = clospoint.Distance2D(fountain)-250 > hero.Distance2D(fountain);
+                    var useThisShit = clospoint.Distance2D(fountain) - 250 > hero.Distance2D(fountain);
 
-                    if (nearestTower != null)
-                    {
-                        var pos222 = curlane == "mid" || !useThisShit ? nearestTower.Position : clospoint;
-                        var w2Shero = Drawing.WorldToScreen(hero.Position);
-                        var w2SPos = Drawing.WorldToScreen(pos222);
-                        //Print($"w2shero: {w2shero.X}/{w2shero.Y}");
-                        //Print($"w2sPos: {w2sPos.X}/{w2sPos.Y}");
-                        Drawing.DrawLine(w2Shero, w2SPos, Color.YellowGreen);
-                    }
+                    if (nearestTower == null) continue;
+                    var pos222 = curlane == "mid" || !useThisShit ? nearestTower.Position : clospoint;
+                    var w2Shero = Drawing.WorldToScreen(hero.Position);
+                    var w2SPos = Drawing.WorldToScreen(pos222);
+                    if ((w2Shero.X == 0 && w2Shero.Y == 0) || (w2SPos.X == 0 && w2SPos.Y == 0)) continue;
+                    //Print($"w2shero: {w2shero.X}/{w2shero.Y}");
+                    //Print($"w2sPos: {w2sPos.X}/{w2sPos.Y}");
+                    Drawing.DrawLine(w2Shero, w2SPos, Color.YellowGreen);
                 }
             }
             /*var position = Game.MousePosition;
@@ -698,6 +715,7 @@ namespace ArcAnnihilation
         {
             return LaneDictionary.OrderBy(x => x.Key.Distance2D(me)).First().Value;
         }
+
         private static Vector3 GetClosestPoint(string pos)
         {
             /*return LaneDictionary.Where(
@@ -716,10 +734,6 @@ namespace ArcAnnihilation
             }
         }
 
-        private static void Print(string toString, MessageType type = MessageType.ChatMessage)
-        {
-            Game.PrintMessage(toString, type);
-        }
 
         private static void CloneUseHealItems(Hero clone, Hero me, float distance)
         {
@@ -919,7 +933,7 @@ namespace ArcAnnihilation
                 w.UseAbility(Prediction.InFront(me,200));
                 Utils.Sleep(500, w.Name);
             }
-            if (e != null && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name))
+            if (e != null && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady)
             {
                 var predVector3 = target.NetworkActivity == NetworkActivity.Move && Menu.Item("usePrediction").GetValue<bool>()
                         ? Prediction.InFront(target, target.MovementSpeed * 3 + Game.Ping / 1000)
@@ -933,23 +947,6 @@ namespace ArcAnnihilation
             Utils.Sleep(500, me.Handle + r.Name);
         }
 
-        /*private static IEnumerable<Hero> _clones;
-
-        private static IEnumerable<Hero> GetCloneList(Hero me)
-        {
-            if (!Utils.SleepCheck("get_clones")) return _clones;
-            _clones = ObjectMgr.GetEntities<Hero>()
-                .Where(
-                    x =>
-                        x.IsAlive && x.IsControllable && x.Team == me.Team &&
-                        Utils.SleepCheck("spam" + x.Handle.ToString()) &&
-                        x.Modifiers.Any(y => y.Name == "modifier_kill"))
-                .ToList();
-            if (_clones.Any())
-                Utils.Sleep(100, "get_clones");
-            return _clones;
-
-        }*/
         private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, float distance, bool useBkb, bool byIllusion = false)
         {
             if (me.IsChanneling()) return;
@@ -1209,6 +1206,11 @@ namespace ArcAnnihilation
             Console.ForegroundColor = color;
             Console.WriteLine(text, arguments);
             Console.ForegroundColor = clr;
+        }
+
+        private static void Print(string toString, MessageType type = MessageType.ChatMessage)
+        {
+            Game.PrintMessage(toString, type);
         }
     }
 }
