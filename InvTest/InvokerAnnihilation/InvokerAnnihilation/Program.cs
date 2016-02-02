@@ -545,21 +545,22 @@ namespace InvokerAnnihilation
                 _loaded = true;
                 _combo = 0;
 
+                var spells = me.Spellbook;
 
-                var q = me.Spellbook.SpellQ;
-                var w = me.Spellbook.SpellW;
-                var e = me.Spellbook.SpellE;
+                var q = spells.SpellQ;
+                var w = spells.SpellW;
+                var e = spells.SpellE;
 
-                var ss = me.FindSpell("invoker_sun_strike");
-                var coldsnap = me.FindSpell("invoker_cold_snap");
-                var ghostwalk = me.FindSpell("invoker_ghost_walk");
-                var icewall = me.FindSpell("invoker_ice_wall");
-                var tornado = me.FindSpell("invoker_tornado");
-                var blast = me.FindSpell("invoker_deafening_blast");
-                var forgeSpirit = me.FindSpell("invoker_forge_spirit");
-                var emp = me.FindSpell("invoker_emp");
-                var alacrity = me.FindSpell("invoker_alacrity");
-                var meteor = me.FindSpell("invoker_chaos_meteor");
+                var ss = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_sun_strike");
+                var coldsnap = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_cold_snap");
+                var ghostwalk = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_ghost_walk");
+                var icewall = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_ice_wall");
+                var tornado = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_tornado");
+                var blast = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_deafening_blast");
+                var forgeSpirit = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_forge_spirit");
+                var emp = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_emp");
+                var alacrity = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_alacrity");
+                var meteor = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_chaos_meteor");
 
                 SpellInfo.Add(ss.Name, new SpellStruct(e, e, e));
                 SpellInfo.Add(coldsnap.Name, new SpellStruct(q, q, q));
@@ -727,16 +728,18 @@ namespace InvokerAnnihilation
             var active1 = me.Spellbook.Spell4;
             var active2 = me.Spellbook.Spell5;
             */
-            var invoke = me.FindSpell("invoker_invoke");
+            var spellBooker = me.Spellbook.Spells.ToList();
+            var items = me.Inventory.Items.ToList();
+            var invoke = spellBooker.FirstOrDefault(x=>x.Name=="invoker_invoke");
             
-            var eul = me.FindItem("item_cyclone");
-            var dagger = me.FindItem("item_blink");
-            var refresher = me.FindItem("item_refresher");
-            var icewall = me.FindSpell("invoker_ice_wall");
-            var deafblast = me.FindSpell("invoker_deafening_blast");
-            var hex = me.FindItem("item_sheepstick");
-            var urn = me.FindItem("item_urn_of_shadows");
-            var orchid = me.FindItem("item_orchid");
+            var eul = items.FirstOrDefault(x=>x.Name=="item_cyclone");
+            var dagger = items.FirstOrDefault(x=>x.Name=="item_blink");
+            var refresher = items.FirstOrDefault(x=>x.Name=="item_refresher");
+            var icewall = spellBooker.FirstOrDefault(x=>x.Name=="invoker_ice_wall");
+            var deafblast = spellBooker.FirstOrDefault(x=>x.Name=="invoker_deafening_blast");
+            var hex = items.FirstOrDefault(x=>x.Name=="item_sheepstick");
+            var urn = items.FirstOrDefault(x=>x.Name=="item_urn_of_shadows");
+            var orchid = items.FirstOrDefault(x=>x.Name=="item_orchid");
             var meteor = me.FindSpell("invoker_chaos_meteor");
             var ss = me.FindSpell("invoker_sun_strike");
             //var emp = me.FindSpell("invoker_emp");
