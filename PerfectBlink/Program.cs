@@ -36,21 +36,24 @@ namespace PerfectBlink
             if (args.Ability.Name != "item_blink") return;
             var me = args.Entities.FirstOrDefault() as Hero;//ObjectMgr.LocalHero);
             if (me==null) return;
-            if (!(me.Distance2D(args.TargetPosition) > 1200))
+            var safeRange = me.FindItem("item_aether_lens") == null ? 1200 : 1400;
+            if (!(me.Distance2D(args.TargetPosition) > safeRange))
                 return;
             var tpos = me.Position;
             var a = tpos.ToVector2().FindAngleBetween(args.TargetPosition.ToVector2(), true);
+            
+            safeRange -= (int)me.HullRadius;
             var p = new Vector3(
-                tpos.X + 1150 * (float)Math.Cos(a),
-                tpos.Y + 1150 * (float)Math.Sin(a),
+                tpos.X + safeRange * (float)Math.Cos(a),
+                tpos.Y + safeRange * (float)Math.Sin(a),
                 100);
             if (me.Modifiers.Any(x => x.Name == "modifier_teleporting"))
             {
                 tpos = TpPos;
                 a = tpos.ToVector2().FindAngleBetween(args.TargetPosition.ToVector2(), true);
                 p = new Vector3(
-                    tpos.X + 1150*(float) Math.Cos(a),
-                    tpos.Y + 1150*(float) Math.Sin(a),
+                    tpos.X + safeRange * (float)Math.Cos(a),
+                    tpos.Y + safeRange * (float)Math.Sin(a),
                     100);
             }
             args.Ability.UseAbility(p,me.IsChanneling());
