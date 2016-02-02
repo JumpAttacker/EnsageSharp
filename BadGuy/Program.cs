@@ -51,7 +51,7 @@ namespace BadGuy
             var laugh = new Menu("laugh Selection", "laugh");
             laugh.AddItem(new MenuItem("laugh.Enable", "Enable laugh").SetValue(false));
             laugh.AddItem(new MenuItem("laugh.Cd", "Rate").SetValue(new Slider(20, 20))).SetTooltip("in secs");
-            laugh.AddItem(new MenuItem("laugh.Message", "Print Message on lught").SetValue(false).SetTooltip("only for you"));
+            laugh.AddItem(new MenuItem("laugh.Message", "Print Message on laught").SetValue(false).SetTooltip("only for you"));
 
             var drawing = new Menu("Spam Drawing", "spamDrawing");
             drawing.AddItem(new MenuItem("Drawing.Fully.Enable", "Fully Enable").SetValue(false));
