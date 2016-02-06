@@ -46,7 +46,7 @@ namespace ArcAnnihilation
         {
             private static IEnumerable<Unit> _necronomicon;
 
-            public static IEnumerable<Unit> GetNecronomicons(Hero me)
+            public static IEnumerable<Unit> GetNecronomicons(Unit me)
             {
                 if (!Utils.SleepCheck("Necronomicon.refresh")) return _necronomicon;
                 _necronomicon =
