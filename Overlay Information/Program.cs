@@ -8,7 +8,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
-using Ensage.Items;
+using Ensage.Common.Objects;
 using SharpDX;
 using SharpDX.Direct3D9;
 using Color = SharpDX.Color;
@@ -19,14 +19,18 @@ namespace OverlayInformation
 {
     internal static class Program
     {
-        private static readonly Menu Menu=new Menu("OverlayInformation","OI",true);
+        #region Variables
+
+        private static readonly Menu Menu = new Menu("OverlayInformation", "OI", true);
 
         private static Hero MeHero { get; set; }
         private static Player MePlayer { get; set; }
 
         private static readonly StatusInfo[] SInfo = new StatusInfo[10];
+
         private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect =
             new Dictionary<Unit, ParticleEffect>();
+
         private static readonly Dictionary<Hero, Ability> UltimateAbilities = new Dictionary<Hero, Ability>();
 
         private static readonly List<Entity> InSystem = new List<Entity>();
@@ -44,7 +48,8 @@ namespace OverlayInformation
         private static Font _roshanFont;
         private static bool _letsDraw = true;
 
-        private static readonly ShowMeMoreStruct[] ShowMeMoreEffects = {
+        private static readonly ShowMeMoreStruct[] ShowMeMoreEffects =
+        {
             new ShowMeMoreStruct("modifier_invoker_sun_strike",
                 "hero_invoker/invoker_sun_strike_team", 175),
             new ShowMeMoreStruct("modifier_lina_light_strike_array",
@@ -54,6 +59,9 @@ namespace OverlayInformation
             new ShowMeMoreStruct("modifier_leshrac_split_earth_thinker",
                 "hero_leshrac/leshrac_split_earth_b", 225)
         };
+
+        #endregion
+
         private struct ShowMeMoreStruct
         {
             public readonly string Modifier;
@@ -316,34 +324,31 @@ namespace OverlayInformation
             #region Init
 
             if (!Game.IsInGame) return;
+
+            Update();
+
+            #endregion
+
+            #region Actions
+
+            RuneAction();
+            RoshanAction();
+            ShowIllusion();
+            AutoItemsAction();
+
+            #endregion
+        }
+
+        private static void Update()
+        {
             if (!MePlayer.IsValid)
                 MePlayer = ObjectMgr.LocalPlayer;
             if (!MeHero.IsValid)
                 MeHero = ObjectMgr.LocalHero;
+        }
 
-            #endregion
-
-            #region Rune
-
-            if (Menu.Item("RuneNotification.Enable").GetValue<bool>())
-            {
-                var runes =
-                    ObjectMgr.GetEntities<Rune>()
-                        .Where(x => x.RuneType != RuneType.None && !InSystem.Contains(x))
-                        .ToList();
-                foreach (var rune in runes)
-                {
-                    InSystem.Add(rune);
-                    Game.PrintMessage(
-                        "<font size='20'> Rune: " + "<font face='Comic Sans MS, cursive'><font color='#00aaff'>"
-                        + rune.RuneType + " on <font color='#FF0000'>" + (rune.Position.X < 0 ? "TOP" : "BOT") +
-                        " </font>",
-                        MessageType.LogMessage);
-                }
-            }
-
-            #endregion
-
+        private static void RoshanAction()
+        {
             #region Roshan
             if (Menu.Item("TopPanel.Roshan").GetValue<bool>())
             {
@@ -360,7 +365,10 @@ namespace OverlayInformation
             }
 
             #endregion
+        }
 
+        private static void ShowIllusion()
+        {
             #region ShowIllusions
 
             if (Menu.Item("ShowIllusions.Enable").GetValue<bool>() && Utils.SleepCheck("ShowIllusions"))
@@ -375,7 +383,10 @@ namespace OverlayInformation
             }
 
             #endregion
+        }
 
+        private static void AutoItemsAction()
+        {
             #region AutoItems
 
             if (!Menu.Item("AutoItems.Enable").GetValue<bool>() || !Utils.SleepCheck("AutoItems") || !MeHero.IsAlive || MeHero.IsInvisible()) return;
@@ -383,7 +394,7 @@ namespace OverlayInformation
             if (Menu.Item("autoitemsList").GetValue<AbilityToggler>().IsEnabled("item_hand_of_midas"))
             {
                 Utils.Sleep(250, "AutoItems");
-                var midas = inventory.FirstOrDefault(x=>x.Name=="item_hand_of_midas");
+                var midas = inventory.FirstOrDefault(x => x.Name == "item_hand_of_midas");
                 if (midas != null && midas.CanBeCasted())
                 {
                     var creep =
@@ -413,8 +424,30 @@ namespace OverlayInformation
             if (stick == null || !stick.CanBeCasted() || stick.CurrentCharges <= 0) return;
             stick.UseAbility();
             #endregion
+        }
 
-            
+        private static void RuneAction()
+        {
+            #region Rune
+
+            if (Menu.Item("RuneNotification.Enable").GetValue<bool>())
+            {
+                var runes =
+                    ObjectMgr.GetEntities<Rune>()
+                        .Where(x => x.RuneType != RuneType.None && !InSystem.Contains(x))
+                        .ToList();
+                foreach (var rune in runes)
+                {
+                    InSystem.Add(rune);
+                    Game.PrintMessage(
+                        "<font size='20'> Rune: " + "<font face='Comic Sans MS, cursive'><font color='#00aaff'>"
+                        + rune.RuneType + " on <font color='#FF0000'>" + (rune.Position.X < 0 ? "TOP" : "BOT") +
+                        " </font>",
+                        MessageType.LogMessage);
+                }
+            }
+
+            #endregion
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -431,29 +464,92 @@ namespace OverlayInformation
             #endregion
         }
 
+        #region DrawForHeroes
+
+        private static void DrawForAllHero()
+        {
+            foreach (var v in Heroes.All.Where(x => x != null && x.IsValid))
+            {
+                var pos = GetTopPanelPosition(v) +
+                          new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
+                              Menu.Item("BarPosY").GetValue<Slider>().Value);
+                var size = GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value);
+                var healthDelta = new Vector2(v.Health*size.X/v.MaximumHealth, 0);
+                var manaDelta = new Vector2(v.Mana*size.X/v.MaximumMana, 0);
+                DrawHealthPanel(pos, size, healthDelta);
+                DrawManaPanel(pos, size, manaDelta);
+            }
+        }
+
+        private static void DrawForAllyHero()
+        {
+            foreach (var v in Heroes.GetByTeam(MeHero.Team).Where(x => x != null && x.IsValid))
+            {
+                var pos = GetTopPanelPosition(v) +
+                          new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
+                              Menu.Item("BarPosY").GetValue<Slider>().Value);
+                var size = GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value);
+                DrawVisionChecker(v, pos, size);
+                DrawShowMeMoreBara(v, pos, size);
+            }
+        }
+
+        private static void DrawForEnemyHero()
+        {
+            foreach (
+                var v in
+                    Heroes.GetByTeam(MeHero.GetEnemyTeam()).Where(x => x != null && x.IsValid))
+            {
+                DrawEnemyStatus(v, GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value),
+                    GetTopPanelPosition(v) +
+                    new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
+                        Menu.Item("BarPosY").GetValue<Slider>().Value), 7);
+                DrawUltimates(v);
+                DrawShowMeMoreLooping(v);
+                DrawLastPosition(v);
+            }
+        }
+
+        private static void DrawForViableHero()
+        {
+            foreach (
+                var v in Heroes.All.Where(x => x != null && x.IsValid && x.IsVisible && x.IsAlive)
+                )
+            {
+                DrawDangItems(v);
+                DrawSpellPanel(v);
+            }
+        }
+
+        #endregion
+
+        #region DrawingHelpers
+
         private static void DrawShowMeMore(bool showMeMore)
         {
-            if (showMeMore && AAunit != null && AAunit.IsValid)
-            {
-                var aapos = Drawing.WorldToScreen(AAunit.Position);
-                Drawing.DrawLine(Drawing.WorldToScreen(MeHero.Position), aapos, Color.AliceBlue);
-                const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
-                Drawing.DrawRect(aapos, new Vector2(50, 50), Drawing.GetTexture(name));
-            }
+            if (!showMeMore || AAunit == null || !AAunit.IsValid) return;
+            var aapos = Drawing.WorldToScreen(AAunit.Position);
+            Drawing.DrawLine(Drawing.WorldToScreen(MeHero.Position), aapos, Color.AliceBlue);
+            const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
+            Drawing.DrawRect(aapos, new Vector2(50, 50), Drawing.GetTexture(name));
         }
 
         private static void ShowMeMore(bool showMeMore)
         {
             #region Show me more cast
+
             DrawShowMeMore(showMeMore);
             if (!showMeMore || !Utils.SleepCheck("showMeMore.Rate")) return;
             Utils.Sleep(250, "showMeMore.Rate");
-            var dummy = ObjectMgr.GetEntities<Unit>().Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team != MeHero.Team).ToList();
+            var dummy =
+                ObjectMgr.GetEntities<Unit>()
+                    .Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team != MeHero.Team)
+                    .ToList();
             foreach (var t in dummy)
             {
                 for (var n = 0; n <= 3; n++)
                 {
-                    var mod = t.Modifiers.Any(x => x.Name == ShowMeMoreEffects[n].Modifier);
+                    var mod = t.HasModifier(ShowMeMoreEffects[n].Modifier);
                     if (!mod) continue;
 
                     ParticleEffect effect;
@@ -475,7 +571,7 @@ namespace OverlayInformation
                     if (_findAa) continue;
                     _findAa = true;
                     AAunit = t;
-                    
+
                     GenerateSideMessage("ancient_apparition", "ancient_apparition_ice_blast");
                 }
                 else
@@ -500,414 +596,384 @@ namespace OverlayInformation
 
         private static Unit AAunit { get; set; }
 
-        private static void DrawForViableHero()
+        private static void DrawSpellPanel(Hero v)
         {
-            foreach (var v in Ensage.Common.Objects.Heroes.All.Where(x=>x.IsVisible && x.IsAlive))
+            #region Spells
+
+            if (!Menu.Item("SpellPanel.Enable").GetValue<bool>() || Equals(v, MeHero) ||
+                (v.Team != MeHero.GetEnemyTeam() && !Menu.Item("SpellPanel.EnableForAlly").GetValue<bool>())) return;
+            Vector2 mypos;
+            if (!Drawing.WorldToScreen(v.Position, out mypos)) return;
+            if (mypos.X <= -5000 || mypos.X >= 5000) return;
+            if (mypos.Y <= -5000 || mypos.Y >= 5000) return;
+            var start = HUDInfo.GetHPbarPosition(v) +
+                        new Vector2(-Menu.Item("SpellPanel.ExtraPosX").GetValue<Slider>().Value,
+                            Menu.Item("SpellPanel.ExtraPosY").GetValue<Slider>().Value);
+            //new Vector2(mypos.X-100, mypos.Y);
+
+            var distBetweenSpells = Menu.Item("SpellPanel.distBetweenSpells").GetValue<Slider>().Value;
+            var distBwtweenLvls = Menu.Item("SpellPanel.DistBwtweenLvls").GetValue<Slider>().Value;
+            var sizeSpell = Menu.Item("SpellPanel.SizeSpell").GetValue<Slider>().Value;
+            const int sizey = 9;
+            foreach (
+                var spell in
+                    v.Spellbook.Spells.Where(
+                        x => x.AbilityType != AbilityType.Attribute && x.AbilitySlot.ToString() != "-1")
+                )
             {
-                if (Menu.Item("DangItems.Enable").GetValue<bool>())
+                var size2 = distBetweenSpells;
+                var extrarange = spell.Level > 4 ? spell.Level - 4 : 0;
+
+                size2 = (int) (size2 + extrarange*7);
+                var cd = spell.Cooldown;
+
+                Drawing.DrawRect(start,
+                    new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
+                    new ColorBGRA(0, 0, 0, 100));
+                Drawing.DrawRect(start,
+                    new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
+                    new ColorBGRA(255, 255, 255, 100), true);
+                if (spell.AbilityState == AbilityState.NotEnoughMana)
                 {
-                    var invetory =
-                            v.Inventory.Items.Where(
-                                x =>
-                                    Menu.Item("dangItemsUsage").GetValue<AbilityToggler>().IsEnabled(x.Name));
-                    var iPos = HUDInfo.GetHPbarPosition(v);
-                    var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v), HUDInfo.GetHpBarSizeY(v));
-                    float count = 0;
-                    foreach (var item in invetory)
-                    {
-                        var itemname = string.Format("materials/ensage_ui/items/{0}.vmat",
-                            item.Name.Replace("item_", ""));
-                        Drawing.DrawRect(iPos + new Vector2(count, 50),
-                            new Vector2(iSize.X / 3, (float)(iSize.Y * 2.5)),
-                            Drawing.GetTexture(itemname));
-                        if (item.AbilityState == AbilityState.OnCooldown)
-                        {
-                            var cd = ((int)item.Cooldown).ToString(CultureInfo.InvariantCulture);
-                            Drawing.DrawText(cd, iPos + new Vector2(count, 40), Color.White,
-                                FontFlags.AntiAlias | FontFlags.DropShadow);
-                        }
-                        if (item.AbilityState == AbilityState.NotEnoughMana)
-                        {
-                            Drawing.DrawRect(iPos + new Vector2(count, 50),
-                                new Vector2(iSize.X / 4, (float)(iSize.Y * 2.5)), new Color(0, 0, 200, 100));
-                        }
-                        count += iSize.X / 4;
-                    }
+                    Drawing.DrawRect(start,
+                        new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
+                        new ColorBGRA(0, 0, 150, 150));
                 }
-
-                #region Spells
-
-                if (Menu.Item("SpellPanel.Enable").GetValue<bool>() && !Equals(v, MeHero) &&
-                    (v.Team == MeHero.GetEnemyTeam() || Menu.Item("SpellPanel.EnableForAlly").GetValue<bool>()))
+                if (spell.AbilityState == AbilityState.OnCooldown)
                 {
-                    Vector2 mypos;
-                    if (Drawing.WorldToScreen(v.Position, out mypos))
-                    {
-                        if (mypos.X <= -5000 || mypos.X >= 5000) continue;
-                        if (mypos.Y <= -5000 || mypos.Y >= 5000) continue;
-                        var start = HUDInfo.GetHPbarPosition(v) +
-                                    new Vector2(-Menu.Item("SpellPanel.ExtraPosX").GetValue<Slider>().Value,
-                                        Menu.Item("SpellPanel.ExtraPosY").GetValue<Slider>().Value);
-                            //new Vector2(mypos.X-100, mypos.Y);
-
-                        var distBetweenSpells = Menu.Item("SpellPanel.distBetweenSpells").GetValue<Slider>().Value;
-                        var distBwtweenLvls = Menu.Item("SpellPanel.DistBwtweenLvls").GetValue<Slider>().Value;
-                        var sizeSpell = Menu.Item("SpellPanel.SizeSpell").GetValue<Slider>().Value;
-                        const int sizey = 9;
-                        foreach (
-                            var spell in
-                                v.Spellbook.Spells.Where(
-                                    x => x.AbilityType != AbilityType.Attribute && x.AbilitySlot.ToString() != "-1")
-                            )
-                        {
-                            var size2 = distBetweenSpells;
-                            var extrarange = spell.Level > 4 ? spell.Level - 4 : 0;
-
-                            size2 = (int) (size2 + extrarange*7);
-                            var cd = spell.Cooldown;
-
-                            Drawing.DrawRect(start,
-                                new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
-                                new ColorBGRA(0, 0, 0, 100));
-                            Drawing.DrawRect(start,
-                                new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
-                                new ColorBGRA(255, 255, 255, 100), true);
-                            if (spell.AbilityState == AbilityState.NotEnoughMana)
-                            {
-                                Drawing.DrawRect(start,
-                                    new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
-                                    new ColorBGRA(0, 0, 150, 150));
-                            }
-                            if (spell.AbilityState == AbilityState.OnCooldown)
-                            {
-                                var text = string.Format("{0:0.#}", cd);
-                                var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200),
-                                    FontFlags.None);
-                                var textPos = start +
-                                              new Vector2(10 - textSize.X/2, -textSize.Y/2 + 12);
-                                Drawing.DrawText(text, textPos, /*new Vector2(10, 150),*/ Color.White,
-                                    FontFlags.AntiAlias | FontFlags.DropShadow);
-                            }
-
-                            if (spell.Level > 0)
-                            {
-                                for (var lvl = 1; lvl <= spell.Level; lvl++)
-                                {
-                                    Drawing.DrawRect(start + new Vector2(distBwtweenLvls*lvl, sizey - 6),
-                                        new Vector2(sizeSpell, sizey - 6),
-                                        new ColorBGRA(255, 255, 0, 255));
-                                }
-                            }
-                            start += new Vector2(size2, 0);
-                        }
-                    }
-                }
-
-                #endregion
-            }
-        }
-
-        private static void DrawForAllyHero()
-        {
-            foreach (var v in Ensage.Common.Objects.Heroes.GetByTeam(MeHero.Team))
-            {
-                var pos = GetTopPanelPosition(v) +
-                          new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
-                              Menu.Item("BarPosY").GetValue<Slider>().Value);
-                var size = GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value);
-                const int height = 7;
-                if (Menu.Item("EnemyStatus.Vision.Enable").GetValue<bool>() && v.IsVisibleToEnemies)
-                {
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + height * 2), new Vector2(size.X, height * 2),
-                        new Color(0, 0, 0, 100));
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + height * 2), new Vector2(size.X, height * 2),
-                        new Color(0, 0, 0, 255), true);
-                    Drawing.DrawText("under vision", pos + new Vector2(5, size.Y + height * 2), Color.White,
+                    var text = string.Format("{0:0.#}", cd);
+                    var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200),
+                        FontFlags.None);
+                    var textPos = start +
+                                  new Vector2(10 - textSize.X/2, -textSize.Y/2 + 12);
+                    Drawing.DrawText(text, textPos, /*new Vector2(10, 150),*/ Color.White,
                         FontFlags.AntiAlias | FontFlags.DropShadow);
                 }
-                if (Menu.Item("showMeMore.Enable").GetValue<bool>())
+
+                if (spell.Level > 0)
                 {
-                    var mod = v.Modifiers.Any(x => x.Name == "modifier_spirit_breaker_charge_of_darkness_vision");
-                    if (mod)
+                    for (var lvl = 1; lvl <= spell.Level; lvl++)
                     {
-                        var textPos = pos + new Vector2(0, size.Y + height*4);
-                        Drawing.DrawText("Spirit Breaker", textPos, new Vector2(15, 150), Color.White,
-                            FontFlags.AntiAlias | FontFlags.DropShadow);
-                        if (Equals(MeHero, v))
-                        {
-                            const string name = "modifier_spirit_breaker_charge_of_darkness_vision";
-                            Drawing.DrawRect(new Vector2(0, 0), new Vector2(Drawing.Width, Drawing.Height),
-                                new Color(Menu.Item(name + ".Red").GetValue<Slider>().Value,
-                                    Menu.Item(name + ".Green").GetValue<Slider>().Value,
-                                    Menu.Item(name + ".Blue").GetValue<Slider>().Value,
-                                    Menu.Item(name + ".Alpha").GetValue<Slider>().Value));
-                        }
-                        ParticleEffect eff;
-                        if (!BaraIndicator.TryGetValue(v, out eff))
-                        {
-                            eff = new ParticleEffect("", v);
-                            eff.SetControlPointEntity(1, v);
-                            BaraIndicator.Add(v, eff);
-                            GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""),
-                                "spirit_breaker_charge_of_darkness");
-                        }
-                    }
-                    else
-                    {
-                        ParticleEffect eff;
-                        if (BaraIndicator.TryGetValue(v, out eff))
-                        {
-                            eff.Dispose();
-                            BaraIndicator.Remove(v);
-                        }
+                        Drawing.DrawRect(start + new Vector2(distBwtweenLvls*lvl, sizey - 6),
+                            new Vector2(sizeSpell, sizey - 6),
+                            new ColorBGRA(255, 255, 0, 255));
                     }
                 }
+                start += new Vector2(size2, 0);
             }
+
+            #endregion
         }
 
-        private static void DrawForEnemyHero()
+        private static void DrawDangItems(Hero v)
         {
-            foreach (var v in Ensage.Common.Objects.Heroes.GetByTeam(MeHero.GetEnemyTeam()))
+            if (!Menu.Item("DangItems.Enable").GetValue<bool>()) return;
+            var invetory =
+                v.Inventory.Items.Where(
+                    x =>
+                        Menu.Item("dangItemsUsage").GetValue<AbilityToggler>().IsEnabled(x.Name));
+            var iPos = HUDInfo.GetHPbarPosition(v);
+            var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v), HUDInfo.GetHpBarSizeY(v));
+            float count = 0;
+            foreach (var item in invetory)
             {
-                var pos = GetTopPanelPosition(v) +
-                          new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
-                              Menu.Item("BarPosY").GetValue<Slider>().Value);
-                var size = GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value);
-                const int height = 7;
-                if (Menu.Item("EnemyStatus.Timer.Enable").GetValue<bool>())
+                var itemname = string.Format("materials/ensage_ui/items/{0}.vmat",
+                    item.Name.Replace("item_", ""));
+                Drawing.DrawRect(iPos + new Vector2(count, 50),
+                    new Vector2(iSize.X/3, (float) (iSize.Y*2.5)),
+                    Drawing.GetTexture(itemname));
+                if (item.AbilityState == AbilityState.OnCooldown)
                 {
-                    var handle = v.Player.ID;
-                    if (SInfo[handle] == null || !SInfo[handle].GetHero().IsValid)
-                    {
-                        SInfo[handle] = new StatusInfo(v, Game.GameTime);
-                    }
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2),
-                        new Color(0, 0, 0, 100));
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2),
-                        new Color(0, 0, 0, 255), true);
-                    var text = SInfo[handle].GetTime();
-                    Drawing.DrawText(text, pos + new Vector2(5, size.Y + height*2), Color.White,
+                    var cd = ((int) item.Cooldown).ToString(CultureInfo.InvariantCulture);
+                    Drawing.DrawText(cd, iPos + new Vector2(count, 40), Color.White,
                         FontFlags.AntiAlias | FontFlags.DropShadow);
                 }
-                if (Menu.Item("Ultimates.Icon.Enable").GetValue<bool>() ||
-                    Menu.Item("Ultimates.Text.Enable").GetValue<bool>())
+                if (item.AbilityState == AbilityState.NotEnoughMana)
                 {
-                    try
-                    {
-                        Ability ultimate;
-                        if (!UltimateAbilities.TryGetValue(v, out ultimate))
-                        {
-                            var ult = v.Spellbook.Spells.First(x => x.AbilityType == AbilityType.Ultimate);
-                            if (ult != null) UltimateAbilities.Add(v, ult);
-                        }
-                        else if (ultimate != null && ultimate.Level > 0)
-                        {
-                            pos = GetTopPanelPosition(v) +
-                                  new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
-                                      Menu.Item("BarPosY").GetValue<Slider>().Value);
-                            size = GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value);
-                            var ultPos = pos + new Vector2(size.X/2 - 5, size.Y + 1);
-                            string path;
-
-                            switch (ultimate.AbilityState)
-                            {
-                                case AbilityState.NotEnoughMana:
-                                    path = "materials/ensage_ui/other/ulti_nomana.vmat";
-                                    break;
-                                case AbilityState.OnCooldown:
-                                    path = "materials/ensage_ui/other/ulti_cooldown.vmat";
-                                    break;
-                                default:
-                                    path = "materials/ensage_ui/other/ulti_ready.vmat";
-                                    break;
-                            }
-                            if (Menu.Item("Ultimates.Icon.Enable").GetValue<bool>())
-                                Drawing.DrawRect(ultPos, new Vector2(14, 14), Drawing.GetTexture(path));
-
-                            if (Menu.Item("Ultimates.Text.Enable").GetValue<bool>())
-                            {
-
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
+                    Drawing.DrawRect(iPos + new Vector2(count, 50),
+                        new Vector2(iSize.X/4, (float) (iSize.Y*2.5)), new Color(0, 0, 200, 100));
                 }
-
-                if (Menu.Item("showMeMore.Enable").GetValue<bool>())
-                {
-                    switch (v.ClassID)
-                    {
-                        case ClassID.CDOTA_Unit_Hero_Mirana:
-                            if (_arrowUnit == null)
-                            {
-                                _arrowUnit =
-                                    ObjectMgr.GetEntities<Unit>()
-                                        .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
-                                                             && x.Team != MeHero.Team);
-                            }
-                            if (_arrowUnit != null)
-                            {
-                                if (!_arrowUnit.IsValid)
-                                {
-                                    foreach (var effect in ArrowParticalEffects.Where(effect => effect != null))
-                                    {
-                                        effect.Dispose();
-                                    }
-                                    _letsDraw = true;
-                                    _arrowUnit =
-                                    ObjectMgr.GetEntities<Unit>()
-                                        .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
-                                                             && x.Team != MeHero.Team);
-                                    break;
-                                }
-                                if (!InSystem.Contains(_arrowUnit))
-                                {
-                                    _arrowS = _arrowUnit.Position;
-                                    InSystem.Add(_arrowUnit);
-                                    Utils.Sleep(100,"kek");
-                                    GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""), "mirana_arrow");
-                                }
-                                else if (_letsDraw && Utils.SleepCheck("kek") && _arrowUnit.IsVisible)
-                                {
-                                    _letsDraw = false;
-                                    /*PrintInfo(string.Format("{0}{1}{2}/{3}{4}{5}", _arrowS.X, _arrowS.Y, _arrowS.Z,
-                                        _arrowUnit.Position.X, _arrowUnit.Position.Y, _arrowUnit.Position.Z));*/
-                                    var ret = FindRet(_arrowS, _arrowUnit.Position);
-                                    for (var z = 1; z <= 147; z++)
-                                    {
-                                        var p = FindVector(_arrowS, ret, 20*z + 60);
-                                        ArrowParticalEffects[z] = new ParticleEffect(
-                                            @"particles\ui_mouseactions\draw_commentator.vpcf", p);
-                                        ArrowParticalEffects[z].SetControlPoint(1, new Vector3(255, 255, 255));
-                                        ArrowParticalEffects[z].SetControlPoint(0, p);
-                                    }
-                                }
-                            }
-                            break;
-                        case ClassID.CDOTA_Unit_Hero_SpiritBreaker:
-
-                            break;
-                        case ClassID.CDOTA_Unit_Hero_Windrunner:
-                            if (!Prediction.IsTurning(v)) //(Utils.SleepCheck("ArrowWindRun"))
-                            {
-                                var spell = v.Spellbook.Spell2;
-                                if (spell != null && spell.Cooldown != 0)
-                                {
-                                    var cd = Math.Floor(spell.Cooldown * 100);
-                                    if (cd < 880)
-                                    {
-                                        if (!InSystem.Contains(v))
-                                        {
-                                            if (cd > 720)
-                                            {
-                                                var eff = new ParticleEffect[148];
-                                                for (var z = 1; z <= 140; z++)
-                                                {
-                                                    var p = new Vector3(
-                                                        v.Position.X + 100 * z * (float)Math.Cos(v.RotationRad),
-                                                        v.Position.Y + 100 * z * (float)Math.Sin(v.RotationRad),
-                                                        100);
-                                                    eff[z] =
-                                                        new ParticleEffect(
-                                                            @"particles\ui_mouseactions\draw_commentator.vpcf",
-                                                            p);
-                                                    eff[z].SetControlPoint(1, new Vector3(255, 255, 255));
-                                                    eff[z].SetControlPoint(0, p);
-                                                }
-                                                Eff.Add(v, eff);
-                                                InSystem.Add(v);
-                                            }
-                                        }
-                                        else if (cd < 720 || !v.IsAlive && InSystem.Contains(v))
-                                        {
-                                            InSystem.Remove(v);
-                                            ParticleEffect[] eff;
-                                            if (Eff.TryGetValue(v, out eff))
-                                            {
-                                                foreach (var particleEffect in eff.Where(x=>x!=null))
-                                                    particleEffect.ForceDispose();
-                                                Eff.Clear();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            break;
-                        case ClassID.CDOTA_Unit_Hero_Pudge:
-                            break;
-                        case ClassID.CDOTA_Unit_Hero_Kunkka:
-                            break;
-                    }
-                }
-
-                if (Menu.Item("EnemyStatus.Map.Enable").GetValue<bool>())
-                {
-                    if (!v.IsAlive || v.IsVisible) continue;
-                    Vector2 newPos;
-                    if (!Drawing.WorldToScreen(v.Position, out newPos)) continue;
-                    var name = "materials/ensage_ui/heroes_horizontal/" +
-                               v.Name.Replace("npc_dota_hero_", "") + ".vmat";
-                    var size2 = new Vector2(50, 50);
-                    Drawing.DrawRect(newPos + new Vector2(10, 35), size2 + new Vector2(13, -6),
-                        Drawing.GetTexture(name));
-                }
-
-                
-                
+                count += iSize.X/4;
             }
         }
 
-        private static void DrawForAllHero()
+        private static void DrawShowMeMoreBara(Hero v, Vector2 pos, Vector2 size, int height = 7)
         {
-            foreach (var v in Ensage.Common.Objects.Heroes.All)
+            if (!Menu.Item("showMeMore.Enable").GetValue<bool>()) return;
+            var mod = v.HasModifier("modifier_spirit_breaker_charge_of_darkness_vision");
+            if (mod)
             {
-                var pos = GetTopPanelPosition(v) +
-                          new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
-                              Menu.Item("BarPosY").GetValue<Slider>().Value);
-                var size = GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value);
-                var healthDelta = new Vector2(v.Health * size.X / v.MaximumHealth, 0);
-                var manaDelta = new Vector2(v.Mana * size.X / v.MaximumMana, 0);
-                const int height = 7;
-                
-                if (Menu.Item("TopPanel.Hp").GetValue<bool>())
+                var textPos = pos + new Vector2(0, size.Y + height*4);
+                Drawing.DrawText("Spirit Breaker", textPos, new Vector2(15, 150), Color.White,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                if (Equals(MeHero, v))
                 {
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(size.X, height),
-                        new Color(255, 0, 0, 255));
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(healthDelta.X, height),
-                        new Color(0, 255, 0, 255));
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(size.X, height), Color.Black, true);
+                    const string name = "modifier_spirit_breaker_charge_of_darkness_vision";
+                    Drawing.DrawRect(new Vector2(0, 0), new Vector2(Drawing.Width, Drawing.Height),
+                        new Color(Menu.Item(name + ".Red").GetValue<Slider>().Value,
+                            Menu.Item(name + ".Green").GetValue<Slider>().Value,
+                            Menu.Item(name + ".Blue").GetValue<Slider>().Value,
+                            Menu.Item(name + ".Alpha").GetValue<Slider>().Value));
                 }
-                if (Menu.Item("TopPanel.Mana").GetValue<bool>())
-                {
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(size.X, height), Color.Gray);
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(manaDelta.X, height),
-                        new Color(0, 0, 255, 255));
-                    Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(size.X, height), Color.Black,
-                        true);
-                }
-                
+                ParticleEffect eff;
+                if (BaraIndicator.TryGetValue(v, out eff)) return;
+                eff = new ParticleEffect("", v);
+                eff.SetControlPointEntity(1, v);
+                BaraIndicator.Add(v, eff);
+                GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""),
+                    "spirit_breaker_charge_of_darkness");
+            }
+            else
+            {
+                ParticleEffect eff;
+                if (!BaraIndicator.TryGetValue(v, out eff)) return;
+                eff.Dispose();
+                BaraIndicator.Remove(v);
             }
         }
+
+        private static void DrawVisionChecker(Hero v, Vector2 pos, Vector2 size, int height = 7)
+        {
+            if (!Menu.Item("EnemyStatus.Vision.Enable").GetValue<bool>() || !v.IsVisibleToEnemies) return;
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2),
+                new Color(0, 0, 0, 100));
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2),
+                new Color(0, 0, 0, 255), true);
+            Drawing.DrawText("under vision", pos + new Vector2(5, size.Y + height*2), Color.White,
+                FontFlags.AntiAlias | FontFlags.DropShadow);
+        }
+
+        private static void DrawLastPosition(Hero v)
+        {
+            if (!Menu.Item("EnemyStatus.Map.Enable").GetValue<bool>()) return;
+            if (!v.IsAlive || v.IsVisible) return;
+            Vector2 newPos;
+            if (!Drawing.WorldToScreen(v.Position, out newPos)) return;
+            var name = "materials/ensage_ui/heroes_horizontal/" +
+                       v.Name.Replace("npc_dota_hero_", "") + ".vmat";
+            var size2 = new Vector2(50, 50);
+            Drawing.DrawRect(newPos + new Vector2(10, 35), size2 + new Vector2(13, -6),
+                Drawing.GetTexture(name));
+        }
+
+        private static void DrawShowMeMoreLooping(Hero v)
+        {
+            if (!Menu.Item("showMeMore.Enable").GetValue<bool>()) return;
+            switch (v.ClassID)
+            {
+                case ClassID.CDOTA_Unit_Hero_Mirana:
+                    if (_arrowUnit == null)
+                    {
+                        _arrowUnit =
+                            ObjectMgr.GetEntities<Unit>()
+                                .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
+                                                     && x.Team != MeHero.Team);
+                    }
+                    if (_arrowUnit != null)
+                    {
+                        if (!_arrowUnit.IsValid)
+                        {
+                            foreach (var effect in ArrowParticalEffects.Where(effect => effect != null))
+                            {
+                                effect.Dispose();
+                            }
+                            _letsDraw = true;
+                            _arrowUnit =
+                                ObjectMgr.GetEntities<Unit>()
+                                    .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
+                                                         && x.Team != MeHero.Team);
+                            break;
+                        }
+                        if (!InSystem.Contains(_arrowUnit))
+                        {
+                            _arrowS = _arrowUnit.Position;
+                            InSystem.Add(_arrowUnit);
+                            Utils.Sleep(100, "kek");
+                            GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""), "mirana_arrow");
+                        }
+                        else if (_letsDraw && Utils.SleepCheck("kek") && _arrowUnit.IsVisible)
+                        {
+                            _letsDraw = false;
+                            /*PrintInfo(string.Format("{0}{1}{2}/{3}{4}{5}", _arrowS.X, _arrowS.Y, _arrowS.Z,
+                                    _arrowUnit.Position.X, _arrowUnit.Position.Y, _arrowUnit.Position.Z));*/
+                            var ret = FindRet(_arrowS, _arrowUnit.Position);
+                            for (var z = 1; z <= 147; z++)
+                            {
+                                var p = FindVector(_arrowS, ret, 20*z + 60);
+                                ArrowParticalEffects[z] = new ParticleEffect(
+                                    @"particles\ui_mouseactions\draw_commentator.vpcf", p);
+                                ArrowParticalEffects[z].SetControlPoint(1, new Vector3(255, 255, 255));
+                                ArrowParticalEffects[z].SetControlPoint(0, p);
+                            }
+                        }
+                    }
+                    break;
+                case ClassID.CDOTA_Unit_Hero_SpiritBreaker:
+
+                    break;
+                case ClassID.CDOTA_Unit_Hero_Windrunner:
+                    if (!Prediction.IsTurning(v)) //(Utils.SleepCheck("ArrowWindRun"))
+                    {
+                        var spell = v.Spellbook.Spell2;
+                        if (spell != null && spell.Cooldown != 0)
+                        {
+                            var cd = Math.Floor(spell.Cooldown*100);
+                            if (cd < 880)
+                            {
+                                if (!InSystem.Contains(v))
+                                {
+                                    if (cd > 720)
+                                    {
+                                        var eff = new ParticleEffect[148];
+                                        for (var z = 1; z <= 140; z++)
+                                        {
+                                            var p = new Vector3(
+                                                v.Position.X + 100*z*(float) Math.Cos(v.RotationRad),
+                                                v.Position.Y + 100*z*(float) Math.Sin(v.RotationRad),
+                                                100);
+                                            eff[z] =
+                                                new ParticleEffect(
+                                                    @"particles\ui_mouseactions\draw_commentator.vpcf",
+                                                    p);
+                                            eff[z].SetControlPoint(1, new Vector3(255, 255, 255));
+                                            eff[z].SetControlPoint(0, p);
+                                        }
+                                        Eff.Add(v, eff);
+                                        InSystem.Add(v);
+                                    }
+                                }
+                                else if (cd < 720 || !v.IsAlive && InSystem.Contains(v))
+                                {
+                                    InSystem.Remove(v);
+                                    ParticleEffect[] eff;
+                                    if (Eff.TryGetValue(v, out eff))
+                                    {
+                                        foreach (var particleEffect in eff.Where(x => x != null))
+                                            particleEffect.ForceDispose();
+                                        Eff.Clear();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case ClassID.CDOTA_Unit_Hero_Pudge:
+                    break;
+                case ClassID.CDOTA_Unit_Hero_Kunkka:
+                    break;
+            }
+        }
+
+        private static void DrawUltimates(Hero v)
+        {
+            if (!Menu.Item("Ultimates.Icon.Enable").GetValue<bool>() &&
+                !Menu.Item("Ultimates.Text.Enable").GetValue<bool>()) return;
+            try
+            {
+                Ability ultimate;
+                if (!UltimateAbilities.TryGetValue(v, out ultimate))
+                {
+                    var ult = v.Spellbook.Spells.First(x => x.AbilityType == AbilityType.Ultimate);
+                    if (ult != null) UltimateAbilities.Add(v, ult);
+                }
+                else if (ultimate != null && ultimate.Level > 0)
+                {
+                    var pos = GetTopPanelPosition(v) +
+                              new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
+                                  Menu.Item("BarPosY").GetValue<Slider>().Value);
+                    var size = GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value);
+                    var ultPos = pos + new Vector2(size.X/2 - 5, size.Y + 1);
+                    string path;
+
+                    switch (ultimate.AbilityState)
+                    {
+                        case AbilityState.NotEnoughMana:
+                            path = "materials/ensage_ui/other/ulti_nomana.vmat";
+                            break;
+                        case AbilityState.OnCooldown:
+                            path = "materials/ensage_ui/other/ulti_cooldown.vmat";
+                            break;
+                        default:
+                            path = "materials/ensage_ui/other/ulti_ready.vmat";
+                            break;
+                    }
+                    if (Menu.Item("Ultimates.Icon.Enable").GetValue<bool>())
+                        Drawing.DrawRect(ultPos, new Vector2(14, 14), Drawing.GetTexture(path));
+
+                    if (Menu.Item("Ultimates.Text.Enable").GetValue<bool>())
+                    {
+
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+
+        private static void DrawEnemyStatus(Hero v, Vector2 size, Vector2 pos, int height)
+        {
+            if (Menu.Item("EnemyStatus.Timer.Enable").GetValue<bool>())
+            {
+                var handle = v.Player.ID;
+                if (SInfo[handle] == null || !SInfo[handle].GetHero().IsValid)
+                {
+                    SInfo[handle] = new StatusInfo(v, Game.GameTime);
+                }
+                Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2),
+                    new Color(0, 0, 0, 100));
+                Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2),
+                    new Color(0, 0, 0, 255), true);
+                var text = SInfo[handle].GetTime();
+                Drawing.DrawText(text, pos + new Vector2(5, size.Y + height*2), Color.White,
+                    FontFlags.AntiAlias | FontFlags.DropShadow);
+            }
+        }
+
+        private static void DrawManaPanel(Vector2 pos, Vector2 size, Vector2 manaDelta, int height = 7)
+        {
+            if (!Menu.Item("TopPanel.Mana").GetValue<bool>()) return;
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(size.X, height), Color.Gray);
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(manaDelta.X, height),
+                new Color(0, 0, 255, 255));
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(size.X, height), Color.Black,
+                true);
+        }
+
+        private static void DrawHealthPanel(Vector2 pos, Vector2 size, Vector2 healthDelta, int height = 7)
+        {
+            if (!Menu.Item("TopPanel.Hp").GetValue<bool>()) return;
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(size.X, height),
+                new Color(255, 0, 0, 255));
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(healthDelta.X, height),
+                new Color(0, 255, 0, 255));
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(size.X, height), Color.Black, true);
+        }
+
+        #endregion
+
+        #region Helpers
 
         private static void GenerateSideMessage(string hero, string spellName)
         {
             if (!Menu.Item("SideMessage.Enable").GetValue<bool>()) return;
             var msg = new SideMessage(hero, new Vector2(200, 60));
-            msg.AddElement(new Vector2(006, 06), new Vector2(72, 36), Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
-            msg.AddElement(new Vector2(078, 12), new Vector2(64, 32), Drawing.GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
-            msg.AddElement(new Vector2(142, 06), new Vector2(72, 36), Drawing.GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
+            msg.AddElement(new Vector2(006, 06), new Vector2(72, 36),
+                Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
+            msg.AddElement(new Vector2(078, 12), new Vector2(64, 32),
+                Drawing.GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
+            msg.AddElement(new Vector2(142, 06), new Vector2(72, 36),
+                Drawing.GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
             msg.CreateMessage();
         }
 
         private static Vector2 GetTopPalenSize(Hero hero)
         {
-            return new Vector2((float)HUDInfo.GetTopPanelSizeX(hero), (float)HUDInfo.GetTopPanelSizeY(hero));
+            return new Vector2((float) HUDInfo.GetTopPanelSizeX(hero), (float) HUDInfo.GetTopPanelSizeY(hero));
         }
-        
-        private static readonly Dictionary<uint,Vector2> TopPos=new Dictionary<uint, Vector2>();
+
+        private static readonly Dictionary<uint, Vector2> TopPos = new Dictionary<uint, Vector2>();
         private static Unit _arrowUnit;
 
         private static Vector2 GetTopPanelPosition(Hero v)
@@ -916,25 +982,27 @@ namespace OverlayInformation
             var handle = v.Handle;
             if (TopPos.TryGetValue(handle, out vec2)) return vec2;
             vec2 = HUDInfo.GetTopPanelPosition(v);
-            TopPos.Add(handle,vec2);
+            TopPos.Add(handle, vec2);
             return vec2;
         }
 
-
-        private static void Print(string s, MessageType chatMessage=MessageType.ChatMessage)
+        private static void Print(string s, MessageType chatMessage = MessageType.ChatMessage)
         {
             if (true)
-                Game.PrintMessage(s, chatMessage);
+                Game.PrintMessage("[OerlayInfo]: " + s, chatMessage);
         }
+
         private static Vector3 FindVector(Vector3 first, double ret, float distance)
         {
-            var retVector = new Vector3(first.X + (float)Math.Cos(Utils.DegreeToRadian(ret)) * distance, first.Y + (float)Math.Sin(Utils.DegreeToRadian(ret)) * distance, 100);
+            var retVector = new Vector3(first.X + (float) Math.Cos(Utils.DegreeToRadian(ret))*distance,
+                first.Y + (float) Math.Sin(Utils.DegreeToRadian(ret))*distance, 100);
 
             return retVector;
         }
+
         private static double FindRet(Vector3 first, Vector3 second)
         {
-            var xAngle = Utils.RadianToDegree(Math.Atan(Math.Abs(second.X - first.X) / Math.Abs(second.Y - first.Y)));
+            var xAngle = Utils.RadianToDegree(Math.Atan(Math.Abs(second.X - first.X)/Math.Abs(second.Y - first.Y)));
             if (first.X <= second.X && first.Y >= second.Y)
             {
                 return 270 + xAngle;
@@ -953,9 +1021,10 @@ namespace OverlayInformation
             }
             return 0;
         }
+
         private static void DrawShadowText(string stext, int x, int y, Color color, Font f)
         {
-            
+
             f.DrawText(null, stext, x + 1, y + 1, Color.Black);
             f.DrawText(null, stext, x, y, color);
         }
@@ -964,10 +1033,11 @@ namespace OverlayInformation
         {
             ParticleEffect effect;
             ParticleEffect effect2;
-            if (unit.IsAlive/* && unit.IsVisibleToEnemies*/)
+            if (unit.IsAlive /* && unit.IsVisibleToEnemies*/)
             {
                 if (Effects1.TryGetValue(unit, out effect)) return;
-                effect = unit.AddParticleEffect("particles/items2_fx/smoke_of_deceit_buff.vpcf"); //particles/items_fx/diffusal_slow.vpcf
+                effect = unit.AddParticleEffect("particles/items2_fx/smoke_of_deceit_buff.vpcf");
+                    //particles/items_fx/diffusal_slow.vpcf
                 effect2 = unit.AddParticleEffect("particles/items2_fx/shadow_amulet_active_ground_proj.vpcf");
                 Effects1.Add(unit, effect);
                 Effects2.Add(unit, effect2);
@@ -982,5 +1052,7 @@ namespace OverlayInformation
                 Effects2.Remove(unit);
             }
         }
+
+        #endregion
     }
 }
