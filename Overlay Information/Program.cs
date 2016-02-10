@@ -391,7 +391,7 @@ namespace OverlayInformation
 
             if (!Menu.Item("AutoItems.Enable").GetValue<bool>() || !Utils.SleepCheck("AutoItems") || !MeHero.IsAlive || MeHero.IsInvisible()) return;
             var inventory = MeHero.Inventory.Items.ToList();
-            if (Menu.Item("autoitemsList").GetValue<AbilityToggler>().IsEnabled("item_hand_of_midas"))
+            if (Menu.Item("AutoItems.List").GetValue<AbilityToggler>().IsEnabled("item_hand_of_midas"))
             {
                 Utils.Sleep(250, "AutoItems");
                 var midas = inventory.FirstOrDefault(x => x.Name == "item_hand_of_midas");
@@ -409,7 +409,7 @@ namespace OverlayInformation
                     midas.UseAbility(creep);
                 }
             }
-            if (Menu.Item("autoitemsList").GetValue<AbilityToggler>().IsEnabled("item_phase_boots"))
+            if (Menu.Item("AutoItems.List").GetValue<AbilityToggler>().IsEnabled("item_phase_boots"))
             {
                 var phase = inventory.FirstOrDefault(x => x.Name == "item_phase_boots");
                 if (phase != null && phase.CanBeCasted() && !MeHero.IsAttacking() && !MeHero.IsChanneling() && MeHero.NetworkActivity == NetworkActivity.Move)
@@ -417,10 +417,10 @@ namespace OverlayInformation
                     phase.UseAbility();
                 }
             }
-            if (!Menu.Item("autoitemsList").GetValue<AbilityToggler>().IsEnabled("item_magic_wand")) return;
+            if (!Menu.Item("AutoItems.List").GetValue<AbilityToggler>().IsEnabled("item_magic_wand")) return;
             var stick = inventory.FirstOrDefault(x => (x.Name == "item_magic_stick" || x.Name == "item_magic_wand") && x.CanBeCasted() && x.CurrentCharges > 0);
-            if (MeHero.Health * 100 / MeHero.MaximumHealth >= Menu.Item("autoitemlistHealth").GetValue<Slider>().Value &&
-                !(MeHero.Mana * 100 / MeHero.MaximumMana < Menu.Item("autoitemlistMana").GetValue<Slider>().Value)) return;
+            if (MeHero.Health * 100 / MeHero.MaximumHealth >= Menu.Item("AutoItems.Health").GetValue<Slider>().Value &&
+                !(MeHero.Mana * 100 / MeHero.MaximumMana < Menu.Item("AutoItems.Mana").GetValue<Slider>().Value)) return;
             if (stick == null || !stick.CanBeCasted() || stick.CurrentCharges <= 0) return;
             stick.UseAbility();
             #endregion
