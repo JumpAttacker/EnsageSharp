@@ -8,6 +8,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
+using Ensage.Common.Objects;
 using SharpDX;
 
 namespace InvokerAnnihilation
@@ -57,7 +58,10 @@ namespace InvokerAnnihilation
             Drawing.OnEndScene += Drawing_OnEndScene;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;*/
             Menu.AddItem(new MenuItem("Hotkey", "Combo Key").SetValue(new KeyBind('G', KeyBindType.Press)));
+            Menu.AddItem(
+                new MenuItem("Hotkey.Ghost", " Quick cast ghost walk").SetValue(new KeyBind('H', KeyBindType.Press)));
             var sunStrikeSettings=new Menu("Sun Strike Settings","ssSettings");
+
             /*sunStrikeSettings.AddItem(
                 new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('T', KeyBindType.Press))
                     .SetTooltip("press hotkey for auto SunStrike"));
@@ -346,6 +350,10 @@ namespace InvokerAnnihilation
                     _lastAction = _inAction;
                 }
             }
+            if (args.WParam == Menu.Item("Hotkey.Ghost").GetValue<KeyBind>().Key)
+            {
+                _ghostMode = args.Msg != WmKeyup;
+            }
             if (args.WParam == Menu.Item("hotkeyPrev").GetValue<KeyBind>().Key && args.Msg == WmKeyup)
             {
                 _combo = _combo == _maxCombo - 1 ? _combo = 0 : _combo + 1;
@@ -359,6 +367,8 @@ namespace InvokerAnnihilation
         }
 
         private static Vector2 _size = new Vector2(HUDInfo.GetHPBarSizeX() / 4, HUDInfo.GetHPBarSizeX() / 4);
+        private static bool _ghostMode;
+
         private static void Drawing_OnDraw(EventArgs args)
         {
             var player = ObjectMgr.LocalPlayer;
@@ -562,16 +572,16 @@ namespace InvokerAnnihilation
                 var alacrity = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_alacrity");
                 var meteor = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_chaos_meteor");
 
-                SpellInfo.Add(ss.Name, new SpellStruct(e, e, e));
-                SpellInfo.Add(coldsnap.Name, new SpellStruct(q, q, q));
-                SpellInfo.Add(ghostwalk.Name, new SpellStruct(q, q, w));
-                SpellInfo.Add(icewall.Name, new SpellStruct(q, q, e));
-                SpellInfo.Add(tornado.Name, new SpellStruct(w, w, q));
-                SpellInfo.Add(blast.Name, new SpellStruct(q, w, e));
-                SpellInfo.Add(forgeSpirit.Name, new SpellStruct(e, e, q));
-                SpellInfo.Add(emp.Name, new SpellStruct(w, w, w));
-                SpellInfo.Add(alacrity.Name, new SpellStruct(w, w, e));
-                SpellInfo.Add(meteor.Name, new SpellStruct(e, e, w));
+                SpellInfo.Add(ss.StoredName(), new SpellStruct(e, e, e));
+                SpellInfo.Add(coldsnap.StoredName(), new SpellStruct(q, q, q));
+                SpellInfo.Add(ghostwalk.StoredName(), new SpellStruct(q, q, w));
+                SpellInfo.Add(icewall.StoredName(), new SpellStruct(q, q, e));
+                SpellInfo.Add(tornado.StoredName(), new SpellStruct(w, w, q));
+                SpellInfo.Add(blast.StoredName(), new SpellStruct(q, w, e));
+                SpellInfo.Add(forgeSpirit.StoredName(), new SpellStruct(e, e, q));
+                SpellInfo.Add(emp.StoredName(), new SpellStruct(w, w, w));
+                SpellInfo.Add(alacrity.StoredName(), new SpellStruct(w, w, e));
+                SpellInfo.Add(meteor.StoredName(), new SpellStruct(e, e, w));
 
                 Combos[_maxCombo] = new ComboStruct(new[] {ss, meteor, blast, coldsnap, forgeSpirit}, 5, true);
                 Combos[_maxCombo] =
@@ -609,6 +619,8 @@ namespace InvokerAnnihilation
                 return;
             }
             //PrintInfo(me.NetworkActivity.ToString());
+
+
             if (Utils.SleepCheck("act") && !_inAction && Menu.Item("smartIsActive").GetValue<bool>())
             {
                 Ability spell = null;
@@ -634,7 +646,45 @@ namespace InvokerAnnihilation
             }
 
             #endregion
-            
+
+            #region Flee mode
+
+            if (_ghostMode && Utils.SleepCheck("flee_mode") && !me.IsInvisible())
+            {
+                var spells = me.Spellbook;
+                var q = spells.SpellQ;
+                var w = spells.SpellW;
+                var active1 = me.Spellbook.Spell4;
+                var active2 = me.Spellbook.Spell5;
+                
+                if (q?.Level > 0 && w?.Level > 0 )
+                {
+                    var ghostwalk = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_ghost_walk");
+                    if (ghostwalk==null || ghostwalk.Cooldown>0) return;
+                    if (active1.Equals(ghostwalk) || active2.Equals(ghostwalk))
+                    {
+                        w.UseAbility();
+                        w.UseAbility();
+                        w.UseAbility();
+                        ghostwalk.UseAbility();
+                        Utils.Sleep(500,"flee_mode");
+                    }
+                    else
+                    {
+                        InvokeNeededSpells(me, ghostwalk);
+                        w.UseAbility();
+                        w.UseAbility();
+                        w.UseAbility();
+                        ghostwalk.UseAbility();
+                        Utils.Sleep(500,"flee_mode");
+                    }
+                }
+                
+            }
+
+            #endregion
+
+
             #region Get needed spells
 
             if (_startInitSpell && Utils.SleepCheck("GettingNeededSpells"))
@@ -679,10 +729,10 @@ namespace InvokerAnnihilation
             #endregion
         }
 
-        private static void InvokeNeededSpells(Hero me)
+        private static void InvokeNeededSpells(Hero me,Ability neededAbility=null)
         {
-            var spell1 = _spellForCast = Combos[_combo].GetComboAbilities()[0];
-            var spell2 = _spellForCast = Combos[_combo].GetComboAbilities()[1];
+            var spell1 = _spellForCast = neededAbility ?? Combos[_combo].GetComboAbilities()[0];
+            var spell2 = _spellForCast = neededAbility ?? Combos[_combo].GetComboAbilities()[1];
             var active1 = me.Spellbook.Spell4;
             var active2 = me.Spellbook.Spell5;
             if ((Equals(spell1, active1) || Equals(spell1, active2)) && (Equals(spell2, active1) || Equals(spell2, active2)))
