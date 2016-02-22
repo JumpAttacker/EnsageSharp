@@ -17,7 +17,6 @@ namespace InvokerAnnihilation
     {
         #region Members
         private static readonly Menu Menu = new Menu("Invoker Annihilation", "InvokerAnnihilation", true, "npc_dota_hero_invoker", true);
-        private static bool _loaded;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         private const int WmKeyup = 0x0101;
         private static int _combo;
@@ -33,6 +32,8 @@ namespace InvokerAnnihilation
         private static bool _startInitSpell;
         private static NetworkActivity _lastAct=NetworkActivity.Idle;
         private static bool _lastAction;
+        private static Hero MyHero = null;
+        private static Player MyPlayer = null;
         //============================================================
         //============================================================
         private static bool _sunstrikekill;
@@ -48,15 +49,81 @@ namespace InvokerAnnihilation
 
         private static void Main()
         {
-            Game.OnUpdate += Game_OnUpdate;
-            _loaded = false;
-            Drawing.OnDraw += Drawing_OnDraw;
-            Game.OnWndProc += Game_OnWndProc;
-            Player.OnExecuteOrder += Player_OnExecuteAction;
-            /*Drawing.OnPreReset += Drawing_OnPreReset;
-            Drawing.OnPostReset += Drawing_OnPostReset;
-            Drawing.OnEndScene += Drawing_OnEndScene;
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;*/
+            Events.OnLoad += (sender, args) =>
+            {
+                MyHero = ObjectManager.LocalHero;
+                if (MyHero.ClassID != ClassID.CDOTA_Unit_Hero_Invoker)
+                {
+                    return;
+                }
+                MyPlayer = ObjectManager.LocalPlayer;
+                _stage = 0;
+                _combo = 0;
+                var spells = MyHero.Spellbook;
+
+                var q = spells.SpellQ;
+                var w = spells.SpellW;
+                var e = spells.SpellE;
+                
+                var ss = Abilities.FindAbility("invoker_sun_strike");
+                var coldsnap = Abilities.FindAbility("invoker_cold_snap");
+                var ghostwalk = Abilities.FindAbility("invoker_ghost_walk");
+                var icewall = Abilities.FindAbility("invoker_ice_wall");
+                var tornado = Abilities.FindAbility("invoker_tornado");
+                var blast = Abilities.FindAbility("invoker_deafening_blast");
+
+                var forgeSpirit = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_forge_spirit");
+                if (forgeSpirit == null)
+                {
+                    Print("oops, something went wrong");
+                }
+                var emp = Abilities.FindAbility("invoker_emp");
+                var alacrity = Abilities.FindAbility("invoker_alacrity");
+                var meteor = Abilities.FindAbility("invoker_chaos_meteor");
+                SpellInfo.Add(ss.Name, new SpellStruct(e, e, e));
+                SpellInfo.Add(coldsnap.Name, new SpellStruct(q, q, q));
+                SpellInfo.Add(ghostwalk.Name, new SpellStruct(q, q, w));
+                SpellInfo.Add(icewall.Name, new SpellStruct(q, q, e));
+                SpellInfo.Add(tornado.Name, new SpellStruct(w, w, q));
+                SpellInfo.Add(blast.Name, new SpellStruct(q, w, e));
+                SpellInfo.Add(forgeSpirit.Name, new SpellStruct(e, e, q));
+                SpellInfo.Add(emp.Name, new SpellStruct(w, w, w));
+                SpellInfo.Add(alacrity.Name, new SpellStruct(w, w, e));
+                SpellInfo.Add(meteor.Name, new SpellStruct(e, e, w));
+                
+                Combos[_maxCombo] = new ComboStruct(new[] {ss, meteor, blast, coldsnap, forgeSpirit}, 5, true);
+                Combos[_maxCombo] =
+                    new ComboStruct(new[] {tornado, ss, meteor, blast, tornado, coldsnap, alacrity, forgeSpirit},5);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, ss, meteor, blast, tornado, coldsnap},5);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, meteor, blast, coldsnap},5);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, meteor, blast},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, blast},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, icewall},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, ss, icewall},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, blast, coldsnap},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, coldsnap},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {coldsnap, alacrity, forgeSpirit},3);
+                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, meteor,blast,ss,icewall},5);
+
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
+                    " loaded!</font> <font color='#aa0000'>v"  + Ver, MessageType.LogMessage);
+                PrintSuccess(string.Format("> {1} Loaded v{0}", Ver, Menu.DisplayName));
+
+                Game.OnUpdate += Game_OnUpdate;
+                Drawing.OnDraw += Drawing_OnDraw;
+                Game.OnWndProc += Game_OnWndProc;
+                Player.OnExecuteOrder += Player_OnExecuteAction;
+            };
+            Events.OnClose += (sender, args) =>
+            {
+                Game.OnUpdate -= Game_OnUpdate;
+                Drawing.OnDraw -= Drawing_OnDraw;
+                Game.OnWndProc -= Game_OnWndProc;
+                Player.OnExecuteOrder -= Player_OnExecuteAction;
+                PrintSuccess(string.Format("> {1} Unloaded v{0}", Ver, Menu.DisplayName));
+            };
+
             Menu.AddItem(new MenuItem("Hotkey", "Combo Key").SetValue(new KeyBind('G', KeyBindType.Press)));
             Menu.AddItem(
                 new MenuItem("Hotkey.Ghost", " Quick cast ghost walk").SetValue(new KeyBind('H', KeyBindType.Press)));
@@ -298,7 +365,7 @@ namespace InvokerAnnihilation
                 var s=new StringBuilder();
                 foreach (var ability in _spells)
                 {
-                    s.AppendLine(ability.Name);
+                    s.AppendLine(ability.StoredName());
                 }
                 return s.ToString();
             }
@@ -371,12 +438,7 @@ namespace InvokerAnnihilation
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer || !_loaded)
-            {
-                return;
-            }
-            var me = player.Hero;
+            var me = MyHero;
 
             #region SS ACTION
 
@@ -389,7 +451,7 @@ namespace InvokerAnnihilation
                 var damage = 100 + 62.5*(exort.Level - 1);
                 if (topDamage)
                 {
-                    var enemy = ObjectMgr.GetEntities<Hero>()
+                    var enemy = ObjectManager.GetEntities<Hero>()
                         .Where(x => x.IsAlive && x.Team != me.Team && !x.IsIllusion);
                     if (me.AghanimState())
                     {
@@ -490,7 +552,7 @@ namespace InvokerAnnihilation
                     Drawing.DrawRect(
                         itemStartPos,
                         new Vector2((float)(_size.X + _size.X * 0.16), _size.Y),
-                        Drawing.GetTexture(texturename));
+                        Textures.GetTexture(texturename));
                     if (_stage == 1 && selected)
                         Drawing.DrawRect(
                             itemStartPos + new Vector2(1, 1),
@@ -502,30 +564,31 @@ namespace InvokerAnnihilation
                 var legal = 1;
                 //PrintInfo(i.ToString());
                 //PrintInfo(i+": "+Combos[i]);
-                for (; j <= Combos[i].GetSpellsInCombo(); j++)
+
+                for (; j+1 <= Combos[i].GetSpellsInCombo(); j++)
                 {
                     try
                     {
-                        texturename = $"materials/ensage_ui/spellicons/{comboStruct.GetComboAbilities()[j].Name}.vmat";
+                        texturename = $"materials/ensage_ui/spellicons/{comboStruct.GetComboAbilities()[j].StoredName()}.vmat";
                         var sizeX = _size.X * (j + (eul?1:0)) + 10;
                         itemStartPos = pos + new Vector2(sizeX, sizeY);
                         Drawing.DrawRect(
                             itemStartPos,
                             new Vector2(_size.X-6, _size.Y),
-                            Drawing.GetTexture(texturename));
+                            Textures.GetTexture(texturename));
                         legal++;
-                        if (Equals(comboStruct.GetComboAbilities()[j], Combos[_combo].GetComboAbilities()[_stage-2]) && selected)
+                        var tempStage = _stage<2?0:_stage-2;
+                        if (Equals(comboStruct.GetComboAbilities()[j], Combos[_combo].GetComboAbilities()[tempStage]) && selected && _stage>0)
                         {
                             Drawing.DrawRect(
                                 itemStartPos,
                                 new Vector2(_size.X - 3, _size.Y),
                                 Color.Red, true);
                         }
-                        
                     }
                     catch (Exception)
                     {
-                        // ignored
+                        //Print("I:" + i + " J: " + j + " stage-2:" + (_stage - 2));
                     }
                 }
                 if (selected)
@@ -545,81 +608,12 @@ namespace InvokerAnnihilation
         {
             #region Init
 
-            var me = ObjectMgr.LocalHero;
-            if (!_loaded)
-            {
-                if (!Game.IsInGame || me == null || me.ClassID != ClassID.CDOTA_Unit_Hero_Invoker)
-                {
-                    return;
-                }
-                _loaded = true;
-                _combo = 0;
-
-                var spells = me.Spellbook;
-
-                var q = spells.SpellQ;
-                var w = spells.SpellW;
-                var e = spells.SpellE;
-
-                var ss = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_sun_strike");
-                var coldsnap = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_cold_snap");
-                var ghostwalk = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_ghost_walk");
-                var icewall = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_ice_wall");
-                var tornado = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_tornado");
-                var blast = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_deafening_blast");
-                var forgeSpirit = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_forge_spirit");
-                var emp = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_emp");
-                var alacrity = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_alacrity");
-                var meteor = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_chaos_meteor");
-
-                SpellInfo.Add(ss.StoredName(), new SpellStruct(e, e, e));
-                SpellInfo.Add(coldsnap.StoredName(), new SpellStruct(q, q, q));
-                SpellInfo.Add(ghostwalk.StoredName(), new SpellStruct(q, q, w));
-                SpellInfo.Add(icewall.StoredName(), new SpellStruct(q, q, e));
-                SpellInfo.Add(tornado.StoredName(), new SpellStruct(w, w, q));
-                SpellInfo.Add(blast.StoredName(), new SpellStruct(q, w, e));
-                SpellInfo.Add(forgeSpirit.StoredName(), new SpellStruct(e, e, q));
-                SpellInfo.Add(emp.StoredName(), new SpellStruct(w, w, w));
-                SpellInfo.Add(alacrity.StoredName(), new SpellStruct(w, w, e));
-                SpellInfo.Add(meteor.StoredName(), new SpellStruct(e, e, w));
-
-                Combos[_maxCombo] = new ComboStruct(new[] {ss, meteor, blast, coldsnap, forgeSpirit}, 5, true);
-                Combos[_maxCombo] =
-                    new ComboStruct(new[] {tornado, ss, meteor, blast, tornado, coldsnap, alacrity, forgeSpirit},5);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, ss, meteor, blast, tornado, coldsnap},5);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, meteor, blast, coldsnap},5);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, meteor, blast},3);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, blast},3);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, icewall},3);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, ss, icewall},3);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, blast, coldsnap},3);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, coldsnap},3);
-                Combos[_maxCombo] = new ComboStruct(new[] {coldsnap, alacrity, forgeSpirit},3);
-                Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, meteor,blast,ss,icewall},5);
-
-                Game.PrintMessage(
-                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v"  + Ver, MessageType.LogMessage);
-                PrintSuccess(string.Format("> {1} Loaded v{0}", Ver, Menu.DisplayName));
-                /*PrintInfo("===============Combo selection===============");
-                for (var i = 0; i < _maxCombo; i++)
-                    PrintInfo(string.Format("Init new combo--> {0}", Combos[i]));
-                PrintInfo("============================================");*/
-            }
-
-            if (!Game.IsInGame || me == null)
-            {
-                _loaded = false;
-                PrintInfo("> Invorker Annihilation unLoaded");
-                return;
-            }
+            var me = MyHero;
 
             if (Game.IsPaused)
             {
                 return;
             }
-            //PrintInfo(me.NetworkActivity.ToString());
-
 
             if (Utils.SleepCheck("act") && !_inAction && Menu.Item("smartIsActive").GetValue<bool>())
             {
@@ -659,7 +653,7 @@ namespace InvokerAnnihilation
                 
                 if (q?.Level > 0 && w?.Level > 0 )
                 {
-                    var ghostwalk = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_ghost_walk");
+                    var ghostwalk = Abilities.FindAbility("invoker_ghost_walk");
                     if (ghostwalk==null || ghostwalk.Cooldown>0) return;
                     if (active1.Equals(ghostwalk) || active2.Equals(ghostwalk))
                     {
@@ -743,21 +737,21 @@ namespace InvokerAnnihilation
                 SpellStruct s;
                 if (Equals(spell1, active2))
                 {
-                    if (!SpellInfo.TryGetValue(spell1.Name, out s)) return;
+                    if (!SpellInfo.TryGetValue(spell1.StoredName(), out s)) return;
                 }
                 else if (Equals(spell2, active2))
                 {
-                    if (!SpellInfo.TryGetValue(spell2.Name, out s)) return;
+                    if (!SpellInfo.TryGetValue(spell2.StoredName(), out s)) return;
                 }
                 else if (Equals(spell1, active1) || Equals(spell1, active2))
                 {
-                    if (!SpellInfo.TryGetValue(spell2.Name, out s)) return;
+                    if (!SpellInfo.TryGetValue(spell2.StoredName(), out s)) return;
                 }
                 else
                 {
-                    if (!SpellInfo.TryGetValue(spell1.Name, out s)) return;
+                    if (!SpellInfo.TryGetValue(spell1.StoredName(), out s)) return;
                 }
-                var invoke = me.FindSpell("invoker_invoke");
+                var invoke = Abilities.FindAbility("invoker_invoke");
                 if (!invoke.CanBeCasted()) return;
                 var spells = s.GetNeededAbilities();
                 spells[0]?.UseAbility();
@@ -778,20 +772,20 @@ namespace InvokerAnnihilation
             var active1 = me.Spellbook.Spell4;
             var active2 = me.Spellbook.Spell5;
             */
-            var spellBooker = me.Spellbook.Spells.ToList();
             var items = me.Inventory.Items.ToList();
-            var invoke = spellBooker.FirstOrDefault(x=>x.Name=="invoker_invoke");
+            var invoke = Abilities.FindAbility("invoker_invoke");
             
-            var eul = items.FirstOrDefault(x=>x.Name=="item_cyclone");
-            var dagger = items.FirstOrDefault(x=>x.Name=="item_blink");
-            var refresher = items.FirstOrDefault(x=>x.Name=="item_refresher");
-            var icewall = spellBooker.FirstOrDefault(x=>x.Name=="invoker_ice_wall");
-            var deafblast = spellBooker.FirstOrDefault(x=>x.Name=="invoker_deafening_blast");
-            var hex = items.FirstOrDefault(x=>x.Name=="item_sheepstick");
-            var urn = items.FirstOrDefault(x=>x.Name=="item_urn_of_shadows");
-            var orchid = items.FirstOrDefault(x=>x.Name=="item_orchid");
-            var meteor = me.FindSpell("invoker_chaos_meteor");
-            var ss = me.FindSpell("invoker_sun_strike");
+            var eul = items.FirstOrDefault(x=>x.StoredName()=="item_cyclone");
+            var dagger = items.FirstOrDefault(x=>x.StoredName()=="item_blink");
+            var refresher = items.FirstOrDefault(x=>x.StoredName()=="item_refresher");
+            var hex = items.FirstOrDefault(x=>x.StoredName()=="item_sheepstick");
+            var urn = items.FirstOrDefault(x=>x.StoredName()=="item_urn_of_shadows");
+            var orchid = items.FirstOrDefault(x=>x.StoredName()=="item_orchid");
+
+            var meteor = Abilities.FindAbility("invoker_chaos_meteor");
+            var ss = Abilities.FindAbility("invoker_sun_strike");
+            var icewall = Abilities.FindAbility("invoker_ice_wall");
+            var deafblast = Abilities.FindAbility("invoker_deafening_blast");
             //var emp = me.FindSpell("invoker_emp");
             /*
             
@@ -809,7 +803,7 @@ namespace InvokerAnnihilation
             {
                 _initNewCombo = true;
                 _stage = 1;
-                //PrintInfo("Starting new combo! " + $"[{_combo + 1}] target: {target.Name}");
+                //PrintInfo("Starting new combo! " + $"[{_combo + 1}] target: {target.StoredName()}");
             }
             if (!Utils.SleepCheck("StageCheck")) return;
             #endregion
@@ -818,9 +812,9 @@ namespace InvokerAnnihilation
             PrintInfo("===========================");
             foreach (var s in modif)
             {
-                PrintInfo(s.Name);
+                PrintInfo(s.StoredName());
             }*/
-            var myBoys = ObjectMgr.GetEntities<Unit>().Where(x => x.Team == me.Team && x.IsControllable && x.IsAlive && Utils.SleepCheck(x.Handle.ToString()));
+            var myBoys = ObjectManager.GetEntities<Unit>().Where(x => x.Team == me.Team && x.IsControllable && x.IsAlive && Utils.SleepCheck(x.Handle.ToString()));
             foreach (var myBoy in myBoys)
             {
                 myBoy.Attack(target);
@@ -830,32 +824,32 @@ namespace InvokerAnnihilation
             {
                 if (urn != null && urn.CanBeCasted(target))
                 {
-                    var urnMod = target.Modifiers.Any(x => x.Name == "modifier_item_urn_damage") &&
-                                 Utils.SleepCheck(urn.Name);
+                    var urnMod = target.HasModifier("modifier_item_urn_damage") &&
+                                 Utils.SleepCheck(urn.StoredName());
                     if (!urnMod)
                     {
                         urn.UseAbility(target);
-                        Utils.Sleep(300, urn.Name);
+                        Utils.Sleep(300, urn.StoredName());
                     }
                 }
                 if (_stage > 2 && !target.IsHexed() && !target.IsStunned())
                 {
                     if (hex != null && hex.CanBeCasted(target) &&
-                        Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.Name) &&
+                        Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.StoredName()) &&
                         Utils.SleepCheck("items"))
                     {
                         hex.UseAbility(target);
                         Utils.Sleep(300, "items");
                     }
                     if (orchid != null && orchid.CanBeCasted(target) &&
-                        Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(orchid.Name) &&
+                        Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(orchid.StoredName()) &&
                         Utils.SleepCheck("items"))
                     {
                         orchid.UseAbility(target);
                         Utils.Sleep(300, "items");
                     }
                 }
-                if (dagger != null && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(dagger.Name) &&
+                if (dagger != null && Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(dagger.StoredName()) &&
                     dagger.CanBeCasted() && Utils.SleepCheck("blinker") && me.Distance2D(target) >= 700)
                 {
                     var dist = 300;
@@ -928,7 +922,7 @@ namespace InvokerAnnihilation
                         {
                             if (_spellForCast.CanBeCasted())
                             {
-                                if (_spellForCast.Name == "invoker_cold_snap")
+                                if (_spellForCast.StoredName() == "invoker_cold_snap")
                                 {
                                     if (_spellForCast.CanBeCasted(target))
                                         LetsTryCastSpell(me, target, _spellForCast);
@@ -941,7 +935,7 @@ namespace InvokerAnnihilation
                             else
                             {
                                 SpellStruct s;
-                                if (SpellInfo.TryGetValue(_spellForCast.Name, out s))
+                                if (SpellInfo.TryGetValue(_spellForCast.StoredName(), out s))
                                 {
                                     if (invoke.CanBeCasted())
                                     {
@@ -956,7 +950,7 @@ namespace InvokerAnnihilation
                                 else
                                     try
                                     {
-                                        PrintError("couldnt find data for spell: " + _spellForCast.Name);
+                                        PrintError("couldnt find data for spell: " + _spellForCast.StoredName());
                                     }
                                     catch (Exception)
                                     {
@@ -966,7 +960,7 @@ namespace InvokerAnnihilation
                         }
                         else
                         {
-                            PrintInfo($"spell {_spellForCast.Name} cant be casted, go next [{_stage}]");
+                            PrintInfo($"spell {_spellForCast.StoredName()} cant be casted, go next [{_stage}]");
                             _stage++;
                             return;
                         }
@@ -979,7 +973,7 @@ namespace InvokerAnnihilation
                     }
                     break;
             }
-            if (refresher == null || !Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(refresher.Name) ||
+            if (refresher == null || !Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(refresher.StoredName()) ||
                 refresher.AbilityState != AbilityState.Ready || _stage < Combos[_combo].GetRefreshPos() ||
                 Combos[_combo].GetRefreshPos() == -1)
                 return;
@@ -990,11 +984,11 @@ namespace InvokerAnnihilation
 
         private static void LetsTryCastSpell(Hero me, Hero target, Ability spellForCast, bool nextSpell=false)
         {
-            var ss = me.FindSpell("invoker_sun_strike");
-            var icewall = me.FindSpell("invoker_ice_wall");
-            var blast = me.FindSpell("invoker_deafening_blast");
-            var tornado = me.FindSpell("invoker_tornado");
-            var emp = me.FindSpell("invoker_emp");
+            var ss = Abilities.FindAbility("invoker_sun_strike");
+            var icewall = Abilities.FindAbility("invoker_ice_wall");
+            var blast = Abilities.FindAbility("invoker_deafening_blast");
+            var tornado = Abilities.FindAbility("invoker_tornado");
+            var emp = Abilities.FindAbility("invoker_emp");
             /*
             var coldsnap = me.FindSpell("invoker_cold_snap");
             var ghostwalk = me.FindSpell("invoker_ghost_walk");
@@ -1003,11 +997,12 @@ namespace InvokerAnnihilation
             var emp = me.FindSpell("invoker_emp");
             var alacrity = me.FindSpell("invoker_alacrity");
             */
-            var meteor = me.FindSpell("invoker_chaos_meteor");
-            var eulmodif = target.Modifiers.FirstOrDefault(x => x.Name == "modifier_eul_cyclone" || x.Name == "modifier_invoker_tornado");
+            var meteor = Abilities.FindAbility("invoker_chaos_meteor");
+            var eulmodif = target.FindModifier("modifier_eul_cyclone") ??
+                           target.FindModifier("modifier_invoker_tornado");
             /*foreach (var source in target.Modifiers.ToList())
             {
-                PrintInfo(source.Name+": "+source.RemainingTime);
+                PrintInfo(source.StoredName()+": "+source.RemainingTime);
             }*/
             var timing = Equals(spellForCast, ss)
                 ? 1.7
@@ -1028,8 +1023,8 @@ namespace InvokerAnnihilation
                 else
                 {
                     UseSpell(spellForCast, target,me);
-                    //Game.PrintMessage(spellForCast.Name+" (2)", MessageType.ChatMessage);
-                    //PrintInfo("caster "+spellForCast.Name+" with timing "+timing);
+                    //Game.PrintMessage(spellForCast.StoredName()+" (2)", MessageType.ChatMessage);
+                    //PrintInfo("caster "+spellForCast.StoredName()+" with timing "+timing);
                     Utils.Sleep(250, "StageCheck");
                     _stage++;
                 }
@@ -1047,12 +1042,12 @@ namespace InvokerAnnihilation
                     {
                         if (nextSpell) time += me.Distance2D(target)/spellForCast.GetProjectileSpeed()*1000 + Game.Ping;
 
-                        spellForCast.CastSkillShot(target, me.Position,spellForCast.Name);
-                        //Game.PrintMessage("CastSkillShot "+spellForCast.CastSkillShot(target, me.Position,spellForCast.Name),MessageType.ChatMessage);
+                        spellForCast.CastSkillShot(target, me.Position,spellForCast.StoredName());
+                        //Game.PrintMessage("CastSkillShot "+spellForCast.CastSkillShot(target, me.Position,spellForCast.StoredName()),MessageType.ChatMessage);
                     }
                     else
                     {
-                        //Game.PrintMessage("suka: " + spellForCast.Name,MessageType.ChatMessage);
+                        //Game.PrintMessage("suka: " + spellForCast.StoredName(),MessageType.ChatMessage);
                         UseSpell(spellForCast, target,me);
                     }
                     Utils.Sleep(time, "StageCheck");
@@ -1101,7 +1096,7 @@ namespace InvokerAnnihilation
         {
             var mousePosition = Game.MousePosition;
             var enemyHeroes =
-                ObjectMgr.GetEntities<Hero>()
+                ObjectManager.GetEntities<Hero>()
                     .Where(
                         x =>
                             x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible
@@ -1136,6 +1131,16 @@ namespace InvokerAnnihilation
             Console.ForegroundColor = color;
             Console.WriteLine(text, arguments);
             Console.ForegroundColor = clr;
+        }
+
+        private static void Print(string s)
+        {
+            Game.PrintMessage(s, MessageType.ChatMessage);
+        }
+        private static string GPrint(this string s)
+        {
+            Game.PrintMessage("[debug]: "+s, MessageType.ChatMessage);
+            return s;
         }
         #endregion
 
