@@ -16,7 +16,7 @@ namespace ArcAnnihilation
             public static List<Unit> GetTowers()
             {
                 if (!Utils.SleepCheck("Towers.refresh")) return _towerList;
-                _towerList = ObjectMgr.GetEntities<Unit>()
+                _towerList = ObjectManager.GetEntities<Unit>()
                     .Where(x => x.ClassID == ClassID.CDOTA_BaseNPC_Tower && x.IsValid && x.IsAlive)
                     .ToList();
                 if (_towerList.Any())
@@ -32,7 +32,7 @@ namespace ArcAnnihilation
             public static IEnumerable<Hero> GetCloneList(Hero me)
             {
                 if (!Utils.SleepCheck("Tempest.refresh")) return _clones;
-                _clones = ObjectMgr.GetEntities<Hero>()
+                _clones = ObjectManager.GetEntities<Hero>()
                     .Where(
                         x =>
                             x.IsAlive && x.IsControllable && x.Team == me.Team &&
@@ -50,7 +50,7 @@ namespace ArcAnnihilation
             {
                 if (!Utils.SleepCheck("Necronomicon.refresh")) return _necronomicon;
                 _necronomicon =
-                    ObjectMgr.GetEntities<Unit>()
+                    ObjectManager.GetEntities<Unit>()
                         .Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsSummoned)
                         .ToList();
                 if (_necronomicon.Any())
@@ -66,7 +66,7 @@ namespace ArcAnnihilation
             {
                 if (!Utils.SleepCheck("LaneCreeps.refresh")) return _laneCreepsList;
                 _laneCreepsList =
-                    ObjectMgr.GetEntities<Unit>()
+                    ObjectManager.GetEntities<Unit>()
                         .Where(x => x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane && x.IsValid && x.IsAlive)
                         .ToList();
                 if (_laneCreepsList.Any())
@@ -82,8 +82,8 @@ namespace ArcAnnihilation
             {
                 if (_ally == null || !_ally.IsValid)
                 {
-                    _ally = ObjectMgr.GetEntities<Unit>()
-                        .FirstOrDefault(x => x.Team == ObjectMgr.LocalHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                    _ally = ObjectManager.GetEntities<Unit>()
+                        .FirstOrDefault(x => x.Team == ObjectManager.LocalHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
                 }
                 return _ally;
             }
@@ -91,8 +91,8 @@ namespace ArcAnnihilation
             {
                 if (_enemy == null || !_enemy.IsValid)
                 {
-                    _enemy = ObjectMgr.GetEntities<Unit>()
-                        .FirstOrDefault(x => x.Team != ObjectMgr.LocalHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                    _enemy = ObjectManager.GetEntities<Unit>()
+                        .FirstOrDefault(x => x.Team != ObjectManager.LocalHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
                 }
                 return _enemy;
             }

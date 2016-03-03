@@ -9,6 +9,7 @@ using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using SharpDX;
+
 // ReSharper disable UnusedMember.Local
 
 namespace ArcAnnihilation
@@ -178,6 +179,7 @@ namespace ArcAnnihilation
             var autoPush = new Menu("Auto Push", "AutoPush");
             autoPush.AddItem(new MenuItem("AutoPush.Enable", "Enable").SetValue(new KeyBind('V', KeyBindType.Toggle)));
             autoPush.AddItem(new MenuItem("AutoPush.DrawLine", "Draw line").SetValue(false));
+            autoPush.AddItem(new MenuItem("AutoPush.Travels", "Use Travel Boots").SetValue(true));
             var antiFeed = new Menu("Anti Feed", "AntiFeed", false, "item_necronomicon_3", true);
             antiFeed.AddItem(new MenuItem("AntiFeed.Enable", "Ebable").SetValue(true).SetTooltip("if u have any enemy hero in range, ur necro will run on base"));
             antiFeed.AddItem(new MenuItem("AntiFeed.Range", "Range Checker").SetValue(new Slider(800,0,1500)));
@@ -354,7 +356,7 @@ namespace ArcAnnihilation
                 Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active &&
                 !Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
-                var me = ObjectMgr.LocalHero;
+                var me = ObjectManager.LocalHero;
                 foreach (var hero in Objects.Tempest.GetCloneList(me))
                 {
                     var nearestTower =
@@ -387,7 +389,7 @@ namespace ArcAnnihilation
                 var size = new Vector2(180, 90);
                 Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
                 Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
-                Drawing.DrawText("Clone Mode is Active", startPos + new Vector2(10, 10),new Vector2(20), new Color(0, 155, 255),
+                Drawing.DrawText("Clone Mode is Active" + $"[{Utils.KeyToText(Menu.Item("hotkeyClone").GetValue<KeyBind>().Key)}]", startPos + new Vector2(10, 10),new Vector2(20), new Color(0, 155, 255),
                     FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
                     FontFlags.StrikeOut);
                 if (_globalTarget2 != null && _globalTarget2.IsAlive)
@@ -409,7 +411,7 @@ namespace ArcAnnihilation
                 var size = new Vector2(180, 40);
                 Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
                 Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
-                Drawing.DrawText("AutoPush is Active", startPos + new Vector2(10, 10), new Vector2(20), new Color(0, 155, 255),
+                Drawing.DrawText("AutoPush is Active " + $"[{Utils.KeyToText(Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Key)}]", startPos + new Vector2(10, 10), new Vector2(20), new Color(0, 155, 255),
                     FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
                     FontFlags.StrikeOut);
             }
@@ -419,7 +421,7 @@ namespace ArcAnnihilation
                 var size = new Vector2(180, 30);
                 Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
                 Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
-                Drawing.DrawText("AutoHeal is Active", startPos + new Vector2(10, 10), new Vector2(20), new Color(0, 155, 255),
+                Drawing.DrawText("AutoHeal is Active" + $"[{Utils.KeyToText(Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Key)}]", startPos + new Vector2(10, 10), new Vector2(20), new Color(0, 155, 255),
                     FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
                     FontFlags.StrikeOut);
             }
@@ -431,7 +433,7 @@ namespace ArcAnnihilation
 
         private static void Game_OnUpdate(EventArgs args)
         {
-            _mainHero = ObjectMgr.LocalHero;
+            _mainHero = ObjectManager.LocalHero;
             //Print($"_mainHero: {_mainHero.Position.X}/{_mainHero.Position.Y}/{_mainHero.Position.Z}");
             if (!_loaded)
             {
@@ -473,8 +475,7 @@ namespace ArcAnnihilation
             {
                 if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
                 {
-                    var enemy =
-                        ObjectMgr.GetEntities<Unit>()
+                    var enemy = ObjectManager.GetEntities<Unit>()
                             .Any(
                                 x =>
                                     x.Team == _mainHero.GetEnemyTeam() && x.IsAlive && x.IsVisible &&
@@ -521,8 +522,7 @@ namespace ArcAnnihilation
             {
                 if (midas.CanBeCasted() && Utils.SleepCheck(_mainHero.Handle + "midas") && _mainHero.IsAlive && !_mainHero.IsInvisible())
                 {
-                    var enemy =
-                        ObjectMgr.GetEntities<Unit>()
+                    var enemy = ObjectManager.GetEntities<Unit>()
                             .Where(
                                 x =>
                                     !x.IsMagicImmune() && x.Team != _mainHero.Team &&
@@ -542,8 +542,7 @@ namespace ArcAnnihilation
                 {
                     midas = clone.FindItem("item_hand_of_midas");
                     if (midas == null || !midas.CanBeCasted()) continue;
-                    var enemy =
-                        ObjectMgr.GetEntities<Unit>()
+                    var enemy = ObjectManager.GetEntities<Unit>()
                             .Where(
                                 x =>
                                     !x.IsMagicImmune() && x.Team != _mainHero.Team &&
@@ -592,7 +591,7 @@ namespace ArcAnnihilation
             }
             foreach (
                 var source in
-                    ObjectMgr.GetEntities<Hero>()
+                    ObjectManager.GetEntities<Hero>()
                         .Where(x => x.IsIllusion && Utils.SleepCheck("Tempest.Attack.Cd" + x.Handle) && !x.IsAttacking())
                 )
             {
@@ -646,7 +645,7 @@ namespace ArcAnnihilation
                 myCreeps.FirstOrDefault(
                     x => x.MaximumHealth * 65 / 100 < x.Health && enemyCreeps.Any(y => y.Distance2D(x) <= 1000));
             var isChannel = isTempest && hero.IsChanneling();
-            if (travelBoots != null && !enemyCreeps.Any(x => x.Distance2D(hero) <= 1000) && isTempest && !isChannel)
+            if (travelBoots != null && !enemyCreeps.Any(x => x.Distance2D(hero) <= 1000) && !isChannel && Menu.Item("AutoPush.Travels").GetValue<bool>())
             {
                 if (creepWithEnemy == null)
                 {
@@ -673,20 +672,22 @@ namespace ArcAnnihilation
             if (nearestTower != null)
             {
                 var pos = curlane == "mid" || !useThisShit ? nearestTower.Position : clospoint;
-                if (nearestTower.Distance2D(hero) <= 1000 && Utils.SleepCheck("Tempest.Attack.Tower.Cd" + handle) &&
-                    Utils.SleepCheck("shield" + handle) && isTempest)
+                if (nearestTower.Distance2D(hero) <= 900 && isTempest)
                 {
-                    var spell = hero.Spellbook.Spell2;
-                    if (spell != null && spell.CanBeCasted())
+                    if (Utils.SleepCheck("Tempest.Attack.Tower.Cd" + handle))
                     {
-                        spell.UseAbility(Prediction.InFront(hero, 100));
-                        Utils.Sleep(1500, "shield" + handle);
+                        var spell = hero.Spellbook.Spell2;
+                        if (spell != null && spell.CanBeCasted() && Utils.SleepCheck("shield" + handle))
+                        {
+                            spell.UseAbility(Prediction.InFront(hero, 100));
+                            Utils.Sleep(1500, "shield" + handle);
+                        }
+                        else if (!hero.IsAttacking())
+                        {
+                            hero.Attack(nearestTower);
+                        }
+                        Utils.Sleep(1000, "Tempest.Attack.Tower.Cd" + handle);
                     }
-                    else if (!hero.IsAttacking())
-                    {
-                        hero.Attack(nearestTower);
-                    }
-                    Utils.Sleep(1000, "Tempest.Attack.Tower.Cd" + handle);
                 }
                 else if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && !hero.IsAttacking())
                 {
@@ -820,7 +821,7 @@ namespace ArcAnnihilation
                     break;
                 }*/
             }
-            var illusions = ObjectMgr.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && !x.HasModifier("modifier_kill")).ToList();
+            var illusions = ObjectManager.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && !x.HasModifier("modifier_kill")).ToList();
             foreach (var illusion in illusions.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle) && illusion.Distance2D(target) <= 1500))
             {
                 illusion.Attack(target);
@@ -890,7 +891,7 @@ namespace ArcAnnihilation
                     }
                 }
             }
-            var illusions = ObjectMgr.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && !x.HasModifier("modifier_kill")).ToList();
+            var illusions = ObjectManager.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && !x.HasModifier("modifier_kill")).ToList();
             foreach (var illusion in illusions.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle)))
             {
                 illusion.Attack(target);
@@ -1013,8 +1014,7 @@ namespace ArcAnnihilation
             
             if (byIllusion)
             {
-                var targets =
-                ObjectMgr.GetEntities<Hero>()
+                var targets = ObjectManager.GetEntities<Hero>()
                     .Where(
                         x =>
                             x.IsValid && x.IsAlive && x.IsVisible && x.Team!=me.Team && x.Distance2D(me) <= 650 &&
@@ -1190,8 +1190,7 @@ namespace ArcAnnihilation
         private static Hero ClosestToMouse(Hero source, float range = 600)
         {
             var mousePosition = Game.MousePosition;
-            var enemyHeroes =
-                ObjectMgr.GetEntities<Hero>()
+            var enemyHeroes = ObjectManager.GetEntities<Hero>()
                     .Where(
                         x =>
                             x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible &&
