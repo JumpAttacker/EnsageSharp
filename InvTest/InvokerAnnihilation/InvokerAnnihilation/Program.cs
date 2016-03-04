@@ -32,8 +32,8 @@ namespace InvokerAnnihilation
         private static bool _startInitSpell;
         private static NetworkActivity _lastAct=NetworkActivity.Idle;
         private static bool _lastAction;
-        private static Hero MyHero = null;
-        private static Player MyPlayer = null;
+        private static Hero _myHero;
+        private static Player MyPlayer { get; set; }
         //============================================================
         //============================================================
         private static bool _sunstrikekill;
@@ -51,15 +51,15 @@ namespace InvokerAnnihilation
         {
             Events.OnLoad += (sender, args) =>
             {
-                MyHero = ObjectManager.LocalHero;
-                if (MyHero.ClassID != ClassID.CDOTA_Unit_Hero_Invoker)
+                _myHero = ObjectManager.LocalHero;
+                if (_myHero.ClassID != ClassID.CDOTA_Unit_Hero_Invoker)
                 {
                     return;
                 }
                 MyPlayer = ObjectManager.LocalPlayer;
                 _stage = 0;
                 _combo = 0;
-                var spells = MyHero.Spellbook;
+                var spells = _myHero.Spellbook;
 
                 var q = spells.SpellQ;
                 var w = spells.SpellW;
@@ -75,11 +75,13 @@ namespace InvokerAnnihilation
                 var forgeSpirit = spells.Spells.FirstOrDefault(x=>x.Name=="invoker_forge_spirit");
                 if (forgeSpirit == null)
                 {
-                    Print("oops, something went wrong");
+                    Print("oops, something went wrong. Please reload the script.");
+                    return;
                 }
                 var emp = Abilities.FindAbility("invoker_emp");
                 var alacrity = Abilities.FindAbility("invoker_alacrity");
                 var meteor = Abilities.FindAbility("invoker_chaos_meteor");
+
                 SpellInfo.Add(ss.Name, new SpellStruct(e, e, e));
                 SpellInfo.Add(coldsnap.Name, new SpellStruct(q, q, q));
                 SpellInfo.Add(ghostwalk.Name, new SpellStruct(q, q, w));
@@ -104,7 +106,7 @@ namespace InvokerAnnihilation
                 Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, coldsnap},3);
                 Combos[_maxCombo] = new ComboStruct(new[] {coldsnap, alacrity, forgeSpirit},3);
                 Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, meteor,blast,ss,icewall},5);
-                Combos[_maxCombo] = new ComboStruct(new[] {ss, ss, ss,ss,ss,ss},3,false,true);
+                Combos[_maxCombo] = new ComboStruct(new[] {ss, ss, ss, ss, ss, ss, ss, ss}, 3, false, true);
 
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
@@ -122,6 +124,8 @@ namespace InvokerAnnihilation
                 Drawing.OnDraw -= Drawing_OnDraw;
                 Game.OnWndProc -= Game_OnWndProc;
                 Player.OnExecuteOrder -= Player_OnExecuteAction;
+                SpellInfo.Clear();
+                _maxCombo = 0;
                 PrintSuccess(string.Format("> {1} Unloaded v{0}", Ver, Menu.DisplayName));
             };
 
@@ -143,10 +147,10 @@ namespace InvokerAnnihilation
             var combo = new Menu("Combos", "combos");
             combo.AddItem(
                 new MenuItem("hotkeyPrev", "Previous Combo").SetValue(new KeyBind(0x6B, KeyBindType.Press))
-                    .SetTooltip("default hotkey is notepad [+]"));
+                    .SetTooltip("default hotkey is numpad [+]"));
             combo.AddItem(
                 new MenuItem("hotkeyNext", "Next Combo").SetValue(new KeyBind(0x6D, KeyBindType.Press))
-                    .SetTooltip("default hotkey is notepad [-]"));
+                    .SetTooltip("default hotkey is numpad [-]"));
             combo.AddItem(new MenuItem("ShowComboMenu", "Show Combo Menu").SetValue(true));
             //combo.AddItem(new MenuItem("ShowCurrentCombo", "Show Current Combo").SetValue(true));
 
@@ -296,7 +300,7 @@ namespace InvokerAnnihilation
         {
             private readonly bool _isNeedEul;
             private readonly bool _custom;
-            public readonly Ability []_spells;
+            public readonly Ability []Spells;
             private readonly int _refreshPos;
             /*private readonly Ability _s1;
             private readonly Ability _s2;
@@ -304,62 +308,38 @@ namespace InvokerAnnihilation
             private readonly Ability _s4;
             private readonly Ability _s5;
             private readonly Ability _s6;*/
+
             /// <summary>
             /// add new combo to sys
             /// </summary>
             /// <param name="spells">array of spells</param>
             /// <param name="refreshPos">min spell pos for refresher (type -1 to disable refresher)</param>
             /// <param name="useEul">use uel in this combo</param>
-            public ComboStruct(Ability[] spells, int refreshPos,bool useEul=false,bool isItCustom=false)
+            /// <param name="isItCustom">player can change this combo</param>
+            public ComboStruct(Ability[] spells, int refreshPos,bool useEul=false,bool isItCustom=true)
             {
                 _isNeedEul = useEul;
-                _spells = spells;
+                Spells = spells;
                 _maxCombo++;
                 _refreshPos = refreshPos;
-                _maxComboSpells = Math.Max(_spells.Length, _maxComboSpells);
+                _maxComboSpells = Math.Max(Spells.Length, _maxComboSpells);
                 _custom = isItCustom;
             }
-            /*public ComboStruct(bool useEul, Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null, Ability s6=null)
-            {
-                _isNeedEul = useEul;
-                _s1 = s1;
-                _s2 = s2;
-                _s6 = s6;
-                _s3 = s3;
-                _s4 = s4;
-                _s5 = s5;
-                _s6 = s6;
-                _maxCombo++;
-            }
-
-            public ComboStruct(Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null, Ability s6 = null)
-                : this()
-            {
-                _s1 = s1;
-                _s2 = s2;
-                _s6 = s6;
-                _s3 = s3;
-                _s4 = s4;
-                _s5 = s5;
-                _s6 = s6;
-                _maxCombo++;
-            }*/
+            
             public int GetRefreshPos()
             {
                 return _refreshPos;
             }
             public int GetSpellsInCombo()
             {
-                return _spells.Length;
+                return Spells.Length;
             }
             public Ability[] GetComboAbilities()
             {
-                //return new[] { _s1, _s2, _s3, _s4, _s5, _s6 };
-                return _spells;
+                return Spells;
             }
             public bool IsCustom()
             {
-                //return new[] { _s1, _s2, _s3, _s4, _s5, _s6 };
                 return _custom;
             }
 
@@ -371,7 +351,7 @@ namespace InvokerAnnihilation
             public override string ToString()
             {
                 var s=new StringBuilder();
-                foreach (var ability in _spells)
+                foreach (var ability in Spells)
                 {
                     s.AppendLine(ability.StoredName());
                 }
@@ -451,11 +431,11 @@ namespace InvokerAnnihilation
         private static Vector2 _size = new Vector2(HUDInfo.GetHPBarSizeX() / 4, HUDInfo.GetHPBarSizeX() / 4);
         private static bool _ghostMode;
         private static bool _leftMouseIsPress;
-        private static bool[] OpenStatus=new bool[11];
-        private static bool LastLeftMouseStatus=false;
+        private static readonly bool[,] OpenStatus=new bool[15,15];
+
         private static void Drawing_OnDraw(EventArgs args)
         {
-            var me = MyHero;
+            var me = _myHero;
 
             #region SS ACTION
 
@@ -554,7 +534,7 @@ namespace InvokerAnnihilation
             Drawing.DrawRect(pos, size2, new Color(0, 155, 255, 255), true);
             var i = 0;
 
-            //var max = Combos.Length;
+            var max = Combos.Length;
             foreach (var comboStruct in Combos)
             {
                 var sizeY = 4 + i*(_size.Y + 2);
@@ -615,21 +595,34 @@ namespace InvokerAnnihilation
                             if (isIn && _leftMouseIsPress && Utils.SleepCheck("clicker"+j+"/"+i))
                             {
                                 Utils.Sleep(200,"clicker"+j+"/"+i);
-                                OpenStatus[j] = !OpenStatus[j];
+                                OpenStatus[j,i] = !OpenStatus[j,i];
                             }
-                            if (OpenStatus[j])
+                            if (OpenStatus[j,i])
                             {
                                 var kek = 0;
+                                var itemStartPos3 = pos + new Vector2(8, sizeY);
+                                
                                 Drawing.DrawRect(
-                                    itemStartPos+new Vector2(-2,_size.Y+2),
-                                    new Vector2(_size.X - 1, (_size.Y+2)*10),
-                                    Color.Orange, true);
+                                    itemStartPos,
+                                    new Vector2(_size.X - 3, _size.Y),
+                                    new Color(0,0,0,155));
+
+                                Drawing.DrawRect(
+                                    itemStartPos,
+                                    new Vector2(_size.X - 3, _size.Y),
+                                    Color.Orange,true);
+
+                                Drawing.DrawRect(
+                                    itemStartPos3 + new Vector2((-_size.X - 2)*10 - 2, -2),
+                                    new Vector2((_size.X - 2)*11, (_size.Y + 2) + 2),
+                                    Color.DarkOrange, true);
                                 foreach (var spell in SpellInfo)
                                 {
                                     kek++;
                                     texturename = $"materials/ensage_ui/spellicons/{spell.Key}.vmat";
-                                    var sizeY2 = 4 + (i + kek)*(_size.Y + 2);
-                                    var itemStartPos2 = pos + new Vector2(sizeX, sizeY2);
+                                    var sizeX2 = _size.X * kek + 10;
+                                    //var sizeY2 = 4 + (i + kek)*(_size.Y + 2);
+                                    var itemStartPos2 = pos + new Vector2(-sizeX2, sizeY);
                                     Drawing.DrawRect(
                                         itemStartPos2,
                                         new Vector2(_size.X - 6, _size.Y),
@@ -645,14 +638,12 @@ namespace InvokerAnnihilation
                                             Color.GreenYellow, true);
                                         if (_leftMouseIsPress)
                                         {
-                                            OpenStatus[j] = !OpenStatus[j];
-                                            comboStruct._spells[j] = Abilities.FindAbility(spell.Key);
+                                            OpenStatus[j,i] = !OpenStatus[j,i];
+                                            comboStruct.Spells[j] = Abilities.FindAbility(spell.Key);
                                         }
                                     }
                                 }
-                                
                             }
-
                         }
                     }
                     catch (Exception)
@@ -669,15 +660,15 @@ namespace InvokerAnnihilation
                 }
                 i++;
             }
+            //Print($"Max:{max}; I:{i}");
             #endregion
-
         }
 
         private static void Game_OnUpdate(EventArgs args)
         {
             #region Init
 
-            var me = MyHero;
+            var me = _myHero;
 
             if (Game.IsPaused)
             {
@@ -746,7 +737,6 @@ namespace InvokerAnnihilation
             }
 
             #endregion
-
 
             #region Get needed spells
 
@@ -1179,6 +1169,7 @@ namespace InvokerAnnihilation
         }
 
         #region Helpers
+
         private static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
@@ -1211,6 +1202,7 @@ namespace InvokerAnnihilation
             Game.PrintMessage("[debug]: "+s, MessageType.ChatMessage);
             return s;
         }
+
         #endregion
 
     }
