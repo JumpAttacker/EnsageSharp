@@ -7,5 +7,6 @@ C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation\Invoker
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation\InvokerAnnihilation\bin\Release\SharpDX.dll
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation\InvokerAnnihilation\bin\Release\EnsageSharp.Sandbox.dll
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation\InvokerAnnihilation\bin\Release\Newtonsoft.Json.dll
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation\InvokerAnnihilation\obj\Debug\InvokerAnnihilation.csprojResolveAssemblyReference.cache
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation\InvokerAnnihilation\obj\Debug\InvokerAnnihilation.exe
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation\InvokerAnnihilation\obj\Debug\InvokerAnnihilation.pdb

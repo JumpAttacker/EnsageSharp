@@ -21,7 +21,7 @@ namespace InvokerAnnihilation
         private const int WmKeyup = 0x0101;
         private static int _combo;
         //private static readonly SpellStruct[] Spells = new SpellStruct[12];
-        private static readonly ComboStruct[] Combos = new ComboStruct[12];
+        private static readonly ComboStruct[] Combos = new ComboStruct[13];
         private static int _maxCombo;
         private static bool _inAction;
         private static bool _initNewCombo;
@@ -104,6 +104,7 @@ namespace InvokerAnnihilation
                 Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, coldsnap},3);
                 Combos[_maxCombo] = new ComboStruct(new[] {coldsnap, alacrity, forgeSpirit},3);
                 Combos[_maxCombo] = new ComboStruct(new[] {tornado, emp, meteor,blast,ss,icewall},5);
+                Combos[_maxCombo] = new ComboStruct(new[] {ss, ss, ss,ss,ss,ss},3,false,true);
 
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
@@ -294,7 +295,8 @@ namespace InvokerAnnihilation
         private struct ComboStruct
         {
             private readonly bool _isNeedEul;
-            private readonly Ability []_spells;
+            private readonly bool _custom;
+            public readonly Ability []_spells;
             private readonly int _refreshPos;
             /*private readonly Ability _s1;
             private readonly Ability _s2;
@@ -308,13 +310,14 @@ namespace InvokerAnnihilation
             /// <param name="spells">array of spells</param>
             /// <param name="refreshPos">min spell pos for refresher (type -1 to disable refresher)</param>
             /// <param name="useEul">use uel in this combo</param>
-            public ComboStruct(Ability[] spells, int refreshPos,bool useEul=false)
+            public ComboStruct(Ability[] spells, int refreshPos,bool useEul=false,bool isItCustom=false)
             {
                 _isNeedEul = useEul;
                 _spells = spells;
                 _maxCombo++;
                 _refreshPos = refreshPos;
                 _maxComboSpells = Math.Max(_spells.Length, _maxComboSpells);
+                _custom = isItCustom;
             }
             /*public ComboStruct(bool useEul, Ability s1, Ability s2, Ability s3 = null, Ability s4 = null, Ability s5 = null, Ability s6=null)
             {
@@ -353,6 +356,11 @@ namespace InvokerAnnihilation
             {
                 //return new[] { _s1, _s2, _s3, _s4, _s5, _s6 };
                 return _spells;
+            }
+            public bool IsCustom()
+            {
+                //return new[] { _s1, _s2, _s3, _s4, _s5, _s6 };
+                return _custom;
             }
 
             public bool CheckEul()
@@ -394,6 +402,7 @@ namespace InvokerAnnihilation
         {
             if (Game.IsChatOpen)
                 return;
+            
             if (Game.IsKeyDown(0x11) && args.WParam == 'T')
             {
                 _sunstrikekill = args.Msg != WmKeyup;
@@ -431,11 +440,19 @@ namespace InvokerAnnihilation
                 _combo = _combo == 0 ? _combo = _maxCombo - 1 : _combo - 1;
                 args.Process = false;
             }
+            if (args.WParam != 1 || !Utils.SleepCheck("clicker"))
+            {
+                _leftMouseIsPress = false;
+                return;
+            }
+            _leftMouseIsPress = true;
         }
 
         private static Vector2 _size = new Vector2(HUDInfo.GetHPBarSizeX() / 4, HUDInfo.GetHPBarSizeX() / 4);
         private static bool _ghostMode;
-
+        private static bool _leftMouseIsPress;
+        private static bool[] OpenStatus=new bool[11];
+        private static bool LastLeftMouseStatus=false;
         private static void Drawing_OnDraw(EventArgs args)
         {
             var me = MyHero;
@@ -564,7 +581,6 @@ namespace InvokerAnnihilation
                 var legal = 1;
                 //PrintInfo(i.ToString());
                 //PrintInfo(i+": "+Combos[i]);
-
                 for (; j+1 <= Combos[i].GetSpellsInCombo(); j++)
                 {
                     try
@@ -584,6 +600,59 @@ namespace InvokerAnnihilation
                                 itemStartPos,
                                 new Vector2(_size.X - 3, _size.Y),
                                 Color.Red, true);
+                        }
+                        if (comboStruct.IsCustom())
+                        {
+                            var isIn=Utils.IsUnderRectangle(Game.MouseScreenPosition, itemStartPos.X, itemStartPos.Y, _size.X - 3,
+                                _size.Y);
+                            if (isIn)
+                            {
+                                Drawing.DrawRect(
+                                    itemStartPos,
+                                    new Vector2(_size.X - 3, _size.Y),
+                                    Color.GreenYellow, true);
+                            }
+                            if (isIn && _leftMouseIsPress && Utils.SleepCheck("clicker"+j+"/"+i))
+                            {
+                                Utils.Sleep(200,"clicker"+j+"/"+i);
+                                OpenStatus[j] = !OpenStatus[j];
+                            }
+                            if (OpenStatus[j])
+                            {
+                                var kek = 0;
+                                Drawing.DrawRect(
+                                    itemStartPos+new Vector2(-2,_size.Y+2),
+                                    new Vector2(_size.X - 1, (_size.Y+2)*10),
+                                    Color.Orange, true);
+                                foreach (var spell in SpellInfo)
+                                {
+                                    kek++;
+                                    texturename = $"materials/ensage_ui/spellicons/{spell.Key}.vmat";
+                                    var sizeY2 = 4 + (i + kek)*(_size.Y + 2);
+                                    var itemStartPos2 = pos + new Vector2(sizeX, sizeY2);
+                                    Drawing.DrawRect(
+                                        itemStartPos2,
+                                        new Vector2(_size.X - 6, _size.Y),
+                                        Textures.GetTexture(texturename));
+                                    isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, itemStartPos2.X,
+                                        itemStartPos2.Y, _size.X - 3,
+                                        _size.Y);
+                                    if (isIn)
+                                    {
+                                        Drawing.DrawRect(
+                                            itemStartPos2,
+                                            new Vector2(_size.X - 3, _size.Y),
+                                            Color.GreenYellow, true);
+                                        if (_leftMouseIsPress)
+                                        {
+                                            OpenStatus[j] = !OpenStatus[j];
+                                            comboStruct._spells[j] = Abilities.FindAbility(spell.Key);
+                                        }
+                                    }
+                                }
+                                
+                            }
+
                         }
                     }
                     catch (Exception)
