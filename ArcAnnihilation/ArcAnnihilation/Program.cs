@@ -28,12 +28,20 @@ namespace ArcAnnihilation
         private static float _myHull;
         private static readonly Dictionary<Vector3, string> LaneDictionary = new Dictionary<Vector3, string>()
         {
+<<<<<<< HEAD
             {new Vector3(-6080, 5805, 384), "top"}, 
+=======
+            {new Vector3(-5895, 5402, 384), "top"}, 
+>>>>>>> origin/master
             {new Vector3(-6600, -3000, 384), "top"},
             {new Vector3(2700, 5600, 384), "top"},
 
 
+<<<<<<< HEAD
             {new Vector3(5807, -5785, 384), "bot"}, 
+=======
+            {new Vector3(5827, -5229, 384), "bot"}, 
+>>>>>>> origin/master
             {new Vector3(-3200, -6200, 384), "bot"},
             {new Vector3(6200, 2200, 384), "bot"},
 
@@ -476,8 +484,12 @@ namespace ArcAnnihilation
         **/
         private static void Game_OnUpdate(EventArgs args)
         {
+<<<<<<< HEAD
             if (_mainHero == null || !_mainHero.IsValid)
                 _mainHero = ObjectManager.LocalHero;
+=======
+            _mainHero = ObjectManager.LocalHero;
+>>>>>>> origin/master
             
             #region standard checks for loader and in-game status
             //Print($"_mainHero: {_mainHero.Position.X}/{_mainHero.Position.Y}/{_mainHero.Position.Z}");
@@ -553,11 +565,14 @@ namespace ArcAnnihilation
             }
             #endregion
 
+<<<<<<< HEAD
             #region Flusher
             if (_globalTarget2 != null)
                 FlushEffectForDyingUnits();
             #endregion
 
+=======
+>>>>>>> origin/master
             #region code for clone combo2 hotkey
             if (Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
@@ -780,16 +795,24 @@ namespace ArcAnnihilation
                     }
                 }
                 // make the unit issue an attack command at the position pos 
+<<<<<<< HEAD
                 else if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && !hero.IsAttacking() && isTempest)
+=======
+                else if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && !hero.IsAttacking())
+>>>>>>> origin/master
                 {
                     hero.Attack(pos);
                     Utils.Sleep(1000, "Tempest.Attack.Cd" + handle);
                 }
+<<<<<<< HEAD
                 // smart attack for necrobook (unaggro under tower)
                 if (!isTempest && Utils.SleepCheck(hero.StoredName() + "attack"))
                 {
                     SmartAttack(hero, myCreeps, nearestTower, pos);
                 }
+=======
+
+>>>>>>> origin/master
                 // if there are creeps in the vicinity, make tempest use mjollnir and necronomicon
                 if (enemyCreeps.Any(x => x.Distance2D(hero) <= 800) && isTempest)
                 {
@@ -812,6 +835,7 @@ namespace ArcAnnihilation
             }
         }
 
+<<<<<<< HEAD
         private static void SmartAttack(Unit me, List<Unit> myCreeps, Unit nearestTower, Vector3 pos)
         {
             var name = me.StoredName();
@@ -868,6 +892,8 @@ namespace ArcAnnihilation
             return boolka;
         }
 
+=======
+>>>>>>> origin/master
         /**
         * GetCurrentLane returns the lane in string that the unit me is currently in
         * uses LaneDictionary with 9 waypoints to determine closest lane (room for possible improvement)
@@ -1130,11 +1156,19 @@ namespace ArcAnnihilation
         * 2) Uses all other items specified in the Items list (line 53)
         * 3) Uses diffusal blade (to purge or dispel) if enabled
         * 4) Uses bkb if enabled
+<<<<<<< HEAD
         * 5) Uses ultimate if all items expect of refresher was casted
         **/
         private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, double distance, bool useBkb, bool byIllusion = false)
         {
             if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime")) return;
+=======
+        * 5) Uses refresher (?) code looks weird. Require author review
+        **/
+        private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, double distance, bool useBkb, bool byIllusion = false)
+        {
+            if (me.IsChanneling()) return;
+>>>>>>> origin/master
             // use all items given in Items list (line 53)
             var inventory =
                 inv.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted()
@@ -1150,7 +1184,10 @@ namespace ArcAnnihilation
             //var count = 0;
             foreach (var item in items)
             {
+<<<<<<< HEAD
                 //Print(++count+". "+item.Name+" ("+Items[item.Name]+")");
+=======
+>>>>>>> origin/master
                 // code for using blink
                 if (item.Name == "item_blink")
                 {
@@ -1243,7 +1280,11 @@ namespace ArcAnnihilation
             }
 
             // code for using bkb
+<<<<<<< HEAD
             if (useBkb && distance<900)
+=======
+            if (useBkb && distance<650)
+>>>>>>> origin/master
             {
                 var bkb = inventory.FirstOrDefault(x => x.Name == "item_black_king_bar");
                 if (bkb != null && bkb.CanBeCasted() && Utils.SleepCheck(bkb.Name + me.Handle))
@@ -1253,7 +1294,11 @@ namespace ArcAnnihilation
                 }
             }
 
+<<<<<<< HEAD
             // Uses ultimate if all items expect of refresher was casted
+=======
+            // not sure what this chunk of code means. weird syntax.
+>>>>>>> origin/master
             if (!items.Any()) return;
             {
                 var r = me.Spellbook.SpellR;
@@ -1400,6 +1445,7 @@ namespace ArcAnnihilation
             return enemyHeroes.FirstOrDefault();
         }
 
+<<<<<<< HEAD
         #region Effects
 
         private static readonly Dictionary<uint, ParticleEffect> Effects = new Dictionary<uint, ParticleEffect>();
@@ -1470,6 +1516,8 @@ namespace ArcAnnihilation
 
         #endregion
 
+=======
+>>>>>>> origin/master
         #region functions to print to screen
         private static void PrintInfo(string text, params object[] arguments)
         {
