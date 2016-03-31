@@ -8,6 +8,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
+using Ensage.Common.Objects;
 using SharpDX;
 
 // ReSharper disable UnusedMember.Local
@@ -27,28 +28,12 @@ namespace ArcAnnihilation
         private static float _myHull;
         private static readonly Dictionary<Vector3, string> LaneDictionary = new Dictionary<Vector3, string>()
         {
-<<<<<<< HEAD
-<<<<<<< HEAD
             {new Vector3(-6080, 5805, 384), "top"}, 
-=======
-            {new Vector3(-5895, 5402, 384), "top"}, 
->>>>>>> origin/master
-=======
-            {new Vector3(-5895, 5402, 384), "top"},
->>>>>>> parent of 1b44f70... v 2.0.0.0
             {new Vector3(-6600, -3000, 384), "top"},
             {new Vector3(2700, 5600, 384), "top"},
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
             {new Vector3(5807, -5785, 384), "bot"}, 
-=======
-            {new Vector3(5827, -5229, 384), "bot"}, 
->>>>>>> origin/master
-=======
-            {new Vector3(5827, -5229, 384), "bot"},
->>>>>>> parent of 1b44f70... v 2.0.0.0
             {new Vector3(-3200, -6200, 384), "bot"},
             {new Vector3(6200, 2200, 384), "bot"},
 
@@ -66,34 +51,33 @@ namespace ArcAnnihilation
         private static readonly Dictionary<uint, int> LastAttackStart = new Dictionary<uint, int>();
         private static readonly Dictionary<uint, NetworkActivity> LastActivity = new Dictionary<uint, NetworkActivity>();
 
-        private static readonly List<string> Items = new List<string>
+        private static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
         {
-            "item_mask_of_madness",
-            "item_dagon",
-            "item_dagon_2",
-            "item_dagon_3",
-            "item_dagon_4",
-            "item_dagon_5",
-            "item_blink",
-            "item_orchid",
-            "item_manta",
-            "item_arcane_boots",
-            "item_guardian_greaves",
-            "item_shivas_guard",
-            "item_ethereal_blade",
+            {"item_mask_of_madness", 1},
+            {"item_dagon", 2},
+            {"item_dagon_2", 2},
+            {"item_dagon_3", 2},
+            {"item_dagon_4", 2},
+            {"item_dagon_5", 2},
+            {"item_blink", 5},
+            {"item_orchid",4},
+            {"item_manta", 1},
+            {"item_arcane_boots", 1},
+            {"item_guardian_greaves", 1},
+            {"item_shivas_guard", 1},
+            {"item_ethereal_blade", 3},
 
-            "item_soul_ring",
-            "item_blade_mail",
-            "item_veil_of_discord",
-            "item_heavens_halberd",
+            {"item_soul_ring", 4},
+            {"item_blade_mail", 4},
+            {"item_veil_of_discord", 4},
+            {"item_heavens_halberd", 1},
 
-            "item_necronomicon",
-            "item_necronomicon_2",
-            "item_necronomicon_3",
-            "item_mjollnir",
+            {"item_necronomicon", 2},
+            {"item_necronomicon_2", 2},
+            {"item_necronomicon_3", 2},
+            {"item_mjollnir", 1},
 
-            "item_sheepstick"
-            /*"item_refresher"*/
+            {"item_sheepstick", 4}
         };
 
         private static readonly List<string> AutoPushItems = new List<string>
@@ -196,6 +180,10 @@ namespace ArcAnnihilation
             autoPush.AddItem(new MenuItem("AutoPush.Enable", "Enable").SetValue(new KeyBind('V', KeyBindType.Toggle)));
             autoPush.AddItem(new MenuItem("AutoPush.DrawLine", "Draw line").SetValue(false));
             autoPush.AddItem(new MenuItem("AutoPush.Travels", "Use Travel Boots").SetValue(true));
+            autoPush.AddItem(
+                new MenuItem("AutoPush.UnAggro.Enable", "UnAggro under tower").SetValue(true)
+                    .SetTooltip(
+                        "Necronomicon will try to unaggro under tower and will stay away from tower if didnt see any ally creep under tower"));
             var antiFeed = new Menu("Anti Feed", "AntiFeed", false, "item_necronomicon_3", true);
             antiFeed.AddItem(new MenuItem("AntiFeed.Enable", "Ebable").SetValue(true).SetTooltip("if u have any enemy hero in range, ur necro will run on base"));
             antiFeed.AddItem(new MenuItem("AntiFeed.Range", "Range Checker").SetValue(new Slider(800,0,1500)));
@@ -254,8 +242,14 @@ namespace ArcAnnihilation
             Menu.AddToMainMenu();
         }
 
+        /**
+        * Whenever a player executes an action, do the following
+        * 1) if monkey mode is active, make the clone copy the actions
+        * 2) if ez heal is active and player executes a command with eligible items (given in CloneOnlyItems), cancel command and make clone use it instead
+        **/
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
+            #region code for monkey
             if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int)Orders.Monkey && !Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
             {
                 //Game.PrintMessage(args.Order.ToString(), MessageType.ChatMessage);
@@ -265,6 +259,7 @@ namespace ArcAnnihilation
                     args.Order != Order.MoveLocation && args.Order != Order.MoveTarget && args.Order != Order.Hold)
                     return;
 
+                // make each tempest clone copy main hero's moves
                 foreach (var hero in Objects.Tempest.GetCloneList(sender.Hero))
                 {
                     Ability spell;
@@ -321,12 +316,16 @@ namespace ArcAnnihilation
                     }
                 }
             }
+            #endregion
+            #region code for ez heal
             else if (Menu.Item("FirstClone").GetValue<bool>())
             {
                 if (args.Order != Order.Ability && args.Order != Order.AbilityTarget &&
                     args.Order != Order.AbilityLocation)
                     return;
                 if (!CloneOnlyItems.Contains(args.Ability.Name)) return;
+                
+                // use clone items instead of main hero's items
                 foreach (var hero in Objects.Tempest.GetCloneList(sender.Hero).Where(x => x.Distance2D(sender.Hero) <= 1000))
                 {
                     Ability spell;
@@ -363,10 +362,12 @@ namespace ArcAnnihilation
                     }
                 }
             }
+            #endregion
         }
 
         private static void Drawing_OnDraw(EventArgs args)
         {
+            //Drawing.DrawText($"x:{Game.MousePosition.X} y:{Game.MousePosition.Y}",Game.MouseScreenPosition+new Vector2(150,150),Color.Red,FontFlags.Custom);
             if (!_loaded) return;
             if (Menu.Item("AutoPush.DrawLine").GetValue<bool>() &&
                 Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active &&
@@ -419,6 +420,14 @@ namespace ArcAnnihilation
                         Drawing.GetTexture(name));
                     Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(14, -5),
                         new Color(0, 0, 0, 255), true);
+                    foreach (var me in Objects.Tempest.GetCloneList(_mainHero).ToList())
+                    {
+                        DrawEffects(me,_globalTarget2);
+                    }
+                    foreach (var me in Objects.Necronomicon.GetNecronomicons(_mainHero).ToList())
+                    {
+                        DrawEffects(me,_globalTarget2);
+                    }
                 }
             }
             else if (Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
@@ -445,22 +454,32 @@ namespace ArcAnnihilation
             if (_globalTarget == null || !_globalTarget.IsAlive) return;
             pos = Drawing.WorldToScreen(_globalTarget.Position);
             Drawing.DrawText("Target", pos, new Vector2(0, 50), Color.Red, FontFlags.AntiAlias | FontFlags.DropShadow);
+            foreach (var me in Objects.Tempest.GetCloneList(_mainHero).ToList())
+            {
+                DrawEffects(me, _globalTarget2);
+            }
+            foreach (var me in Objects.Necronomicon.GetNecronomicons(_mainHero).ToList())
+            {
+                DrawEffects(me, _globalTarget2);
+            }
+            DrawEffects(_mainHero, _globalTarget2);
         }
 
+        /**
+        * On each game tick, do the following
+        * 1) make clone auto heal if enabled
+        * 2) spam spark if enabled
+        * 3) use clone combo attack if enabled
+        * 4) use auto midas if enabled
+        * 5) use generic hotkey for pushing (?) if enabled. 
+        * 6) defaults to using combo1 (?)
+        **/
         private static void Game_OnUpdate(EventArgs args)
         {
-<<<<<<< HEAD
-<<<<<<< HEAD
             if (_mainHero == null || !_mainHero.IsValid)
                 _mainHero = ObjectManager.LocalHero;
-=======
-            _mainHero = ObjectManager.LocalHero;
->>>>>>> origin/master
             
             #region standard checks for loader and in-game status
-=======
-            _mainHero = ObjectManager.LocalHero;
->>>>>>> parent of 1b44f70... v 2.0.0.0
             //Print($"_mainHero: {_mainHero.Position.X}/{_mainHero.Position.Y}/{_mainHero.Position.Z}");
             if (!_loaded)
             {
@@ -484,6 +503,7 @@ namespace ArcAnnihilation
                 return;
             }
             if (Game.IsPaused) return;
+            #endregion
 
             _tick = Environment.TickCount;
             NetworkActivity act;
@@ -500,6 +520,7 @@ namespace ArcAnnihilation
             }
             foreach (var clone in Objects.Tempest.GetCloneList(_mainHero))
             {
+                #region auto heal code
                 if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
                 {
                     var enemy = ObjectManager.GetEntities<Unit>()
@@ -512,6 +533,9 @@ namespace ArcAnnihilation
                         CloneUseHealItems(clone, _mainHero, clone.Distance2D(_mainHero));
                     }
                 }
+                #endregion
+
+                // following code updates lastactivity and lastattack state
                 handle = clone.Handle;
                 if (LastActivity.TryGetValue(handle, out act) && clone.NetworkActivity == act) continue;
                 LastActivity.Remove(handle);
@@ -520,27 +544,24 @@ namespace ArcAnnihilation
                 LastAttackStart.Remove(handle);
                 LastAttackStart.Add(handle, _tick);
             }
+
+            #region code for spark spam
             if (Menu.Item("spamHotkey").GetValue<KeyBind>().Active)
             {
                 SparkSpam(_mainHero);
                 return;
             }
-<<<<<<< HEAD
             #endregion
 
-<<<<<<< HEAD
             #region Flusher
             if (_globalTarget2 != null)
                 FlushEffectForDyingUnits();
             #endregion
 
-=======
->>>>>>> origin/master
             #region code for clone combo2 hotkey
-=======
->>>>>>> parent of 1b44f70... v 2.0.0.0
             if (Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
+                // if target is not valid, set target to the hero closest to the mouse
                 if (_globalTarget2 == null || !_globalTarget2.IsValid || !_globalTarget2.IsAlive)
                 {
                     _globalTarget2 = ClosestToMouse(_mainHero, 500);
@@ -553,11 +574,11 @@ namespace ArcAnnihilation
             else
             {
                 _globalTarget2 = null;
-                
+                if (!Menu.Item("hotkey").GetValue<KeyBind>().Active) FlushEffect();
             }
+            #endregion
 
-            //if (!me.IsAlive) return;
-
+            #region code for auto midas 
             var midas = _mainHero.FindItem("item_hand_of_midas");
             if (midas != null && Menu.Item("AutoMidas").GetValue<bool>())
             {
@@ -598,20 +619,20 @@ namespace ArcAnnihilation
                     midas.UseAbility(enemy);
                 }
             }
+            #endregion
 
-            /*foreach (var modifier in me.Modifiers)
-            {
-                Game.PrintMessage(modifier.Name, MessageType.ChatMessage);
-            }*/
-
+            #region code for generic hotkey(?)
             if (!Menu.Item("hotkey").GetValue<KeyBind>().Active)
             {
                 _globalTarget = null;
                 if (Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active && _globalTarget2==null)
                     AutoPush(_mainHero);
+
                 return;
             }
+            #endregion
 
+            // if globaltarget is not set and target is LockTarget is not set, set target to the unit closest to the mouse
             if (_globalTarget == null || !_globalTarget.IsValid || !Menu.Item("LockTarget").GetValue<bool>())
             {
                 _globalTarget = ClosestToMouse(_mainHero, 300);
@@ -619,17 +640,26 @@ namespace ArcAnnihilation
             if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
 
             DoCombo(_mainHero, _globalTarget);
+            
         }
+
+        /**
+        * AutoPush takes control of all available units and sends each unit to DoShit() to push
+        * arg me: main hero (used to check units controlled by main hero)
+        **/
 
         private static void AutoPush(Hero me)
         {
             /*var curlane2 = GetCurrentLane(me);
             var clospoint2 = GetClosestPoint(curlane2);
             Print($"{curlane2}: to: x:{clospoint2.X}/ y:{clospoint2.Y}");*/
+
+            // make each clone doshit
             foreach (var hero in Objects.Tempest.GetCloneList(me))
             {
                 DoShit(hero, true);
             }
+            // make each illusion do shit
             foreach (
                 var source in
                     ObjectManager.GetEntities<Hero>()
@@ -640,7 +670,7 @@ namespace ArcAnnihilation
                 DoShit(source);
                 Utils.Sleep(350, "Tempest.Attack.Cd" + source.Handle);
             }
-
+            // make each necronomicon unit doshit
             foreach (
                 var necr in
                     Objects.Necronomicon.GetNecronomicons(me)
@@ -664,33 +694,46 @@ namespace ArcAnnihilation
                 Utils.Sleep(1000, necr.Handle + "AutoPush.Attack");
             }
         }
-
+        /**
+        * DoShit takes in a unit and makes the unit do pushing related actions:
+        * 1) boots of travel to creep furthest away from unit
+        * 2) push the current lane
+        * 3) attack tower with shield if nearby
+        * 4) attack creeps if nearby
+        * 5) if enemy creeps are nearby, use mjollnir and necronomicon
+        * args hero: unit to control
+        * args isTempest: passed to easily distinguish between clone unit and other units
+        **/
         private static void DoShit(Unit hero, bool isTempest=false)
         {
+            // setting variables
             var handle = hero.Handle;
-            var items = isTempest?hero.Inventory.Items.ToList():null;
+            var items = isTempest ? hero.Inventory.Items.ToList() : null;
             var travelBoots = isTempest?
                 items.FirstOrDefault(
                     x =>
                         (x.Name == "item_travel_boots" ||
                         x.Name == "item_travel_boots_2") && x.CanBeCasted() &&
-                        Utils.SleepCheck("Tempest.Travels.Cd" + handle)):null;
-            var autoPushItems =isTempest?
+                        Utils.SleepCheck("Tempest.Travels.Cd" + handle)) : null;
+            var autoPushItems =isTempest ? 
                 items.Where(
                     x =>
                         AutoPushItems.Contains(x.Name) && x.CanBeCasted() &&
-                        Utils.SleepCheck("Tempest.AutoPush.Cd" + handle + x.Name)):null;
+                        Utils.SleepCheck("Tempest.AutoPush.Cd" + handle + x.Name)) : null;
             var myCreeps = Objects.LaneCreeps.GetCreeps().Where(x => x.Team == hero.Team).ToList();
             var enemyCreeps = Objects.LaneCreeps.GetCreeps().Where(x => x.Team != hero.Team).ToList();
             var creepWithEnemy =
                 myCreeps.FirstOrDefault(
                     x => x.MaximumHealth * 65 / 100 < x.Health && enemyCreeps.Any(y => y.Distance2D(x) <= 1000));
             var isChannel = isTempest && hero.IsChanneling();
+
+            // code for using boots of travel
+            // note: chooses creep furthest away from unit to TP to
             if (travelBoots != null && !enemyCreeps.Any(x => x.Distance2D(hero) <= 1000) && !isChannel && Menu.Item("AutoPush.Travels").GetValue<bool>())
             {
                 if (creepWithEnemy == null)
                 {
-                    creepWithEnemy = myCreeps.OrderByDescending(x => x.Distance2D(hero)).FirstOrDefault();
+                    creepWithEnemy = myCreeps.OrderByDescending(x => x.Distance2D(hero)).FirstOrDefault(); 
                 }
                 if (creepWithEnemy != null)
                 {
@@ -700,6 +743,7 @@ namespace ArcAnnihilation
                 }
             }
             if (isChannel) return;
+            
             var nearestTower =
                     Objects.Towers.GetTowers()
                         .Where(x => x.Team == hero.GetEnemyTeam())
@@ -709,16 +753,21 @@ namespace ArcAnnihilation
             var curlane = GetCurrentLane(hero);
             var clospoint = GetClosestPoint(curlane);
             var useThisShit = clospoint.Distance2D(fountain) - 250 > hero.Distance2D(fountain);
-            //Print($"{clospoint.Distance2D(fountain)} ??? {hero.Distance2D(fountain)}");
+            // useThisShit will return true if unit is closer to the fountain than the clospoint
+
             if (nearestTower != null)
             {
-                var pos = curlane == "mid" || !useThisShit ? nearestTower.Position : clospoint;
+                var pos = (curlane == "mid" || !useThisShit) ? nearestTower.Position : clospoint;
+                // if unit is at mid or clospoint is closer than the unit to the fountain, push the nearest tower
+                // otherwise, push the closest point
+
+                // if unit is a tempest and is close to the tower, use shield and attack tower
                 if (nearestTower.Distance2D(hero) <= 900 && isTempest)
                 {
                     if (Utils.SleepCheck("Tempest.Attack.Tower.Cd" + handle))
                     {
                         var spell = hero.Spellbook.Spell2;
-                        if (spell != null && spell.CanBeCasted() && Utils.SleepCheck("shield" + handle))
+                        if (spell != null && spell.CanBeCasted() && Utils.SleepCheck("shield" + handle)) // handle used to uniquely identify the current hero's cooldowns
                         {
                             spell.UseAbility(Prediction.InFront(hero, 100));
                             Utils.Sleep(1500, "shield" + handle);
@@ -730,33 +779,18 @@ namespace ArcAnnihilation
                         Utils.Sleep(1000, "Tempest.Attack.Tower.Cd" + handle);
                     }
                 }
-<<<<<<< HEAD
                 // make the unit issue an attack command at the position pos 
-<<<<<<< HEAD
                 else if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && !hero.IsAttacking() && isTempest)
-=======
-                else if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && !hero.IsAttacking())
->>>>>>> origin/master
-=======
-                else if (Utils.SleepCheck("Tempest.Attack.Cd" + handle) && !hero.IsAttacking())
->>>>>>> parent of 1b44f70... v 2.0.0.0
                 {
                     hero.Attack(pos);
                     Utils.Sleep(1000, "Tempest.Attack.Cd" + handle);
                 }
-<<<<<<< HEAD
-<<<<<<< HEAD
                 // smart attack for necrobook (unaggro under tower)
                 if (!isTempest && Utils.SleepCheck(hero.StoredName() + "attack"))
                 {
                     SmartAttack(hero, myCreeps, nearestTower, pos);
                 }
-=======
-
->>>>>>> origin/master
                 // if there are creeps in the vicinity, make tempest use mjollnir and necronomicon
-=======
->>>>>>> parent of 1b44f70... v 2.0.0.0
                 if (enemyCreeps.Any(x => x.Distance2D(hero) <= 800) && isTempest)
                 {
                     foreach (var item in autoPushItems)
@@ -778,8 +812,6 @@ namespace ArcAnnihilation
             }
         }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         private static void SmartAttack(Unit me, List<Unit> myCreeps, Unit nearestTower, Vector3 pos)
         {
             var name = me.StoredName();
@@ -836,21 +868,23 @@ namespace ArcAnnihilation
             return boolka;
         }
 
-=======
->>>>>>> origin/master
         /**
         * GetCurrentLane returns the lane in string that the unit me is currently in
         * uses LaneDictionary with 9 waypoints to determine closest lane (room for possible improvement)
         * args me: the unit in question
         * return string: the lane. either "bot", "top" or "middle"
         **/
-=======
->>>>>>> parent of 1b44f70... v 2.0.0.0
         private static string GetCurrentLane(Unit me)
         {
             return LaneDictionary.OrderBy(x => x.Key.Distance2D(me)).First().Value;
         }
 
+        /**
+        * GetClosestPoint takes in a lane in string and returns a position given by the 0th, 3rd, or 6th key in LaneDictionary
+        * (Require author documentation to explain what these positions mean)
+        * args pos: the position, "top", "bot" or "middle"
+        * return: vector3 position given in LaneDictionary
+        **/
         private static Vector3 GetClosestPoint(string pos)
         {
             /*return LaneDictionary.Where(
@@ -910,6 +944,15 @@ namespace ArcAnnihilation
             }
         }
 
+        /**
+        * DoCombo2 takes in a hero, me, and a hero, target, and does the following
+        * 1) Use dagger towards the target if available
+        * 2) Use all spells on target handled by SpellsUsage()
+        * 3) Use all possible items handled by ItemUsage()
+        * 4) Attacks enemy with orbwalking (if enabled) or with regular attack
+        * 5) Make illusions attack if is illusion
+        * 6) Make necronomicon units attack and use spell on target
+        **/
         private static void DoCombo2(Hero me, Hero target)
         {
             double targetHull = target.HullRadius;
@@ -918,12 +961,18 @@ namespace ArcAnnihilation
                 var d = hero.Distance2D(target) - _myHull - targetHull;
                 var inv = hero.Inventory.Items;
                 var enumerable = inv as Item[] ?? inv.ToArray();
-                var dagger = enumerable.Any(x => x.Name == "item_blink" && x.Cooldown == 0);
 
+                // use dagger if available
+                var dagger = enumerable.Any(x => x.Name == "item_blink" && x.Cooldown == 0);
                 SpellsUsage(hero, target, d, dagger);
+
+                // uses all items available
                 ItemUsage(hero, enumerable, target, d,
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
+
+                // do orbwalking if enabled
+                // otherwise simply attack target
                 if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
                 {
                     Orbwalk(hero, target, Menu.Item("OrbWalking.bonusWindupMs").GetValue<Slider>().Value);
@@ -934,23 +983,6 @@ namespace ArcAnnihilation
                     hero.Attack(target);
                     Utils.Sleep(350, "clone_attacking" + hero.Handle);
                 }
-                
-
-                /*
-                if (Utils.SleepCheck("clone_attacking" + hero.Handle))
-                {
-                    hero.Attack(target);
-                    Utils.Sleep(UnitDatabase.GetAttackPoint(me) * 1000 - Game.Ping + 50, "clone_attacking" + hero.Handle);
-                }
-                else if (Utils.SleepCheck("clone_moving" + hero.Handle) && me.NetworkActivity != NetworkActivity.Attack && me.NetworkActivity != NetworkActivity.Attack2)
-                {
-                    hero.Move(target.Position);
-                    Utils.Sleep(300, "clone_moving" + hero.Handle);
-                }
-                else
-                {
-                    break;
-                }*/
             }
             var illusions = ObjectManager.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && !x.HasModifier("modifier_kill")).ToList();
             foreach (var illusion in illusions.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle) && illusion.Distance2D(target) <= 1500))
@@ -1052,18 +1084,23 @@ namespace ArcAnnihilation
                 Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Me ||
                 Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All);
             Orbwalk(me,target);
-            /*
-            if (!Utils.SleepCheck("attacking")) return;
-            me.Attack(target);
-            Utils.Sleep(200, "attacking");*/
         }
 
+        /**
+        * SpellsUsage does the following
+        * 1) Use Q spell on target
+        * 2) Use W if close enough to target and blink dagger not available
+        * 3) Use E with prediction (based on enemy pathing) if blink dagger is not available
+        * 4) Use R if available (?)
+        **/
         private static void SpellsUsage(Hero me, Hero target, double distance,bool daggerIsReady)
         {
             var spellbook = me.Spellbook;
             var q = spellbook.SpellQ;
             var w = spellbook.SpellW;
             var e = spellbook.SpellE;
+
+
             if (q != null && q.CanBeCasted() && q.CastRange >= distance && Utils.SleepCheck(me.Handle+q.Name))
             {
                 q.UseAbility(target);
@@ -1088,7 +1125,6 @@ namespace ArcAnnihilation
             Utils.Sleep(500, me.Handle + r.Name);
         }
 
-<<<<<<< HEAD
         /**
         * ItemUsage takes in a Hero me, its inventory inv, a Hero target, the distance between me and target, a boolean usebkb and byillusion
         * and uses all items as necessary
@@ -1096,48 +1132,34 @@ namespace ArcAnnihilation
         * 2) Uses all other items specified in the Items list (line 53)
         * 3) Uses diffusal blade (to purge or dispel) if enabled
         * 4) Uses bkb if enabled
-<<<<<<< HEAD
         * 5) Uses ultimate if all items expect of refresher was casted
         **/
         private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, double distance, bool useBkb, bool byIllusion = false)
         {
             if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime")) return;
-=======
-        * 5) Uses refresher (?) code looks weird. Require author review
-        **/
-        private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, double distance, bool useBkb, bool byIllusion = false)
-        {
-            if (me.IsChanneling()) return;
->>>>>>> origin/master
             // use all items given in Items list (line 53)
-=======
-        private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, double distance, bool useBkb, bool byIllusion = false)
-        {
-            if (me.IsChanneling()) return;
->>>>>>> parent of 1b44f70... v 2.0.0.0
             var inventory =
                 inv.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted()
                     /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
             var items =
                 inventory.Where(
                     x =>
-                        Items.Contains(x.Name) &&
-                        ((x.CastRange == 0 && distance <= 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value) ||
-                         x.CastRange >= distance)).ToList();
+                        Items.Keys.Contains(x.Name) &&
+                        ((x.CastRange == 0 &&
+                          distance <=
+                          (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
+                         x.CastRange >= distance)).OrderByDescending(y => Items[y.StoredName()]);
+            //var count = 0;
             foreach (var item in items)
             {
-<<<<<<< HEAD
-<<<<<<< HEAD
                 //Print(++count+". "+item.Name+" ("+Items[item.Name]+")");
-=======
->>>>>>> origin/master
                 // code for using blink
-=======
->>>>>>> parent of 1b44f70... v 2.0.0.0
                 if (item.Name == "item_blink")
                 {
+                    // if target is more than blink range away
                     if (distance > 1150)
                     {
+                        // sets blink point to position given by CloseRange menu slider
                         var point = new Vector3(
                             (float)
                                 (target.Position.X -
@@ -1153,6 +1175,8 @@ namespace ArcAnnihilation
                         {
                             item.UseAbility(point);
                             Utils.Sleep(500, item.Name + me.Handle);
+                            Utils.Sleep(250, "DaggerTime");
+                            return;
                         }
                     }
                     else if (distance>Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value)
@@ -1161,6 +1185,7 @@ namespace ArcAnnihilation
                         Utils.Sleep(500, item.Name + me.Handle);
                     }
                     continue;
+                    //return;
                 }
                 item.UseAbility();
                 item.UseAbility(target);
@@ -1168,19 +1193,17 @@ namespace ArcAnnihilation
                 item.UseAbility(me);
                 Utils.Sleep(500, item.Name + me.Handle);
             }
-            //var underDiff = target.Modifiers.Any(x => x.Name == "modifier_item_diffusal_blade_slow");
-            //Game.PrintMessage("Under SLow?: "+target.Modifiers.Any(x=>x.Name=="modifier_item_diffusal_blade_slow"),MessageType.ChatMessage);
             
-            //var PurgeMain = Menu.Item("Diffusal.PurgEnemy").GetValue<StringList>().SelectedIndex == (int)PurgeSelection.MainTarget;
+            // purge enemies if menu setting enabled
             var purgeAll = Menu.Item("Diffusal.PurgEnemy").GetValue<StringList>().SelectedIndex == (int)PurgeSelection.AllEnemies;
-
             
+            // if ItemUsage is called by combo1
             if (byIllusion)
             {
                 var targets = ObjectManager.GetEntities<Hero>()
                     .Where(
                         x =>
-                            x.IsValid && x.IsAlive && x.IsVisible && x.Team!=me.Team && x.Distance2D(me) <= 650 &&
+                            x.IsValid && x.IsAlive && x.IsVisible && x.Team!=me.Team && x.Distance2D(me) <= 750 &&
                             (purgeAll || Equals(target, x)) &&
                              !x.IsStunned() && !x.IsHexed())
                     .ToList();
@@ -1188,7 +1211,12 @@ namespace ArcAnnihilation
                 {
                     var mod =
                         hero.HasModifier("modifier_item_diffusal_blade_slow");
-                    if (mod) continue;
+                    var repel = hero.FindModifier("modifier_omniknight_repel")!=null;
+                    var guard = hero.FindModifier("modifier_omninight_guardian_angel")!=null;
+                    if (mod && !repel && !guard)
+                    {
+                        continue;
+                    }
                     var items2 =
                     inventory.Where(
                         x =>
@@ -1201,6 +1229,8 @@ namespace ArcAnnihilation
                     }
                 }
             }
+
+            // code for diffusal blade dispelling 
             var both = Menu.Item("Diffusal.Dispel").GetValue<StringList>().SelectedIndex == (int)DispelSelection.Both;
             var main = Menu.Item("Diffusal.Dispel").GetValue<StringList>().SelectedIndex == (int)DispelSelection.Me;
             var tempest = Menu.Item("Diffusal.Dispel").GetValue<StringList>().SelectedIndex == (int)DispelSelection.Tempest;
@@ -1213,17 +1243,9 @@ namespace ArcAnnihilation
                 if (dif.Any())
                     TryToDispell(me, dif, both, main, tempest);
             }
-<<<<<<< HEAD
 
             // code for using bkb
-<<<<<<< HEAD
             if (useBkb && distance<900)
-=======
-            if (useBkb && distance<650)
->>>>>>> origin/master
-=======
-            if (useBkb && distance<650)
->>>>>>> parent of 1b44f70... v 2.0.0.0
             {
                 var bkb = inventory.FirstOrDefault(x => x.Name == "item_black_king_bar");
                 if (bkb != null && bkb.CanBeCasted() && Utils.SleepCheck(bkb.Name + me.Handle))
@@ -1232,15 +1254,8 @@ namespace ArcAnnihilation
                     Utils.Sleep(500, bkb.Name + me.Handle);
                 }
             }
-<<<<<<< HEAD
 
-<<<<<<< HEAD
             // Uses ultimate if all items expect of refresher was casted
-=======
-            // not sure what this chunk of code means. weird syntax.
->>>>>>> origin/master
-=======
->>>>>>> parent of 1b44f70... v 2.0.0.0
             if (!items.Any()) return;
             {
                 var r = me.Spellbook.SpellR;
@@ -1258,9 +1273,9 @@ namespace ArcAnnihilation
             {
                 var underShit = me.IsSilenced() || me.IsHexed() /*|| me.DebuffState*/;
                 var isSilenced2 = _mainHero.IsSilenced();
-                if (isSilenced2)
+                if (isSilenced2 && me.Distance2D(_mainHero) <= 600)
                 {
-                    foreach (var item in toList.Where(item => me.Distance2D(_mainHero) <= 600))
+                    foreach (var item in toList.Where(x => Utils.SleepCheck(x.Name + me.Handle)))
                     {
                         item.UseAbility(_mainHero);
                         Utils.Sleep(500, item.Name + me.Handle);
@@ -1274,7 +1289,7 @@ namespace ArcAnnihilation
                         Utils.Sleep(500, item.Name + me.Handle);
                     }
                 }
-                foreach (var hero in Ensage.Common.Objects.Heroes.GetByTeam(me.Team).Where(x=>x.IsAlive && x.Distance2D(me)<=600 && (x.IsHexed() || x.IsSilenced())))
+                foreach (var hero in Ensage.Common.Objects.Heroes.GetByTeam(me.Team).Where(x=>x!=null && x.IsValid && x.IsAlive && x.Distance2D(me)<=600 && (x.IsHexed() || x.IsSilenced())))
                 {
                     foreach (var item in toList)
                     {
@@ -1314,10 +1329,14 @@ namespace ArcAnnihilation
                     (float)((Game.Ping / 1000 + me.GetTurnTime(target.Position)) * me.MovementSpeed));
                 distance = pos.Distance2D(target) - me.Distance2D(target);
             }
+
+            // target is valid if it is alive, visbile, not invulnerable, not in ethereal state, and is within attack range
             var isValid = target != null && target.IsValid && target.IsAlive && target.IsVisible && !target.IsInvul()
                           && !target.HasModifiers(new[] { "modifier_ghost_state", "modifier_item_ethereal_blade_slow" },
                               false) && target.Distance2D(me)
                           <= (me.GetAttackRange() + me.HullRadius + 50 + targetHull + bonusRange + Math.Max(distance, 0));
+
+            // attack and set cooldown on attack timer if possible to attack
             if (isValid || (target != null && me.IsAttacking() && me.GetTurnTime(target.Position) < 0.1))
             {
                 var canAttack = !AttackOnCooldown(me,target, bonusWindupMs)
@@ -1331,6 +1350,8 @@ namespace ArcAnnihilation
                     return;
                 }
             }
+
+            // do animation cancelling by walking to the target location if possible to cancel
             var canCancel = (CanCancelAnimation(me) && AttackOnCooldown(me,target, bonusWindupMs))
                             || (!isValid && !me.IsAttacking() && CanCancelAnimation(me));
             if (!canCancel || !Utils.SleepCheck("!Orbwalk.Move") || !Utils.SleepCheck("!Orbwalk.Attack"))
@@ -1381,8 +1402,6 @@ namespace ArcAnnihilation
             return enemyHeroes.FirstOrDefault();
         }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         #region Effects
 
         private static readonly Dictionary<uint, ParticleEffect> Effects = new Dictionary<uint, ParticleEffect>();
@@ -1453,11 +1472,7 @@ namespace ArcAnnihilation
 
         #endregion
 
-=======
->>>>>>> origin/master
         #region functions to print to screen
-=======
->>>>>>> parent of 1b44f70... v 2.0.0.0
         private static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
@@ -1485,5 +1500,6 @@ namespace ArcAnnihilation
         {
             Game.PrintMessage(toString, type);
         }
+        #endregion
     }
 }

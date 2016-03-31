@@ -9,3 +9,4 @@ C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihila
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihilation\bin\Release\Newtonsoft.Json.dll
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihilation\obj\Debug\ArcAnnihilation.exe
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihilation\obj\Debug\ArcAnnihilation.pdb
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihilation\obj\Debug\ArcAnnihilation.csprojResolveAssemblyReference.cache
