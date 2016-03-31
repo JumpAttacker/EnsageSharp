@@ -28,6 +28,7 @@ namespace ArcAnnihilation
         public class Tempest
         {
             private static IEnumerable<Hero> _clones;
+            private static IEnumerable<Hero> _clonesF;
 
             public static IEnumerable<Hero> GetCloneList(Hero me)
             {
@@ -36,15 +37,27 @@ namespace ArcAnnihilation
                     .Where(
                         x =>
                             x.IsAlive && x.IsControllable && x.Team == me.Team &&
-                            x.Modifiers.Any(y => y.Name == "modifier_kill")).ToList();
+                            x.Modifiers.Any(y=>y.Name=="modifier_kill")).ToList();
                 if (_clones.Any())
                     Utils.Sleep(100, "Tempest.refresh");
                 return _clones;
+            }
+            public static IEnumerable<Hero> GetFullyCloneList(Hero me)
+            {
+                if (!Utils.SleepCheck("Tempest.refresh.fully")) return _clonesF;
+                _clonesF = ObjectManager.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            !Equals(x, me) && x.IsControllable && x.Team == me.Team).ToList();
+                if (_clonesF.Any())
+                    Utils.Sleep(100, "Tempest.refresh.fully");
+                return _clonesF;
             } 
         }
         public class Necronomicon
         {
             private static IEnumerable<Unit> _necronomicon;
+            private static IEnumerable<Unit> _necronomiconF;
 
             public static IEnumerable<Unit> GetNecronomicons(Unit me)
             {
@@ -56,6 +69,17 @@ namespace ArcAnnihilation
                 if (_necronomicon.Any())
                     Utils.Sleep(100, "Necronomicon.refresh");
                 return _necronomicon;
+            }
+            public static IEnumerable<Unit> GetFullyNecronomicons(Unit me)
+            {
+                if (!Utils.SleepCheck("Necronomicon.refresh.fully")) return _necronomiconF;
+                _necronomiconF =
+                    ObjectManager.GetEntities<Unit>()
+                        .Where(x => x.IsControllable && x.Team == me.Team && x.IsSummoned)
+                        .ToList();
+                if (_necronomiconF.Any())
+                    Utils.Sleep(100, "Necronomicon.refresh.fully");
+                return _necronomiconF;
             }
         }
         public class LaneCreeps
