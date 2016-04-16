@@ -434,7 +434,8 @@ namespace InvokerAnnihilation
 
             #region SS ACTION
 
-            var exort = me.Spellbook.SpellE;
+            //var exort = me.Spellbook.SpellE;
+            var exort=Abilities.FindAbility("invoker_exort");
             var topDamage = Menu.Item("ssDamageontop").GetValue<bool>();
             var heroDamage = Menu.Item("ssDamageonhero").GetValue<bool>();
             var predDamage = Menu.Item("ssPrediction").GetValue<bool>();
@@ -477,7 +478,8 @@ namespace InvokerAnnihilation
                                     new Vector2((float) (sizeY*1.5), 100),
                                     Color.White,
                                     FontFlags.AntiAlias | FontFlags.StrikeOut);
-                                var texturename = $"materials/ensage_ui/spellicons/{me.FindSpell("invoker_sun_strike").StoredName()}.vmat";
+                                var ss=Abilities.FindAbility("invoker_sun_strike");
+                                var texturename = $"materials/ensage_ui/spellicons/{ss.StoredName()}.vmat";
                                 var iconPos = textPos - new Vector2(sizeY*2 + 5, 0);
                                 Drawing.DrawRect(
                                     iconPos,
@@ -513,7 +515,7 @@ namespace InvokerAnnihilation
                     }
                     if (_sunstrikekill && Utils.SleepCheck("SunStrike"))
                     {
-                        var sunstrike = me.FindSpell("invoker_sun_strike");
+                        var sunstrike = Abilities.FindAbility("invoker_sun_strike");
                         var active1 = me.Spellbook.Spell4;
                         var active2 = me.Spellbook.Spell5;
                         if (active2 != null && active1 != null && sunstrike != null && (Equals(sunstrike, active1) || Equals(sunstrike, active2)))
@@ -694,10 +696,10 @@ namespace InvokerAnnihilation
                 switch (Menu.Item("OnMoving").GetValue<StringList>().SelectedIndex)
                 {
                     case (int) SmartSphereEnum.Quas:
-                        spell = me.Spellbook.SpellQ;
+                        spell = Abilities.FindAbility("invoker_quas");;
                         break;
                     case (int) SmartSphereEnum.Wex:
-                        spell = me.Spellbook.SpellW;
+                        spell = Abilities.FindAbility("invoker_wex");;
                         break;
                 }
                 if (me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != _lastAct && !me.IsInvisible())
@@ -718,9 +720,8 @@ namespace InvokerAnnihilation
 
             if (_ghostMode && Utils.SleepCheck("flee_mode") && !me.IsInvisible())
             {
-                var spells = me.Spellbook;
-                var q = spells.SpellQ;
-                var w = spells.SpellW;
+                var q = Abilities.FindAbility("invoker_quas");;
+                var w = Abilities.FindAbility("invoker_wex");;
                 var active1 = me.Spellbook.Spell4;
                 var active2 = me.Spellbook.Spell5;
                 
@@ -755,35 +756,41 @@ namespace InvokerAnnihilation
 
             if (Menu.Item("ssAutoInStunned").GetValue<bool>() && !me.IsInvisible() && Utils.SleepCheck("auto_ss"))
             {
-                var enemy =
-                    Heroes.GetByTeam(_myHero.GetEnemyTeam())
-                        .Where(x => x.IsAlive && x.IsVisible);
-                foreach (var hero in enemy)
+                var ss = Abilities.FindAbility("invoker_sun_strike");
+                if (ss != null && ss.CanBeCasted())
                 {
-                    float time;
-                    if (hero.IsStunned(out time))
+                    var enemy =
+                        Heroes.GetByTeam(_myHero.GetEnemyTeam())
+                            .Where(x => x.IsAlive && x.IsVisible);
+                    foreach (var hero in enemy)
                     {
-                        if (Math.Abs(time) >= 1.7 + Game.Ping)
+                        float time;
+                        if (hero.IsStunned(out time))
                         {
-                            var spells = me.Spellbook;
-                            var e = spells.SpellE;
-                            var active1 = me.Spellbook.Spell4;
-                            var active2 = me.Spellbook.Spell5;
-
-                            if (e?.Level > 0)
+                            //hero.Modifiers.ForEach(modifier => Print(modifier.Name));
+                            var mod =
+                                hero.HasModifiers(new[]
+                                {"modifier_obsidian_destroyer_astral_imprisonment_prison","modifier_eul_cyclone","modifier_shadow_demon_disruption"}, false);
+                            if ((Math.Abs(time) >= 1.7 + Game.Ping/1000 && !mod) ||  Math.Abs(time) <= 1.69 + Game.Ping/1000)
                             {
-                                var ss = Abilities.FindAbility("invoker_sun_strike");
-                                if (ss == null || ss.Cooldown > 0) return;
-                                if (active1.Equals(ss) || active2.Equals(ss))
+                                var spells = me.Spellbook;
+                                var e = spells.SpellE;
+                                var active1 = me.Spellbook.Spell4;
+                                var active2 = me.Spellbook.Spell5;
+
+                                if (e?.Level > 0)
                                 {
-                                    ss.UseAbility(hero.Position);
-                                    Utils.Sleep(500, "auto_ss");
-                                }
-                                else
-                                {
-                                    InvokeNeededSpells(me, ss);
-                                    ss.UseAbility(hero.Position);
-                                    Utils.Sleep(500, "auto_ss");
+                                    if (active1.Equals(ss) || active2.Equals(ss))
+                                    {
+                                        ss.UseAbility(hero.Position);
+                                        Utils.Sleep(500, "auto_ss");
+                                    }
+                                    else
+                                    {
+                                        InvokeNeededSpells(me, ss);
+                                        ss.UseAbility(hero.Position);
+                                        Utils.Sleep(500, "auto_ss");
+                                    }
                                 }
                             }
                         }
@@ -792,7 +799,6 @@ namespace InvokerAnnihilation
             }
 
             #endregion
-
 
             #region Get needed spells
 
