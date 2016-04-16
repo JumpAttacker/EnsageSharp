@@ -141,6 +141,7 @@ namespace InvokerAnnihilation
             sunStrikeSettings.AddItem(new MenuItem("ssDamageontop", "Show Damage on Top Panel").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssDamageonhero", "Show Damage on Hero").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssPrediction", "Show Prediction").SetValue(false));
+            sunStrikeSettings.AddItem(new MenuItem("ssAutoInStunned", "Use sunstrike on stun").SetValue(true));
             
 
 
@@ -302,12 +303,6 @@ namespace InvokerAnnihilation
             private readonly bool _custom;
             public readonly Ability []Spells;
             private readonly int _refreshPos;
-            /*private readonly Ability _s1;
-            private readonly Ability _s2;
-            private readonly Ability _s3;
-            private readonly Ability _s4;
-            private readonly Ability _s5;
-            private readonly Ability _s6;*/
 
             /// <summary>
             /// add new combo to sys
@@ -468,9 +463,27 @@ namespace InvokerAnnihilation
                     {
                         try
                         {
-                            Drawing.DrawText((target.Health - damage).ToString(CultureInfo.InvariantCulture),
-                                HUDInfo.GetHPbarPosition(target) + new Vector2(0, -35), Color.White,
-                                FontFlags.AntiAlias | FontFlags.DropShadow);
+                            var w2SPos = HUDInfo.GetHPbarPosition(target);
+                            if (w2SPos.X > 0 && w2SPos.Y > 0)
+                            {
+                                var sizeY = HUDInfo.GetHpBarSizeY();
+                                var damagePerSs = (target.Health - damage).ToString(CultureInfo.InvariantCulture);
+                                var textSize = Drawing.MeasureText(damagePerSs, "Arial",
+                                    new Vector2((float) (sizeY*1.5), 500), FontFlags.AntiAlias);
+                                var textPos = w2SPos - new Vector2(textSize.X + 5, (float) ((sizeY*1.5) - (textSize.Y)));
+                                Drawing.DrawText(
+                                    damagePerSs,
+                                    textPos,
+                                    new Vector2((float) (sizeY*1.5), 100),
+                                    Color.White,
+                                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+                                var texturename = $"materials/ensage_ui/spellicons/{me.FindSpell("invoker_sun_strike").StoredName()}.vmat";
+                                var iconPos = textPos - new Vector2(sizeY*2 + 5, 0);
+                                Drawing.DrawRect(
+                                    iconPos,
+                                    new Vector2(sizeY*2, sizeY*2),
+                                    Textures.GetTexture(texturename));
+                            }
                         }
                         catch
                         {
@@ -737,6 +750,49 @@ namespace InvokerAnnihilation
             }
 
             #endregion
+
+            #region Auto ss on stunned enemy
+
+            if (Menu.Item("ssAutoInStunned").GetValue<bool>() && !me.IsInvisible() && Utils.SleepCheck("auto_ss"))
+            {
+                var enemy =
+                    Heroes.GetByTeam(_myHero.GetEnemyTeam())
+                        .Where(x => x.IsAlive && x.IsVisible);
+                foreach (var hero in enemy)
+                {
+                    float time;
+                    if (hero.IsStunned(out time))
+                    {
+                        if (Math.Abs(time) >= 1.7 + Game.Ping)
+                        {
+                            var spells = me.Spellbook;
+                            var e = spells.SpellE;
+                            var active1 = me.Spellbook.Spell4;
+                            var active2 = me.Spellbook.Spell5;
+
+                            if (e?.Level > 0)
+                            {
+                                var ss = Abilities.FindAbility("invoker_sun_strike");
+                                if (ss == null || ss.Cooldown > 0) return;
+                                if (active1.Equals(ss) || active2.Equals(ss))
+                                {
+                                    ss.UseAbility(hero.Position);
+                                    Utils.Sleep(500, "auto_ss");
+                                }
+                                else
+                                {
+                                    InvokeNeededSpells(me, ss);
+                                    ss.UseAbility(hero.Position);
+                                    Utils.Sleep(500, "auto_ss");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            #endregion
+
 
             #region Get needed spells
 
