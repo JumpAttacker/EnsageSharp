@@ -770,8 +770,39 @@ namespace InvokerAnnihilation
                             //hero.Modifiers.ForEach(modifier => Print(modifier.Name));
                             var mod =
                                 hero.HasModifiers(new[]
-                                {"modifier_obsidian_destroyer_astral_imprisonment_prison","modifier_eul_cyclone","modifier_shadow_demon_disruption"}, false);
-                            if ((Math.Abs(time) >= 1.7 + Game.Ping/1000 && !mod) ||  Math.Abs(time) <= 1.69 + Game.Ping/1000)
+                                {
+                                    "modifier_obsidian_destroyer_astral_imprisonment_prison", "modifier_eul_cyclone",
+                                    "modifier_shadow_demon_disruption", "modifier_invoker_tornado"
+                                }, false);
+                            
+                            if ((Math.Abs(time) >= 1.7 + Game.Ping/1000 && !mod) ||  (Math.Abs(time) <= 1.69 + Game.Ping/1000 && Math.Abs(time) >= 1.00 + Game.Ping/1000))
+                            {
+                                var spells = me.Spellbook;
+                                var e = spells.SpellE;
+                                var active1 = me.Spellbook.Spell4;
+                                var active2 = me.Spellbook.Spell5;
+
+                                if (e?.Level > 0)
+                                {
+                                    if (active1.Equals(ss) || active2.Equals(ss))
+                                    {
+                                        ss.UseAbility(hero.Position);
+                                        Utils.Sleep(500, "auto_ss");
+                                    }
+                                    else
+                                    {
+                                        InvokeNeededSpells(me, ss);
+                                        ss.UseAbility(hero.Position);
+                                        Utils.Sleep(500, "auto_ss");
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //hero.Modifiers.ForEach(modifier => Print("2. "+modifier.Name));
+                            var extramod = hero.FindModifier("modifier_ember_spirit_searing_chains");
+                            if (extramod!=null && extramod.RemainingTime>=1.7+Game.Ping/1000)
                             {
                                 var spells = me.Spellbook;
                                 var e = spells.SpellE;
