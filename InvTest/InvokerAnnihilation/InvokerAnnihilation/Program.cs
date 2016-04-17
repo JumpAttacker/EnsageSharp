@@ -757,7 +757,7 @@ namespace InvokerAnnihilation
             if (Menu.Item("ssAutoInStunned").GetValue<bool>() && !me.IsInvisible() && Utils.SleepCheck("auto_ss"))
             {
                 var ss = Abilities.FindAbility("invoker_sun_strike");
-                if (ss != null && ss.CanBeCasted())
+                if (ss != null && ss.AbilityState==AbilityState.Ready)
                 {
                     var enemy =
                         Heroes.GetByTeam(_myHero.GetEnemyTeam())
