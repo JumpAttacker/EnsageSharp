@@ -132,7 +132,7 @@ namespace InvokerAnnihilation
             Menu.AddItem(new MenuItem("Hotkey", "Combo Key").SetValue(new KeyBind('G', KeyBindType.Press)));
             Menu.AddItem(
                 new MenuItem("Hotkey.Ghost", " Quick cast ghost walk").SetValue(new KeyBind('H', KeyBindType.Press)));
-            var sunStrikeSettings=new Menu("Sun Strike Settings","ssSettings");
+            var sunStrikeSettings=new Menu("Sun Strike Settings","ssSettings",false,"invoker_sun_strike",true);
 
             /*sunStrikeSettings.AddItem(
                 new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('T', KeyBindType.Press))
@@ -141,11 +141,15 @@ namespace InvokerAnnihilation
             sunStrikeSettings.AddItem(new MenuItem("ssDamageontop", "Show Damage on Top Panel").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssDamageonhero", "Show Damage on Hero").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssPrediction", "Show Prediction").SetValue(false));
-            sunStrikeSettings.AddItem(new MenuItem("ssAutoInStunned", "Use sunstrike on stun").SetValue(true));
-            sunStrikeSettings.AddItem(new MenuItem("ssAutoInStunned.UseSelectedRange", "Use selected range for auto ss").SetValue(false));
-            sunStrikeSettings.AddItem(new MenuItem("ssAutoInStunned.Range", "Range for auto ss").SetValue(new Slider(2500,0,10000)));
+            var ssonstun=new Menu("Sun Strike on stunned Enemy","ssSettingsOnStun");
+            ssonstun.AddItem(new MenuItem("ssAutoInStunned", "Use SunStike on stun").SetValue(true));
+            ssonstun.AddItem(new MenuItem("ssAutoInStunned.UseSelectedRange", "Use selected range for auto SunStike").SetValue(false));
+            ssonstun.AddItem(new MenuItem("ssAutoInStunned.Range", "Range for auto SunStike").SetValue(new Slider(2500,0,10000)));
+            ssonstun.AddItem(new MenuItem("ssAutoInStunned.CheckForAnyEnemyInRange", "Dont use SunStike if SunStike cant deal full damage").SetValue(true));
+            ssonstun.AddItem(new MenuItem("ssAutoInStunned.KillSteal", "Use SunStike Only for Steal").SetValue(false));
+            ssonstun.AddItem(new MenuItem("ssAutoInStunned.FindBestPosition", "Find Best Position for SunStike").SetValue(true).SetTooltip("can eat ur fps"));
+            ssonstun.AddItem(new MenuItem("ssAutoInStunned.Accuracy", "Accuracy for finding best position for SunStike").SetValue(new Slider(5,1,50)));
             
-
             var combo = new Menu("Combos", "combos");
             combo.AddItem(
                 new MenuItem("hotkeyPrev", "Previous Combo").SetValue(new KeyBind(0x6B, KeyBindType.Press))
@@ -212,6 +216,7 @@ namespace InvokerAnnihilation
             Menu.AddSubMenu(settings);
             Menu.AddSubMenu(smart);
             Menu.AddSubMenu(sunStrikeSettings);
+            sunStrikeSettings.AddSubMenu(ssonstun);
             Menu.AddSubMenu(combo);
             Menu.AddToMainMenu();
         }
@@ -767,16 +772,22 @@ namespace InvokerAnnihilation
                 var ss = Abilities.FindAbility("invoker_sun_strike");
                 if (ss != null && ss.AbilityState==AbilityState.Ready)
                 {
+                    var validHeroes =
+                        Heroes.GetByTeam(_myHero.GetEnemyTeam()).Where(x => x.IsValid && x.IsAlive && x.IsVisible).ToList();
+                    var damage = !Menu.Item("ssAutoInStunned.KillSteal").GetValue<bool>()
+                        ? 100 +
+                          62.5*
+                          (Abilities.FindAbility("invoker_exort").Level - 1 + (_myHero.AghanimState() ? 1 : 0))
+                        : 0;
                     var enemy =
-                        Heroes.GetByTeam(_myHero.GetEnemyTeam())
+                        validHeroes
                             .Where(
-                                x =>
-                                    x.IsAlive && x.IsVisible &&
-                                    (!Menu.Item("ssAutoInStunned.UseSelectedRange").GetValue<bool>() ||
-                                     me.Distance2D(x) <= Menu.Item("ssAutoInStunned.Range").GetValue<Slider>().Value));
+                                x => CheckForRange(x) && CheckForKillSteal(x,damage));
+                    //Print(enemy.Count().ToString()+" Damage: "+damage);
                     foreach (var hero in enemy)
                     {
                         float time;
+                        Vector3 extraPos;
                         if (hero.IsStunned(out time))
                         {
                             //hero.Modifiers.ForEach(modifier => Print(modifier.Name+". Time: "+modifier.RemainingTime));
@@ -786,26 +797,34 @@ namespace InvokerAnnihilation
                                     "modifier_obsidian_destroyer_astral_imprisonment_prison", "modifier_eul_cyclone",
                                     "modifier_shadow_demon_disruption", "modifier_invoker_tornado"
                                 }, false);
-                            var ignoreMod = hero.HasModifiers(new []{"modifier_invoker_cold_snap"});
-                            if (((Math.Abs(time) >= 1.7 + Game.Ping/1000 && !mod) ||  (Math.Abs(time) <= 1.69 + Game.Ping/1000 && Math.Abs(time) >= 1.00 + Game.Ping/1000)) && !ignoreMod)
+                            var ignoreMod = hero.HasModifiers(new[] {"modifier_invoker_cold_snap"});
+                            if (((Math.Abs(time) >= 1.7 + Game.Ping/1000 && !mod) ||
+                                    (Math.Abs(time) <= 1.699 + Game.Ping/1000 &&
+                                    Math.Abs(time) >= 1.20 + Game.Ping/1000)) && !ignoreMod)
                             {
                                 var spells = me.Spellbook;
                                 var e = spells.SpellE;
                                 var active1 = me.Spellbook.Spell4;
                                 var active2 = me.Spellbook.Spell5;
-
-                                if (e?.Level > 0)
+                                if (CheckForAnyShitInRange(hero, validHeroes, out extraPos) || !extraPos.IsZero)
                                 {
-                                    if (active1.Equals(ss) || active2.Equals(ss))
+                                    //Print(extraPos.IsZero.ToString());
+                                    var ssPos = hero.Position;
+                                    if (!extraPos.IsZero)
+                                        ssPos = extraPos;
+                                    if (e?.Level > 0)
                                     {
-                                        ss.UseAbility(hero.Position);
-                                        Utils.Sleep(500, "auto_ss");
-                                    }
-                                    else
-                                    {
-                                        InvokeNeededSpells(me, ss);
-                                        ss.UseAbility(hero.Position);
-                                        Utils.Sleep(500, "auto_ss");
+                                        if (active1.Equals(ss) || active2.Equals(ss))
+                                        {
+                                            ss.UseAbility(ssPos);
+                                            Utils.Sleep(500, "auto_ss");
+                                        }
+                                        else
+                                        {
+                                            InvokeNeededSpells(me, ss);
+                                            ss.UseAbility(ssPos);
+                                            Utils.Sleep(500, "auto_ss");
+                                        }
                                     }
                                 }
                             }
@@ -814,25 +833,31 @@ namespace InvokerAnnihilation
                         {
                             //hero.Modifiers.ForEach(modifier => Print("2. "+modifier.Name));
                             var extramod = hero.FindModifier("modifier_ember_spirit_searing_chains");
-                            if (extramod!=null && extramod.RemainingTime>=1.7+Game.Ping/1000)
+                            if (extramod != null && extramod.RemainingTime >= 1.7 + Game.Ping/1000)
                             {
                                 var spells = me.Spellbook;
                                 var e = spells.SpellE;
                                 var active1 = me.Spellbook.Spell4;
                                 var active2 = me.Spellbook.Spell5;
-
-                                if (e?.Level > 0)
+                                if (CheckForAnyShitInRange(hero, validHeroes, out extraPos) || !extraPos.IsZero)
                                 {
-                                    if (active1.Equals(ss) || active2.Equals(ss))
+                                    //Print(extraPos.IsZero.ToString());
+                                    var ssPos = hero.Position;
+                                    if (!extraPos.IsZero)
+                                        ssPos = extraPos;
+                                    if (e?.Level > 0)
                                     {
-                                        ss.UseAbility(hero.Position);
-                                        Utils.Sleep(500, "auto_ss");
-                                    }
-                                    else
-                                    {
-                                        InvokeNeededSpells(me, ss);
-                                        ss.UseAbility(hero.Position);
-                                        Utils.Sleep(500, "auto_ss");
+                                        if (active1.Equals(ss) || active2.Equals(ss))
+                                        {
+                                            ss.UseAbility(ssPos);
+                                            Utils.Sleep(500, "auto_ss");
+                                        }
+                                        else
+                                        {
+                                            InvokeNeededSpells(me, ss);
+                                            ss.UseAbility(ssPos);
+                                            Utils.Sleep(500, "auto_ss");
+                                        }
                                     }
                                 }
                             }
@@ -885,6 +910,66 @@ namespace InvokerAnnihilation
                 ComboInAction(me, target);
             */
             #endregion
+        }
+
+        private static bool CheckForKillSteal(Hero x, double damage)
+        {
+            return !Menu.Item("ssAutoInStunned.KillSteal").GetValue<bool>() || x.Health <= damage;
+        }
+
+        private static bool CheckForEnemy(Vector3 pos, List<Hero> validHeroes,Hero main)
+        {
+            var any = !validHeroes.Any(y => y.Distance2D(pos) <= 175+y.HullRadius && !Equals(main, y)) &&
+                      !Creeps.All.Any(
+                          y =>
+                              y.IsValid && y.IsAlive && y.IsVisible &&
+                              y.Team == _myHero.GetEnemyTeam() &&
+                              y.Distance2D(pos) <= 175+50) && pos.Distance2D(main)<170-main.HullRadius;
+            return any;
+        }
+        private static bool AnyShitInRange(Hero x,out Vector3 newPosForSS, List<Hero> validHeroes=null)
+        {
+            if (validHeroes==null)
+                validHeroes=Heroes.GetByTeam(_myHero.GetEnemyTeam()).Where(q => q.IsValid && q.IsAlive && q.IsVisible).ToList();
+            var any=!validHeroes.Any(y => x.Distance2D(y) <= 175 && !Equals(x, y)) &&
+                   !Creeps.All.Any(
+                       y =>
+                           y.IsValid && y.IsAlive && y.IsVisible &&
+                           y.Team == _myHero.GetEnemyTeam() &&
+                           x.Distance2D(y) <= 175);
+            if (Menu.Item("ssAutoInStunned.FindBestPosition").GetValue<bool>() && !any)
+            {
+                var startPos = x.Position;
+                for (float X = -175; X < 175;)
+                {
+                    for (float Y = -175; Y < 175;)
+                    {
+                        if (CheckForEnemy(startPos+new Vector3(X, Y,0), validHeroes,x))
+                        {
+                            newPosForSS=startPos+new Vector3(X,Y,0);
+                            return true;
+                        }
+                        Y += Menu.Item("ssAutoInStunned.Accuracy").GetValue<Slider>().Value;
+                    }
+                    X += Menu.Item("ssAutoInStunned.Accuracy").GetValue<Slider>().Value;
+                }
+            }
+            newPosForSS = new Vector3();
+            return any;
+        }
+        private static bool CheckForAnyShitInRange(Hero x, List<Hero> validHeroes,out Vector3 pos)
+        {
+            Vector3 pos2;
+            var any = AnyShitInRange(x, out pos2, validHeroes) ||
+                      !Menu.Item("ssAutoInStunned.CheckForAnyEnemyInRange").GetValue<bool>();
+            pos = pos2;
+            return any;
+        }
+
+        private static bool CheckForRange(Hero x)
+        {
+            return !Menu.Item("ssAutoInStunned.UseSelectedRange").GetValue<bool>() ||
+                   _myHero.Distance2D(x) <= Menu.Item("ssAutoInStunned.Range").GetValue<Slider>().Value;
         }
 
         private static void InvokeNeededSpells(Hero me,Ability neededAbility=null)
