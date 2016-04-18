@@ -754,7 +754,7 @@ namespace InvokerAnnihilation
 
             #region Auto ss on stunned enemy
 
-            if (Menu.Item("ssAutoInStunned").GetValue<bool>() && !me.IsInvisible() && Utils.SleepCheck("auto_ss"))
+            if (Menu.Item("ssAutoInStunned").GetValue<bool>() && !me.IsInvisible() && Utils.SleepCheck("auto_ss") && _globalTarget==null)
             {
                 var ss = Abilities.FindAbility("invoker_sun_strike");
                 if (ss != null && ss.AbilityState==AbilityState.Ready)
@@ -767,15 +767,15 @@ namespace InvokerAnnihilation
                         float time;
                         if (hero.IsStunned(out time))
                         {
-                            //hero.Modifiers.ForEach(modifier => Print(modifier.Name));
+                            hero.Modifiers.ForEach(modifier => Print(modifier.Name+". Time: "+modifier.RemainingTime));
                             var mod =
                                 hero.HasModifiers(new[]
                                 {
                                     "modifier_obsidian_destroyer_astral_imprisonment_prison", "modifier_eul_cyclone",
                                     "modifier_shadow_demon_disruption", "modifier_invoker_tornado"
                                 }, false);
-                            
-                            if ((Math.Abs(time) >= 1.7 + Game.Ping/1000 && !mod) ||  (Math.Abs(time) <= 1.69 + Game.Ping/1000 && Math.Abs(time) >= 1.00 + Game.Ping/1000))
+                            var ignoreMod = hero.HasModifiers(new []{"modifier_invoker_cold_snap"});
+                            if (((Math.Abs(time) >= 1.7 + Game.Ping/1000 && !mod) ||  (Math.Abs(time) <= 1.69 + Game.Ping/1000 && Math.Abs(time) >= 1.00 + Game.Ping/1000)) && !ignoreMod)
                             {
                                 var spells = me.Spellbook;
                                 var e = spells.SpellE;
