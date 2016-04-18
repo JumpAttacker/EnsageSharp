@@ -142,8 +142,9 @@ namespace InvokerAnnihilation
             sunStrikeSettings.AddItem(new MenuItem("ssDamageonhero", "Show Damage on Hero").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssPrediction", "Show Prediction").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssAutoInStunned", "Use sunstrike on stun").SetValue(true));
+            sunStrikeSettings.AddItem(new MenuItem("ssAutoInStunned.UseSelectedRange", "Use selected range for auto ss").SetValue(false));
+            sunStrikeSettings.AddItem(new MenuItem("ssAutoInStunned.Range", "Range for auto ss").SetValue(new Slider(2500,0,10000)));
             
-
 
             var combo = new Menu("Combos", "combos");
             combo.AddItem(
@@ -518,12 +519,19 @@ namespace InvokerAnnihilation
                         var sunstrike = Abilities.FindAbility("invoker_sun_strike");
                         var active1 = me.Spellbook.Spell4;
                         var active2 = me.Spellbook.Spell5;
-                        if (active2 != null && active1 != null && sunstrike != null && (Equals(sunstrike, active1) || Equals(sunstrike, active2)))
+                        var e = Abilities.FindAbility("invoker_exort");
+                        if (e?.Level > 0 && sunstrike.AbilityState==AbilityState.Ready)
                         {
-                            if (sunstrike.CanBeCasted())
+                            if (active1.Equals(sunstrike) || active2.Equals(sunstrike))
                             {
                                 sunstrike.UseAbility(predVector3);
-                                Utils.Sleep(250, "SunStrike");
+                                Utils.Sleep(500, "SunStrike");
+                            }
+                            else
+                            {
+                                InvokeNeededSpells(me, sunstrike);
+                                sunstrike.UseAbility(predVector3);
+                                Utils.Sleep(500, "SunStrike");
                             }
                         }
                     }
@@ -761,13 +769,17 @@ namespace InvokerAnnihilation
                 {
                     var enemy =
                         Heroes.GetByTeam(_myHero.GetEnemyTeam())
-                            .Where(x => x.IsAlive && x.IsVisible);
+                            .Where(
+                                x =>
+                                    x.IsAlive && x.IsVisible &&
+                                    (!Menu.Item("ssAutoInStunned.UseSelectedRange").GetValue<bool>() ||
+                                     me.Distance2D(x) <= Menu.Item("ssAutoInStunned.Range").GetValue<Slider>().Value));
                     foreach (var hero in enemy)
                     {
                         float time;
                         if (hero.IsStunned(out time))
                         {
-                            hero.Modifiers.ForEach(modifier => Print(modifier.Name+". Time: "+modifier.RemainingTime));
+                            //hero.Modifiers.ForEach(modifier => Print(modifier.Name+". Time: "+modifier.RemainingTime));
                             var mod =
                                 hero.HasModifiers(new[]
                                 {
