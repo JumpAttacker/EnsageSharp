@@ -10,3 +10,6 @@ C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihila
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihilation\obj\Debug\ArcAnnihilation.exe
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihilation\obj\Debug\ArcAnnihilation.pdb
 C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\ArcAnnihilation\ArcAnnihilation\obj\Debug\ArcAnnihilation.csprojResolveAssemblyReference.cache
+C:\Eloader\EnsageSharp\EnsageSharp\ArcAnnihilation\ArcAnnihilation\bin\Release\ArcAnnihilation.exe.config
+C:\Eloader\EnsageSharp\EnsageSharp\ArcAnnihilation\ArcAnnihilation\obj\Debug\ArcAnnihilation.exe
+C:\Eloader\EnsageSharp\EnsageSharp\ArcAnnihilation\ArcAnnihilation\obj\Debug\ArcAnnihilation.pdb
