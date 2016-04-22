@@ -124,7 +124,7 @@ namespace OverlayInformation
             var enemyStatus = new Menu("Enemy Status", "enemystatus");
             enemyStatus.AddItem(new MenuItem("EnemyStatus.Enable", "Activated").SetValue(true));
             enemyStatus.AddItem(new MenuItem("EnemyStatus.Timer.Enable", "Show Enemy Status").SetValue(true).SetTooltip("show how long enemy in current status (in fog, in invis, under vision)"));
-            enemyStatus.AddItem(new MenuItem("EnemyStatus.PaOnMinimap.Enable", "Show PhantomAssasin on minimap").SetValue(true).SetFontStyle(FontStyle.Bold, Color.Gray));
+            enemyStatus.AddItem(new MenuItem("EnemyStatus.PaOnMinimap.Enable", "Show PhantomAssasin on minimap").SetValue(true)/*.SetFontStyle(FontStyle.Bold, Color.Gray)*/);
             enemyStatus.AddItem(new MenuItem("EnemyStatus.Map.Enable", "Show Enemy Last Position on Map").SetValue(true));
             enemyStatus.AddItem(new MenuItem("EnemyStatus.Vision.Enable", "Show on top panel Ally's vision status").SetValue(true));
             
@@ -146,7 +146,7 @@ namespace OverlayInformation
 
             var ultimates = new Menu("Ultimates", "ultimates");
             ultimates.AddItem(new MenuItem("Ultimates.Icon.Enable", "Show ultimate Icon").SetValue(true));
-            ultimates.AddItem(new MenuItem("Ultimates.Text.Enable", "Show ultimate Text").SetValue(true).SetFontStyle(FontStyle.Bold, Color.Gray));
+            ultimates.AddItem(new MenuItem("Ultimates.Text.Enable", "Show ultimate Text").SetValue(true).SetFontStyle(FontStyle.Bold, Color.Gray).SetTooltip("not working at this time"));
 
             var autoItems = new Menu("Auto Items", "autoitems");
             autoItems.AddItem(new MenuItem("AutoItems.Enable", "Auto Items Active").SetValue(false));
@@ -162,14 +162,14 @@ namespace OverlayInformation
 
             var runes = new Menu("Rune Notification", "runenotification");
             runes.AddItem(new MenuItem("RuneNotification.Enable", "Print Info").SetValue(true));
-            runes.AddItem(new MenuItem("RuneNotification.onMap.Enable", "Show on Minimap").SetValue(false).SetFontStyle(FontStyle.Bold, Color.Gray));
+            runes.AddItem(new MenuItem("RuneNotification.onMap.Enable", "Show on Minimap").SetValue(false).SetFontStyle(FontStyle.Bold, Color.Gray).SetTooltip("not working at this time"));
 
             var spellpanel = new Menu("SpellPanel", "SpellPanel");
             spellpanel.AddItem(new MenuItem("SpellPanel.Enable", "Show Ability").SetValue(true));
             spellpanel.AddItem(new MenuItem("SpellPanel.EnableForAlly", "Enable For Ally").SetValue(true));
-            spellpanel.AddItem(new MenuItem("SpellPanel.distBetweenSpells", "Distance spells").SetValue(new Slider(0, 0, 200)));
-            spellpanel.AddItem(new MenuItem("SpellPanel.DistBwtweenLvls", "Distance lvls").SetValue(new Slider(0, 0, 200)));
-            spellpanel.AddItem(new MenuItem("SpellPanel.SizeSpell", "Level size").SetValue(new Slider(0, 1, 25)));
+            spellpanel.AddItem(new MenuItem("SpellPanel.distBetweenSpells", "Distance spells").SetValue(new Slider(36, 0, 200)));
+            spellpanel.AddItem(new MenuItem("SpellPanel.DistBwtweenLvls", "Distance lvls").SetValue(new Slider(6, 0, 200)));
+            spellpanel.AddItem(new MenuItem("SpellPanel.SizeSpell", "Level size").SetValue(new Slider(3, 1, 25)));
             spellpanel.AddItem(new MenuItem("SpellPanel.ExtraPosX", "Extra Position X").SetValue(new Slider(25)));
             spellpanel.AddItem(new MenuItem("SpellPanel.ExtraPosY", "Extra Position Y").SetValue(new Slider(125, 0, 400)));
             
@@ -219,8 +219,8 @@ namespace OverlayInformation
                 });
             Events.OnLoad += (sender, args) =>
             {
-                MePlayer = ObjectMgr.LocalPlayer;
-                MeHero = ObjectMgr.LocalHero;
+                MePlayer = ObjectManager.LocalPlayer;
+                MeHero = ObjectManager.LocalHero;
                 Game.OnUpdate += GameOnOnUpdate;
                 Drawing.OnDraw+=Drawing_OnDraw;
                 Drawing.OnPreReset += Drawing_OnPreReset;
@@ -342,9 +342,9 @@ namespace OverlayInformation
         private static void Update()
         {
             if (!MePlayer.IsValid)
-                MePlayer = ObjectMgr.LocalPlayer;
+                MePlayer = ObjectManager.LocalPlayer;
             if (!MeHero.IsValid)
-                MeHero = ObjectMgr.LocalHero;
+                MeHero = ObjectManager.LocalHero;
         }
 
         private static void RoshanAction()
@@ -356,7 +356,7 @@ namespace OverlayInformation
                 _roshanMinutes = Math.Floor(tickDelta / 60);
                 _roshanSeconds = tickDelta % 60;
                 var roshan =
-                    ObjectMgr.GetEntities<Unit>()
+                    ObjectManager.GetEntities<Unit>()
                         .FirstOrDefault(unit => unit.ClassID == ClassID.CDOTA_Unit_Roshan && unit.IsAlive);
                 if (roshan != null)
                 {
@@ -374,7 +374,7 @@ namespace OverlayInformation
             if (Menu.Item("ShowIllusions.Enable").GetValue<bool>() && Utils.SleepCheck("ShowIllusions"))
             {
                 Utils.Sleep(250, "ShowIllusions");
-                var illusions = ObjectMgr.GetEntities<Hero>()
+                var illusions = ObjectManager.GetEntities<Hero>()
                     .Where(
                         x =>
                             x.IsIllusion && x.Team != MePlayer.Team);
@@ -398,7 +398,7 @@ namespace OverlayInformation
                 if (midas != null && midas.CanBeCasted())
                 {
                     var creep =
-                        ObjectMgr.GetEntities<Unit>()
+                        ObjectManager.GetEntities<Unit>()
                             .FirstOrDefault(
                                 x =>
                                     x.Team != MeHero.Team &&
@@ -433,7 +433,7 @@ namespace OverlayInformation
             if (Menu.Item("RuneNotification.Enable").GetValue<bool>())
             {
                 var runes =
-                    ObjectMgr.GetEntities<Rune>()
+                    ObjectManager.GetEntities<Rune>()
                         .Where(x => x.RuneType != RuneType.None && !InSystem.Contains(x))
                         .ToList();
                 foreach (var rune in runes)
@@ -455,9 +455,10 @@ namespace OverlayInformation
             if (!Game.IsInGame) return;
 
             DrawForAllHero();
-            DrawForEnemyHero();
+            
             DrawForAllyHero();
             DrawForViableHero();
+            DrawForEnemyHero();
 
             #region Show me more
             ShowMeMore(Menu.Item("showMeMore.Enable").GetValue<bool>());
@@ -500,14 +501,36 @@ namespace OverlayInformation
                 var v in
                     Heroes.GetByTeam(MeHero.GetEnemyTeam()).Where(x => x != null && x.IsValid))
             {
+                /*try
+                {*/
                 DrawEnemyStatus(v, GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value),
-                    GetTopPanelPosition(v) +
-                    new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
-                        Menu.Item("BarPosY").GetValue<Slider>().Value), 7);
+                GetTopPanelPosition(v) +
+                new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
+                    Menu.Item("BarPosY").GetValue<Slider>().Value), 7);
+                /*}
+                catch (Exception)
+                {
+                    Print(v.StoredName());
+                }*/
+                
                 DrawUltimates(v);
                 DrawShowMeMoreLooping(v);
                 DrawLastPosition(v);
+                DrawPhantomAssasin(v);
             }
+        }
+
+        private static void DrawPhantomAssasin(Hero v)
+        {
+            if (!Menu.Item("EnemyStatus.PaOnMinimap.Enable").GetValue<bool>()) return;
+            if (v.ClassID!=ClassID.CDOTA_Unit_Hero_PhantomAssassin) return;
+            if (!v.HasModifier("modifier_phantom_assassin_blur_active") || !v.IsAlive || !v.IsVisible) return;
+            var size3 = new Vector2(10, 20) + new Vector2(13, -6);
+            var w2M = WorldToMinimap(v.NetworkPosition);
+            var name = "materials/ensage_ui/miniheroes/" +
+                       v.Name.Replace("npc_dota_hero_", "") + ".vmat";
+            Drawing.DrawRect(w2M - new Vector2(size3.X/2, size3.Y/2), size3,
+                Drawing.GetTexture(name));
         }
 
         private static void DrawForViableHero()
@@ -542,7 +565,7 @@ namespace OverlayInformation
             if (!showMeMore || !Utils.SleepCheck("showMeMore.Rate")) return;
             Utils.Sleep(250, "showMeMore.Rate");
             var dummy =
-                ObjectMgr.GetEntities<Unit>()
+                ObjectManager.GetEntities<Unit>()
                     .Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team != MeHero.Team)
                     .ToList();
             foreach (var t in dummy)
@@ -747,12 +770,16 @@ namespace OverlayInformation
         {
             if (!Menu.Item("EnemyStatus.Map.Enable").GetValue<bool>()) return;
             if (!v.IsAlive || v.IsVisible) return;
-            Vector2 newPos;
-            if (!Drawing.WorldToScreen(v.Position, out newPos)) return;
-            var name = "materials/ensage_ui/heroes_horizontal/" +
+            Vector2 w2s;
+            var name = "materials/ensage_ui/miniheroes/" +
                        v.Name.Replace("npc_dota_hero_", "") + ".vmat";
             var size2 = new Vector2(50, 50);
-            Drawing.DrawRect(newPos + new Vector2(10, 35), size2 + new Vector2(13, -6),
+            var size3 = new Vector2(10, 20) + new Vector2(13, -6);
+            var w2M = WorldToMinimap(v.NetworkPosition);
+            Drawing.DrawRect(w2M - new Vector2(size3.X / 2, size3.Y / 2), size3,
+                Drawing.GetTexture(name));
+            if (!Drawing.WorldToScreen(v.Position, out w2s)) return;
+            Drawing.DrawRect(w2s + new Vector2(10, 35), size2 + new Vector2(13, -6),
                 Drawing.GetTexture(name));
         }
 
@@ -765,7 +792,7 @@ namespace OverlayInformation
                     if (_arrowUnit == null)
                     {
                         _arrowUnit =
-                            ObjectMgr.GetEntities<Unit>()
+                            ObjectManager.GetEntities<Unit>()
                                 .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
                                                      && x.Team != MeHero.Team);
                     }
@@ -779,7 +806,7 @@ namespace OverlayInformation
                             }
                             _letsDraw = true;
                             _arrowUnit =
-                                ObjectMgr.GetEntities<Unit>()
+                                ObjectManager.GetEntities<Unit>()
                                     .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.DayVision == 650
                                                          && x.Team != MeHero.Team);
                             break;
@@ -954,6 +981,53 @@ namespace OverlayInformation
         #endregion
 
         #region Helpers
+
+        private static Vector2 WorldToMinimap(Vector3 pos)
+        {
+            const float MapLeft = -8000;
+            const float MapTop = 7350;
+            const float MapRight = 7500;
+            const float MapBottom = -7200;
+            var MapWidth = Math.Abs(MapLeft - MapRight);
+            var MapHeight = Math.Abs(MapBottom - MapTop);
+
+            var _x = pos.X - MapLeft;
+            var _y = pos.Y - MapBottom;
+
+            float dx, dy, px, py;
+            if (Math.Round((float)Drawing.Width / Drawing.Height, 1) >= 1.7)
+            {
+                dx = 272f / 1920f * Drawing.Width;
+                dy = 261f / 1080f * Drawing.Height;
+                px = 11f / 1920f * Drawing.Width;
+                py = 11f / 1080f * Drawing.Height;
+            }
+            else if (Math.Round((float)Drawing.Width / Drawing.Height, 1) >= 1.5)
+            {
+                dx = 267f / 1680f * Drawing.Width;
+                dy = 252f / 1050f * Drawing.Height;
+                px = 10f / 1680f * Drawing.Width;
+                py = 11f / 1050f * Drawing.Height;
+            }
+            else
+            {
+                dx = 255f / 1280f * Drawing.Width;
+                dy = 229f / 1024f * Drawing.Height;
+                px = 6f / 1280f * Drawing.Width;
+                py = 9f / 1024f * Drawing.Height;
+            }
+            var MinimapMapScaleX = dx / MapWidth;
+            var MinimapMapScaleY = dy / MapHeight;
+
+            var scaledX = Math.Min(Math.Max(_x * MinimapMapScaleX, 0), dx);
+            var scaledY = Math.Min(Math.Max(_y * MinimapMapScaleY, 0), dy);
+
+            var screenX = px + scaledX;
+            var screenY = Drawing.Height - scaledY - py;
+
+            return new Vector2((float)Math.Floor(screenX), (float)Math.Floor(screenY));
+
+        }
 
         private static void GenerateSideMessage(string hero, string spellName)
         {
