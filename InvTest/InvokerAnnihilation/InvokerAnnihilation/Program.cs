@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -117,6 +118,7 @@ namespace InvokerAnnihilation
                 Drawing.OnDraw += Drawing_OnDraw;
                 Game.OnWndProc += Game_OnWndProc;
                 Player.OnExecuteOrder += Player_OnExecuteAction;
+                Orbwalking.Load();
             };
             Events.OnClose += (sender, args) =>
             {
@@ -138,6 +140,8 @@ namespace InvokerAnnihilation
                 new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('T', KeyBindType.Press))
                     .SetTooltip("press hotkey for auto SunStrike"));
             sunStrikeSettings.AddItem(new MenuItem("ssShift", "Use Shift With Hotkey").SetValue(true));*/
+
+            sunStrikeSettings.AddItem(new MenuItem("autoSs.Enable", "Enable auto ss [ctrl+T]").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssDamageontop", "Show Damage on Top Panel").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssDamageonhero", "Show Damage on Hero").SetValue(false));
             sunStrikeSettings.AddItem(new MenuItem("ssPrediction", "Show Prediction").SetValue(false));
@@ -384,7 +388,7 @@ namespace InvokerAnnihilation
             if (Game.IsChatOpen)
                 return;
             
-            if (Game.IsKeyDown(0x11) && args.WParam == 'T')
+            if (Game.IsKeyDown(0x11) && args.WParam == 'T' && Menu.Item("autoSs.Enable").GetValue<bool>())
             {
                 _sunstrikekill = args.Msg != WmKeyup;
             }
@@ -593,13 +597,30 @@ namespace InvokerAnnihilation
                 {
                     try
                     {
-                        texturename = $"materials/ensage_ui/spellicons/{comboStruct.GetComboAbilities()[j].StoredName()}.vmat";
+                        var selectedSpell = comboStruct.GetComboAbilities()[j];
+                        texturename = $"materials/ensage_ui/spellicons/{selectedSpell.StoredName()}.vmat";
                         var sizeX = _size.X * (j + (eul?1:0)) + 10;
                         itemStartPos = pos + new Vector2(sizeX, sizeY);
                         Drawing.DrawRect(
                             itemStartPos,
                             new Vector2(_size.X-6, _size.Y),
                             Textures.GetTexture(texturename));
+                        if (selected && selectedSpell.AbilityState==AbilityState.OnCooldown)
+                        {
+                            var cd = selectedSpell.Cooldown;
+                            var cdL = selectedSpell.CooldownLength;
+                            Drawing.DrawRect(itemStartPos,
+                                new Vector2(_size.X - 6,
+                                    cd/
+                                    cdL*(_size.Y)),
+                                new Color(255, 255, 255, 100));
+                            Drawing.DrawText(((int) cd).ToString(CultureInfo.InvariantCulture),
+                                    itemStartPos,new Vector2(15,15), 
+                                    Color.Gold,FontFlags.AntiAlias | FontFlags.DropShadow);
+                            /*Drawing.DrawRect(
+                            itemStartPos,
+                            new Vector2(_size.X-6, _size.Y),Color.Black);*/
+                        }
                         legal++;
                         var tempStage = _stage<2?0:_stage-2;
                         if (Equals(comboStruct.GetComboAbilities()[j], Combos[_combo].GetComboAbilities()[tempStage]) && selected && _stage>0)
@@ -927,6 +948,7 @@ namespace InvokerAnnihilation
                               y.Distance2D(pos) <= 175+50) && pos.Distance2D(main)<170-main.HullRadius;
             return any;
         }
+
         private static bool AnyShitInRange(Hero x,out Vector3 newPosForSS, List<Hero> validHeroes=null)
         {
             if (validHeroes==null)
@@ -957,6 +979,7 @@ namespace InvokerAnnihilation
             newPosForSS = new Vector3();
             return any;
         }
+
         private static bool CheckForAnyShitInRange(Hero x, List<Hero> validHeroes,out Vector3 pos)
         {
             Vector3 pos2;
@@ -1066,8 +1089,16 @@ namespace InvokerAnnihilation
             var myBoys = ObjectManager.GetEntities<Unit>().Where(x => x.Team == me.Team && x.IsControllable && x.IsAlive && Utils.SleepCheck(x.Handle.ToString()));
             foreach (var myBoy in myBoys)
             {
-                myBoy.Attack(target);
-                Utils.Sleep(300, myBoy.Handle.ToString());
+                if (myBoy is Hero)
+                {
+                    Orbwalking.Orbwalk(target, 0, 0, false, true);
+                }
+                else
+                {
+                    myBoy.Attack(target);
+                    Utils.Sleep(300, myBoy.Handle.ToString()); 
+                }
+                
             }
             if (me.CanUseItems())
             {
@@ -1144,8 +1175,10 @@ namespace InvokerAnnihilation
                 default:
                     if (Combos[_combo].GetComboAbilities().Length < _stage - 1)
                     {
-                        me.Attack(target);
-                        Utils.Sleep(1000, "StageCheck");
+                        Orbwalking.Orbwalk(target, 0, 0, false, true);
+                        _stage = 1;
+                        //me.Attack(target);
+                        //Utils.Sleep(1000, "StageCheck");
                         return;
                     }
                     _spellForCast = Combos[_combo].GetComboAbilities()[_stage - 2];
@@ -1216,8 +1249,9 @@ namespace InvokerAnnihilation
                     }
                     else
                     {
-                        me.Attack(target);
-                        Utils.Sleep(1000, "StageCheck");
+                        Orbwalking.Orbwalk(target, 0, 0, false, true);
+                        //me.Attack(target);
+                        //Utils.Sleep(1000, "StageCheck");
                         return;
                     }
                     break;
@@ -1310,17 +1344,24 @@ namespace InvokerAnnihilation
             if (!b)
             {
                 if (!me.CanMove() || !Utils.SleepCheck("icewallmove")) return;
-                var angle = me.FindAngleBetween(target.Position, true);
-                var point =
-                    new Vector3(
-                        (float)(target.Position.X -
-                                 200 *
-                                 Math.Cos(angle)),
-                        (float)(target.Position.Y -
-                                 200 *
-                                 Math.Sin(angle)), 0);
-                me.Move(point);
-                Utils.Sleep(300, "icewallmove");
+                if (icewall.AbilityState == AbilityState.Ready)
+                {
+                    var angle = me.FindAngleBetween(target.Position, true);
+                    var point =
+                        new Vector3(
+                            (float) (target.Position.X -
+                                     200*
+                                     Math.Cos(angle)),
+                            (float) (target.Position.Y -
+                                     200*
+                                     Math.Sin(angle)), 0);
+                    me.Move(point);
+                    Utils.Sleep(300, "icewallmove");
+                }
+                else
+                {
+                    Orbwalking.Orbwalk(target,0,0,false,true);
+                }
             }
             else
             {
