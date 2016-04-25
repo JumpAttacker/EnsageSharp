@@ -162,7 +162,7 @@ namespace OverlayInformation
 
             var runes = new Menu("Rune Notification", "runenotification");
             runes.AddItem(new MenuItem("RuneNotification.Enable", "Print Info").SetValue(true));
-            runes.AddItem(new MenuItem("RuneNotification.onMap.Enable", "Show on Minimap").SetValue(false).SetFontStyle(FontStyle.Bold, Color.Gray).SetTooltip("not working at this time"));
+            runes.AddItem(new MenuItem("RuneNotification.onMap.Enable", "Show on Minimap").SetValue(true)/*.SetFontStyle(FontStyle.Bold, Color.Gray).SetTooltip("not working at this time")*/);
 
             var spellpanel = new Menu("SpellPanel", "SpellPanel");
             spellpanel.AddItem(new MenuItem("SpellPanel.Enable", "Show Ability").SetValue(true));
@@ -453,23 +453,56 @@ namespace OverlayInformation
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!Game.IsInGame) return;
+            var validHeroes = Heroes.All.Where(x => x != null && x.IsValid).ToList();
+            validHeroes.DrawForAllHero();
 
-            DrawForAllHero();
-            
-            DrawForAllyHero();
-            DrawForViableHero();
-            DrawForEnemyHero();
-
+            validHeroes.DrawForAllyHero();
+            validHeroes.DrawForViableHero();
+            validHeroes.DrawForEnemyHero();
+            DrawRunes();
             #region Show me more
             ShowMeMore(Menu.Item("showMeMore.Enable").GetValue<bool>());
             #endregion
         }
+        private static readonly Dictionary<RuneType, string> RuneTypes = new Dictionary<RuneType, string>
+        {
+            {RuneType.Arcane,"materials/ensage_ui/runes/arcane.vmat" },
+            {RuneType.Bounty,"materials/ensage_ui/runes/bounty.vmat" },
+            {RuneType.DoubleDamage,"materials/ensage_ui/runes/doubledamage.vmat" },
+            {RuneType.Haste,"materials/ensage_ui/runes/haste.vmat" },
+            {RuneType.Illusion,"materials/ensage_ui/runes/illusion.vmat" },
+            {RuneType.Invisibility,"materials/ensage_ui/runes/invis.vmat" },
+            {RuneType.None,"" },
+            {RuneType.Regeneration,"materials/ensage_ui/runes/regen.vmat" }
+        };
+        private static void DrawRunes()
+        {
+            if (!Menu.Item("RuneNotification.onMap.Enable").GetValue<bool>()) return;
+            foreach (var rune in InSystem.Where(rune => rune!=null && rune.IsValid && rune is Rune))
+            {
+                var v = rune as Rune;
+                var size3 = new Vector2(10, 25) + new Vector2(13, -6);
+                var w2M = WorldToMinimap(v.NetworkPosition);
+                if (v.RuneType == RuneType.Arcane)
+                {
+                    Drawing.DrawText("[A]", w2M, new Vector2(15, 10), Color.White,
+                        FontFlags.AntiAlias | FontFlags.DropShadow);
+                }
+                else
+                {
+                    var name = RuneTypes[v.RuneType];
+                    Drawing.DrawRect(w2M - new Vector2(size3.X / 2, size3.Y / 2), size3,
+                        Drawing.GetTexture(name));
+                }
+                
+            }
+        }
 
         #region DrawForHeroes
 
-        private static void DrawForAllHero()
+        private static void DrawForAllHero(this IEnumerable<Hero> heroes)
         {
-            foreach (var v in Heroes.All.Where(x => x != null && x.IsValid))
+            foreach (var v in heroes)
             {
                 var pos = GetTopPanelPosition(v) +
                           new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
@@ -482,9 +515,9 @@ namespace OverlayInformation
             }
         }
 
-        private static void DrawForAllyHero()
+        private static void DrawForAllyHero(this IEnumerable<Hero> heroes)
         {
-            foreach (var v in Heroes.GetByTeam(MeHero.Team).Where(x => x != null && x.IsValid))
+            foreach (var v in heroes.Where(x => x.Team==MeHero.Team))
             {
                 var pos = GetTopPanelPosition(v) +
                           new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
@@ -495,11 +528,11 @@ namespace OverlayInformation
             }
         }
 
-        private static void DrawForEnemyHero()
+        private static void DrawForEnemyHero(this IEnumerable<Hero> heroes)
         {
             foreach (
                 var v in
-                    Heroes.GetByTeam(MeHero.GetEnemyTeam()).Where(x => x != null && x.IsValid))
+                    heroes.Where(x => x.Team == MeHero.GetEnemyTeam()))
             {
                 /*try
                 {*/
@@ -520,23 +553,10 @@ namespace OverlayInformation
             }
         }
 
-        private static void DrawPhantomAssasin(Hero v)
-        {
-            if (!Menu.Item("EnemyStatus.PaOnMinimap.Enable").GetValue<bool>()) return;
-            if (v.ClassID!=ClassID.CDOTA_Unit_Hero_PhantomAssassin) return;
-            if (!v.HasModifier("modifier_phantom_assassin_blur_active") || !v.IsAlive || !v.IsVisible) return;
-            var size3 = new Vector2(10, 20) + new Vector2(13, -6);
-            var w2M = WorldToMinimap(v.NetworkPosition);
-            var name = "materials/ensage_ui/miniheroes/" +
-                       v.Name.Replace("npc_dota_hero_", "") + ".vmat";
-            Drawing.DrawRect(w2M - new Vector2(size3.X/2, size3.Y/2), size3,
-                Drawing.GetTexture(name));
-        }
-
-        private static void DrawForViableHero()
+        private static void DrawForViableHero(this IEnumerable<Hero> heroes)
         {
             foreach (
-                var v in Heroes.All.Where(x => x != null && x.IsValid && x.IsVisible && x.IsAlive)
+                var v in heroes.Where(x => x.IsVisible && x.IsAlive)
                 )
             {
                 DrawDangItems(v);
@@ -544,6 +564,18 @@ namespace OverlayInformation
             }
         }
 
+        private static void DrawPhantomAssasin(Hero v)
+        {
+            if (!Menu.Item("EnemyStatus.PaOnMinimap.Enable").GetValue<bool>()) return;
+            if (v.ClassID != ClassID.CDOTA_Unit_Hero_PhantomAssassin) return;
+            if (!v.HasModifier("modifier_phantom_assassin_blur_active") || !v.IsAlive || !v.IsVisible) return;
+            var size3 = new Vector2(10, 20) + new Vector2(13, -6);
+            var w2M = WorldToMinimap(v.NetworkPosition);
+            var name = "materials/ensage_ui/miniheroes/" +
+                       v.Name.Replace("npc_dota_hero_", "") + ".vmat";
+            Drawing.DrawRect(w2M - new Vector2(size3.X / 2, size3.Y / 2), size3,
+                Drawing.GetTexture(name));
+        }
         #endregion
 
         #region DrawingHelpers
