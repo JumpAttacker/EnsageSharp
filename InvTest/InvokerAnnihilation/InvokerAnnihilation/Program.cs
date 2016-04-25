@@ -1089,7 +1089,7 @@ namespace InvokerAnnihilation
             var myBoys = ObjectManager.GetEntities<Unit>().Where(x => x.Team == me.Team && x.IsControllable && x.IsAlive && Utils.SleepCheck(x.Handle.ToString()));
             foreach (var myBoy in myBoys)
             {
-                if (myBoy is Hero)
+                if (myBoy is Hero && !target.IsInvul())
                 {
                     Orbwalking.Orbwalk(target, 0, 0, false, true);
                 }
@@ -1173,7 +1173,7 @@ namespace InvokerAnnihilation
                     }
                     break;
                 default:
-                    if (Combos[_combo].GetComboAbilities().Length < _stage - 1)
+                    if (Combos[_combo].GetComboAbilities().Length < _stage - 1 && !target.IsInvul())
                     {
                         Orbwalking.Orbwalk(target, 0, 0, false, true);
                         _stage = 1;
@@ -1247,7 +1247,7 @@ namespace InvokerAnnihilation
                             return;
                         }
                     }
-                    else
+                    else if (!target.IsInvul())
                     {
                         Orbwalking.Orbwalk(target, 0, 0, false, true);
                         //me.Attack(target);
@@ -1358,7 +1358,7 @@ namespace InvokerAnnihilation
                     me.Move(point);
                     Utils.Sleep(300, "icewallmove");
                 }
-                else
+                else if (!target.IsInvul())
                 {
                     Orbwalking.Orbwalk(target,0,0,false,true);
                 }
