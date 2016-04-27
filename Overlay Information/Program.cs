@@ -32,7 +32,17 @@ namespace OverlayInformation
             new Dictionary<Unit, ParticleEffect>();
 
         private static readonly Dictionary<Hero, Ability> UltimateAbilities = new Dictionary<Hero, Ability>();
-
+        private static Vector2 TempMousePos;
+        private static Vector2 MousePos
+        {
+            get
+            {
+                if (!Utils.SleepCheck("mouse_update")) return TempMousePos;
+                Utils.Sleep(100,"mouse_update");
+                TempMousePos = Game.MouseScreenPosition;
+                return TempMousePos;
+            }
+        }
         private static readonly List<Entity> InSystem = new List<Entity>();
         private static readonly Dictionary<Unit, ParticleEffect> BaraIndicator = new Dictionary<Unit, ParticleEffect>();
         private static Vector3 _arrowS;
@@ -82,6 +92,12 @@ namespace OverlayInformation
             toppanel.AddItem(new MenuItem("TopPanel.Hp", "Show Health on Top").SetValue(true));
             toppanel.AddItem(new MenuItem("TopPanel.Mana", "Show Mana on Top").SetValue(true));
             toppanel.AddItem(new MenuItem("TopPanel.Roshan", "Show Roshan Timer").SetValue(true));
+            toppanel.AddItem(
+                new MenuItem("TopPanel.Info", "Show details").SetValue(true)
+                    .SetTooltip("show Ultimate's CD if u put ur mouse on icon"));
+            toppanel.AddItem(
+                new MenuItem("TopPanel.InfoAlways", "Show details all time").SetValue(false)
+                    .SetTooltip("Show Details should be enabled"));
             
             var extra = new Menu("Extra", "Extra");
             extra.AddItem(new MenuItem("ShowIllusions.Enable", "Show Illusions").SetValue(true));
@@ -512,6 +528,7 @@ namespace OverlayInformation
                 var manaDelta = new Vector2(v.Mana*size.X/v.MaximumMana, 0);
                 DrawHealthPanel(pos, size, healthDelta);
                 DrawManaPanel(pos, size, manaDelta);
+                
             }
         }
 
@@ -963,6 +980,77 @@ namespace OverlayInformation
                     {
 
                     }
+                    if (Menu.Item("TopPanel.Info").GetValue<bool>() &&
+                        (Menu.Item("TopPanel.InfoAlways").GetValue<bool>() && (
+                            ultimate.AbilityState == AbilityState.OnCooldown ||
+                            ultimate.AbilityState == AbilityState.NotEnoughMana) ||
+                         Utils.IsUnderRectangle(MousePos, ultPos.X, ultPos.Y, 15, 15)))
+                    {
+                        var texturename = string.Format("materials/ensage_ui/spellicons/{0}.vmat", ultimate.StoredName());
+                        size = GetTopPalenSize(v) + new Vector2(0, Menu.Item("BarSizeY").GetValue<Slider>().Value);
+                        pos = GetTopPanelPosition(v) +
+                              new Vector2(Menu.Item("BarPosX").GetValue<Slider>().Value,
+                                  Menu.Item("BarPosY").GetValue<Slider>().Value);
+                        var startPos = pos + new Vector2(0, 7*4 + size.Y);
+                        size = new Vector2(size.X, size.Y + 15);
+                        Drawing.DrawRect(startPos,
+                            size,
+                            Textures.GetTexture(texturename));
+                        string ultimateCd;
+                        Vector2 textSize;
+                        Vector2 textPos;
+                        switch (ultimate.AbilityState)
+                        {
+                            case AbilityState.OnCooldown:
+                                ultimateCd =
+                                    ((int) Math.Min(ultimate.Cooldown, 999)).ToString(CultureInfo.InvariantCulture);
+                                textSize = Drawing.MeasureText(ultimateCd, "Arial",
+                                    new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
+                                //Print(v.Name + " cd: " + ultimateCd);
+                                textPos = startPos + new Vector2(0, size.Y - textSize.Y);
+                                Drawing.DrawRect(textPos - new Vector2(0, 0),
+                                    new Vector2(textSize.X, textSize.Y),
+                                    new Color(0, 0, 0, 200));
+                                Drawing.DrawText(
+                                    ultimateCd,
+                                    textPos,
+                                    new Vector2(textSize.Y, 0),
+                                    Color.White,
+                                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+                                break;
+                            case AbilityState.Ready:
+                                break;
+                            case AbilityState.NotEnoughMana:
+                                ultimateCd =
+                                    ((int) Math.Min(Math.Abs(v.Mana - ultimate.ManaCost), 999)).ToString(
+                                        CultureInfo.InvariantCulture);
+                                //Print(v.Name + " mana: " + ultimateCd);
+                                textSize = Drawing.MeasureText(ultimateCd, "Arial",
+                                    new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
+                                textPos = startPos + new Vector2(0, size.Y - textSize.Y);
+                                Drawing.DrawRect(textPos - new Vector2(0, 0),
+                                    new Vector2(textSize.X, textSize.Y),
+                                    new Color(0, 0, 0, 200));
+                                Drawing.DrawText(
+                                    ultimateCd,
+                                    textPos,
+                                    new Vector2(textSize.Y, 0),
+                                    Color.White,
+                                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+                                Drawing.DrawRect(startPos,
+                                    new Vector2(size.X, size.Y),
+                                    new Color(0, 50, 155, 100));
+                                break;
+                            case AbilityState.NotLearned:
+                                break;
+                            case AbilityState.NoAbility:
+                                break;
+                            case AbilityState.ItemOnCooldown:
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
                 }
             }
             catch (Exception)
@@ -980,13 +1068,10 @@ namespace OverlayInformation
                 {
                     SInfo[handle] = new StatusInfo(v, Game.GameTime);
                 }
-                Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2),
-                    new Color(0, 0, 0, 100));
-                Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2),
-                    new Color(0, 0, 0, 255), true);
+                Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2), new Color(0, 0, 0, 100));
+                Drawing.DrawRect(pos + new Vector2(0, size.Y + height*2), new Vector2(size.X, height*2), new Color(0, 0, 0, 255), true);
                 var text = SInfo[handle].GetTime();
-                Drawing.DrawText(text, pos + new Vector2(5, size.Y + height*2), Color.White,
-                    FontFlags.AntiAlias | FontFlags.DropShadow);
+                Drawing.DrawText(text, pos + new Vector2(5, size.Y + height*2), Color.White, FontFlags.AntiAlias | FontFlags.DropShadow);
             }
         }
 
@@ -994,19 +1079,15 @@ namespace OverlayInformation
         {
             if (!Menu.Item("TopPanel.Mana").GetValue<bool>()) return;
             Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(size.X, height), Color.Gray);
-            Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(manaDelta.X, height),
-                new Color(0, 0, 255, 255));
-            Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(size.X, height), Color.Black,
-                true);
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(manaDelta.X, height), new Color(0, 0, 255, 255));
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + height), new Vector2(size.X, height), Color.Black, true);
         }
 
         private static void DrawHealthPanel(Vector2 pos, Vector2 size, Vector2 healthDelta, int height = 7)
         {
             if (!Menu.Item("TopPanel.Hp").GetValue<bool>()) return;
-            Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(size.X, height),
-                new Color(255, 0, 0, 255));
-            Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(healthDelta.X, height),
-                new Color(0, 255, 0, 255));
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(size.X, height), new Color(255, 0, 0, 255));
+            Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(healthDelta.X, height), new Color(0, 255, 0, 255));
             Drawing.DrawRect(pos + new Vector2(0, size.Y + 1), new Vector2(size.X, height), Color.Black, true);
         }
 
@@ -1027,50 +1108,46 @@ namespace OverlayInformation
             var _y = pos.Y - MapBottom;
 
             float dx, dy, px, py;
-            if (Math.Round((float)Drawing.Width / Drawing.Height, 1) >= 1.7)
+            if (Math.Round((float) Drawing.Width/Drawing.Height, 1) >= 1.7)
             {
-                dx = 272f / 1920f * Drawing.Width;
-                dy = 261f / 1080f * Drawing.Height;
-                px = 11f / 1920f * Drawing.Width;
-                py = 11f / 1080f * Drawing.Height;
+                dx = 272f/1920f*Drawing.Width;
+                dy = 261f/1080f*Drawing.Height;
+                px = 11f/1920f*Drawing.Width;
+                py = 11f/1080f*Drawing.Height;
             }
-            else if (Math.Round((float)Drawing.Width / Drawing.Height, 1) >= 1.5)
+            else if (Math.Round((float) Drawing.Width/Drawing.Height, 1) >= 1.5)
             {
-                dx = 267f / 1680f * Drawing.Width;
-                dy = 252f / 1050f * Drawing.Height;
-                px = 10f / 1680f * Drawing.Width;
-                py = 11f / 1050f * Drawing.Height;
+                dx = 267f/1680f*Drawing.Width;
+                dy = 252f/1050f*Drawing.Height;
+                px = 10f/1680f*Drawing.Width;
+                py = 11f/1050f*Drawing.Height;
             }
             else
             {
-                dx = 255f / 1280f * Drawing.Width;
-                dy = 229f / 1024f * Drawing.Height;
-                px = 6f / 1280f * Drawing.Width;
-                py = 9f / 1024f * Drawing.Height;
+                dx = 255f/1280f*Drawing.Width;
+                dy = 229f/1024f*Drawing.Height;
+                px = 6f/1280f*Drawing.Width;
+                py = 9f/1024f*Drawing.Height;
             }
-            var MinimapMapScaleX = dx / MapWidth;
-            var MinimapMapScaleY = dy / MapHeight;
+            var MinimapMapScaleX = dx/MapWidth;
+            var MinimapMapScaleY = dy/MapHeight;
 
-            var scaledX = Math.Min(Math.Max(_x * MinimapMapScaleX, 0), dx);
-            var scaledY = Math.Min(Math.Max(_y * MinimapMapScaleY, 0), dy);
+            var scaledX = Math.Min(Math.Max(_x*MinimapMapScaleX, 0), dx);
+            var scaledY = Math.Min(Math.Max(_y*MinimapMapScaleY, 0), dy);
 
             var screenX = px + scaledX;
             var screenY = Drawing.Height - scaledY - py;
 
-            return new Vector2((float)Math.Floor(screenX), (float)Math.Floor(screenY));
-
+            return new Vector2((float) Math.Floor(screenX), (float) Math.Floor(screenY));
         }
 
         private static void GenerateSideMessage(string hero, string spellName)
         {
             if (!Menu.Item("SideMessage.Enable").GetValue<bool>()) return;
             var msg = new SideMessage(hero, new Vector2(200, 60));
-            msg.AddElement(new Vector2(006, 06), new Vector2(72, 36),
-                Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
-            msg.AddElement(new Vector2(078, 12), new Vector2(64, 32),
-                Drawing.GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
-            msg.AddElement(new Vector2(142, 06), new Vector2(72, 36),
-                Drawing.GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
+            msg.AddElement(new Vector2(006, 06), new Vector2(72, 36), Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
+            msg.AddElement(new Vector2(078, 12), new Vector2(64, 32), Drawing.GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
+            msg.AddElement(new Vector2(142, 06), new Vector2(72, 36), Drawing.GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
             msg.CreateMessage();
         }
 
@@ -1100,8 +1177,7 @@ namespace OverlayInformation
 
         private static Vector3 FindVector(Vector3 first, double ret, float distance)
         {
-            var retVector = new Vector3(first.X + (float) Math.Cos(Utils.DegreeToRadian(ret))*distance,
-                first.Y + (float) Math.Sin(Utils.DegreeToRadian(ret))*distance, 100);
+            var retVector = new Vector3(first.X + (float) Math.Cos(Utils.DegreeToRadian(ret))*distance, first.Y + (float) Math.Sin(Utils.DegreeToRadian(ret))*distance, 100);
 
             return retVector;
         }
@@ -1130,7 +1206,6 @@ namespace OverlayInformation
 
         private static void DrawShadowText(string stext, int x, int y, Color color, Font f)
         {
-
             f.DrawText(null, stext, x + 1, y + 1, Color.Black);
             f.DrawText(null, stext, x, y, color);
         }
@@ -1143,7 +1218,7 @@ namespace OverlayInformation
             {
                 if (Effects1.TryGetValue(unit, out effect)) return;
                 effect = unit.AddParticleEffect("particles/items2_fx/smoke_of_deceit_buff.vpcf");
-                    //particles/items_fx/diffusal_slow.vpcf
+                //particles/items_fx/diffusal_slow.vpcf
                 effect2 = unit.AddParticleEffect("particles/items2_fx/shadow_amulet_active_ground_proj.vpcf");
                 Effects1.Add(unit, effect);
                 Effects2.Add(unit, effect2);
