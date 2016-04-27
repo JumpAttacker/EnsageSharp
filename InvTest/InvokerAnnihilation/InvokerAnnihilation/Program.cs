@@ -47,7 +47,6 @@ namespace InvokerAnnihilation
         }
         #endregion
 
-
         private static void Main()
         {
             Events.OnLoad += (sender, args) =>
@@ -208,6 +207,7 @@ namespace InvokerAnnihilation
                 {"item_refresher",true},
                 {"item_orchid",true},
                 {"item_sheepstick",true},
+                {"item_bloodthorn",true},
                 {"item_urn_of_shadows",true}
             };
             var settings = new Menu("Settings", "Settings");
@@ -224,7 +224,6 @@ namespace InvokerAnnihilation
             Menu.AddSubMenu(combo);
             Menu.AddToMainMenu();
         }
-
 /*
         private static void OnAttackChange(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
         {
@@ -279,7 +278,6 @@ namespace InvokerAnnihilation
         {
         }
 */
-
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
             if (!Menu.Item("smartIsActive").GetValue<bool>()) return;
@@ -1053,6 +1051,7 @@ namespace InvokerAnnihilation
             var hex = items.FirstOrDefault(x=>x.StoredName()=="item_sheepstick");
             var urn = items.FirstOrDefault(x=>x.StoredName()=="item_urn_of_shadows");
             var orchid = items.FirstOrDefault(x=>x.StoredName()=="item_orchid");
+            var bloodthorn = items.FirstOrDefault(x=>x.StoredName()=="item_bloodthorn");
 
             var meteor = Abilities.FindAbility("invoker_chaos_meteor");
             var ss = Abilities.FindAbility("invoker_sun_strike");
@@ -1112,7 +1111,7 @@ namespace InvokerAnnihilation
                         Utils.Sleep(300, urn.StoredName());
                     }
                 }
-                if (_stage > 2 && !target.IsHexed() && !target.IsStunned())
+                if (_stage > 0 && !target.IsHexed() && !target.IsStunned())
                 {
                     if (hex != null && hex.CanBeCasted(target) &&
                         Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.StoredName()) &&
@@ -1126,6 +1125,13 @@ namespace InvokerAnnihilation
                         Utils.SleepCheck("items"))
                     {
                         orchid.UseAbility(target);
+                        Utils.Sleep(300, "items");
+                    }
+                    if (bloodthorn != null && bloodthorn.CanBeCasted(target) &&
+                        Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(bloodthorn.StoredName()) &&
+                        Utils.SleepCheck("items"))
+                    {
+                        bloodthorn.UseAbility(target);
                         Utils.Sleep(300, "items");
                     }
                 }
