@@ -499,18 +499,9 @@ namespace OverlayInformation
                 var v = rune as Rune;
                 var size3 = new Vector2(10, 25) + new Vector2(13, -6);
                 var w2M = WorldToMinimap(v.NetworkPosition);
-                if (v.RuneType == RuneType.Arcane)
-                {
-                    Drawing.DrawText("[A]", w2M, new Vector2(15, 10), Color.White,
-                        FontFlags.AntiAlias | FontFlags.DropShadow);
-                }
-                else
-                {
-                    var name = RuneTypes[v.RuneType];
-                    Drawing.DrawRect(w2M - new Vector2(size3.X / 2, size3.Y / 2), size3,
-                        Drawing.GetTexture(name));
-                }
-                
+                var name = RuneTypes[v.RuneType];
+                Drawing.DrawRect(w2M - new Vector2(size3.X / 2, size3.Y / 2), size3,
+                    Drawing.GetTexture(name));
             }
         }
 
