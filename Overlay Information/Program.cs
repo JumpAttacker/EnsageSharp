@@ -96,7 +96,7 @@ namespace OverlayInformation
                 new MenuItem("TopPanel.Info", "Show details").SetValue(true)
                     .SetTooltip("show Ultimate's CD if u put ur mouse on icon"));
             toppanel.AddItem(
-                new MenuItem("TopPanel.InfoAlways", "Show details all time").SetValue(false)
+                new MenuItem("TopPanel.InfoAlways", "Show details all time").SetValue(true)
                     .SetTooltip("Show Details should be enabled"));
             
             var extra = new Menu("Extra", "Extra");
