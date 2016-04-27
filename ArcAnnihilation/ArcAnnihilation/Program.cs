@@ -66,6 +66,7 @@ namespace ArcAnnihilation
             {"item_guardian_greaves", 1},
             {"item_shivas_guard", 1},
             {"item_ethereal_blade", 3},
+            {"item_bloodthorn", 4},
 
             {"item_soul_ring", 4},
             {"item_blade_mail", 4},
@@ -77,7 +78,7 @@ namespace ArcAnnihilation
             {"item_necronomicon_3", 2},
             {"item_mjollnir", 1},
 
-            {"item_sheepstick", 4}
+            {"item_sheepstick", 5}
         };
 
         private static readonly List<string> AutoPushItems = new List<string>
@@ -964,13 +965,13 @@ namespace ArcAnnihilation
 
                 // use dagger if available
                 var dagger = enumerable.Any(x => x.Name == "item_blink" && x.Cooldown == 0);
-                SpellsUsage(hero, target, d, dagger);
-
+                
                 // uses all items available
                 ItemUsage(hero, enumerable, target, d,
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
 
+                SpellsUsage(hero, target, d, dagger);
                 // do orbwalking if enabled
                 // otherwise simply attack target
                 if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
@@ -1149,10 +1150,56 @@ namespace ArcAnnihilation
                           distance <=
                           (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
                          x.CastRange >= distance)).OrderByDescending(y => Items[y.StoredName()]);
+            var v = items.FirstOrDefault();
+            if (v != null && Utils.SleepCheck("item_cd"+me.Handle))
+            {
+                //Print(v.Name+"["+Game.GameTime+"]");
+                if (v.IsAbilityBehavior(AbilityBehavior.NoTarget))
+                {
+                    v.UseAbility();
+                }
+                else if (v.IsAbilityBehavior(AbilityBehavior.UnitTarget))
+                {
+                    if (v.TargetTeamType == TargetTeamType.Enemy || v.TargetTeamType == TargetTeamType.All)
+                    {
+                        v.UseAbility(target);
+                    }
+                    else
+                    {
+                        v.UseAbility(me);
+                    }
+                }
+                else 
+                {
+                    if (distance > 1150)
+                    {
+                        var point = new Vector3(
+                            (float)
+                                (target.Position.X -
+                                 Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value*
+                                 Math.Cos(me.FindAngleBetween(target.Position, true))),
+                            (float)
+                                (target.Position.Y -
+                                 Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value*
+                                 Math.Sin(me.FindAngleBetween(target.Position, true))),
+                            target.Position.Z);
+                        var dist = me.Distance2D(point);
+                        if (dist >= Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value && dist <= 1150)
+                            v.UseAbility(point);
+                    }
+                    else if (distance > Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value)
+                    {
+                        v.UseAbility(target.Position);
+                    }
+                }
+                Utils.Sleep(500, v.Name + me.Handle);
+                Utils.Sleep(100, "item_cd"+me.Handle);
+            }
             //var count = 0;
+            /*
             foreach (var item in items)
             {
-                //Print(++count+". "+item.Name+" ("+Items[item.Name]+")");
+                Print(++count+". "+item.Name+" ("+Items[item.Name]+")");
                 // code for using blink
                 if (item.Name == "item_blink")
                 {
@@ -1175,7 +1222,7 @@ namespace ArcAnnihilation
                         {
                             item.UseAbility(point);
                             Utils.Sleep(500, item.Name + me.Handle);
-                            Utils.Sleep(250, "DaggerTime");
+                            Utils.Sleep(150, "DaggerTime");
                             return;
                         }
                     }
@@ -1192,7 +1239,7 @@ namespace ArcAnnihilation
                 item.UseAbility(target.Position);
                 item.UseAbility(me);
                 Utils.Sleep(500, item.Name + me.Handle);
-            }
+            }*/
             
             // purge enemies if menu setting enabled
             var purgeAll = Menu.Item("Diffusal.PurgEnemy").GetValue<StringList>().SelectedIndex == (int)PurgeSelection.AllEnemies;
