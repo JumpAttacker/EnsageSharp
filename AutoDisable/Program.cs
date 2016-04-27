@@ -42,6 +42,11 @@ namespace Auto_Disable
         private static readonly Dictionary<string, bool> PreLoadSpell = new Dictionary<string, bool>();
         private static readonly List<string> ItemList = new List<string>();
         private static readonly List<string> SpellList = new List<string>();
+        private static readonly List<ClassID> DangIltimate=new List<ClassID>
+        {
+            ClassID.CDOTA_Unit_Hero_Magnataur,
+            ClassID.CDOTA_Unit_Hero_Tidehunter
+        }; 
         private static readonly bool[] Create = new bool[10];
         private static readonly bool[] FirstTimeItem = new bool[10];
         private static readonly bool[] FirstTimeSpell = new bool[10];
@@ -50,7 +55,7 @@ namespace Auto_Disable
 
         private static void Game_OnUpdate(EventArgs args)
         {
-            var me = ObjectMgr.LocalHero;
+            var me = ObjectManager.LocalHero;
 
             if (!_loaded)
             {
@@ -80,7 +85,7 @@ namespace Auto_Disable
                 PrintInfo("> AutoDisable unLoaded");
                 return;
             }
-
+            if (!me.IsAlive) return;
             #region Dodge by mod
 
             if (Utils.SleepCheck("item_manta"))
@@ -148,7 +153,7 @@ namespace Auto_Disable
             {
                 try
                 {
-                    var v = ObjectMgr.GetPlayerById(i).Hero;
+                    var v = ObjectManager.GetPlayerByID(i).Hero;
                     if (v == null || v.Team == me.Team || Equals(v, me) ||
                         !Utils.SleepCheck(v.GetHashCode().ToString())) continue;
                     var isInvul = v.IsInvul();
@@ -215,8 +220,7 @@ namespace Auto_Disable
                     var blink = v.FindItem("item_blink");
                     var forcestaff = v.FindItem("item_force_staff");
                     var dpActivated =
-                        v.Modifiers.Any(
-                            x => x.Name == "modifier_slark_dark_pact" || x.Name == "modifier_slark_dark_pact_pulses");
+                        v.HasModifiers(new[] {"modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses"});
                     var enumerable = items as IList<Item> ?? items.ToList();
                     var distance = me.Distance2D(v);
                     //var angle =
@@ -226,11 +230,10 @@ namespace Auto_Disable
 
                     if (!enumerable.Any() || !(isInvul || magicImmnune || isInvis || isChannel || dpActivated))
                     {
-                        
-                        if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
+
+                        if ((blink != null && blink.Cooldown / blink.CooldownLength > 0.99) || forcestaff != null && forcestaff.Cooldown / forcestaff.CooldownLength > 0.99)
                         {
                             UseDisableStageOne(v, enumerable, null, false, true, me, i);
-                            
                         }
                         else if (Menu.Item("onlyoninitiators").GetValue<StringList>().SelectedIndex == (int)DisableType.All)
                         {
@@ -248,6 +251,15 @@ namespace Auto_Disable
                     if (isStun || isHex || isSilence || isDisarm) continue;
                     var abilities = spells as IList<Ability> ?? spells.ToList();
                     if (!abilities.Any() && !enumerable.Any()) continue;
+                    if (DangIltimate.Contains(v.ClassID))
+                    {
+                        var ult =
+                            v.Spellbook.Spells.Any(x => x.AbilityType == AbilityType.Ultimate && x.IsInAbilityPhase);
+                        if (ult)
+                        {
+                            UseDisableStageOne(v, enumerable, abilities, true, true, me, i);
+                        }
+                    }
                     //var 
                     /*if (v.ClassID == ClassID.CDOTA_Unit_Hero_Clinkz)
                     {
@@ -274,8 +286,8 @@ namespace Auto_Disable
                             CounterSpellAndItems(v, enumerable, abilities, me, i);
                         }
                     }
-                    
-                    if ((blink != null && blink.Cooldown > 11) || forcestaff != null && forcestaff.Cooldown > 18.6)
+
+                    if ((blink != null && blink.Cooldown / blink.CooldownLength > 0.99) || forcestaff != null && forcestaff.Cooldown / forcestaff.CooldownLength > 0.99)
                     {
                         UseDisableStageOne(v, enumerable, abilities, true, true, me, i);
                     }
@@ -283,7 +295,7 @@ namespace Auto_Disable
                     {
                         UseDisableStageOne(v, enumerable, abilities, true, false, me, i);
                     }
-                    if (Initiators.TryGetValue(v.ClassID, out spellString) && distance < 1000)
+                    if (!Initiators.TryGetValue(v.ClassID, out spellString) || !(distance < 1000)) continue;
                     {
                         var initSpell = v.FindSpell(spellString);
                         if (initSpell != null && initSpell.Cooldown != 0)
@@ -291,6 +303,7 @@ namespace Auto_Disable
                             UseDisableStageOne(v, enumerable, abilities, true, true, me, i);
                         }
                     }
+                    
                 }
                 catch (Exception)
                 {
@@ -329,6 +342,7 @@ namespace Auto_Disable
 
             ItemList.Add("item_sheepstick");
             ItemList.Add("item_orchid");
+            ItemList.Add("item_bloodthorn");
             ItemList.Add("item_abyssal_blade");
             ItemList.Add("item_ethereal_blade");
             ItemList.Add("item_rod_of_atos");
@@ -443,7 +457,7 @@ namespace Auto_Disable
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Lina, "r");
             c++;
-            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Lion, "r");
+            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Lion, "r",1);
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_NightStalker, "q");
             c++;
@@ -494,7 +508,9 @@ namespace Auto_Disable
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_DoomBringer, "r");
             c++;
             CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Bane, "r", 2);
-
+            c++;
+            CounterSpells[c] = new CounterHelp(ClassID.CDOTA_Unit_Hero_Tidehunter, "r");
+            
             #endregion
 
             Game.OnUpdate += Game_OnUpdate;
@@ -525,7 +541,7 @@ namespace Auto_Disable
                     (x.Name == "item_lotus_orb" || x.Name == "item_glimmer_cape") && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name + target.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             var safeItemTargetEnemy = enumerable.FirstOrDefault(
                 x =>
-                    (x.Name == "item_sheepstick" || x.Name == "item_orchid" || x.Name == "item_abyssal_blade" ||
+                    (x.Name == "item_sheepstick" || x.Name == "item_orchid" || x.Name == "item_abyssal_blade" || x.Name == "item_bloodthorn" ||
                     x.Name == "item_heavens_halberd" || x.Name == "item_cyclone") && ExtraSubMenu[i, 0].Item("SelectedItems" + me.Name + target.Name).GetValue<AbilityToggler>().IsEnabled(x.Name));
             var safeItemPoint = enumerable.FirstOrDefault(
                 x =>
@@ -561,7 +577,7 @@ namespace Auto_Disable
 					vec = Vector(me.position.x+1200*math.cos(me.rotR), me.position.y+1200*math.sin(me.rotR), me.position.z)
 				end*/
             var v =
-                ObjectMgr.GetEntities<Unit>()
+                ObjectManager.GetEntities<Unit>()
                     .FirstOrDefault(x => x.Team == me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
             if (Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.All ||
                 Menu.Item("using").GetValue<StringList>().SelectedIndex == (int) Using.OnlyItems)
@@ -607,11 +623,21 @@ namespace Auto_Disable
             {
                 safeSpell.UseAbility();
                 safeSpell.UseAbility(target);
-                safeSpell.UseAbility(me.Position);
+                if (Menu.Item("onlyoninitiators").GetValue<StringList>().SelectedIndex != (int) DisableType.All )
+                    safeSpell.UseAbility(me.Position);
             }
             Utils.Sleep(250, target.GetHashCode().ToString());
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="items"></param>
+        /// <param name="abilities"></param>
+        /// <param name="stage"> false - only rot of atos & solar</param>
+        /// <param name="itsRealConterSpell"></param>
+        /// <param name="me"></param>
+        /// <param name="i"></param>
         private static void UseDisableStageOne(Hero target, IEnumerable<Item> items, IEnumerable<Ability> abilities, bool stage, bool itsRealConterSpell, Hero me, uint i)
         {
             if (!me.IsValid) return;
@@ -624,7 +650,7 @@ namespace Auto_Disable
                 disable =
                     enumerable.FirstOrDefault( // wo puck_waning_rift
                         x =>
-                            (x.Name == "item_sheepstick" || x.Name == "item_orchid" ||
+                            (x.Name == "item_sheepstick" || x.Name == "item_orchid" || x.Name == "item_bloodthorn" || 
                              x.Name == "item_abyssal_blade" ||
                              x.Name == "item_ethereal_blade" ||
                              x.Name == "item_rod_of_atos" || x.Name == "item_heavens_halberd" ||
@@ -711,7 +737,7 @@ namespace Auto_Disable
                             x.Name == "item_blink");
             
             var v =
-                ObjectMgr.GetEntities<Unit>()
+                ObjectManager.GetEntities<Unit>()
                     .FirstOrDefault(x => x.Team == me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
             //Game.PrintMessage(String.Format("1: {0} 2: {1} 3: {2}", safeItemPoint == null, !Menu.Item("usedagger").GetValue<bool>(), (me.Distance2D(target) >= 1000)), MessageType.ChatMessage);
             if (safeItemPoint == null || !Menu.Item("usedagger").GetValue<bool>() ||
@@ -748,11 +774,9 @@ namespace Auto_Disable
             for (var n = 0; n < CounterSpells.Length; n++)
                 if (t.ClassID == CounterSpells[n].Hero)
                 {
-                    if (CounterSpells[n].Modifer != "")
-                    {
-                        mustHave = true;
-                        return CounterSpells[n].Modifer;
-                    }
+                    if (CounterSpells[n].Modifer == "") continue;
+                    mustHave = true;
+                    return CounterSpells[n].Modifer;
                 }
             return "";
         }
@@ -773,7 +797,6 @@ namespace Auto_Disable
                             case "e":
                                 return t.Spellbook.Spell3;
                             case "r":
-                                //
                                 return t.Spellbook.Spell4;
                             case "f":
                                 return t.Spellbook.Spell5;
@@ -823,7 +846,7 @@ namespace Auto_Disable
         {
             var range = ability.CastRange;
             if (range >= 1) return range;
-            var data = ability.AbilityData.FirstOrDefault(x => x.Name.Contains("radius") || (x.Name.Contains("range") && !x.Name.Contains("ranged")));
+            var data = ability.AbilitySpecialData.FirstOrDefault(x => x.Name.Contains("radius") || (x.Name.Contains("range") && !x.Name.Contains("ranged")));
             if (data == null) return range;
             var level = ability.Level == 0 ? 0 : ability.Level - 1;
             range = (uint)(data.Count > 1 ? data.GetValue(level) : data.Value);
