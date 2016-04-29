@@ -482,14 +482,14 @@ namespace OverlayInformation
         }
         private static readonly Dictionary<RuneType, string> RuneTypes = new Dictionary<RuneType, string>
         {
-            {RuneType.Arcane,"materials/ensage_ui/runes/arcane.vmat" },
-            {RuneType.Bounty,"materials/ensage_ui/runes/bounty.vmat" },
-            {RuneType.DoubleDamage,"materials/ensage_ui/runes/doubledamage.vmat" },
-            {RuneType.Haste,"materials/ensage_ui/runes/haste.vmat" },
-            {RuneType.Illusion,"materials/ensage_ui/runes/illusion.vmat" },
-            {RuneType.Invisibility,"materials/ensage_ui/runes/invis.vmat" },
+            {RuneType.Arcane,"materials/ensage_ui/minirunes/arcane_rune.vmat" },
+            {RuneType.Bounty,"materials/ensage_ui/minirunes/bounty.vmat" },
+            {RuneType.DoubleDamage,"materials/ensage_ui/minirunes/doubledamage.vmat" },
+            {RuneType.Haste,"materials/ensage_ui/minirunes/haste.vmat" },
+            {RuneType.Illusion,"materials/ensage_ui/minirunes/illusion.vmat" },
+            {RuneType.Invisibility,"materials/ensage_ui/minirunes/invis.vmat" },
             {RuneType.None,"" },
-            {RuneType.Regeneration,"materials/ensage_ui/runes/regen.vmat" }
+            {RuneType.Regeneration,"materials/ensage_ui/minirunes/regen.vmat" }
         };
         private static void DrawRunes()
         {
