@@ -482,7 +482,7 @@ namespace OverlayInformation
         }
         private static readonly Dictionary<RuneType, string> RuneTypes = new Dictionary<RuneType, string>
         {
-            {RuneType.Arcane,"materials/ensage_ui/runes/arcane.vmat" },
+            {RuneType.Arcane,"materials/ensage_ui/minirunes/arcane_rune.vmat" },
             {RuneType.Bounty,"materials/ensage_ui/runes/bounty.vmat" },
             {RuneType.DoubleDamage,"materials/ensage_ui/runes/doubledamage.vmat" },
             {RuneType.Haste,"materials/ensage_ui/runes/haste.vmat" },
