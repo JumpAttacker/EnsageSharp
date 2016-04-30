@@ -35,9 +35,10 @@ namespace PerfectBlink
             var tpos = _me.Position;
             var a = tpos.ToVector2().FindAngleBetween(_mySelectedPos, true);
             safeRange -= (int)_me.HullRadius;
+            var d = tpos.Distance2D(_mySelectedPos.ToVector3(true));
             var p = new Vector3(
-                tpos.X + safeRange * (float)Math.Cos(a),
-                tpos.Y + safeRange * (float)Math.Sin(a),
+                tpos.X + Math.Min(safeRange, d)*(float) Math.Cos(a),
+                tpos.Y + Math.Min(safeRange, d)*(float) Math.Sin(a),
                 100);
             _myAbility.UseAbility(p);
         }
