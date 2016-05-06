@@ -6,44 +6,62 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
+using Ensage.Common.Objects;
 using SharpDX;
 
 namespace Legion_Annihilation
 {
-    internal class Program
+    internal static class Program
     {
         #region Members
         //============================================================
-        private static bool _loaded;
-        private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        //============================================================
-        private static readonly Menu Menu = new Menu("LegionAnnihilation", "LegionAnnihilation", true);
+        private static readonly Menu Menu = new Menu("Legion Annihilation", "LegionAnnihilation", true, "npc_dota_hero_legion_commander",true);
         private static Hero _globalTarget;
 
         #endregion
 
         private static void Main()
         {
-            Game.OnUpdate += Game_OnUpdate;
-            Drawing.OnDraw += OnDraw;
-            _loaded = false;
-
             Menu.AddItem(new MenuItem("combokey", "Combo key").SetValue(new KeyBind('F',KeyBindType.Press)).SetTooltip("just hold this key for combo"));
             var dict = new Dictionary<string, bool>
             {
-                {"item_black_king_bar", false},
-                {"legion_commander_press_the_attack", true},
-                {"legion_commander_overwhelming_odds", true}
+                {"item_black_king_bar", false}
+                /*{"legion_commander_press_the_attack", true},
+                {"legion_commander_overwhelming_odds", true}*/
             };
             Menu.AddItem(new MenuItem("enabledAbilities", "Abilities:").SetValue(new AbilityToggler(dict)));
-            Menu.AddItem(new MenuItem("buff", "Buff Me").SetValue(true).SetTooltip("use items on myself"));
-            Menu.AddItem(new MenuItem("debuff", "Debuff enemy").SetValue(true).SetTooltip("use items on enemy"));
+            /*Menu.AddItem(new MenuItem("buff", "Buff Me").SetValue(true).SetTooltip("use items on myself"));
+            Menu.AddItem(new MenuItem("debuff", "Debuff enemy").SetValue(true).SetTooltip("use items on enemy"));*/
             Menu.AddToMainMenu();
+
+            Events.OnLoad += (sender, args) =>
+            {
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
+                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
+                    MessageType.LogMessage);
+                PrintSuccess(Menu.DisplayName + " loaded v" + Assembly.GetExecutingAssembly().GetName().Version);
+                MyHero = ObjectManager.LocalHero;
+                Game.OnUpdate += Game_OnUpdate;
+                Drawing.OnDraw += OnDraw;
+            };
+            Events.OnClose += (sender, args) =>
+            {
+                Game.OnUpdate -= Game_OnUpdate;
+                Drawing.OnDraw -= OnDraw;
+            };
         }
+
+        private static Hero MyHero { get; set; }
+        private static Item Bkb { get; set; }
+        private static Item Dagger { get; set; }
+        private static Ability Spell1 { get; set; }
+        private static Ability Spell2 { get; set; }
+        private static Ability Spell4 { get; set; }
 
         private static void OnDraw(EventArgs args)
         {
-            if (!_loaded || _globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
+            if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
 
             var start = HUDInfo.GetHPbarPosition(_globalTarget) + new Vector2(-HUDInfo.GetHPBarSizeX(_globalTarget)/2, -HUDInfo.GetHpBarSizeY(_globalTarget)*5);
             var size = new Vector2(HUDInfo.GetHPBarSizeX(_globalTarget), HUDInfo.GetHpBarSizeY(_globalTarget) / 2)*2;
@@ -63,36 +81,30 @@ namespace Legion_Annihilation
         {
             #region Init
 
-            var me = ObjectMgr.LocalHero;
-            if (!_loaded)
+            if (Bkb == null || !Bkb.IsValid)
             {
-                if (!Game.IsInGame || me == null || me.ClassID != ClassID.CDOTA_Unit_Hero_Legion_Commander)
-                {
-                    return;
-                }
-                _loaded = true;
-
-                PrintSuccess(string.Format("> {1} v{0}", Ver, Menu.DisplayName));
-                Game.PrintMessage(
-                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName+
-                    " loaded!</font> <font color='#aa0000'>v" + Ver, MessageType.LogMessage);
+                Bkb = MyHero.FindItem("item_black_king_bar");
+            }
+            if (Dagger == null || !Dagger.IsValid)
+            {
+                Dagger = MyHero.FindItem("item_blink");
+            }
+            if (Spell1 == null || !Spell1.IsValid)
+            {
+                Spell1 = MyHero.Spellbook.Spell1;
+            }
+            if (Spell2 == null || !Spell2.IsValid)
+            {
+                Spell2 = MyHero.Spellbook.Spell2;
+            }
+            if (Spell4 == null || !Spell4.IsValid)
+            {
+                Spell4 = MyHero.Spellbook.Spell4;
             }
 
-            if (!Game.IsInGame || me == null)
-            {
-                _loaded = false;
-                PrintInfo("> Legion Annihilation unLoaded");
-                return;
-            }
-
-            if (Game.IsPaused)
-            {
-                return;
-            }
             #endregion
 
             #region Lets combo
-
 
             if (!Menu.Item("combokey").GetValue<KeyBind>().Active)
             {
@@ -101,140 +113,147 @@ namespace Legion_Annihilation
             }
             if (_globalTarget == null || !_globalTarget.IsValid)
             {
-                _globalTarget = ClosestToMouse(me);
+                _globalTarget = ClosestToMouse(MyHero);
             }
-            if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive || !me.CanCast()) return;
+            if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive || !MyHero.CanCast()) return;
             
-            ComboInAction(me, _globalTarget);
+            ComboInAction(_globalTarget);
 
             #endregion
         }
 
-        private static void ComboInAction(Hero me, Hero target)
+        #region ItemList
+
+        private static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
         {
-            if (!Utils.SleepCheck("nextAction")) return;
-            var duel = me.Spellbook.Spell4;
-            if (duel==null) return;
-            if (!duel.CanBeCasted()) return;
+            {"item_abyssal_blade", 6},
+            {"item_orchid", 5},
+            {"item_heavens_halberd", 4},
+            {"item_sheepstick", 6},
+            {"item_urn_of_shadows", 1},
+            {"item_medallion_of_courage", 1},
+            {"item_solar_crest", 1},
+            {"item_armlet", 1},
+            {"item_soul_ring", 7},
+            {"item_mask_of_madness", 1},
+            {"item_satanic", 1},
+            {"item_blade_mail", 1},
+            {"item_silver_edge", 8},
+            {"item_invis_sword", 8},
+            {"item_mjollnir", 1}
+        };
 
-            var haras = me.Spellbook.Spell1;
-            var heal = me.Spellbook.Spell2;
-            
-            var dagger = me.FindItem("item_blink");
-            var neededMana = me.Mana-duel.ManaCost;
+        private static readonly Dictionary<string, byte> ItemsLinker = new Dictionary<string, byte>
+        {
+            {"item_abyssal_blade", 2},
+            {"item_orchid", 4},
+            {"item_heavens_halberd", 5},
+            {"item_sheepstick", 3},
+            {"item_urn_of_shadows", 5},
+        };
 
-            var allitems = me.Inventory.Items.Where(x => x.CanBeCasted() && x.ManaCost <= neededMana);
-            var dpActivated =
-                target.Modifiers.Any(
-                    x => x.Name == "modifier_slark_dark_pact" || x.Name == "modifier_slark_dark_pact_pulses");
-            var enumerable = allitems as Item[] ?? allitems.ToArray();
-            var isInvise = me.IsInvisible();
-            var itemOnTarget =
-                enumerable.FirstOrDefault(
-                    x =>
-                        x.Name == "item_abyssal_blade" || x.Name == "item_orchid" ||
-                        x.Name == "item_heavens_halberd" || x.Name == "item_sheepstick" ||
-                        x.Name == "item_urn_of_shadows" || x.Name == "item_medallion_of_courage" ||
-                        x.Name == "item_solar_crest");
-            var itemWithOutTarget = enumerable.FirstOrDefault(
-                    x =>
-                        x.Name == "item_soul_ring" || (x.Name == "item_armlet" && !x.IsToggled) ||
-                        x.Name == "item_mask_of_madness" || x.Name == "item_satanic" ||
-                        x.Name == "item_blade_mail" || x.Name == "item_silver_edge" || x.Name == "item_invis_sword");
-            var itemOnMySelf = enumerable.FirstOrDefault(
-                x =>
-                    x.Name == "item_mjollnir");
-            Item bkb = null;
-            if (Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled("item_black_king_bar"))
-            {
-                bkb = me.FindItem("item_black_king_bar");
-            }
+        #endregion
+
+        private static void ComboInAction(Hero target)
+        {
+            if (!Spell4.CanBeCasted() || Spell4.Level==0 || !Utils.SleepCheck(Spell2.StoredName())) return;
+
+            var neededMana = MyHero.Mana-Spell4.ManaCost;
+
+            var allitems = MyHero.Inventory.Items.Where(x => x.CanBeCasted() && x.ManaCost <= neededMana);
             
-            var distance = me.Distance2D(target);
-            if (distance >= 1150)
+            var isInvise = MyHero.IsInvisible();
+            
+            var inventory =
+                allitems.Where(x => Utils.SleepCheck(x.Name + MyHero.Handle)).ToList();
+            var underLink = target.IsLinkensProtected();
+            var distance = MyHero.Distance2D(target)-MyHero.HullRadius-target.HullRadius;
+            if (underLink)
             {
-                me.Move(target.Position);
-                Utils.Sleep(200 + Game.Ping, "nextAction");
-                return;
-            }
-            if (Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled("legion_commander_overwhelming_odds") && haras != null && haras.CanBeCasted() && distance <= haras.CastRange)
-            {
-                haras.UseAbility(target.Position);
-                Utils.Sleep(300 + Game.Ping, "nextAction");
-                return;
-            }
-            if (!me.IsMagicImmune() && heal.CanBeCasted() && heal.ManaCost <= neededMana && Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled("legion_commander_press_the_attack"))
-            {
-                heal.UseAbility(me);
-                Utils.Sleep(200 + Game.Ping, "nextAction");
-                return;
-            }
-            if (itemOnMySelf != null && Menu.Item("buff").GetValue<bool>())
-            {
-                itemOnMySelf.UseAbility(me);
-                Utils.Sleep(50 + Game.Ping, "nextAction");
-                return;
-            }
-            if (itemWithOutTarget != null && Menu.Item("buff").GetValue<bool>())
-            {
-                if (itemWithOutTarget.Name == "item_armlet")
+                var linkerItems = inventory.Where(x => x.CanHit(target) && ItemsLinker.Keys.Contains(x.Name)).OrderByDescending(y => ItemsLinker[y.StoredName()]);
+                foreach (var item in linkerItems)
                 {
-                    itemWithOutTarget.ToggleAbility();
-                    Utils.Sleep(50 + Game.Ping, "nextAction");
-                    return;
+                    item.UseAbility(target);
+                    Utils.Sleep(250, item.Name + MyHero.Handle);
                 }
-                itemWithOutTarget.UseAbility();
-                Utils.Sleep(100 + Game.Ping, "nextAction");
-                return;
+                if (linkerItems.Any(x => Utils.SleepCheck(x.Name + MyHero.Handle))) return;
             }
-
-            if (dagger != null && dagger.CanBeCasted() && !isInvise && Utils.SleepCheck("dagger"))
+            var items =
+                inventory.Where(
+                    x =>
+                        Items.Keys.Contains(x.Name) &&
+                        ((x.CastRange == 0 && distance <= 800) ||
+                         x.CastRange >= distance)).OrderByDescending(y => Items[y.StoredName()]);
+            
+            if (Dagger != null && Dagger.CanBeCasted() && !isInvise && Utils.SleepCheck("dagger") && distance<=1200 && distance>150)
             {
+                if (UseHeal()) return;
                 var point = new Vector3(
-                    (float)(target.Position.X - 20 * Math.Cos(me.FindAngleBetween(target.Position, true))),
-                    (float)(target.Position.Y - 20 * Math.Sin(me.FindAngleBetween(target.Position, true))),
-                    target.Position.Z);
-                dagger.UseAbility(point);
-                Utils.Sleep(200 + Game.Ping, "dagger");
-                return;
+                    (float)(target.Position.X - 20 * Math.Cos(MyHero.FindAngleBetween(target.Position, true))),
+                    (float)(target.Position.Y - 20 * Math.Sin(MyHero.FindAngleBetween(target.Position, true))),
+                    0);
+                Dagger.UseAbility(point);
+                Utils.Sleep(500, "dagger");
             }
-            if (distance > duel.CastRange + 100 && Utils.SleepCheck("moving"))
+            else if (Utils.SleepCheck("attack_cd"))
             {
-                if (isInvise)
-                    me.Attack(target);
-                else
-                    me.Move(target.Position);
-                Utils.Sleep(150 + Game.Ping, "moving");
-                return;
+                Utils.Sleep(500, "attack_cd");
+                MyHero.Attack(target);
             }
-            if (itemOnTarget != null && !dpActivated && Menu.Item("debuff").GetValue<bool>() && !isInvise)
+            if (Bkb != null && Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled(Bkb.StoredName()) &&
+                Bkb.CanBeCasted() && Utils.SleepCheck(Bkb.StoredName()) && Spell4.CanHit(target))
             {
-                itemOnTarget.UseAbility(target);
-                Utils.Sleep(50 + Game.Ping, "nextAction");
-                return;
+                Bkb.UseAbility();
+                Utils.Sleep(500, Bkb.StoredName());
             }
-            if (Menu.Item("enabledAbilities").GetValue<AbilityToggler>().IsEnabled("item_black_king_bar") && bkb != null && bkb.CanBeCasted() && Utils.SleepCheck("bkb") && !isInvise)
+            foreach (var item in items)
             {
-                bkb.UseAbility();
-                Utils.Sleep(35+Game.Ping, "bkb");
-                return;
+                if (item.IsAbilityBehavior(AbilityBehavior.NoTarget))
+                {
+                    item.UseAbility();
+                }
+                if (item.IsAbilityBehavior(AbilityBehavior.UnitTarget))
+                {
+                    if (item.TargetTeamType == TargetTeamType.Enemy || item.TargetTeamType == TargetTeamType.All)
+                    {
+                        item.UseAbility(target);
+                    }
+                    else
+                    {
+                        item.UseAbility(MyHero);
+                    }
+                }
+                Utils.Sleep(500, item.Name + MyHero.Handle);
             }
-            if (isInvise)
+            if (isInvise && Utils.SleepCheck("attack_cd_2"))
             {
-                me.Attack(target);
-                Utils.Sleep(200 + Game.Ping, "nextAction");
+                MyHero.Attack(target);
+                Utils.Sleep(500 + Game.Ping, "attack_cd_2");
             }
             else if (Utils.SleepCheck("ult"))
             {
-                if (distance >= 100)
-                    Utils.Sleep(200 + Game.Ping, "ult");
-                duel.UseAbility(target);
+                if (distance<=200/*Spell4.CanHit(target)*/)
+                {
+                    UseHeal();
+                    //if (items.Any(x => Utils.SleepCheck(x.Name + MyHero.Handle))) return;
+                    Utils.Sleep(100 + Game.Ping, "ult");
+                    Spell4.UseAbility(target);
+                }
             }
-
-            Utils.Sleep(10, "nextAction");
         }
 
-        public static Hero ClosestToMouse(Hero source, float range = 600)
+        private static bool UseHeal()
+        {
+            if (Spell2 != null && Spell2.CanBeCasted() && Utils.SleepCheck(Spell2.StoredName()))
+            {
+                Spell2.UseAbility(MyHero);
+                Utils.Sleep(500+Game.Ping, Spell2.StoredName());
+                return true;
+            }
+            return false;
+        }
+
+        private static Hero ClosestToMouse(Hero source, float range = 600)
         {
             var mousePosition = Game.MousePosition;
             var enemyHeroes =
@@ -252,12 +271,12 @@ namespace Legion_Annihilation
         }
 
         #region Helpers
-        public static void PrintInfo(string text, params object[] arguments)
+        private static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
         }
 
-        public static void PrintSuccess(string text, params object[] arguments)
+        private static void PrintSuccess(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.Green, arguments);
         }
@@ -267,12 +286,17 @@ namespace Legion_Annihilation
             PrintEncolored(text, ConsoleColor.Red, arguments);
         }
 
-        public static void PrintEncolored(string text, ConsoleColor color, params object[] arguments)
+        private static void PrintEncolored(string text, ConsoleColor color, params object[] arguments)
         {
             var clr = Console.ForegroundColor;
             Console.ForegroundColor = color;
             Console.WriteLine(text, arguments);
             Console.ForegroundColor = clr;
+        }
+
+        private static void Print(string str)
+        {
+            Game.PrintMessage(str,MessageType.ChatMessage);
         }
         #endregion
 
