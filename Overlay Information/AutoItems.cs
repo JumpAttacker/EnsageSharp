@@ -28,7 +28,16 @@ namespace OverylayInformationV2
                 }
                 if (_midas!=null && _midas.CanBeCasted())
                 {
-                    var creep = Creeps.All.Where(x => x != null && x.IsValid && x.IsAlive && x.Distance2D(Members.MyHero) <= 600).OrderByDescending(y=>y.Health).FirstOrDefault();
+                    var creep = ObjectManager.GetEntities<Unit>()
+                            .Where(
+                                x =>
+                                    !x.IsMagicImmune() && x.Team != Members.MyHero.Team &&
+                                    (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
+                                    x.Distance2D(Members.MyHero) <= 600).OrderByDescending(x => x.Health)
+                            .DefaultIfEmpty(null)
+                            .FirstOrDefault();
                     if (creep != null)
                         _midas.UseAbility(creep);
                 }
@@ -37,7 +46,8 @@ namespace OverylayInformationV2
             {
                 if (_phase == null || !_phase.IsValid)
                     _phase = Members.MyHero.FindItem("item_phase_boots");
-                if (_phase != null && _phase.CanBeCasted() && !Members.MyHero.IsAttacking() && !Members.MyHero.IsChanneling() && Members.MyHero.NetworkActivity == NetworkActivity.Move)
+                if (_phase != null && _phase.CanBeCasted() && !Members.MyHero.IsAttacking() &&
+                    !Members.MyHero.IsChanneling() && Members.MyHero.NetworkActivity == NetworkActivity.Move)
                 {
                     _phase.UseAbility();
                 }
