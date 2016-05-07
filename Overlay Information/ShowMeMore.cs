@@ -9,7 +9,7 @@ using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal static class ShowMeMore
     {

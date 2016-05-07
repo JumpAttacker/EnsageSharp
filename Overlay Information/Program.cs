@@ -11,7 +11,7 @@ using Font = SharpDX.Direct3D9.Font;
 using Menu = Ensage.Common.Menu.Menu;
 using MenuItem = Ensage.Common.Menu.MenuItem;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal static class Program
     {
@@ -24,6 +24,7 @@ namespace OverylayInformationV2
             var health = new Menu("Health Panel", "health");
             var mana = new Menu("Mana Panel", "mana");
             var status = new Menu("Status panel", "status");
+            var extraPos = new Menu("Extra Position", "extraPos");
             var itemPanel = new Menu("Item panel", "itempanel");
 
             var roshanTimer = new Menu("Roshan Timer", "roshanTimer");
@@ -74,6 +75,11 @@ namespace OverylayInformationV2
             status.AddItem(new MenuItem("toppanel.Status.Enable", "Enable").SetValue(true));
             status.AddItem(new MenuItem("toppanel.AllyVision.Enable", "Vision on Ally Heroes").SetValue(true));
             status.AddItem(new MenuItem("toppanel.EnemiesStatus.Enable", "Enemies status").SetValue(true));
+            //===========================
+            extraPos.AddItem(
+                new MenuItem("extraPos.X", "Extra Position for top panel: X").SetValue(new Slider(0, -25, 25)));
+            extraPos.AddItem(
+                new MenuItem("extraPos.Y", "Extra Position for top panel: Y").SetValue(new Slider(0, -25, 25)));
             //===========================
             roshanTimer.AddItem(new MenuItem("roshanTimer.Enable", "Enable").SetValue(true));
             //===========================
@@ -140,6 +146,7 @@ namespace OverylayInformationV2
             topPanel.AddSubMenu(health);
             topPanel.AddSubMenu(mana);
             topPanel.AddSubMenu(status);
+            topPanel.AddSubMenu(extraPos);
             settings.AddSubMenu(topPanel);
             settings.AddSubMenu(spellPanel);
             settings.AddSubMenu(roshanTimer);

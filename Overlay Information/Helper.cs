@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Objects;
 using SharpDX;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal static class Helper
     {

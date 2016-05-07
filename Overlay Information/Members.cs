@@ -6,7 +6,7 @@ using SharpDX;
 using Color = SharpDX.Color;
 using Font = SharpDX.Direct3D9.Font;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal static class Members
     {

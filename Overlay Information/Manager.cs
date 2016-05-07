@@ -3,7 +3,7 @@ using System.Linq;
 using Ensage;
 using Ensage.Common.Objects;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal class Manager
     {
@@ -31,22 +31,26 @@ namespace OverylayInformationV2
 
             public static List<Item> GetItemList(Hero h)
             {
-                return Members.ItemDictionary.Count == 0 ? new List<Item>() : Members.ItemDictionary[h.StoredName()];
+                List<Item> list;
+                return Members.ItemDictionary.TryGetValue(h.StoredName(), out list) ? list : null;
             }
 
             public static List<Ability> GetAbilityList(Hero h)
             {
-                return Members.AbilityDictionary.Count==0 ? new List<Ability>() : Members.AbilityDictionary[h.StoredName()];
+                List<Ability> list;
+                return Members.AbilityDictionary.TryGetValue(h.StoredName(), out list) ? list : null;
             }
 
             public static List<Item> GetItemList(string s)
             {
-                return Members.ItemDictionary.Count == 0 ? new List<Item>() : Members.ItemDictionary[s];
+                List<Item> list;
+                return Members.ItemDictionary.TryGetValue(s, out list) ? list : null;
             }
 
             public static List<Ability> GetAbilityList(string s)
             {
-                return Members.AbilityDictionary.Count == 0 ? new List<Ability>() : Members.AbilityDictionary[s];
+                List<Ability> list;
+                return Members.AbilityDictionary.TryGetValue(s, out list) ? list : null;
             }
         }
         internal class PlayerManager

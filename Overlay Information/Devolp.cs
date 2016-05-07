@@ -1,7 +1,7 @@
 ﻿using System;
 using Ensage;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal static class Devolp
     {

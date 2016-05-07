@@ -1,4 +1,4 @@
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal static class Checker
     {

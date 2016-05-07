@@ -8,7 +8,7 @@ using Ensage.Common.Objects;
 using Ensage.Items;
 using SharpDX;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal static class ItemPanel
     {

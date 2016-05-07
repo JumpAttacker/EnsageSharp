@@ -9,9 +9,10 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using SharpDX;
 using SharpDX.Direct3D9;
+
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal abstract class DrawHelper
     {
@@ -84,7 +85,9 @@ namespace OverylayInformationV2
             {
                 foreach (var v in selectedHeroes)
                 {
-                    var pos = Helper.GetTopPanelPosition(v);
+                    var pos = Helper.GetTopPanelPosition(v) +
+                              new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
+                                  Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
                     var temp = HUDInfo.GetTopPanelSize(v);
                     var size = new Vector2((float) temp[0], (float) temp[1]);
                     var healthDelta = new Vector2(v.Health*size.X/v.MaximumHealth, 0);
@@ -110,7 +113,9 @@ namespace OverylayInformationV2
                     continue;
                 }
                 if (ultimate.Level <= 0) continue;
-                var pos = Helper.GetTopPanelPosition(v);
+                var pos = Helper.GetTopPanelPosition(v) +
+                          new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
+                              Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
                 var tempS = HUDInfo.GetTopPanelSize(v);
                 var size = new Vector2((float) tempS[0], (float) tempS[1]);
                 var ultPos = pos + new Vector2(size[0]/2 - 5, size[1] + 1);
@@ -321,6 +326,7 @@ namespace OverylayInformationV2
                 var sizeSpell = Members.Menu.Item("spellPanel.SizeSpell").GetValue<Slider>().Value;
                 const int sizey = 9;
                 var spells = Manager.HeroManager.GetAbilityList(v);//Members.AbilityDictionary[v.StoredName()];
+                if (spells == null || spells.Count==0) continue;
                 foreach (var spell in spells/*.Where(x => x.AbilitySlot.ToString() != "-1")*/)
                 {
                     var size2 = distBetweenSpells;

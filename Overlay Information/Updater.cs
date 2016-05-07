@@ -5,7 +5,7 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal abstract class Updater
     {
@@ -59,8 +59,10 @@ namespace OverylayInformationV2
                 if (!AbilityUpdate.Sleeping)
                 {
                     AbilityUpdate.Sleep(1000);
-                    foreach (var hero in Members.Heroes)
+                    foreach (var hero in /*Members.Heroes */Manager.HeroManager.GetViableHeroes())
                     {
+                        /*if ((hero.ClassID==ClassID.CDOTA_Unit_Hero_DoomBringer || hero.ClassID==ClassID.CDOTA_Unit_Hero_Rubick) && !hero.IsVisible)
+                            continue;*/
                         try
                         {
                             if (!Members.AbilityDictionary.ContainsKey(hero.StoredName()))

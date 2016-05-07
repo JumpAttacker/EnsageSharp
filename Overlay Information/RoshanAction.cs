@@ -3,7 +3,7 @@ using System.Linq;
 using Ensage;
 using Ensage.Common.Objects.UtilityObjects;
 
-namespace OverylayInformationV2
+namespace OverlayInformation
 {
     internal static class RoshanAction
     {
