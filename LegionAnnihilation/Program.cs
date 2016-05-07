@@ -15,14 +15,14 @@ namespace Legion_Annihilation
     {
         #region Members
         //============================================================
-        private static readonly Menu Menu = new Menu("Legion Annihilation", "LegionAnnihilation", true, "npc_dota_hero_legion_commander",true);
+        private static readonly Menu Menu = new Menu("Legion Annihilation", "LegionAnnihilation", true, "npc_dota_hero_legion_commander", true);
         private static Hero _globalTarget;
 
         #endregion
 
         private static void Main()
         {
-            Menu.AddItem(new MenuItem("combokey", "Combo key").SetValue(new KeyBind('F',KeyBindType.Press)).SetTooltip("just hold this key for combo"));
+            Menu.AddItem(new MenuItem("combokey", "Combo key").SetValue(new KeyBind('F', KeyBindType.Press)).SetTooltip("just hold this key for combo"));
             var dict = new Dictionary<string, bool>
             {
                 {"item_black_king_bar", false}
@@ -62,16 +62,16 @@ namespace Legion_Annihilation
         {
             if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive) return;
 
-            var start = HUDInfo.GetHPbarPosition(_globalTarget) + new Vector2(-HUDInfo.GetHPBarSizeX(_globalTarget)/2, -HUDInfo.GetHpBarSizeY(_globalTarget)*5);
-            var size = new Vector2(HUDInfo.GetHPBarSizeX(_globalTarget), HUDInfo.GetHpBarSizeY(_globalTarget) / 2)*2;
-                            
+            var start = HUDInfo.GetHPbarPosition(_globalTarget) + new Vector2(-HUDInfo.GetHPBarSizeX(_globalTarget) / 2, -HUDInfo.GetHpBarSizeY(_globalTarget) * 5);
+            var size = new Vector2(HUDInfo.GetHPBarSizeX(_globalTarget), HUDInfo.GetHpBarSizeY(_globalTarget) / 2) * 2;
+
             const string text = "TARGET";
             var textSize = Drawing.MeasureText(text, "Arial", new Vector2(size.Y * 2, size.X), FontFlags.AntiAlias);
             var textPos = start + new Vector2(size.X / 2 - textSize.X / 2, -textSize.Y / 2 + 2);
             Drawing.DrawText(
                 text,
                 textPos,
-                new Vector2(size.Y*2, size.X),
+                new Vector2(size.Y * 2, size.X),
                 Color.White,
                 FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive);
         }
@@ -115,7 +115,7 @@ namespace Legion_Annihilation
                 _globalTarget = ClosestToMouse(MyHero);
             }
             if (_globalTarget == null || !_globalTarget.IsValid || !_globalTarget.IsAlive || !MyHero.CanCast()) return;
-            
+
             ComboInAction(_globalTarget);
 
             #endregion
@@ -140,7 +140,6 @@ namespace Legion_Annihilation
             {"item_silver_edge", 8},
             {"item_invis_sword", 8},
             {"item_mjollnir", 1},
-            {"item_armlet", 1}
         };
 
         private static readonly Dictionary<string, byte> ItemsLinker = new Dictionary<string, byte>
@@ -151,23 +150,22 @@ namespace Legion_Annihilation
             {"item_sheepstick", 3},
             {"item_urn_of_shadows", 5},
         };
-        //modifier_item_armlet_unholy_strength
         #endregion
 
         private static void ComboInAction(Hero target)
         {
-            if (!Spell4.CanBeCasted() || Spell4.Level==0 || !Utils.SleepCheck(Spell2.StoredName())) return;
+            if (!Spell4.CanBeCasted() || Spell4.Level == 0 || !Utils.SleepCheck(Spell2.StoredName())) return;
 
             var neededMana = MyHero.Mana - Spell4.ManaCost;
 
             var allitems = MyHero.Inventory.Items.Where(x => x.CanBeCasted() && x.ManaCost <= neededMana);
-            
+
             var isInvise = MyHero.IsInvisible();
-            
+
             var inventory =
                 allitems.Where(x => Utils.SleepCheck(x.Name + MyHero.Handle)).ToList();
             var underLink = target.IsLinkensProtected();
-            var distance = MyHero.Distance2D(target)-MyHero.HullRadius-target.HullRadius;
+            var distance = MyHero.Distance2D(target) - MyHero.HullRadius - target.HullRadius;
             if (underLink)
             {
                 var linkerItems = inventory.Where(x => x.CanHit(target) && ItemsLinker.Keys.Contains(x.Name)).OrderByDescending(y => ItemsLinker[y.StoredName()]);
@@ -184,8 +182,8 @@ namespace Legion_Annihilation
                         Items.Keys.Contains(x.Name) &&
                         ((x.CastRange == 0 && distance <= 800) ||
                          x.CastRange >= distance)).OrderByDescending(y => Items[y.StoredName()]);
-            
-            if (Dagger != null && Dagger.CanBeCasted() && !isInvise && Utils.SleepCheck("dagger") && distance<=1200 && distance>150)
+
+            if (Dagger != null && Dagger.CanBeCasted() && !isInvise && Utils.SleepCheck("dagger") && distance <= 1200 && distance > 150)
             {
                 if (UseHeal()) return;
                 var point = new Vector3(
@@ -211,8 +209,10 @@ namespace Legion_Annihilation
                 if (item.StoredName() == "item_armlet")
                 {
                     if (!MyHero.HasModifier("modifier_item_armlet_unholy_strength"))
-                        item.UseAbility();
-                    Utils.Sleep(500, item.Name + MyHero.Handle);
+                    {
+                        item.ToggleAbility();
+                        Utils.Sleep(500, item.Name + MyHero.Handle);
+                    }
                     continue;
                 }
                 if (item.IsAbilityBehavior(AbilityBehavior.NoTarget))
@@ -239,7 +239,7 @@ namespace Legion_Annihilation
             }
             else if (Utils.SleepCheck("ult"))
             {
-                if (distance<=200/*Spell4.CanHit(target)*/)
+                if (distance <= 200/*Spell4.CanHit(target)*/)
                 {
                     UseHeal();
                     //if (items.Any(x => Utils.SleepCheck(x.Name + MyHero.Handle))) return;
@@ -253,7 +253,7 @@ namespace Legion_Annihilation
         {
             if (Spell2 == null || !Spell2.CanBeCasted() || !Utils.SleepCheck(Spell2.StoredName()) || MyHero.Mana - Spell4.ManaCost <= Spell2.ManaCost) return false;
             Spell2.UseAbility(MyHero);
-            Utils.Sleep(500+Game.Ping, Spell2.StoredName());
+            Utils.Sleep(500 + Game.Ping, Spell2.StoredName());
             return true;
         }
 
@@ -261,7 +261,7 @@ namespace Legion_Annihilation
         {
             var mousePosition = Game.MousePosition;
             var enemyHeroes =
-                ObjectMgr.GetEntities<Hero>()
+                ObjectManager.GetEntities<Hero>()
                     .Where(
                         x =>
                             x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible
@@ -300,7 +300,7 @@ namespace Legion_Annihilation
 
         private static void Print(string str)
         {
-            Game.PrintMessage(str,MessageType.ChatMessage);
+            Game.PrintMessage(str, MessageType.ChatMessage);
         }
         #endregion
 
