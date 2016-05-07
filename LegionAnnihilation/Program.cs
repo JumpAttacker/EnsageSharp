@@ -33,7 +33,6 @@ namespace Legion_Annihilation
             /*Menu.AddItem(new MenuItem("buff", "Buff Me").SetValue(true).SetTooltip("use items on myself"));
             Menu.AddItem(new MenuItem("debuff", "Debuff enemy").SetValue(true).SetTooltip("use items on enemy"));*/
             Menu.AddToMainMenu();
-
             Events.OnLoad += (sender, args) =>
             {
                 Game.PrintMessage(
@@ -140,7 +139,8 @@ namespace Legion_Annihilation
             {"item_blade_mail", 1},
             {"item_silver_edge", 8},
             {"item_invis_sword", 8},
-            {"item_mjollnir", 1}
+            {"item_mjollnir", 1},
+            {"item_armlet", 1}
         };
 
         private static readonly Dictionary<string, byte> ItemsLinker = new Dictionary<string, byte>
@@ -151,14 +151,14 @@ namespace Legion_Annihilation
             {"item_sheepstick", 3},
             {"item_urn_of_shadows", 5},
         };
-
+        //modifier_item_armlet_unholy_strength
         #endregion
 
         private static void ComboInAction(Hero target)
         {
             if (!Spell4.CanBeCasted() || Spell4.Level==0 || !Utils.SleepCheck(Spell2.StoredName())) return;
 
-            var neededMana = MyHero.Mana-Spell4.ManaCost;
+            var neededMana = MyHero.Mana - Spell4.ManaCost;
 
             var allitems = MyHero.Inventory.Items.Where(x => x.CanBeCasted() && x.ManaCost <= neededMana);
             
@@ -208,6 +208,13 @@ namespace Legion_Annihilation
             }
             foreach (var item in items)
             {
+                if (item.StoredName() == "item_armlet")
+                {
+                    if (!MyHero.HasModifier("modifier_item_armlet_unholy_strength"))
+                        item.UseAbility();
+                    Utils.Sleep(500, item.Name + MyHero.Handle);
+                    continue;
+                }
                 if (item.IsAbilityBehavior(AbilityBehavior.NoTarget))
                 {
                     item.UseAbility();
@@ -244,13 +251,10 @@ namespace Legion_Annihilation
 
         private static bool UseHeal()
         {
-            if (Spell2 != null && Spell2.CanBeCasted() && Utils.SleepCheck(Spell2.StoredName()))
-            {
-                Spell2.UseAbility(MyHero);
-                Utils.Sleep(500+Game.Ping, Spell2.StoredName());
-                return true;
-            }
-            return false;
+            if (Spell2 == null || !Spell2.CanBeCasted() || !Utils.SleepCheck(Spell2.StoredName()) || MyHero.Mana - Spell4.ManaCost <= Spell2.ManaCost) return false;
+            Spell2.UseAbility(MyHero);
+            Utils.Sleep(500+Game.Ping, Spell2.StoredName());
+            return true;
         }
 
         private static Hero ClosestToMouse(Hero source, float range = 600)
