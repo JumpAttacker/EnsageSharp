@@ -31,6 +31,7 @@ namespace OverlayInformation
         {
             foreach (var hero in Manager.HeroManager.GetEnemyViableHeroes())
             {
+                if (Manager.HeroManager.GetItemList(hero)==null) continue;
                 var iPos = HUDInfo.GetHPbarPosition(hero);
                 var iSize = new Vector2(HUDInfo.GetHPBarSizeX(hero), HUDInfo.GetHpBarSizeY(hero));
                 float count = 0;
@@ -103,95 +104,106 @@ namespace OverlayInformation
                 !Members.Menu.Item("ultimate.InfoAlways").GetValue<bool>()) return;
             foreach (var v in Members.EnemyHeroes)
             {
-                Ability ultimate;
-                if (!Ultimate.TryGetValue(v.StoredName(), out ultimate))
+                var ablist = Manager.HeroManager.GetAbilityList(v);
+                if (ablist == null) continue;
+                try
                 {
-                    var spell = Manager.HeroManager.GetAbilityList(v).FirstOrDefault(
-                            x => x.IsAbilityType(AbilityType.Ultimate));
-                    if (spell != null)
-                        Ultimate.Add(v.StoredName(), spell);
-                    continue;
-                }
-                if (ultimate.Level <= 0) continue;
-                var pos = Helper.GetTopPanelPosition(v) +
-                          new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
-                              Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
-                var tempS = HUDInfo.GetTopPanelSize(v);
-                var size = new Vector2((float) tempS[0], (float) tempS[1]);
-                var ultPos = pos + new Vector2(size[0]/2 - 5, size[1] + 1);
-                string path;
+                    Ability ultimate;
+                    if (!Ultimate.TryGetValue(v.StoredName(), out ultimate))
+                    {
+                        var spell = ablist.FirstOrDefault(x => x.IsAbilityType(AbilityType.Ultimate));
+                        if (spell != null)
+                        {
+                            Ultimate.Remove(v.StoredName());
+                            Ultimate.Add(v.StoredName(), spell);
+                        }
+                        continue;
+                    }
+                    if (ultimate == null || !ultimate.IsValid || ultimate.Level <= 0) continue;
+                    var pos = Helper.GetTopPanelPosition(v) +
+                              new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
+                                  Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
+                    var tempS = HUDInfo.GetTopPanelSize(v);
+                    var size = new Vector2((float) tempS[0], (float) tempS[1]);
+                    var ultPos = pos + new Vector2(size[0]/2 - 5, size[1] + 1);
+                    string path;
 
-                switch (ultimate.AbilityState)
-                {
-                    case AbilityState.NotEnoughMana:
-                        path = "materials/ensage_ui/other/ulti_nomana.vmat";
-                        break;
-                    case AbilityState.OnCooldown:
-                        path = "materials/ensage_ui/other/ulti_cooldown.vmat";
-                        break;
-                    default:
-                        path = "materials/ensage_ui/other/ulti_ready.vmat";
-                        break;
-                }
-                if (Members.Menu.Item("ultimate.Icon.Enable").GetValue<bool>())
-                    Drawing.DrawRect(ultPos, new Vector2(14, 14), Drawing.GetTexture(path));
-                if (Members.Menu.Item("ultimate.Info").GetValue<bool>() &&
-                    (Members.Menu.Item("ultimate.InfoAlways").GetValue<bool>() && (
-                        ultimate.AbilityState == AbilityState.OnCooldown ||
-                        ultimate.AbilityState == AbilityState.NotEnoughMana) ||
-                     Utils.IsUnderRectangle(Game.MouseScreenPosition, ultPos.X, ultPos.Y, 15, 15)))
-                {
-                    var texturename = string.Format("materials/ensage_ui/spellicons/{0}.vmat",
-                        ultimate.StoredName());
-                    pos = Helper.GetTopPanelPosition(v);
-                    var startPos = pos + new Vector2(0, 7*4 + size.Y);
-                    size = new Vector2(size.X, size.Y + 15);
-                    Drawing.DrawRect(startPos,
-                        size,
-                        Textures.GetTexture(texturename));
-                    string ultimateCd;
-                    Vector2 textSize;
-                    Vector2 textPos;
                     switch (ultimate.AbilityState)
                     {
-                        case AbilityState.OnCooldown:
-                            ultimateCd =
-                                ((int) Math.Min(ultimate.Cooldown, 999)).ToString(CultureInfo.InvariantCulture);
-                            textSize = Drawing.MeasureText(ultimateCd, "Arial",
-                                new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
-                            //Print(v.Name + " cd: " + ultimateCd);
-                            textPos = startPos + new Vector2(0, size.Y - textSize.Y);
-                            Drawing.DrawRect(textPos - new Vector2(0, 0),
-                                new Vector2(textSize.X, textSize.Y),
-                                new Color(0, 0, 0, 200));
-                            Drawing.DrawText(
-                                ultimateCd,
-                                textPos,
-                                new Vector2(textSize.Y, 0),
-                                Color.White,
-                                FontFlags.AntiAlias | FontFlags.StrikeOut);
-                            break;
                         case AbilityState.NotEnoughMana:
-                            ultimateCd =
-                                ((int) Math.Min(Math.Abs(v.Mana - ultimate.ManaCost), 999)).ToString(
-                                    CultureInfo.InvariantCulture);
-                            textSize = Drawing.MeasureText(ultimateCd, "Arial",
-                                new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
-                            textPos = startPos + new Vector2(0, size.Y - textSize.Y);
-                            Drawing.DrawRect(textPos - new Vector2(0, 0),
-                                new Vector2(textSize.X, textSize.Y),
-                                new Color(0, 0, 0, 200));
-                            Drawing.DrawText(
-                                ultimateCd,
-                                textPos,
-                                new Vector2(textSize.Y, 0),
-                                Color.White,
-                                FontFlags.AntiAlias | FontFlags.StrikeOut);
-                            Drawing.DrawRect(startPos,
-                                new Vector2(size.X, size.Y),
-                                new Color(0, 50, 155, 100));
+                            path = "materials/ensage_ui/other/ulti_nomana.vmat";
+                            break;
+                        case AbilityState.OnCooldown:
+                            path = "materials/ensage_ui/other/ulti_cooldown.vmat";
+                            break;
+                        default:
+                            path = "materials/ensage_ui/other/ulti_ready.vmat";
                             break;
                     }
+                    if (Members.Menu.Item("ultimate.Icon.Enable").GetValue<bool>())
+                        Drawing.DrawRect(ultPos, new Vector2(14, 14), Drawing.GetTexture(path));
+                    if (Members.Menu.Item("ultimate.Info").GetValue<bool>() &&
+                        (Members.Menu.Item("ultimate.InfoAlways").GetValue<bool>() && (
+                            ultimate.AbilityState == AbilityState.OnCooldown ||
+                            ultimate.AbilityState == AbilityState.NotEnoughMana) ||
+                         Utils.IsUnderRectangle(Game.MouseScreenPosition, ultPos.X, ultPos.Y, 15, 15)))
+                    {
+                        var texturename = string.Format("materials/ensage_ui/spellicons/{0}.vmat",
+                            ultimate.StoredName());
+                        pos = Helper.GetTopPanelPosition(v);
+                        var startPos = pos + new Vector2(0, 7*4 + size.Y);
+                        size = new Vector2(size.X, size.Y + 15);
+                        Drawing.DrawRect(startPos,
+                            size,
+                            Textures.GetTexture(texturename));
+                        string ultimateCd;
+                        Vector2 textSize;
+                        Vector2 textPos;
+                        switch (ultimate.AbilityState)
+                        {
+                            case AbilityState.OnCooldown:
+                                ultimateCd =
+                                    ((int) Math.Min(ultimate.Cooldown, 999)).ToString(CultureInfo.InvariantCulture);
+                                textSize = Drawing.MeasureText(ultimateCd, "Arial",
+                                    new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
+                                //Print(v.Name + " cd: " + ultimateCd);
+                                textPos = startPos + new Vector2(0, size.Y - textSize.Y);
+                                Drawing.DrawRect(textPos - new Vector2(0, 0),
+                                    new Vector2(textSize.X, textSize.Y),
+                                    new Color(0, 0, 0, 200));
+                                Drawing.DrawText(
+                                    ultimateCd,
+                                    textPos,
+                                    new Vector2(textSize.Y, 0),
+                                    Color.White,
+                                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+                                break;
+                            case AbilityState.NotEnoughMana:
+                                ultimateCd =
+                                    ((int) Math.Min(Math.Abs(v.Mana - ultimate.ManaCost), 999)).ToString(
+                                        CultureInfo.InvariantCulture);
+                                textSize = Drawing.MeasureText(ultimateCd, "Arial",
+                                    new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
+                                textPos = startPos + new Vector2(0, size.Y - textSize.Y);
+                                Drawing.DrawRect(textPos - new Vector2(0, 0),
+                                    new Vector2(textSize.X, textSize.Y),
+                                    new Color(0, 0, 0, 200));
+                                Drawing.DrawText(
+                                    ultimateCd,
+                                    textPos,
+                                    new Vector2(textSize.Y, 0),
+                                    Color.White,
+                                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+                                Drawing.DrawRect(startPos,
+                                    new Vector2(size.X, size.Y),
+                                    new Color(0, 50, 155, 100));
+                                break;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[DrawTopPanel:ultimate] " + v.StoredName() + " Type: " + type);
                 }
             }
         }
@@ -302,69 +314,76 @@ namespace OverlayInformation
             switch (type)
             {
                 case 0:
-                    selectedHeroes = Manager.HeroManager.GetViableHeroes().ToList();
+                    selectedHeroes = Manager.HeroManager.GetViableHeroes();
                     break;
                 case 1:
-                    selectedHeroes = Manager.HeroManager.GetAllyViableHeroes().ToList();
+                    selectedHeroes = Manager.HeroManager.GetAllyViableHeroes();
                     break;
                 case 2:
-                    selectedHeroes = Manager.HeroManager.GetEnemyViableHeroes().ToList();
+                    selectedHeroes = Manager.HeroManager.GetEnemyViableHeroes();
                     break;
             }
             if (selectedHeroes == null) return;
             foreach (var v in selectedHeroes)
             {
-                Vector2 mypos;
-                if (!Drawing.WorldToScreen(v.Position, out mypos)) continue;
-                if (mypos.X <= -5000 || mypos.X >= 5000) continue;
-                if (mypos.Y <= -5000 || mypos.Y >= 5000) continue;
-                var start = HUDInfo.GetHPbarPosition(v) +
-                            new Vector2(-Members.Menu.Item("spellPanel.ExtraPosX").GetValue<Slider>().Value,
-                                Members.Menu.Item("spellPanel.ExtraPosY").GetValue<Slider>().Value);
-                var distBetweenSpells = Members.Menu.Item("spellPanel.distBetweenSpells").GetValue<Slider>().Value;
-                var distBwtweenLvls = Members.Menu.Item("spellPanel.DistBwtweenLvls").GetValue<Slider>().Value;
-                var sizeSpell = Members.Menu.Item("spellPanel.SizeSpell").GetValue<Slider>().Value;
-                const int sizey = 9;
-                var spells = Manager.HeroManager.GetAbilityList(v);//Members.AbilityDictionary[v.StoredName()];
-                if (spells == null || spells.Count==0) continue;
-                foreach (var spell in spells/*.Where(x => x.AbilitySlot.ToString() != "-1")*/)
+                try
                 {
-                    var size2 = distBetweenSpells;
-                    var extrarange = spell.Level > 4 ? spell.Level - 4 : 0;
-                    size2 = (int)(size2 + extrarange * 7);
-                    var cd = spell.Cooldown;
-                    Drawing.DrawRect(start,
-                        new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
-                        new ColorBGRA(0, 0, 0, 100));
-                    Drawing.DrawRect(start,
-                        new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
-                        new ColorBGRA(255, 255, 255, 100), true);
-                    if (spell.AbilityState == AbilityState.NotEnoughMana)
+                    Vector2 mypos;
+                    if (!Drawing.WorldToScreen(v.Position, out mypos)) continue;
+                    if (mypos.X <= -5000 || mypos.X >= 5000) continue;
+                    if (mypos.Y <= -5000 || mypos.Y >= 5000) continue;
+                    var start = HUDInfo.GetHPbarPosition(v) +
+                                new Vector2(-Members.Menu.Item("spellPanel.ExtraPosX").GetValue<Slider>().Value,
+                                    Members.Menu.Item("spellPanel.ExtraPosY").GetValue<Slider>().Value);
+                    var distBetweenSpells = Members.Menu.Item("spellPanel.distBetweenSpells").GetValue<Slider>().Value;
+                    var distBwtweenLvls = Members.Menu.Item("spellPanel.DistBwtweenLvls").GetValue<Slider>().Value;
+                    var sizeSpell = Members.Menu.Item("spellPanel.SizeSpell").GetValue<Slider>().Value;
+                    const int sizey = 9;
+                    var spells = Manager.HeroManager.GetAbilityList(v); //Members.AbilityDictionary[v.StoredName()];
+                    if (spells == null || spells.Count == 0) continue;
+                    foreach (var spell in spells /*.Where(x => x.AbilitySlot.ToString() != "-1")*/)
                     {
+                        var size2 = distBetweenSpells;
+                        var extrarange = spell.Level > 4 ? spell.Level - 4 : 0;
+                        size2 = (int) (size2 + extrarange*7);
+                        var cd = spell.Cooldown;
                         Drawing.DrawRect(start,
                             new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
-                            new ColorBGRA(0, 0, 150, 150));
-                    }
-                    if (spell.AbilityState == AbilityState.OnCooldown)
-                    {
-                        var text = string.Format("{0:0.#}", cd);
-                        var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200),
-                            FontFlags.None);
-                        var textPos = start +
-                                      new Vector2(10 - textSize.X / 2, -textSize.Y / 2 + 12);
-                        Drawing.DrawText(text, textPos, /*new Vector2(10, 150),*/ Color.White,
-                            FontFlags.AntiAlias | FontFlags.DropShadow);
-                    }
-                    if (spell.Level > 0)
-                    {
-                        for (var lvl = 1; lvl <= spell.Level; lvl++)
+                            new ColorBGRA(0, 0, 0, 100));
+                        Drawing.DrawRect(start,
+                            new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
+                            new ColorBGRA(255, 255, 255, 100), true);
+                        if (spell.AbilityState == AbilityState.NotEnoughMana)
                         {
-                            Drawing.DrawRect(start + new Vector2(distBwtweenLvls * lvl, sizey - 6),
-                                new Vector2(sizeSpell, sizey - 6),
-                                new ColorBGRA(255, 255, 0, 255));
+                            Drawing.DrawRect(start,
+                                new Vector2(size2, spell.AbilityState != AbilityState.OnCooldown ? sizey : 22),
+                                new ColorBGRA(0, 0, 150, 150));
                         }
+                        if (spell.AbilityState == AbilityState.OnCooldown)
+                        {
+                            var text = string.Format("{0:0.#}", cd);
+                            var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200),
+                                FontFlags.None);
+                            var textPos = start +
+                                          new Vector2(10 - textSize.X/2, -textSize.Y/2 + 12);
+                            Drawing.DrawText(text, textPos, /*new Vector2(10, 150),*/ Color.White,
+                                FontFlags.AntiAlias | FontFlags.DropShadow);
+                        }
+                        if (spell.Level > 0)
+                        {
+                            for (var lvl = 1; lvl <= spell.Level; lvl++)
+                            {
+                                Drawing.DrawRect(start + new Vector2(distBwtweenLvls*lvl, sizey - 6),
+                                    new Vector2(sizeSpell, sizey - 6),
+                                    new ColorBGRA(255, 255, 0, 255));
+                            }
+                        }
+                        start += new Vector2(size2, 0);
                     }
-                    start += new Vector2(size2, 0);
+                }
+                catch
+                {
+                    Printer.Print("[SpellPanel]: "+v.StoredName());
                 }
             }
         }

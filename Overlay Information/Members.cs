@@ -40,7 +40,7 @@ namespace OverlayInformation
         public static readonly Dictionary<Unit, ParticleEffect> Effects2 = new Dictionary<Unit, ParticleEffect>();
         public static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
         public static readonly Dictionary<string, Vector2> TopPanelPostiion = new Dictionary<string, Vector2>();
-        public static List<DrawHelper.StatusInfo> StatInfo = new List<DrawHelper.StatusInfo>(); 
+        public static readonly List<DrawHelper.StatusInfo> StatInfo = new List<DrawHelper.StatusInfo>(); 
         public static bool Apparition;
         public static List<uint> AAlist;
     }

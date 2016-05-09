@@ -54,8 +54,8 @@ namespace OverlayInformation
                             Members.Windrunner = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner);
                         }
                     }
-
                 }
+                
                 if (!AbilityUpdate.Sleeping)
                 {
                     AbilityUpdate.Sleep(1000);
@@ -69,7 +69,7 @@ namespace OverlayInformation
                                 Members.AbilityDictionary.Add(hero.StoredName(),
                                     hero.Spellbook.Spells.Where(
                                         x =>
-                                            x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
+                                            x!=null && x.IsValid && x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
                                             x.AbilitySlot.ToString() != "-1")
                                         .ToList());
                             if (
@@ -79,8 +79,9 @@ namespace OverlayInformation
                                 Members.AbilityDictionary.Remove(hero.StoredName());
                                 Members.AbilityDictionary.Add(hero.StoredName(), hero.Spellbook.Spells.Where(
                                     x =>
-                                        x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
-                                        x.AbilitySlot.ToString() != "-1").ToList());
+                                        x!=null && x.IsValid && x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
+                                            x.AbilitySlot.ToString() != "-1")
+                                        .ToList());
 
                             }
                             if (/*!ItemUpdate.Sleeping &&*/
@@ -95,7 +96,7 @@ namespace OverlayInformation
                         }
                         catch (Exception)
                         {
-                            Printer.Print("[UPDATER.ITEMS/ABILITY: ] "+hero.StoredName());
+                            Printer.Print("[UPDATER.ITEMS/ABILITY: ] " + hero.StoredName());
                         }
                         
                     }

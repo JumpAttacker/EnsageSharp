@@ -166,16 +166,16 @@ namespace OverlayInformation
             Members.Menu.AddSubMenu(devolper);
 
             Members.Menu.AddToMainMenu();
-
-            Members.RoshanFont = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = 15,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
+            if (Drawing.Direct3DDevice9 != null)
+                Members.RoshanFont = new Font(
+                    Drawing.Direct3DDevice9,
+                    new FontDescription
+                    {
+                        FaceName = "Tahoma",
+                        Height = 15,
+                        OutputPrecision = FontPrecision.Default,
+                        Quality = FontQuality.Default
+                    });
             Events.OnLoad += (sender, args) =>
             {
                 Members.MyHero = ObjectManager.LocalHero;
