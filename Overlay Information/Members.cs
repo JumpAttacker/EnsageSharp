@@ -30,6 +30,7 @@ namespace OverlayInformation
 
         public static Dictionary<string, List<Ability>> AbilityDictionary;
         public static Dictionary<string, List<Item>> ItemDictionary;
+        public static Dictionary<string, List<Item>> StashItemDictionary;
 
         public static Font RoshanFont;
         public static float DeathTime;
@@ -42,6 +43,6 @@ namespace OverlayInformation
         public static readonly Dictionary<string, Vector2> TopPanelPostiion = new Dictionary<string, Vector2>();
         public static readonly List<DrawHelper.StatusInfo> StatInfo = new List<DrawHelper.StatusInfo>(); 
         public static bool Apparition;
-        public static List<uint> AAlist;
+        public static readonly List<uint> AAlist=new List<uint>();
     }
 }

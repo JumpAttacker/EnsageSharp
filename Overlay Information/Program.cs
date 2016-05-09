@@ -183,6 +183,7 @@ namespace OverlayInformation
                 
                 Members.AbilityDictionary = new Dictionary<string, List<Ability>>();
                 Members.ItemDictionary = new Dictionary<string, List<Item>>();
+                Members.StashItemDictionary = new Dictionary<string, List<Item>>();
 
                 Members.PAisHere = null;
                 Members.BaraIsHere = false;
@@ -208,8 +209,6 @@ namespace OverlayInformation
 
                 AppDomain.CurrentDomain.DomainUnload += DrawHelper.Render.CurrentDomainDomainUnload;
                 Game.OnFireEvent += FireEvent.Game_OnGameEvent;
-
-                
 
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Members.Menu.DisplayName +

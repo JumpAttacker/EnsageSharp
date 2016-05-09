@@ -93,6 +93,14 @@ namespace OverlayInformation
                                 Members.ItemDictionary.Add(hero.StoredName(),
                                     hero.Inventory.Items.Where(x => x != null && x.IsValid).ToList());
                             }
+                            /*if (!Members.StashItemDictionary.ContainsValue(
+                                    hero.Inventory.StashItems.Where(x => x != null && x.IsValid).ToList()))
+                            {
+                                Members.StashItemDictionary.Remove(hero.StoredName());
+                                Members.StashItemDictionary.Add(hero.StoredName(),
+                                    hero.Inventory.StashItems.Where(x => x != null && x.IsValid).ToList());
+                            }*/
+
                         }
                         catch (Exception)
                         {
