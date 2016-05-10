@@ -5,6 +5,7 @@ using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
+using SharpDX;
 using SharpDX.Direct3D9;
 using Color = SharpDX.Color;
 using Font = SharpDX.Direct3D9.Font;
@@ -36,6 +37,8 @@ namespace OverlayInformation
             var settings = new Menu("Settings", "Settings");
             //===========================
             itemPanel.AddItem(new MenuItem("itempanel.Enable", "Enable").SetValue(true));
+            itemPanel.AddItem(new MenuItem("itempanel.Stash.Enable", "Draw Stash Items").SetValue(true));
+            itemPanel.AddItem(new MenuItem("itempanel.Button.Enable", "Draw Button for toggle").SetValue(true));
             itemPanel.AddItem(new MenuItem("itempanel.X", "Panel Position X").SetValue(new Slider(100, -2000, 2000)));
             itemPanel.AddItem(new MenuItem("itempanel.Y", "Panel Position Y").SetValue(new Slider(200, -2000, 2000)));
             itemPanel.AddItem(new MenuItem("itempanel.SizeX", "SizeX").SetValue(new Slider(255, 1, 255)));
@@ -206,7 +209,7 @@ namespace OverlayInformation
                 Drawing.OnPreReset += DrawHelper.Render.Drawing_OnPreReset;
                 Drawing.OnPostReset += DrawHelper.Render.Drawing_OnPostReset;
                 Drawing.OnEndScene += DrawHelper.Render.Drawing_OnEndScene;
-
+                Game.OnWndProc += Game_OnWndProc;
                 AppDomain.CurrentDomain.DomainUnload += DrawHelper.Render.CurrentDomainDomainUnload;
                 Game.OnFireEvent += FireEvent.Game_OnGameEvent;
 
@@ -234,6 +237,7 @@ namespace OverlayInformation
                 Drawing.OnPreReset -= DrawHelper.Render.Drawing_OnPreReset;
                 Drawing.OnPostReset -= DrawHelper.Render.Drawing_OnPostReset;
                 Drawing.OnEndScene -= DrawHelper.Render.Drawing_OnEndScene;
+                Game.OnWndProc -= Game_OnWndProc;
                 AppDomain.CurrentDomain.DomainUnload -= DrawHelper.Render.CurrentDomainDomainUnload;
                 Game.OnFireEvent -= FireEvent.Game_OnGameEvent;
                 Members.TopPanelPostiion.Clear();
@@ -242,6 +246,23 @@ namespace OverlayInformation
                 Members.AllyHeroes.Clear();
                 Printer.PrintInfo("> " + Members.Menu.DisplayName + " unloaded");
             };
+        }
+
+        private static void Game_OnWndProc(WndEventArgs args)
+        {
+            if (!Members.Menu.Item("itempanel.Button.Enable").GetValue<bool>() /*|| args.WParam != 1*/ || Game.IsChatOpen)
+            {
+                return;
+            }
+            switch (args.Msg)
+            {
+                case (uint) Utils.WindowsMessages.WM_LBUTTONUP:
+                    Members.IsClicked = false;
+                    break;
+                case (uint) Utils.WindowsMessages.WM_LBUTTONDOWN:
+                    Members.IsClicked = true;
+                    break;
+            }
         }
 
         private static void Game_OnUpdate(EventArgs args)

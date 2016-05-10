@@ -28,7 +28,7 @@ namespace OverlayInformation
             Drawing.DrawRect(startPos, size+new Vector2(2,0), new Color(r, g, b, 255), true);
             Drawing.DrawLine(startPos + new Vector2(2, size.Y / 6), startPos + new Vector2(size.X, size.Y / 6),
                 new Color(r, g, b, 255));
-            const string text = "Item Panel";
+            var text = "Item Panel";
             var textSize = Drawing.MeasureText(text, "Arial",
                 new Vector2((float)(size.Y/6 * .80), (float) (size.Y / 6*.95)), FontFlags.AntiAlias);
             var textPos = startPos;
@@ -39,6 +39,112 @@ namespace OverlayInformation
                 Color.White,
                 FontFlags.AntiAlias | FontFlags.StrikeOut);
             DrawItems(startPos + new Vector2(2, size.Y / 6+2),size,r,g,b);
+            if (Members.Menu.Item("itempanel.Button.Enable").GetValue<bool>())
+            {
+                var buttonStartPos = startPos + new Vector2(size.X - size.Y / 6, 2);
+                var buttonSize = new Vector2(size.Y / 6 - 0, size.Y / 6 - 3);
+                text = "S";
+                Drawing.DrawRect(buttonStartPos, buttonSize, new Color(r, g, b, 255), true);
+                textSize = Drawing.MeasureText(text, "Arial",
+                    new Vector2((float)(buttonSize.X), (float)(buttonSize.Y)), FontFlags.AntiAlias);
+                
+                if (Utils.IsUnderRectangle(Game.MouseScreenPosition, buttonStartPos.X, buttonStartPos.Y, buttonSize.X,
+                    buttonSize.Y))
+                {
+                    Drawing.DrawRect(buttonStartPos, buttonSize, new Color(0, 0, 0, 200));
+                    if (Members.IsClicked && Utils.SleepCheck("cd_click"))
+                    {
+                        Utils.Sleep(250,"cd_click");
+                        Members.Menu.Item("itempanel.Stash.Enable")
+                            .SetValue(!Members.Menu.Item("itempanel.Stash.Enable").GetValue<bool>());
+                    }
+                }
+                Drawing.DrawText(
+                    text,
+                    buttonStartPos + new Vector2(buttonSize.X/3, buttonSize.Y/5),
+                    textSize,
+                    Color.White,
+                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+            }
+            if (Members.Menu.Item("itempanel.Stash.Enable").GetValue<bool>())
+            {
+                text = "Stash Panel";
+                var startPos2 = startPos + new Vector2(size.X, 0);
+                Drawing.DrawRect(startPos2, size + new Vector2(2, 0), new Color(0, 0, 0, 100));
+                textSize = Drawing.MeasureText(text, "Arial",
+                    new Vector2((float) (size.Y/6*.80), (float) (size.Y/6*.95)), FontFlags.AntiAlias);
+                Drawing.DrawText(
+                    text,
+                    startPos2 + new Vector2(5, 2),
+                    new Vector2(textSize.Y, 0),
+                    Color.White,
+                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+                Drawing.DrawRect(startPos2, size + new Vector2(2, 0), new Color(r, g, b, 255), true);
+                Drawing.DrawLine(startPos2 + new Vector2(2, size.Y/6), startPos2 + new Vector2(size.X, size.Y/6),
+                    new Color(r, g, b, 255));
+                DrawStashItems(startPos2 + new Vector2(2, size.Y / 6 + 2), size, r, g, b);
+            }
+        }
+
+        private static void DrawStashItems(Vector2 pos, Vector2 size, int r, int g, int b)
+        {
+            var i = 0;
+            if (Members.ItemDictionary.Count == 0) { return; }
+            foreach (var v in Members.EnemyHeroes)
+            {
+                List<Item> items;
+                try
+                {
+                    if (!Members.StashItemDictionary.TryGetValue(v.Name, out items))
+                        continue;
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[DrawStashItems]: " + v.StoredName());
+                    continue;
+                }
+                var n = 0;
+                var heroPos = pos + new Vector2(0, (size.Y / 7 + 3) * i + 2);
+                foreach (var item in items)
+                {
+                    try
+                    {
+                        string texturename;
+                        if (item.IsRecipe)
+                        {
+                            texturename = "materials/ensage_ui/items/recipe.vmat";
+                        }
+                        else
+                        {
+                            texturename = string.Format("materials/ensage_ui/items/{0}.vmat",
+                                item.Name.Replace("item_", ""));
+                        }
+                        if (item is Bottle)
+                        {
+                            var bottletype = item as Bottle;
+                            if (bottletype.StoredRune != RuneType.None)
+                            {
+                                texturename = string.Format("materials/ensage_ui/items/{0}.vmat",
+                                    item.Name.Replace("item_", "") + "_" + bottletype.StoredRune);
+                            }
+                        }
+                        var itemPos = heroPos + new Vector2(size.X / 7 * n + 5, 0);
+                        DrawItem(itemPos, size / 6, texturename, r, g, b);
+                        //DrawState(item, v, itemPos, size / 6);
+                        n++;
+                    }
+                    catch (Exception)
+                    {
+                        //Printer.Print("Hero: "+v.Name+". Item: "+item.Name);
+                    }
+                }
+                for (var j = 0; j < 6 - n; j++)
+                {
+                    var itemPos = heroPos + new Vector2(size.X / 7 * (n + j) + 5, 0);
+                    DrawItem(itemPos, size / 6, "materials/ensage_ui/items/emptyitembg.vmat", r, g, b);
+                }
+                i++;
+            }
         }
 
         private static void DrawItems(Vector2 pos,Vector2 size,int r,int g,int b)

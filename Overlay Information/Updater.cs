@@ -84,22 +84,21 @@ namespace OverlayInformation
                                         .ToList());
 
                             }
-                            if (/*!ItemUpdate.Sleeping &&*/
-                                !Members.ItemDictionary.ContainsValue(
+                            if (!Members.ItemDictionary.ContainsValue(
                                     hero.Inventory.Items.Where(x => x != null && x.IsValid).ToList()))
                             {
-                                //ItemUpdate.Sleep(1500);
                                 Members.ItemDictionary.Remove(hero.StoredName());
                                 Members.ItemDictionary.Add(hero.StoredName(),
                                     hero.Inventory.Items.Where(x => x != null && x.IsValid).ToList());
                             }
-                            /*if (!Members.StashItemDictionary.ContainsValue(
+                            if (Members.Menu.Item("itempanel.Stash.Enable").GetValue<bool>() &&
+                                !Members.StashItemDictionary.ContainsValue(
                                     hero.Inventory.StashItems.Where(x => x != null && x.IsValid).ToList()))
                             {
                                 Members.StashItemDictionary.Remove(hero.StoredName());
                                 Members.StashItemDictionary.Add(hero.StoredName(),
                                     hero.Inventory.StashItems.Where(x => x != null && x.IsValid).ToList());
-                            }*/
+                            }
 
                         }
                         catch (Exception)

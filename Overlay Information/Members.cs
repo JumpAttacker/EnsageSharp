@@ -44,5 +44,6 @@ namespace OverlayInformation
         public static readonly List<DrawHelper.StatusInfo> StatInfo = new List<DrawHelper.StatusInfo>(); 
         public static bool Apparition;
         public static readonly List<uint> AAlist=new List<uint>();
+        public static bool IsClicked;
     }
 }
