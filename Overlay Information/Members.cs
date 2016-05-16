@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
 using Ensage;
 using Ensage.Common.Menu;
 using SharpDX;
@@ -10,8 +9,7 @@ namespace OverlayInformation
 {
     internal static class Members
     {
-        public static readonly Menu Menu = new Menu("OverlayInformation", "OIv2", true).SetFontStyle(FontStyle.Bold,
-            Color.LimeGreen);
+        public static readonly Menu Menu = new Menu("OverlayInformation", "OIv2", true).SetFontColor(Color.LimeGreen);
 
         public static Hero MyHero { get; set; }
         public static Player MyPlayer { get; set; }
@@ -19,7 +17,11 @@ namespace OverlayInformation
         public static bool BaraIsHere { get; set; }
         public static Hero Mirana { get; set; }
         public static Hero Windrunner { get; set; }
-
+        public static Hero Invoker { get; set; }
+        public static Hero Kunkka { get; set; }
+        public static Hero Lina { get; set; }
+        public static Hero Leshrac { get; set; }
+        
         public static List<Hero> Heroes=new List<Hero>();
         public static List<Hero> AllyHeroes=new List<Hero>();
         public static List<Hero> EnemyHeroes = new List<Hero>();

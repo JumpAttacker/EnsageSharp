@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common.Objects;
+using Ensage.Common.Objects.DrawObjects;
+using SharpDX;
 
 namespace OverlayInformation
 {

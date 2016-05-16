@@ -48,10 +48,30 @@ namespace OverlayInformation
                         {
                             Members.Mirana = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Mirana);
                         }
-                        if (Members.Windrunner==null &&
+                        if (Members.Windrunner == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner))
                         {
                             Members.Windrunner = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner);
+                        }
+                        if (Members.Invoker == null &&
+                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Invoker))
+                        {
+                            Members.Invoker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Invoker);
+                        }
+                        if (Members.Kunkka == null &&
+                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka))
+                        {
+                            Members.Kunkka = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka);
+                        }
+                        if (Members.Lina == null &&
+                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Lina))
+                        {
+                            Members.Lina = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Lina);
+                        }
+                        if (Members.Leshrac == null &&
+                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac))
+                        {
+                            Members.Leshrac = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac);
                         }
                     }
                 }

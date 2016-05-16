@@ -5,7 +5,6 @@ using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
-using SharpDX;
 using SharpDX.Direct3D9;
 using Color = SharpDX.Color;
 using Font = SharpDX.Direct3D9.Font;
@@ -43,9 +42,9 @@ namespace OverlayInformation
             itemPanel.AddItem(new MenuItem("itempanel.Y", "Panel Position Y").SetValue(new Slider(200, -2000, 2000)));
             itemPanel.AddItem(new MenuItem("itempanel.SizeX", "SizeX").SetValue(new Slider(255, 1, 255)));
             itemPanel.AddItem(new MenuItem("itempanel.SizeY", "SizeY").SetValue(new Slider(174, 1, 255)));
-            itemPanel.AddItem(new MenuItem("itempanel.Red", "Red").SetValue(new Slider(141, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Red));
-            itemPanel.AddItem(new MenuItem("itempanel.Green", "Green").SetValue(new Slider(182, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Green));
-            itemPanel.AddItem(new MenuItem("itempanel.Blue", "Blue").SetValue(new Slider(98, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Blue));
+            itemPanel.AddItem(new MenuItem("itempanel.Red", "Red").SetValue(new Slider(141, 0, 255)).SetFontColor(Color.Red));
+            itemPanel.AddItem(new MenuItem("itempanel.Green", "Green").SetValue(new Slider(182, 0, 255)).SetFontColor(Color.Green));
+            itemPanel.AddItem(new MenuItem("itempanel.Blue", "Blue").SetValue(new Slider(98, 0, 255)).SetFontColor(Color.Blue));
             //===========================
             topPanel.AddItem(new MenuItem("toppanel.Enable", "Enable").SetValue(true));
             topPanel.AddItem(
@@ -88,28 +87,36 @@ namespace OverlayInformation
             //===========================
             showMeMore.AddItem(new MenuItem("showmemore.Enable", "Enable").SetValue(true));
             var charge = new Menu("", "charge", false, "spirit_breaker_charge_of_darkness", true);
-            charge.AddItem(new MenuItem("tooltip", "When Charge on your Main Hero").SetFontStyle(FontStyle.Bold, Color.Red));
-            charge.AddItem(new MenuItem("charge.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Red));
-            charge.AddItem(new MenuItem("charge.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Green));
-            charge.AddItem(new MenuItem("charge.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Blue));
-            charge.AddItem(new MenuItem("charge.Alpha", "Alpha").SetValue(new Slider(4, 0, 255)).SetFontStyle(FontStyle.Bold, Color.WhiteSmoke));
+            charge.AddItem(new MenuItem("tooltip", "When Charge on your Main Hero").SetFontColor(Color.Red));
+            charge.AddItem(new MenuItem("charge.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            charge.AddItem(new MenuItem("charge.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontColor( Color.Green));
+            charge.AddItem(new MenuItem("charge.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Blue));
+            charge.AddItem(new MenuItem("charge.Alpha", "Alpha").SetValue(new Slider(4, 0, 255)).SetFontColor( Color.WhiteSmoke));
             //===========================
             var blur = new Menu("", "blur", false, "phantom_assassin_blur", true);
             blur.AddItem(new MenuItem("blur.Enable", "Show PA on minimap").SetValue(true));
             //===========================
             var wr = new Menu("", "wr", false, "windrunner_powershot", true);
             wr.AddItem(new MenuItem("wr.Enable", "Enable").SetValue(true));
-            wr.AddItem(new MenuItem("wr.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Red));
-            wr.AddItem(new MenuItem("wr.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Green));
-            wr.AddItem(new MenuItem("wr.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Blue));
+            wr.AddItem(new MenuItem("wr.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            wr.AddItem(new MenuItem("wr.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
+            wr.AddItem(new MenuItem("wr.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
             //===========================
             var mirana = new Menu("", "mirana", false, "mirana_arrow", true);
             mirana.AddItem(new MenuItem("mirana.Enable", "Enable").SetValue(true));
-            mirana.AddItem(new MenuItem("mirana.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Red));
-            mirana.AddItem(new MenuItem("mirana.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Green));
-            mirana.AddItem(new MenuItem("mirana.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontStyle(FontStyle.Bold, Color.Blue));
+            mirana.AddItem(new MenuItem("mirana.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            mirana.AddItem(new MenuItem("mirana.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
+            mirana.AddItem(new MenuItem("mirana.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
             var apparition = new Menu("", "apparition", false, "ancient_apparition_ice_blast", true);
             apparition.AddItem(new MenuItem("apparition.Enable", "Enable").SetValue(true));
+            var lina = new Menu("", "lina", false, "lina_light_strike_array", true);
+            lina.AddItem(new MenuItem("lina.Enable", "Enable").SetValue(true));
+            var invoker = new Menu("", "invoker", false, "invoker_sun_strike", true);
+            invoker.AddItem(new MenuItem("invoker.Enable", "Enable").SetValue(true));
+            var lesh = new Menu("", "lesh", false, "leshrac_split_earth", true);
+            lesh.AddItem(new MenuItem("lesh.Enable", "Enable").SetValue(true));
+            var kunkka = new Menu("", "kunkka", false, "kunkka_torrent", true);
+            kunkka.AddItem(new MenuItem("kunkka.Enable", "Enable").SetValue(true));
             //===========================
             showIllusion.AddItem(new MenuItem("showillusion.Enable", "Enable").SetValue(true));
             //===========================
@@ -159,6 +166,10 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(wr);
             showMeMore.AddSubMenu(mirana);
             showMeMore.AddSubMenu(apparition);
+            showMeMore.AddSubMenu(lina);
+            showMeMore.AddSubMenu(invoker);
+            showMeMore.AddSubMenu(kunkka);
+            showMeMore.AddSubMenu(lesh);
             settings.AddSubMenu(showIllusion);
             settings.AddSubMenu(runevision);
             settings.AddSubMenu(dangItem);

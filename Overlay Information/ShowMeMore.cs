@@ -21,6 +21,8 @@ namespace OverlayInformation
         private static bool _letsDraw=true;
         private static Vector3 _arrowS;
         private static readonly ParticleEffect[] ArrowParticalEffects = new ParticleEffect[150];
+        private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect =
+            new Dictionary<Unit, ParticleEffect>();
 
         public static void ShowIllustion()
         {
@@ -38,33 +40,102 @@ namespace OverlayInformation
             if (!Members.Menu.Item("showmemore.Enable").GetValue<bool>()) return;
             //Printer.Print(Manager.BaseManager.GetBaseList().Count.ToString());
             //Manager.BaseManager.GetBaseList().ForEach(x=>Printer.Print(x.Handle+": "+x.DayVision));
+            var baseList = Manager.BaseManager.GetBaseList().Where(x => x.IsValid && x.IsAlive).ToList();
             if (Members.Apparition)
             {
-                foreach (var t in Manager.BaseManager.GetBaseList().Where(t => t.DayVision == 550).Where(t => !Members.AAlist.Contains(t.Handle)))
+                foreach (var t in baseList.Where(t => !InSys.Contains(t) && t.DayVision == 550).Where(t => !Members.AAlist.Contains(t.Handle)))
                 {
+                    InSys.Add(t);
                     Members.AAlist.Add(t.Handle);
                     AAunit = t;
                     Helper.GenerateSideMessage("ancient_apparition", "ancient_apparition_ice_blast");
                 }
             }
+            if (Members.Kunkka != null && Members.Kunkka.IsValid)
+            {
+                const string modname = "modifier_kunkka_torrent_thinker";
+                foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
+                {
+                    InSys.Add(t);
+                    ParticleEffect effect;
+                    if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                    {
+                        effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                        effect.SetControlPoint(1, new Vector3(225, 0, 0));
+                        ShowMeMoreEffect.Add(t, effect);
+                    }
+                }
+            }
+            if (Members.Invoker != null && Members.Invoker.IsValid)
+            {
+                const string modname = "modifier_invoker_sun_strike";
+                foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
+                {
+                    InSys.Add(t);
+                    ParticleEffect effect;
+                    if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                    {
+                        effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                        effect.SetControlPoint(1, new Vector3(175, 0, 0));
+                        ShowMeMoreEffect.Add(t, effect);
+                    }
+                }
+            }
+            if (Members.Lina != null && Members.Lina.IsValid)
+            {
+                const string modname = "modifier_lina_light_strike_array";
+                foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
+                {
+                    InSys.Add(t);
+                    ParticleEffect effect;
+                    if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                    {
+                        effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                        effect.SetControlPoint(1, new Vector3(225, 0, 0));
+                        ShowMeMoreEffect.Add(t, effect);
+                    }
+                }
+            }
+            if (Members.Leshrac != null && Members.Leshrac.IsValid)
+            {
+                const string modname = "modifier_leshrac_split_earth_thinker";
+                foreach (var t in baseList.Where(x => x.HasModifier(modname)))
+                {
+                    ParticleEffect effect;
+                    if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                    {
+                        effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                        effect.SetControlPoint(1, new Vector3(225, 0, 0));
+                        ShowMeMoreEffect.Add(t, effect);
+                    }
+                }
+            }
+
             if (!Members.Menu.Item("showmemore.Enable").GetValue<bool>()) return;
-            if (Members.Windrunner != null)
+            if (Members.Windrunner != null && Members.Windrunner.IsValid)
             {
                 DrawForWr(Members.Windrunner);
             }
-            if (Members.Mirana != null)
+            if (Members.Mirana != null && Members.Mirana.IsValid)
             {
-                DrawForMirana(Members.Mirana);
+                try
+                {
+                    DrawForMirana(Members.Mirana, baseList);
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[ShowMeMore]: mirana");
+                }
+                
             }
         }
 
-        private static void DrawForMirana(Hero mirana)
+        private static void DrawForMirana(Hero mirana,List<Unit> Base)
         {
             if (_arrowUnit == null)
             {
                 _arrowUnit =
-                    Manager.BaseManager.GetBaseList()
-                        .Find(x => x.DayVision == 650 && x.Team == Members.MyHero.GetEnemyTeam());
+                    Base.Find(x => x.DayVision == 650 && x.Team == Members.MyHero.GetEnemyTeam());
             }
             if (_arrowUnit != null)
             {
