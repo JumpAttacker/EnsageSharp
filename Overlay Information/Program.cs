@@ -147,11 +147,18 @@ namespace OverlayInformation
             };
             autoItems.AddItem(new MenuItem("autoitems.List", "Items:").SetValue(new AbilityToggler(autoitemlist)));
             //===========================
+            var lastPosition = new Menu("Last position", "lastPosition");
+            lastPosition.AddItem(new MenuItem("lastPosition.Enable", "Enable").SetValue(true)).SetTooltip("show last positions of enemies");
+            lastPosition.AddItem(new MenuItem("lastPosition.Enable.Map", "on Map").SetValue(false));
+            lastPosition.AddItem(new MenuItem("lastPosition.Map.X", "icon size").SetValue(new Slider(50,10,150)));
+            lastPosition.AddItem(new MenuItem("lastPosition.Enable.Minimap", "on Minimap").SetValue(true));
+            lastPosition.AddItem(new MenuItem("lastPosition.Minimap.X", "icon size").SetValue(new Slider(20, 10, 150)));
+
+            //===========================
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Hax.enable", "Hax in lobby").SetValue(false));
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
             //===========================
-
             topPanel.AddSubMenu(ultimate);
             topPanel.AddSubMenu(health);
             topPanel.AddSubMenu(mana);
@@ -175,6 +182,7 @@ namespace OverlayInformation
             settings.AddSubMenu(dangItem);
             settings.AddSubMenu(itemPanel);
             settings.AddSubMenu(autoItems);
+            settings.AddSubMenu(lastPosition);
 
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);

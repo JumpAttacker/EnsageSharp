@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common.Objects;
-using Ensage.Common.Objects.DrawObjects;
-using SharpDX;
 
 namespace OverlayInformation
 {
-    internal class Manager
+    internal static class Manager
     {
-        internal class HeroManager
+        internal static class HeroManager
         {
             public static List<Hero> GetHeroes()
             {
@@ -81,7 +79,7 @@ namespace OverlayInformation
                 return Members.AbilityDictionary.TryGetValue(s, out list) ? list : null;
             }
         }
-        internal class PlayerManager
+        internal static class PlayerManager
         {
             public static List<Player> GetPlayer()
             {
@@ -100,7 +98,7 @@ namespace OverlayInformation
                 return Members.EnemyPlayers.Where(x => x.Hero.IsVisible && x.Hero.IsAlive).ToList();
             }
         }
-        internal class BaseManager
+        internal static class BaseManager
         {
             public static List<Unit> GetBaseList()
             {
