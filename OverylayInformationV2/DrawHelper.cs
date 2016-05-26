@@ -25,6 +25,33 @@ namespace OverlayInformation
                 DrawTopPanel(Members.Menu.Item("toppanel.Targets").GetValue<StringList>().SelectedIndex);
             if (Members.Menu.Item("dangitems.Enable").GetValue<bool>())
                 DrawDangeItems();
+            if (Members.Menu.Item("lastPosition.Enable").GetValue<bool>())
+                DrawLastPosition();
+        }
+
+        private static void DrawLastPosition()
+        {
+            foreach (var hero in Members.EnemyHeroes.Where(x=>x.IsAlive && !x.IsVisible))
+            {
+                if (Members.Menu.Item("lastPosition.Enable.Minimap").GetValue<bool>())
+                {
+                    var size = new Vector2(Members.Menu.Item("lastPosition.Minimap.X").GetValue<Slider>().Value,
+                        Members.Menu.Item("lastPosition.Minimap.X").GetValue<Slider>().Value);
+                    Drawing.DrawRect(Helper.WorldToMinimap(hero.Position), size,
+                        Textures.GetHeroTexture(hero.StoredName()));
+                }
+                if (Members.Menu.Item("lastPosition.Enable.Map").GetValue<bool>())
+                {
+                    Vector2 newPos;
+                    if (Drawing.WorldToScreen(hero.Position, out newPos))
+                    {
+                        var size = new Vector2(Members.Menu.Item("lastPosition.Map.X").GetValue<Slider>().Value,
+                        Members.Menu.Item("lastPosition.Map.X").GetValue<Slider>().Value);
+                        Drawing.DrawRect(Drawing.WorldToScreen(hero.Position), size,
+                            Textures.GetHeroTexture(hero.StoredName()));
+                    }
+                }
+            }
         }
 
         private static void DrawDangeItems()
