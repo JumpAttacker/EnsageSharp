@@ -124,5 +124,12 @@ namespace OverlayInformation
             Members.TopPanelPostiion.Add(v.StoredName(), HUDInfo.GetTopPanelPosition(v));
             return HUDInfo.GetTopPanelPosition(v);
         }
+
+        public static DotaTexture GetHeroTextureMinimap(string heroName)
+        {
+            var name = "materials/ensage_ui/miniheroes/" + heroName.Substring("npc_dota_hero_".Length) + ".vmat";
+
+            return Drawing.GetTexture(name); ;
+        }
     }
 }

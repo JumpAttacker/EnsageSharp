@@ -38,7 +38,7 @@ namespace OverlayInformation
                     var size = new Vector2(Members.Menu.Item("lastPosition.Minimap.X").GetValue<Slider>().Value,
                         Members.Menu.Item("lastPosition.Minimap.X").GetValue<Slider>().Value);
                     Drawing.DrawRect(Helper.WorldToMinimap(hero.Position), size,
-                        Textures.GetHeroTexture(hero.StoredName()));
+                        Helper.GetHeroTextureMinimap(hero.StoredName()));
                 }
                 if (Members.Menu.Item("lastPosition.Enable.Map").GetValue<bool>())
                 {
