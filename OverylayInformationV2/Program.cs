@@ -64,11 +64,25 @@ namespace OverlayInformation
             ultimate.AddItem(new MenuItem("ultimate.Enable", "Enable").SetValue(true));
             ultimate.AddItem(new MenuItem("ultimate.Icon.Enable", "Draw Icon").SetValue(true));
             ultimate.AddItem(
+                new MenuItem("ultimate.Type", "Type of drawing").SetValue(
+                    new StringList(new[] { "Draw Icon", "Draw Line" }))).ValueChanged += (sender, args) =>
+                    {
+                        var newArg = args.GetNewValue<StringList>().SelectedIndex;
+                        var newColor = newArg == 1 ? Color.DarkSlateGray : new Color(195, 186, 173, 255);
+                        var newColor2 = newArg == 0 ? Color.DarkSlateGray : new Color(195, 186, 173, 255);
+                        Members.Menu.Item("ultimate.Info").SetFontColor(newColor);
+                        Members.Menu.Item("ultimate.InfoAlways").SetFontColor(newColor);
+                        Members.Menu.Item("ultimate.Line.Size").SetFontColor(newColor2);
+                    };
+            ultimate.AddItem(
                 new MenuItem("ultimate.Info", "Show details").SetValue(true)
                     .SetTooltip("show Ultimate's CD if u put ur mouse on icon"));
             ultimate.AddItem(
                 new MenuItem("ultimate.InfoAlways", "Show details all time").SetValue(true)
                     .SetTooltip("Show Details should be enabled"));
+            ultimate.AddItem(
+                new MenuItem("ultimate.Line.Size", "Line Size").SetValue(new Slider(15, 7, 30)));
+
             //===========================
             health.AddItem(new MenuItem("toppanel.Health.Enable", "Enable").SetValue(true));
             //===========================

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Forms;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -126,9 +127,9 @@ namespace OverlayInformation
                 }
             }
             if (!Members.Menu.Item("ultimate.Enable").GetValue<bool>()) return;
-            if (!Members.Menu.Item("ultimate.Icon.Enable").GetValue<bool>() &&
+            /*if (!Members.Menu.Item("ultimate.Icon.Enable").GetValue<bool>() &&
                 !Members.Menu.Item("ultimate.Info").GetValue<bool>() &&
-                !Members.Menu.Item("ultimate.InfoAlways").GetValue<bool>()) return;
+                !Members.Menu.Item("ultimate.InfoAlways").GetValue<bool>()) return;*/
             foreach (var v in Members.EnemyHeroes)
             {
                 var ablist = Manager.HeroManager.GetAbilityList(v);
@@ -169,7 +170,7 @@ namespace OverlayInformation
                     }
                     if (Members.Menu.Item("ultimate.Icon.Enable").GetValue<bool>())
                         Drawing.DrawRect(ultPos, new Vector2(14, 14), Drawing.GetTexture(path));
-                    if (Members.Menu.Item("ultimate.Info").GetValue<bool>() &&
+                    if (Members.Menu.Item("ultimate.Type").GetValue<StringList>().SelectedIndex == 0 && Members.Menu.Item("ultimate.Info").GetValue<bool>() &&
                         (Members.Menu.Item("ultimate.InfoAlways").GetValue<bool>() && (
                             ultimate.AbilityState == AbilityState.OnCooldown ||
                             ultimate.AbilityState == AbilityState.NotEnoughMana) ||
@@ -226,6 +227,17 @@ namespace OverlayInformation
                                     new Color(0, 50, 155, 100));
                                 break;
                         }
+                    }
+                    else if (ultimate.AbilityState==AbilityState.OnCooldown)
+                    {
+                        pos = Helper.GetTopPanelPosition(v);
+                        var startPos = pos + new Vector2(0, 7 * 4 + size.Y);
+                        var cd = ultimate.Cooldown;
+                        var manaDelta = new Vector2(cd * size.X / ultimate.CooldownLength, 0);
+                        //size = new Vector2(manaDelta.X, 7);
+                        DrawUltimatePanel(startPos, size, manaDelta, (int)cd, Members.Menu.Item("ultimate.Line.Size").GetValue<Slider>().Value);
+                        /*Drawing.DrawRect(startPos,
+                            size, Color.Yellow);*/
                     }
                 }
                 catch (Exception)
@@ -333,6 +345,28 @@ namespace OverlayInformation
             Drawing.DrawRect(newpos, new Vector2(size.X, height), new Color(255, 0, 0, 255));
             Drawing.DrawRect(newpos, new Vector2(healthDelta.X, height), new Color(0, 255, 0, 255));
             Drawing.DrawRect(newpos, new Vector2(size.X, height), Color.Black, true);
+        }
+
+        private static void DrawUltimatePanel(Vector2 newpos, Vector2 size, Vector2 ultimateDelta, int cd, int height = 10)
+        {
+            if (Members.Menu.Item("ultimate.Type").GetValue<StringList>().SelectedIndex != 1) return;
+            Drawing.DrawRect(newpos, new Vector2(size.X, height), new Color(0, 0, 0, 255));
+            Drawing.DrawRect(newpos, new Vector2(ultimateDelta.X, height), Color.Yellow);
+            Drawing.DrawRect(newpos, new Vector2(size.X, height), Color.Black, true);
+            var ultimateCd = Math.Min(Math.Abs(cd), 999).ToString(
+                                        CultureInfo.InvariantCulture);
+            var textSize = Drawing.MeasureText(ultimateCd, "Arial",
+                                    new Vector2((float)(height * .95), (float)(height * .95)), FontFlags.AntiAlias);
+            var textPos = newpos + new Vector2(size.X / 2 - textSize.Y/2, 1);
+            Drawing.DrawRect(textPos - new Vector2(0, 0),
+                new Vector2(textSize.X, textSize.Y),
+                new Color(0, 0, 0, 200));
+            Drawing.DrawText(
+                ultimateCd,
+                textPos,
+                new Vector2(textSize.Y, 0),
+                Color.White,
+                FontFlags.AntiAlias | FontFlags.StrikeOut);
         }
 
         private static void DrawSpellPanel(int type)
