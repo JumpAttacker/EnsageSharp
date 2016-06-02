@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Windows.Forms;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -41,9 +40,10 @@ namespace OverlayInformation
                         Members.Menu.Item("lastPosition.Minimap.X").GetValue<Slider>().Value);
                     if (Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>())
                     {
-                        Drawing.DrawRect(Helper.WorldToMinimap(Prediction.InFront(hero,
-                            hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))), size,
-                            Helper.GetHeroTextureMinimap(hero.StoredName()));
+                        if (Members.PredictionTimes.ContainsKey(hero.StoredName()))
+                            Drawing.DrawRect(Helper.WorldToMinimap(Prediction.InFront(hero,
+                                hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))), size,
+                                Helper.GetHeroTextureMinimap(hero.StoredName()));
                     }
                     else
                     {
@@ -60,11 +60,12 @@ namespace OverlayInformation
                                 Members.Menu.Item("lastPosition.Map.X").GetValue<Slider>().Value);
                         if (Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>())
                         {
-                            Drawing.DrawRect(
-                                Drawing.WorldToScreen(Prediction.InFront(hero,
-                                    hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))),
-                                size,
-                                Textures.GetHeroTexture(hero.StoredName()));
+                            if (Members.PredictionTimes.ContainsKey(hero.StoredName()))
+                                Drawing.DrawRect(
+                                    Drawing.WorldToScreen(Prediction.InFront(hero,
+                                        hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))),
+                                    size,
+                                    Textures.GetHeroTexture(hero.StoredName()));
                         }
                         else
                         {
