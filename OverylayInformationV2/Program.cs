@@ -163,6 +163,7 @@ namespace OverlayInformation
             //===========================
             var lastPosition = new Menu("Last position", "lastPosition");
             lastPosition.AddItem(new MenuItem("lastPosition.Enable", "Enable").SetValue(true)).SetTooltip("show last positions of enemies");
+            lastPosition.AddItem(new MenuItem("lastPosition.Enable.Prediction", "Enable Prediction").SetValue(true));
             lastPosition.AddItem(new MenuItem("lastPosition.Enable.Map", "on Map").SetValue(false));
             lastPosition.AddItem(new MenuItem("lastPosition.Map.X", "icon size").SetValue(new Slider(50,10,150)));
             lastPosition.AddItem(new MenuItem("lastPosition.Enable.Minimap", "on Minimap").SetValue(true));

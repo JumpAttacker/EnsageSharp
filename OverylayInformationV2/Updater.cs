@@ -14,6 +14,7 @@ namespace OverlayInformation
             private static readonly Sleeper AbilityUpdate = new Sleeper();
             //private static readonly Sleeper ItemUpdate = new Sleeper();
             private static readonly Sleeper HeroUpdate = new Sleeper();
+            private static readonly Sleeper UpdatePrediction = new Sleeper();
 
             public static void Update(EventArgs args)
             {
@@ -75,7 +76,32 @@ namespace OverlayInformation
                         }
                     }
                 }
-                
+                if (!UpdatePrediction.Sleeping /*&& Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>()*/)
+                {
+                    UpdatePrediction.Sleep(1);
+                    var time = Game.GameTime;
+                    foreach (var v in Members.EnemyHeroes.Where(x=>x.IsAlive))
+                    {
+                        if (v.IsVisible)
+                        {
+                            if (Members.PredictionTimes.ContainsKey(v.StoredName()))
+                                Members.PredictionTimes.Remove(v.StoredName());
+                        }
+                        else
+                        {
+                            float test;
+                            if (!Members.PredictionTimes.TryGetValue(v.StoredName(), out test))
+                            {
+                                Members.PredictionTimes.Add(v.StoredName(), time);
+                            }
+                            /*else
+                            {
+                                Members.PredictionTimes[v.StoredName()] = time;
+                            }*/
+
+                        }
+                    }
+                }
                 if (!AbilityUpdate.Sleeping)
                 {
                     AbilityUpdate.Sleep(1000);

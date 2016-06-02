@@ -30,6 +30,7 @@ namespace OverlayInformation
                 DrawLastPosition();
         }
 
+        
         private static void DrawLastPosition()
         {
             foreach (var hero in Members.EnemyHeroes.Where(x=>x.IsAlive && !x.IsVisible))
@@ -38,8 +39,17 @@ namespace OverlayInformation
                 {
                     var size = new Vector2(Members.Menu.Item("lastPosition.Minimap.X").GetValue<Slider>().Value,
                         Members.Menu.Item("lastPosition.Minimap.X").GetValue<Slider>().Value);
-                    Drawing.DrawRect(Helper.WorldToMinimap(hero.Position), size,
-                        Helper.GetHeroTextureMinimap(hero.StoredName()));
+                    if (Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>())
+                    {
+                        Drawing.DrawRect(Helper.WorldToMinimap(Prediction.InFront(hero,
+                            hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))), size,
+                            Helper.GetHeroTextureMinimap(hero.StoredName()));
+                    }
+                    else
+                    {
+                        Drawing.DrawRect(Helper.WorldToMinimap(hero.Position), size,
+                            Helper.GetHeroTextureMinimap(hero.StoredName()));
+                    }
                 }
                 if (Members.Menu.Item("lastPosition.Enable.Map").GetValue<bool>())
                 {
@@ -47,9 +57,20 @@ namespace OverlayInformation
                     if (Drawing.WorldToScreen(hero.Position, out newPos))
                     {
                         var size = new Vector2(Members.Menu.Item("lastPosition.Map.X").GetValue<Slider>().Value,
-                        Members.Menu.Item("lastPosition.Map.X").GetValue<Slider>().Value);
-                        Drawing.DrawRect(Drawing.WorldToScreen(hero.Position), size,
-                            Textures.GetHeroTexture(hero.StoredName()));
+                                Members.Menu.Item("lastPosition.Map.X").GetValue<Slider>().Value);
+                        if (Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>())
+                        {
+                            Drawing.DrawRect(
+                                Drawing.WorldToScreen(Prediction.InFront(hero,
+                                    hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))),
+                                size,
+                                Textures.GetHeroTexture(hero.StoredName()));
+                        }
+                        else
+                        {
+                            Drawing.DrawRect(Drawing.WorldToScreen(hero.Position), size,
+                                Textures.GetHeroTexture(hero.StoredName()));
+                        }
                     }
                 }
             }
