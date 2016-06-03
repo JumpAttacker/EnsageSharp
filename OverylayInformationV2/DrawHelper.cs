@@ -32,6 +32,7 @@ namespace OverlayInformation
         
         private static void DrawLastPosition()
         {
+            foreach (var hero in Members.EnemyHeroes.Where(x => x.IsAlive && !x.IsVisible))
             {
                 if (Members.Menu.Item("lastPosition.Enable.Minimap").GetValue<bool>())
                 {
