@@ -125,25 +125,25 @@ namespace OverlayInformation
                                 Members.AbilityDictionary.Remove(hero.StoredName());
                                 Members.AbilityDictionary.Add(hero.StoredName(), hero.Spellbook.Spells.Where(
                                     x =>
-                                        x!=null && x.IsValid && x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
+                                        x.IsValid && x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
                                             x.AbilitySlot.ToString() != "-1")
                                         .ToList());
 
                             }
                             if (!Members.ItemDictionary.ContainsValue(
-                                    hero.Inventory.Items.Where(x => x != null && x.IsValid).ToList()))
+                                    hero.Inventory.Items.Where(x => x.IsValid).ToList()))
                             {
                                 Members.ItemDictionary.Remove(hero.StoredName());
                                 Members.ItemDictionary.Add(hero.StoredName(),
-                                    hero.Inventory.Items.Where(x => x != null && x.IsValid).ToList());
+                                    hero.Inventory.Items.Where(x => x.IsValid).ToList());
                             }
                             if (Members.Menu.Item("itempanel.Stash.Enable").GetValue<bool>() &&
                                 !Members.StashItemDictionary.ContainsValue(
-                                    hero.Inventory.StashItems.Where(x => x != null && x.IsValid).ToList()))
+                                    hero.Inventory.StashItems.Where(x => x.IsValid).ToList()))
                             {
                                 Members.StashItemDictionary.Remove(hero.StoredName());
                                 Members.StashItemDictionary.Add(hero.StoredName(),
-                                    hero.Inventory.StashItems.Where(x => x != null && x.IsValid).ToList());
+                                    hero.Inventory.StashItems.Where(x => x.IsValid).ToList());
                             }
 
                         }

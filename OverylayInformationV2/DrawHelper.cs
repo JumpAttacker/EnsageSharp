@@ -32,7 +32,6 @@ namespace OverlayInformation
         
         private static void DrawLastPosition()
         {
-            foreach (var hero in Members.EnemyHeroes.Where(x=>x.IsAlive && !x.IsVisible))
             {
                 if (Members.Menu.Item("lastPosition.Enable.Minimap").GetValue<bool>())
                 {
@@ -42,12 +41,13 @@ namespace OverlayInformation
                     {
                         if (Members.PredictionTimes.ContainsKey(hero.StoredName()))
                             Drawing.DrawRect(Helper.WorldToMinimap(Prediction.InFront(hero,
-                                hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))), size,
+                                hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))) +
+                                             new Vector2(-size.X/2, -size.Y/2), size,
                                 Helper.GetHeroTextureMinimap(hero.StoredName()));
                     }
                     else
                     {
-                        Drawing.DrawRect(Helper.WorldToMinimap(hero.Position), size,
+                        Drawing.DrawRect(Helper.WorldToMinimap(hero.Position) + new Vector2(-size.X/2, -size.Y/2), size,
                             Helper.GetHeroTextureMinimap(hero.StoredName()));
                     }
                 }
@@ -63,13 +63,14 @@ namespace OverlayInformation
                             if (Members.PredictionTimes.ContainsKey(hero.StoredName()))
                                 Drawing.DrawRect(
                                     Drawing.WorldToScreen(Prediction.InFront(hero,
-                                        hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))),
+                                        hero.MovementSpeed*(Game.GameTime - Members.PredictionTimes[hero.StoredName()]))) +
+                                    new Vector2(-size.X/2, (float) (-size.Y*2.5)),
                                     size,
                                     Textures.GetHeroTexture(hero.StoredName()));
                         }
                         else
                         {
-                            Drawing.DrawRect(Drawing.WorldToScreen(hero.Position), size,
+                            Drawing.DrawRect(newPos + new Vector2(-size.X / 2, -size.Y * 2), size,
                                 Textures.GetHeroTexture(hero.StoredName()));
                         }
                     }

@@ -129,7 +129,7 @@ namespace OverlayInformation
         {
             var name = "materials/ensage_ui/miniheroes/" + heroName.Substring("npc_dota_hero_".Length) + ".vmat";
 
-            return Drawing.GetTexture(name); ;
+            return Drawing.GetTexture(name);
         }
     }
 }
