@@ -169,12 +169,21 @@ namespace OverlayInformation
                 var iPos = HUDInfo.GetHPbarPosition(hero);
                 var iSize = new Vector2(HUDInfo.GetHPBarSizeX(hero), HUDInfo.GetHpBarSizeY(hero));
                 float count = 0;
-                var items = Manager.HeroManager.GetItemList(hero);
-                if (items==null) continue;
+                List<Item> items;
+                try
+                {
+                    if (!Members.ItemDictionary.TryGetValue(hero.Name, out items))
+                        continue;
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[DrawDangeItems]: " + hero.StoredName());
+                    continue;
+                }
                 foreach (
                     var item in
                         items
-                            .Where(x => x!=null && Members.Menu.Item("dangitems.List").GetValue<AbilityToggler>().IsEnabled(x.Name))
+                            .Where(x => x!=null && x.IsValid && Members.Menu.Item("dangitems.List").GetValue<AbilityToggler>().IsEnabled(x.Name))
                     )
                 {
                     var itemname = string.Format("materials/ensage_ui/items/{0}.vmat",
