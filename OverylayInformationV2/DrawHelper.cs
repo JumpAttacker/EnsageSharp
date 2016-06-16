@@ -7,6 +7,7 @@ using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
+using Ensage.Items;
 using SharpDX;
 using SharpDX.Direct3D9;
 
@@ -16,6 +17,7 @@ namespace OverlayInformation
 {
     internal abstract class DrawHelper
     {
+        private static readonly float Percent = HUDInfo.RatioPercentage();
         public static void Overlay(EventArgs args)
         {
             if (!Checker.IsActive()) return;
@@ -27,9 +29,89 @@ namespace OverlayInformation
                 DrawDangeItems();
             if (Members.Menu.Item("lastPosition.Enable").GetValue<bool>())
                 DrawLastPosition();
+            if (Members.Menu.Item("netWorth.Enable").GetValue<bool>())
+                DrawNetWorth();
         }
 
-        
+        private static void DrawNetWorth()
+        {
+            var startPos = new Vector2(Members.Menu.Item("netWorth.X").GetValue<Slider>().Value,
+                Members.Menu.Item("netWorth.Y").GetValue<Slider>().Value);
+            var size = new Vector2(Members.Menu.Item("netWorth.SizeX").GetValue<Slider>().Value * Percent,
+                Members.Menu.Item("netWorth.SizeY").GetValue<Slider>().Value * Percent);
+            Drawing.DrawRect(startPos, size + new Vector2(0, 34), new Color(0, 0, 0, 100));
+            var r = Members.Menu.Item("netWorth.Red").GetValue<Slider>().Value;
+            var g = Members.Menu.Item("netWorth.Green").GetValue<Slider>().Value;
+            var b = Members.Menu.Item("netWorth.Blue").GetValue<Slider>().Value;
+            Drawing.DrawRect(startPos, size + new Vector2(0, 34), new Color(r, g, b, 255), true);
+            DrawPlayer(startPos + new Vector2(2, 2), size, r, g, b);
+
+        }
+        private static void DrawPlayer(Vector2 pos, Vector2 size, int r, int g, int b)
+        {
+            var i = 0;
+            if (Members.ItemDictionary.Count == 0)
+            {
+                return;
+            }
+            long maxWorth = 0;
+            foreach (var v in Members.Heroes)
+            {
+                try
+                {
+                    long worth;
+                    if (!Members.NetWorthDictionary.TryGetValue(v.Name, out worth))
+                        continue;
+                    if (maxWorth < worth)
+                        maxWorth = worth;
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[NetWorth][findMaxNetWorth]: " + v.StoredName());
+                    continue;
+                }
+            }
+
+            foreach (var v in Members.Heroes)
+            {
+                long worth;
+                try
+                {
+                    if (!Members.NetWorthDictionary.TryGetValue(v.Name, out worth))
+                        continue;
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[NetWorth]: " + v.StoredName());
+                    continue;
+                }
+
+                var heroPos = pos + new Vector2(0, (size.Y / 10 + 3) * i + 2);
+                Drawing.DrawRect(heroPos, size / 10,
+                    Textures.GetTexture("materials/ensage_ui/heroes_horizontal/" +
+                                        v.StoredName().Substring("npc_dota_hero_".Length) + ".vmat"));
+                var defaultSize = size.X - (size.X/10 + 10);
+                var percent = 100*worth/Math.Max(1,maxWorth);
+                var currentSize = defaultSize/100*percent;
+                var color = v.Team==Members.MyHero.Team ? new Color(0,155,0,155) : new Color(155, 0, 0, 155);
+                var lineStartPos = heroPos + new Vector2(size.X/10 + 5, 0);
+                var lineSize = new Vector2(currentSize, size.Y/10);
+                Drawing.DrawRect(lineStartPos, lineSize, color);
+                Drawing.DrawRect(lineStartPos, lineSize, Color.Black, true);
+                var heroWorthText = worth.ToString();
+                var textSize = Drawing.MeasureText(heroWorthText, "Arial",
+                    new Vector2((float)(lineSize.Y * .95), lineSize.Y / 2), FontFlags.AntiAlias);
+                var textPos = lineStartPos + new Vector2(2, lineSize.Y / 2 - textSize.Y/2);
+                Drawing.DrawText(
+                    heroWorthText,
+                    textPos,
+                    new Vector2(textSize.Y, 0),
+                    Color.White,
+                    FontFlags.AntiAlias | FontFlags.StrikeOut);   
+                i++;
+            }
+        }
+
         private static void DrawLastPosition()
         {
             foreach (var hero in Members.EnemyHeroes.Where(x => x.IsAlive && !x.IsVisible))
@@ -87,10 +169,12 @@ namespace OverlayInformation
                 var iPos = HUDInfo.GetHPbarPosition(hero);
                 var iSize = new Vector2(HUDInfo.GetHPBarSizeX(hero), HUDInfo.GetHpBarSizeY(hero));
                 float count = 0;
+                var items = Manager.HeroManager.GetItemList(hero);
+                if (items==null) continue;
                 foreach (
                     var item in
-                        Manager.HeroManager.GetItemList(hero)
-                            .Where(x => Members.Menu.Item("dangitems.List").GetValue<AbilityToggler>().IsEnabled(x.Name))
+                        items
+                            .Where(x => x!=null && Members.Menu.Item("dangitems.List").GetValue<AbilityToggler>().IsEnabled(x.Name))
                     )
                 {
                     var itemname = string.Format("materials/ensage_ui/items/{0}.vmat",

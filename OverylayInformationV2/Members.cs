@@ -33,6 +33,7 @@ namespace OverlayInformation
         public static Dictionary<string, List<Ability>> AbilityDictionary;
         public static Dictionary<string, List<Item>> ItemDictionary;
         public static Dictionary<string, List<Item>> StashItemDictionary;
+        public static Dictionary<string, long> NetWorthDictionary;
 
         public static Font RoshanFont;
         public static float DeathTime;

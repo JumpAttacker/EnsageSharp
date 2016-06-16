@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using Ensage;
 using Ensage.Common.Extensions;
@@ -21,6 +22,11 @@ namespace OverlayInformation
                 if (!Checker.IsActive()) return;
                 if (!HeroUpdate.Sleeping)
                 {
+                    /*foreach (var enemyHero in Members.EnemyHeroes)
+                    {
+                        var worth = enemyHero.Inventory.Items.Aggregate<Item, long>(0, (current, item) => current + item.Cost);
+                        Printer.Print(enemyHero.Name + " --> " + worth);
+                    }*/
                     HeroUpdate.Sleep(2000);
                     if (Members.Heroes.Count < 10)
                     {
@@ -28,6 +34,7 @@ namespace OverlayInformation
                         Members.AllyHeroes = Members.Heroes.Where(x => x.Team == Members.MyHero.Team).ToList();
                         Members.EnemyHeroes =
                             Members.Heroes.Where(x => x.Team == Members.MyHero.GetEnemyTeam()).ToList();
+                        
                         //Printer.Print("STATUS:[all] " + Members.Heroes.Count+ " [enemy] " + Members.EnemyHeroes.Count + " [ally] " + Members.AllyHeroes.Count);
                         if (!Members.Apparition &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_AncientApparition))
@@ -130,22 +137,28 @@ namespace OverlayInformation
                                         .ToList());
 
                             }
+                            long worth = 0;
+                            Members.NetWorthDictionary.Remove(hero.StoredName());
                             if (!Members.ItemDictionary.ContainsValue(
                                     hero.Inventory.Items.Where(x => x.IsValid).ToList()))
                             {
+                                var items = hero.Inventory.Items.ToList();
                                 Members.ItemDictionary.Remove(hero.StoredName());
                                 Members.ItemDictionary.Add(hero.StoredName(),
-                                    hero.Inventory.Items.Where(x => x.IsValid).ToList());
+                                    items.Where(x => x.IsValid).ToList());
+                                worth += items.Aggregate<Item, long>(0, (current, item) => current + item.Cost);
                             }
-                            if (Members.Menu.Item("itempanel.Stash.Enable").GetValue<bool>() &&
+                            if ((Members.Menu.Item("itempanel.Stash.Enable").GetValue<bool>() || Members.Menu.Item("netWorth.Enable").GetValue<bool>()) &&
                                 !Members.StashItemDictionary.ContainsValue(
                                     hero.Inventory.StashItems.Where(x => x.IsValid).ToList()))
                             {
+                                var items = hero.Inventory.StashItems.ToList();
                                 Members.StashItemDictionary.Remove(hero.StoredName());
                                 Members.StashItemDictionary.Add(hero.StoredName(),
-                                    hero.Inventory.StashItems.Where(x => x.IsValid).ToList());
+                                    items.Where(x => x.IsValid).ToList());
+                                worth += items.Aggregate<Item, long>(0, (current, item) => current + item.Cost);
                             }
-
+                            Members.NetWorthDictionary.Add(hero.StoredName(), worth);
                         }
                         catch (Exception)
                         {

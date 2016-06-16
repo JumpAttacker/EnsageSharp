@@ -166,7 +166,7 @@ namespace OverlayInformation
                 }
                 
                 var heroPos = pos + new Vector2(0, (size.Y/7 + 3)*i+2);
-                Drawing.DrawRect(heroPos, size / 7,
+                Drawing.DrawRect(heroPos, size/7,
                     Textures.GetTexture("materials/ensage_ui/heroes_horizontal/" +
                                         v.StoredName().Substring("npc_dota_hero_".Length) + ".vmat"));
                 var n = 0;

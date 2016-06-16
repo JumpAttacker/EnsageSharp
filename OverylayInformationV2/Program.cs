@@ -38,8 +38,8 @@ namespace OverlayInformation
             itemPanel.AddItem(new MenuItem("itempanel.Enable", "Enable").SetValue(true));
             itemPanel.AddItem(new MenuItem("itempanel.Stash.Enable", "Draw Stash Items").SetValue(true));
             itemPanel.AddItem(new MenuItem("itempanel.Button.Enable", "Draw Button for toggle").SetValue(true));
-            itemPanel.AddItem(new MenuItem("itempanel.X", "Panel Position X").SetValue(new Slider(100, -2000, 2000)));
-            itemPanel.AddItem(new MenuItem("itempanel.Y", "Panel Position Y").SetValue(new Slider(200, -2000, 2000)));
+            itemPanel.AddItem(new MenuItem("itempanel.X", "Panel Position X").SetValue(new Slider(100, 0, 2000)));
+            itemPanel.AddItem(new MenuItem("itempanel.Y", "Panel Position Y").SetValue(new Slider(200, 0, 2000)));
             itemPanel.AddItem(new MenuItem("itempanel.SizeX", "SizeX").SetValue(new Slider(255, 1, 255)));
             itemPanel.AddItem(new MenuItem("itempanel.SizeY", "SizeY").SetValue(new Slider(174, 1, 255)));
             itemPanel.AddItem(new MenuItem("itempanel.Red", "Red").SetValue(new Slider(141, 0, 255)).SetFontColor(Color.Red));
@@ -131,6 +131,8 @@ namespace OverlayInformation
             lesh.AddItem(new MenuItem("lesh.Enable", "Enable").SetValue(true));
             var kunkka = new Menu("", "kunkka", false, "kunkka_torrent", true);
             kunkka.AddItem(new MenuItem("kunkka.Enable", "Enable").SetValue(true));
+            //var cour = new Menu("Courier", "Courier");
+            //cour.AddItem(new MenuItem("Courier.Enable", "Enable").SetValue(true)).SetTooltip("draw courier position on minimap");
             //===========================
             showIllusion.AddItem(new MenuItem("showillusion.Enable", "Enable").SetValue(true));
             //===========================
@@ -170,6 +172,18 @@ namespace OverlayInformation
             lastPosition.AddItem(new MenuItem("lastPosition.Minimap.X", "icon size").SetValue(new Slider(20, 10, 150)));
 
             //===========================
+            var netWorth = new Menu("NetWorth Graph", "netWorth");
+            netWorth.AddItem(new MenuItem("netWorth.Enable", "Enable").SetValue(true)).SetTooltip("draw networth graph based on item cost");
+            netWorth.AddItem(
+                new MenuItem("netWorth.X", "Position: X").SetValue(new Slider(0, 0, 2000)));
+            netWorth.AddItem(
+                new MenuItem("netWorth.Y", "Position: Y").SetValue(new Slider(0, 0, 2000)));
+            netWorth.AddItem(new MenuItem("netWorth.SizeX", "SizeX").SetValue(new Slider(255, 1, 255)));
+            netWorth.AddItem(new MenuItem("netWorth.SizeY", "SizeY").SetValue(new Slider(174, 1, 255)));
+            netWorth.AddItem(new MenuItem("netWorth.Red", "Red").SetValue(new Slider(141, 0, 255)).SetFontColor(Color.Red));
+            netWorth.AddItem(new MenuItem("netWorth.Green", "Green").SetValue(new Slider(182, 0, 255)).SetFontColor(Color.Green));
+            netWorth.AddItem(new MenuItem("netWorth.Blue", "Blue").SetValue(new Slider(98, 0, 255)).SetFontColor(Color.Blue));
+            //===========================
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Hax.enable", "Hax in lobby").SetValue(false));
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
@@ -198,6 +212,7 @@ namespace OverlayInformation
             settings.AddSubMenu(itemPanel);
             settings.AddSubMenu(autoItems);
             settings.AddSubMenu(lastPosition);
+            settings.AddSubMenu(netWorth);
 
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
@@ -221,6 +236,7 @@ namespace OverlayInformation
                 Members.AbilityDictionary = new Dictionary<string, List<Ability>>();
                 Members.ItemDictionary = new Dictionary<string, List<Item>>();
                 Members.StashItemDictionary = new Dictionary<string, List<Item>>();
+                Members.NetWorthDictionary = new Dictionary<string, long>();
 
                 Members.PAisHere = null;
                 Members.BaraIsHere = false;
