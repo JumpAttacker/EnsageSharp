@@ -174,6 +174,7 @@ namespace OverlayInformation
             //===========================
             var netWorth = new Menu("NetWorth Graph", "netWorth");
             netWorth.AddItem(new MenuItem("netWorth.Enable", "Enable").SetValue(true)).SetTooltip("draw networth graph based on item cost");
+            netWorth.AddItem(new MenuItem("netWorth.Order", "Sort Players").SetValue(true));
             netWorth.AddItem(
                 new MenuItem("netWorth.X", "Position: X").SetValue(new Slider(0, 0, 2000)));
             netWorth.AddItem(

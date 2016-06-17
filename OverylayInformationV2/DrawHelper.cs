@@ -55,15 +55,17 @@ namespace OverlayInformation
                 return;
             }
             long maxWorth = 0;
+            var PlayersWithWorth=new List<Hero>();
             foreach (var v in Members.Heroes)
             {
                 try
                 {
                     long worth;
-                    if (!Members.NetWorthDictionary.TryGetValue(v.Name, out worth))
+                    if (!Members.NetWorthDictionary.TryGetValue(v.StoredName(), out worth))
                         continue;
                     if (maxWorth < worth)
                         maxWorth = worth;
+                    PlayersWithWorth.Add(v);
                 }
                 catch (Exception)
                 {
@@ -72,7 +74,10 @@ namespace OverlayInformation
                 }
             }
 
-            foreach (var v in Members.Heroes)
+            if (Members.Menu.Item("netWorth.Order").GetValue<bool>())
+                PlayersWithWorth =
+                    new List<Hero>(PlayersWithWorth.OrderByDescending(x => Members.NetWorthDictionary[x.StoredName()]));
+            foreach (var v in PlayersWithWorth)
             {
                 long worth;
                 try
@@ -96,6 +101,7 @@ namespace OverlayInformation
                 var color = v.Team==Members.MyHero.Team ? new Color(0,155,0,155) : new Color(155, 0, 0, 155);
                 var lineStartPos = heroPos + new Vector2(size.X/10 + 5, 0);
                 var lineSize = new Vector2(currentSize, size.Y/10);
+                //var color2 = worth == maxWorth ? Color.Yellow : Color.Black;
                 Drawing.DrawRect(lineStartPos, lineSize, color);
                 Drawing.DrawRect(lineStartPos, lineSize, Color.Black, true);
                 var heroWorthText = worth.ToString();

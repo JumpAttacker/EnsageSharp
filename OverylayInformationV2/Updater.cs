@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using Ensage;
@@ -16,7 +17,13 @@ namespace OverlayInformation
             //private static readonly Sleeper ItemUpdate = new Sleeper();
             private static readonly Sleeper HeroUpdate = new Sleeper();
             private static readonly Sleeper UpdatePrediction = new Sleeper();
-
+            private static readonly List<string> IgnoreList=new List<string>
+            {
+                "npc_dota_beastmaster_boar_1",
+                "npc_dota_beastmaster_boar_2",
+                "npc_dota_beastmaster_boar_3",
+                "npc_dota_beastmaster_boar_4",
+            }; 
             public static void Update(EventArgs args)
             {
                 if (!Checker.IsActive()) return;
@@ -30,7 +37,10 @@ namespace OverlayInformation
                     HeroUpdate.Sleep(2000);
                     if (Members.Heroes.Count < 10)
                     {
-                        Members.Heroes = Heroes.All.Where(x => x != null && x.IsValid && !x.IsIllusion).ToList();
+                        Members.Heroes =
+                            Heroes.All.Where(
+                                x =>
+                                    x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName())).ToList();
                         Members.AllyHeroes = Members.Heroes.Where(x => x.Team == Members.MyHero.Team).ToList();
                         Members.EnemyHeroes =
                             Members.Heroes.Where(x => x.Team == Members.MyHero.GetEnemyTeam()).ToList();
