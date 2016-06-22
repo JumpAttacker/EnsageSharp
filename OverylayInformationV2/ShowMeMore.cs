@@ -41,12 +41,14 @@ namespace OverlayInformation
             //Printer.Print(Manager.BaseManager.GetBaseList().Count.ToString());
             //Manager.BaseManager.GetBaseList().ForEach(x=>Printer.Print(x.Handle+": "+x.DayVision));
             var baseList = Manager.BaseManager.GetBaseList().Where(x => x.IsValid && x.IsAlive).ToList();
+            /*foreach (var source in ObjectManager.GetEntities<Unit>().Where(x => x.Distance2D(Members.MyHero) <= 350 && !(x is Hero)))
             {
                 Printer.Print(source.Name + "-->" + source.DayVision+" & "+source.NightVision);
                 foreach (var modifier in source.Modifiers)
                 {
                     Printer.Print(modifier.Name);
                 }
+            }*/
             if (Members.Menu.Item("scan.Enable").GetValue<bool>())
             {
                 if (Members.ScanEnemy == null || !Members.ScanEnemy.IsValid)
