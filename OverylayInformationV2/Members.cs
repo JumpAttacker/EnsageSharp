@@ -21,7 +21,8 @@ namespace OverlayInformation
         public static Hero Kunkka { get; set; }
         public static Hero Lina { get; set; }
         public static Hero Leshrac { get; set; }
-        
+        public static Unit ScanEnemy { get; set; }
+
         public static List<Hero> Heroes=new List<Hero>();
         public static List<Hero> AllyHeroes=new List<Hero>();
         public static List<Hero> EnemyHeroes = new List<Hero>();

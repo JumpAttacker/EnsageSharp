@@ -131,6 +131,8 @@ namespace OverlayInformation
             lesh.AddItem(new MenuItem("lesh.Enable", "Enable").SetValue(true));
             var kunkka = new Menu("", "kunkka", false, "kunkka_torrent", true);
             kunkka.AddItem(new MenuItem("kunkka.Enable", "Enable").SetValue(true));
+            var scan = new Menu("Enemy Scanning Ability", "Scan");
+            scan.AddItem(new MenuItem("scan.Enable", "Enable").SetValue(true));
             //var cour = new Menu("Courier", "Courier");
             //cour.AddItem(new MenuItem("Courier.Enable", "Enable").SetValue(true)).SetTooltip("draw courier position on minimap");
             //===========================
@@ -207,6 +209,7 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(invoker);
             showMeMore.AddSubMenu(kunkka);
             showMeMore.AddSubMenu(lesh);
+            showMeMore.AddSubMenu(scan);
             settings.AddSubMenu(showIllusion);
             settings.AddSubMenu(runevision);
             settings.AddSubMenu(dangItem);

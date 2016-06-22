@@ -41,6 +41,30 @@ namespace OverlayInformation
             //Printer.Print(Manager.BaseManager.GetBaseList().Count.ToString());
             //Manager.BaseManager.GetBaseList().ForEach(x=>Printer.Print(x.Handle+": "+x.DayVision));
             var baseList = Manager.BaseManager.GetBaseList().Where(x => x.IsValid && x.IsAlive).ToList();
+            {
+                Printer.Print(source.Name + "-->" + source.DayVision+" & "+source.NightVision);
+                foreach (var modifier in source.Modifiers)
+                {
+                    Printer.Print(modifier.Name);
+                }
+            if (Members.Menu.Item("scan.Enable").GetValue<bool>())
+            {
+                if (Members.ScanEnemy == null || !Members.ScanEnemy.IsValid)
+                {
+                    Members.ScanEnemy = baseList.Find(x => !InSys.Contains(x) && x.HasModifier("modifier_radar_thinker"));
+                }
+                if (Members.ScanEnemy != null)
+                {
+                    InSys.Add(Members.ScanEnemy);
+                    ParticleEffect effect;
+                    if (!ShowMeMoreEffect.TryGetValue(Members.ScanEnemy, out effect))
+                    {
+                        effect = Members.ScanEnemy.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                        effect.SetControlPoint(1, new Vector3(900, 0, 0));
+                        ShowMeMoreEffect.Add(Members.ScanEnemy, effect);
+                    }
+                }
+            }
             if (Members.Apparition)
             {
                 foreach (var t in baseList.Where(t => !InSys.Contains(t) && t.DayVision == 550).Where(t => !Members.AAlist.Contains(t.Handle)))
@@ -232,6 +256,20 @@ namespace OverlayInformation
                     Drawing.DrawLine(Drawing.WorldToScreen(Members.MyHero.Position), aapos, Color.AliceBlue);
                     const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
                     Drawing.DrawRect(aapos, new Vector2(50, 50), Drawing.GetTexture(name));
+                }
+            }
+            if (Members.Menu.Item("scan.Enable").GetValue<bool>())
+            {
+                if (Members.ScanEnemy != null && Members.ScanEnemy.IsValid)
+                {
+                    var position = Members.ScanEnemy.Position;
+                    var w2S = Drawing.WorldToScreen(position);
+                    if (!w2S.IsZero)
+                        Drawing.DrawText(
+                            "Scan Ability " + Members.ScanEnemy.FindModifier("modifier_radar_thinker").RemainingTime.ToString("F1"), w2S,
+                            new Vector2(15, 15),
+                            Color.White,
+                            FontFlags.AntiAlias | FontFlags.StrikeOut);
                 }
             }
             if (Members.BaraIsHere)
