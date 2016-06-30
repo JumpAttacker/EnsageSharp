@@ -91,6 +91,11 @@ namespace OverlayInformation
                         {
                             Members.Leshrac = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac);
                         }
+                        if (Members.LifeStealer == null &&
+                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Life_Stealer))
+                        {
+                            Members.LifeStealer = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Life_Stealer);
+                        }
                     }
                 }
                 if (!UpdatePrediction.Sleeping /*&& Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>()*/)

@@ -67,7 +67,7 @@ namespace OverlayInformation
                     }
                 }
             }
-            if (Members.Apparition)
+            if (Members.Menu.Item("apparition.Enable").GetValue<bool>() && Members.Apparition)
             {
                 foreach (var t in baseList.Where(t => !InSys.Contains(t) && t.DayVision == 550).Where(t => !Members.AAlist.Contains(t.Handle)))
                 {
@@ -77,7 +77,7 @@ namespace OverlayInformation
                     Helper.GenerateSideMessage("ancient_apparition", "ancient_apparition_ice_blast");
                 }
             }
-            if (Members.Kunkka != null && Members.Kunkka.IsValid)
+            if (Members.Menu.Item("kunkka.Enable").GetValue<bool>() && Members.Kunkka != null && Members.Kunkka.IsValid)
             {
                 const string modname = "modifier_kunkka_torrent_thinker";
                 foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
@@ -92,7 +92,7 @@ namespace OverlayInformation
                     }
                 }
             }
-            if (Members.Invoker != null && Members.Invoker.IsValid)
+            if (Members.Menu.Item("invoker.Enable").GetValue<bool>() && Members.Invoker != null && Members.Invoker.IsValid)
             {
                 const string modname = "modifier_invoker_sun_strike";
                 foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
@@ -107,7 +107,7 @@ namespace OverlayInformation
                     }
                 }
             }
-            if (Members.Lina != null && Members.Lina.IsValid)
+            if (Members.Menu.Item("lina.Enable").GetValue<bool>() && Members.Lina != null && Members.Lina.IsValid)
             {
                 const string modname = "modifier_lina_light_strike_array";
                 foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
@@ -122,7 +122,7 @@ namespace OverlayInformation
                     }
                 }
             }
-            if (Members.Leshrac != null && Members.Leshrac.IsValid)
+            if (Members.Menu.Item("lesh.Enable").GetValue<bool>() && Members.Leshrac != null && Members.Leshrac.IsValid)
             {
                 const string modname = "modifier_leshrac_split_earth_thinker";
                 foreach (var t in baseList.Where(x => x.HasModifier(modname)))
@@ -136,13 +136,11 @@ namespace OverlayInformation
                     }
                 }
             }
-
-            if (!Members.Menu.Item("showmemore.Enable").GetValue<bool>()) return;
-            if (Members.Windrunner != null && Members.Windrunner.IsValid)
+            if (Members.Menu.Item("wr.Enable").GetValue<bool>() && Members.Windrunner != null && Members.Windrunner.IsValid)
             {
                 DrawForWr(Members.Windrunner);
             }
-            if (Members.Mirana != null && Members.Mirana.IsValid)
+            if (Members.Menu.Item("mirana.Enable").GetValue<bool>() && Members.Mirana != null && Members.Mirana.IsValid)
             {
                 try
                 {
@@ -250,7 +248,7 @@ namespace OverlayInformation
         {
             if (!Checker.IsActive()) return;
             if (!Members.Menu.Item("showmemore.Enable").GetValue<bool>()) return;
-            if (AAunit != null && AAunit.IsValid)
+            if (Members.Menu.Item("apparition.Enable").GetValue<bool>() && AAunit != null && AAunit.IsValid)
             {
                 var aapos = Drawing.WorldToScreen(AAunit.Position);
                 if (aapos.X > 0 && aapos.Y > 0)
@@ -274,7 +272,7 @@ namespace OverlayInformation
                             FontFlags.AntiAlias | FontFlags.StrikeOut);
                 }
             }
-            if (Members.BaraIsHere)
+            if (Members.Menu.Item("charge.Enable").GetValue<bool>() && Members.BaraIsHere)
                 foreach (var v in Manager.HeroManager.GetAllyViableHeroes())
                 {
                     var mod = v.HasModifier("modifier_spirit_breaker_charge_of_darkness_vision");
@@ -301,7 +299,34 @@ namespace OverlayInformation
                             InSys.Remove(v);
                     }
                 }
-            if (Members.PAisHere != null)
+            if (Members.Menu.Item("lifestealer.Enable").GetValue<bool>() && Members.LifeStealer != null && Members.LifeStealer.IsValid && !Members.LifeStealer.IsVisible)
+            {
+                const string modname = "modifier_life_stealer_infest_effect";
+                foreach (var t in Manager.HeroManager.GetEnemyViableHeroes().Where(x => x.HasModifier(modname)))
+                {
+                    var size3 = new Vector2(10, 20) + new Vector2(13, -6);
+                    var w2SPos = HUDInfo.GetHPbarPosition(t);
+                    if (w2SPos.IsZero)
+                        continue;
+                    var name = "materials/ensage_ui/miniheroes/" +
+                               Members.LifeStealer.StoredName().Replace("npc_dota_hero_", "") + ".vmat";
+                    Drawing.DrawRect(w2SPos - new Vector2(size3.X / 2, size3.Y / 2), size3,
+                        Drawing.GetTexture(name));
+                }
+                if (Members.Menu.Item("lifestealer.creeps.Enable").GetValue<bool>())
+                    foreach (var t in Creeps.All.Where(x => x != null && x.IsAlive))
+                    {
+                        var size3 = new Vector2(10, 20) + new Vector2(13, -6);
+                        var w2SPos = HUDInfo.GetHPbarPosition(t);
+                        if (w2SPos.IsZero)
+                            continue;
+                        var name = "materials/ensage_ui/miniheroes/" +
+                                   Members.LifeStealer.StoredName().Replace("npc_dota_hero_", "") + ".vmat";
+                        Drawing.DrawRect(w2SPos - new Vector2(size3.X/2, size3.Y/2), size3,
+                            Drawing.GetTexture(name));
+                    }
+            }
+            if (Members.Menu.Item("blur.Enable").GetValue<bool>() && Members.PAisHere != null && Members.PAisHere.IsValid)
             {
                 var mod = Members.PAisHere.HasModifier("modifier_phantom_assassin_blur_active");
                 if (mod && Members.PAisHere.StoredName() == "npc_dota_hero_phantom_assassin")

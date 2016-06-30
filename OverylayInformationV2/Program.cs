@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
@@ -102,6 +101,7 @@ namespace OverlayInformation
             showMeMore.AddItem(new MenuItem("showmemore.Enable", "Enable").SetValue(true));
             var charge = new Menu("", "charge", false, "spirit_breaker_charge_of_darkness", true);
             charge.AddItem(new MenuItem("tooltip", "When Charge on your Main Hero").SetFontColor(Color.Red));
+            charge.AddItem(new MenuItem("charge.Enable", "Enable").SetValue(true));
             charge.AddItem(new MenuItem("charge.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
             charge.AddItem(new MenuItem("charge.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontColor( Color.Green));
             charge.AddItem(new MenuItem("charge.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Blue));
@@ -131,6 +131,9 @@ namespace OverlayInformation
             lesh.AddItem(new MenuItem("lesh.Enable", "Enable").SetValue(true));
             var kunkka = new Menu("", "kunkka", false, "kunkka_torrent", true);
             kunkka.AddItem(new MenuItem("kunkka.Enable", "Enable").SetValue(true));
+            var lifestealer = new Menu("", "life stealer", false, "life_stealer_infest", true);
+            lifestealer.AddItem(new MenuItem("lifestealer.Enable", "Enable").SetValue(true));
+            lifestealer.AddItem(new MenuItem("lifestealer.creeps.Enable", "Enable for creeps").SetValue(true));
             var scan = new Menu("Enemy Scanning Ability", "Scan");
             scan.AddItem(new MenuItem("scan.Enable", "Enable").SetValue(true));
             //var cour = new Menu("Courier", "Courier");
@@ -209,6 +212,7 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(invoker);
             showMeMore.AddSubMenu(kunkka);
             showMeMore.AddSubMenu(lesh);
+            showMeMore.AddSubMenu(lifestealer);
             showMeMore.AddSubMenu(scan);
             settings.AddSubMenu(showIllusion);
             settings.AddSubMenu(runevision);
@@ -221,7 +225,7 @@ namespace OverlayInformation
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
 
-            Members.Menu.AddToMainMenu();
+            
             if (Drawing.Direct3DDevice9 != null)
                 Members.RoshanFont = new Font(
                     Drawing.Direct3DDevice9,
@@ -241,6 +245,14 @@ namespace OverlayInformation
                 Members.ItemDictionary = new Dictionary<string, List<Item>>();
                 Members.StashItemDictionary = new Dictionary<string, List<Item>>();
                 Members.NetWorthDictionary = new Dictionary<string, long>();
+
+                Members.Heroes = new List<Hero>();
+                Members.AllyHeroes = new List<Hero>();
+                Members.EnemyHeroes = new List<Hero>();
+                Members.Players = new List<Player>();
+                Members.AllyPlayers = new List<Player>();
+                Members.EnemyPlayers = new List<Player>();
+                Members.BaseList = new List<Unit>();
 
                 Members.PAisHere = null;
                 Members.BaraIsHere = false;
@@ -274,6 +286,14 @@ namespace OverlayInformation
                     MessageType.LogMessage);
                 Printer.PrintSuccess("> " + Members.Menu.DisplayName + " loaded v" +
                                      Assembly.GetExecutingAssembly().GetName().Version);
+                try
+                {
+                    Members.Menu.AddToMainMenu();
+                }
+                catch (Exception)
+                {
+                }
+
             };
             Events.OnClose += (sender, args) =>
             {
@@ -299,6 +319,16 @@ namespace OverlayInformation
                 Members.EnemyHeroes.Clear();
                 Members.AllyHeroes.Clear();
                 Printer.PrintInfo("> " + Members.Menu.DisplayName + " unloaded");
+                try
+                {
+                    Members.Menu.RemoveFromMainMenu();
+                }
+                catch (Exception)
+                {
+                    
+                    throw;
+                }
+                
             };
         }
 
