@@ -250,71 +250,87 @@ namespace OverlayInformation
             if (!Members.Menu.Item("showmemore.Enable").GetValue<bool>()) return;
             if (Members.Menu.Item("apparition.Enable").GetValue<bool>() && AAunit != null && AAunit.IsValid)
             {
-                var aapos = Drawing.WorldToScreen(AAunit.Position);
-                if (aapos.X > 0 && aapos.Y > 0)
+                try
                 {
-                    Drawing.DrawLine(Drawing.WorldToScreen(Members.MyHero.Position), aapos, Color.AliceBlue);
-                    const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
-                    Drawing.DrawRect(aapos, new Vector2(50, 50), Drawing.GetTexture(name));
+                    var aapos = Drawing.WorldToScreen(AAunit.Position);
+                    if (aapos.X > 0 && aapos.Y > 0)
+                    {
+                        Drawing.DrawLine(Drawing.WorldToScreen(Members.MyHero.Position), aapos, Color.AliceBlue);
+                        const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
+                        Drawing.DrawRect(aapos, new Vector2(50, 50), Drawing.GetTexture(name));
+                    }
                 }
+                catch (Exception)
+                {
+                    Printer.Print("[Draw]: Apparation");
+                }
+                
             }
             if (Members.Menu.Item("scan.Enable").GetValue<bool>())
             {
                 if (Members.ScanEnemy != null && Members.ScanEnemy.IsValid)
                 {
-                    var position = Members.ScanEnemy.Position;
-                    var w2S = Drawing.WorldToScreen(position);
-                    if (!w2S.IsZero)
-                        Drawing.DrawText(
-                            "Scan Ability " + Members.ScanEnemy.FindModifier("modifier_radar_thinker").RemainingTime.ToString("F1"), w2S,
-                            new Vector2(15, 15),
-                            Color.White,
-                            FontFlags.AntiAlias | FontFlags.StrikeOut);
+                    try
+                    {
+                        var position = Members.ScanEnemy.Position;
+                        var w2S = Drawing.WorldToScreen(position);
+                        if (!w2S.IsZero)
+                            Drawing.DrawText(
+                                "Scan Ability " +
+                                Members.ScanEnemy.FindModifier("modifier_radar_thinker").RemainingTime.ToString("F1"),
+                                w2S,
+                                new Vector2(15, 15),
+                                Color.White,
+                                FontFlags.AntiAlias | FontFlags.StrikeOut);
+                    }
+                    catch (Exception)
+                    {
+                        Printer.Print("[Draw]: scan");
+                    }
                 }
             }
             if (Members.Menu.Item("charge.Enable").GetValue<bool>() && Members.BaraIsHere)
-                foreach (var v in Manager.HeroManager.GetAllyViableHeroes())
+            {
+                try
                 {
-                    var mod = v.HasModifier("modifier_spirit_breaker_charge_of_darkness_vision");
-                    if (mod)
+                    foreach (var v in Manager.HeroManager.GetAllyViableHeroes())
                     {
-                        if (Equals(Members.MyHero, v))
+                        var mod = v.HasModifier("modifier_spirit_breaker_charge_of_darkness_vision");
+                        if (mod)
                         {
-                            Drawing.DrawRect(new Vector2(0, 0), new Vector2(Drawing.Width, Drawing.Height),
-                                new Color(Members.Menu.Item("charge" + ".Red").GetValue<Slider>().Value,
-                                    Members.Menu.Item("charge" + ".Green").GetValue<Slider>().Value,
-                                    Members.Menu.Item("charge" + ".Blue").GetValue<Slider>().Value,
-                                    Members.Menu.Item("charge" + ".Alpha").GetValue<Slider>().Value));
+                            if (Equals(Members.MyHero, v))
+                            {
+                                Drawing.DrawRect(new Vector2(0, 0), new Vector2(Drawing.Width, Drawing.Height),
+                                    new Color(Members.Menu.Item("charge" + ".Red").GetValue<Slider>().Value,
+                                        Members.Menu.Item("charge" + ".Green").GetValue<Slider>().Value,
+                                        Members.Menu.Item("charge" + ".Blue").GetValue<Slider>().Value,
+                                        Members.Menu.Item("charge" + ".Alpha").GetValue<Slider>().Value));
+                            }
+                            if (!InSys.Contains(v))
+                            {
+                                Helper.GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""),
+                                    "spirit_breaker_charge_of_darkness");
+                                InSys.Add(v);
+                            }
                         }
-                        if (!InSys.Contains(v))
+                        else
                         {
-                            Helper.GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""),
-                                "spirit_breaker_charge_of_darkness");
-                            InSys.Add(v);
+                            if (InSys.Contains(v))
+                                InSys.Remove(v);
                         }
-                    }
-                    else
-                    {
-                        if (InSys.Contains(v))
-                            InSys.Remove(v);
                     }
                 }
+                catch (Exception)
+                {
+                    Printer.Print("[Draw]: charge");
+                }
+            }
             if (Members.Menu.Item("lifestealer.Enable").GetValue<bool>() && Members.LifeStealer != null && Members.LifeStealer.IsValid && !Members.LifeStealer.IsVisible)
             {
-                const string modname = "modifier_life_stealer_infest_effect";
-                foreach (var t in Manager.HeroManager.GetEnemyViableHeroes().Where(x => x.HasModifier(modname)))
+                try
                 {
-                    var size3 = new Vector2(10, 20) + new Vector2(13, -6);
-                    var w2SPos = HUDInfo.GetHPbarPosition(t);
-                    if (w2SPos.IsZero)
-                        continue;
-                    var name = "materials/ensage_ui/miniheroes/" +
-                               Members.LifeStealer.StoredName().Replace("npc_dota_hero_", "") + ".vmat";
-                    Drawing.DrawRect(w2SPos - new Vector2(size3.X / 2, size3.Y / 2), size3,
-                        Drawing.GetTexture(name));
-                }
-                if (Members.Menu.Item("lifestealer.creeps.Enable").GetValue<bool>())
-                    foreach (var t in Creeps.All.Where(x => x != null && x.IsAlive))
+                    const string modname = "modifier_life_stealer_infest_effect";
+                    foreach (var t in Manager.HeroManager.GetEnemyViableHeroes().Where(x => x.HasModifier(modname)))
                     {
                         var size3 = new Vector2(10, 20) + new Vector2(13, -6);
                         var w2SPos = HUDInfo.GetHPbarPosition(t);
@@ -325,18 +341,42 @@ namespace OverlayInformation
                         Drawing.DrawRect(w2SPos - new Vector2(size3.X/2, size3.Y/2), size3,
                             Drawing.GetTexture(name));
                     }
+                    if (Members.Menu.Item("lifestealer.creeps.Enable").GetValue<bool>())
+                        foreach (var t in Creeps.All.Where(x => x != null && x.IsAlive))
+                        {
+                            var size3 = new Vector2(10, 20) + new Vector2(13, -6);
+                            var w2SPos = HUDInfo.GetHPbarPosition(t);
+                            if (w2SPos.IsZero)
+                                continue;
+                            var name = "materials/ensage_ui/miniheroes/" +
+                                       Members.LifeStealer.StoredName().Replace("npc_dota_hero_", "") + ".vmat";
+                            Drawing.DrawRect(w2SPos - new Vector2(size3.X/2, size3.Y/2), size3,
+                                Drawing.GetTexture(name));
+                        }
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[Draw]: lifestealer");
+                }
             }
             if (Members.Menu.Item("blur.Enable").GetValue<bool>() && Members.PAisHere != null && Members.PAisHere.IsValid)
             {
-                var mod = Members.PAisHere.HasModifier("modifier_phantom_assassin_blur_active");
-                if (mod && Members.PAisHere.StoredName() == "npc_dota_hero_phantom_assassin")
+                try
                 {
-                    var size3 = new Vector2(10, 20) + new Vector2(13, -6);
-                    var w2M = Helper.WorldToMinimap(Members.PAisHere.NetworkPosition);
-                    var name = "materials/ensage_ui/miniheroes/" +
-                               Members.PAisHere.StoredName().Replace("npc_dota_hero_", "") + ".vmat";
-                    Drawing.DrawRect(w2M - new Vector2(size3.X/2, size3.Y/2), size3,
-                        Drawing.GetTexture(name));
+                    var mod = Members.PAisHere.HasModifier("modifier_phantom_assassin_blur_active");
+                    if (mod && Members.PAisHere.StoredName() == "npc_dota_hero_phantom_assassin")
+                    {
+                        var size3 = new Vector2(10, 20) + new Vector2(13, -6);
+                        var w2M = Helper.WorldToMinimap(Members.PAisHere.NetworkPosition);
+                        var name = "materials/ensage_ui/miniheroes/" +
+                                   Members.PAisHere.StoredName().Replace("npc_dota_hero_", "") + ".vmat";
+                        Drawing.DrawRect(w2M - new Vector2(size3.X/2, size3.Y/2), size3,
+                            Drawing.GetTexture(name));
+                    }
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[Draw]: phantom assasin");
                 }
             }
 
