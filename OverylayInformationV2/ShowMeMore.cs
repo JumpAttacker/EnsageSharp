@@ -342,7 +342,7 @@ namespace OverlayInformation
                             Drawing.GetTexture(name));
                     }
                     if (Members.Menu.Item("lifestealer.creeps.Enable").GetValue<bool>())
-                        foreach (var t in Creeps.All.Where(x => x != null && x.IsAlive))
+                        foreach (var t in Creeps.All.Where(x => x != null && x.IsAlive && x.HasModifier(modname)))
                         {
                             var size3 = new Vector2(10, 20) + new Vector2(13, -6);
                             var w2SPos = HUDInfo.GetHPbarPosition(t);
