@@ -130,7 +130,11 @@ namespace OverlayInformation
             var lesh = new Menu("", "lesh", false, "leshrac_split_earth", true);
             lesh.AddItem(new MenuItem("lesh.Enable", "Enable").SetValue(true));
             var kunkka = new Menu("", "kunkka", false, "kunkka_torrent", true);
-            kunkka.AddItem(new MenuItem("kunkka.Enable", "Enable").SetValue(true));
+            kunkka.AddItem(new MenuItem("kunkka.Enable", "Torrent Enable").SetValue(true));
+            var tech = new Menu("", "tech", false, "npc_dota_hero_techies", true);
+            tech.AddItem(new MenuItem("tech.Enable", "Enable").SetValue(true));
+            var tinker = new Menu("", "tinker", false, "npc_dota_hero_tinker", true);
+            tinker.AddItem(new MenuItem("tinker.Enable", "Enable").SetValue(true));
             var lifestealer = new Menu("", "life stealer", false, "life_stealer_infest", true);
             lifestealer.AddItem(new MenuItem("lifestealer.Enable", "Enable").SetValue(true));
             lifestealer.AddItem(new MenuItem("lifestealer.creeps.Enable", "Enable for creeps").SetValue(true));
@@ -213,6 +217,8 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(kunkka);
             showMeMore.AddSubMenu(lesh);
             showMeMore.AddSubMenu(lifestealer);
+            showMeMore.AddSubMenu(tech);
+            showMeMore.AddSubMenu(tinker);
             showMeMore.AddSubMenu(scan);
             settings.AddSubMenu(showIllusion);
             settings.AddSubMenu(runevision);

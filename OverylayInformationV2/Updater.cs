@@ -96,6 +96,17 @@ namespace OverlayInformation
                         {
                             Members.LifeStealer = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Life_Stealer);
                         }
+
+                        if (Members.Techies == null &&
+                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Techies))
+                        {
+                            Members.Techies = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Techies);
+                        }
+                        if (Members.Tinker == null &&
+                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Tinker))
+                        {
+                            Members.Tinker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Tinker);
+                        }
                     }
                 }
                 if (!UpdatePrediction.Sleeping /*&& Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>()*/)

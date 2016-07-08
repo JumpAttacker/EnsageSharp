@@ -16,6 +16,7 @@ namespace OverlayInformation
         private static readonly Sleeper Sleeper=new Sleeper();
         private static Unit AAunit { get; set; }
         private static readonly List<Unit> InSys = new List<Unit>();
+        private static readonly List<Unit> Bombs = new List<Unit>();
         private static readonly Dictionary<Unit, ParticleEffect[]> Eff = new Dictionary<Unit, ParticleEffect[]>();
         private static Unit _arrowUnit;
         private static bool _letsDraw=true;
@@ -49,6 +50,7 @@ namespace OverlayInformation
                     Printer.Print(modifier.Name);
                 }
             }*/
+            
             if (Members.Menu.Item("scan.Enable").GetValue<bool>())
             {
                 if (Members.ScanEnemy == null || !Members.ScanEnemy.IsValid)
@@ -80,33 +82,83 @@ namespace OverlayInformation
             if (Members.Menu.Item("kunkka.Enable").GetValue<bool>() && Members.Kunkka != null && Members.Kunkka.IsValid)
             {
                 const string modname = "modifier_kunkka_torrent_thinker";
-                foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
+                try
                 {
-                    InSys.Add(t);
-                    ParticleEffect effect;
-                    if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                    foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
                     {
-                        effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
-                        effect.SetControlPoint(1, new Vector3(225, 0, 0));
-                        ShowMeMoreEffect.Add(t, effect);
+                        InSys.Add(t);
+                        ParticleEffect effect;
+                        if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                        {
+                            effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                            effect.SetControlPoint(1, new Vector3(225, 0, 0));
+                            ShowMeMoreEffect.Add(t, effect);
+                        }
                     }
+                }
+                catch
+                {
+                    Printer.Print("[ShowMeMore]: kunkka");
                 }
             }
             if (Members.Menu.Item("invoker.Enable").GetValue<bool>() && Members.Invoker != null && Members.Invoker.IsValid)
             {
-                const string modname = "modifier_invoker_sun_strike";
-                foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
+                //string[] modname = {"modifier_invoker_emp", "modifier_invoker_sun_strike"};
+                const string modname = "modifier_invoker_emp";
+                try
                 {
-                    InSys.Add(t);
-                    ParticleEffect effect;
-                    if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                    foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
                     {
-                        effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
-                        effect.SetControlPoint(1, new Vector3(175, 0, 0));
-                        ShowMeMoreEffect.Add(t, effect);
+                        InSys.Add(t);
+                        ParticleEffect effect;
+                        if (!ShowMeMoreEffect.TryGetValue(t, out effect))
+                        {
+                            effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                            var range = 175;
+                            effect.SetControlPoint(1, new Vector3(range, 0, 0));
+                            ShowMeMoreEffect.Add(t, effect);
+                        }
                     }
                 }
+                catch (Exception)
+                {
+                    Printer.Print("[ShowMeMore]: invoker");
+                }
+                
             }
+            if (Members.Menu.Item("tech.Enable").GetValue<bool>() && Members.Techies != null && Members.Techies.IsValid)
+                try
+                {
+                    foreach (var t in Bombs)
+                    {
+                        ParticleEffect effect;
+                        if (!t.IsValid || !t.IsAlive)
+                        {
+                            if (ShowMeMoreEffect.TryGetValue(t, out effect))
+                            {
+                                effect.Dispose();
+                                ShowMeMoreEffect.Remove(t);
+                            }
+                            continue;
+                        }
+                        if (!InSys.Contains(t))
+                        {
+                            InSys.Add(t);
+                            if (!ShowMeMoreEffect.TryGetValue(t, out effect) && t.Spellbook.Spell1 != null)
+                            {
+                                //effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                                effect = new ParticleEffect(@"particles\ui_mouseactions\range_display.vpcf", t.Position);
+                                effect.SetControlPoint(1, new Vector3(425, 0, 0));
+                                ShowMeMoreEffect.Add(t, effect);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    Printer.Print("[ShowMeMore]: tech");
+                }
+
             if (Members.Menu.Item("lina.Enable").GetValue<bool>() && Members.Lina != null && Members.Lina.IsValid)
             {
                 const string modname = "modifier_lina_light_strike_array";
@@ -265,6 +317,74 @@ namespace OverlayInformation
                     Printer.Print("[Draw]: Apparation");
                 }
                 
+            }
+            if (Members.Menu.Item("tinker.Enable").GetValue<bool>())
+            {
+                try
+                {
+                    if (Members.Tinker != null && Members.Tinker.IsValid)
+                    {
+                        var baseList =
+                            Manager.BaseManager.GetBaseList()
+                                .Where(x => x.IsAlive && x.HasModifier("modifier_tinker_march_thinker"));
+                        foreach (var unit in baseList)
+                        {
+                            var realPos = unit.Position;
+                            var pos = Drawing.WorldToScreen(realPos);
+                            var texture = Textures.GetSpellTexture("tinker_march_of_the_machines");
+                            if (pos.X > 0 && pos.Y > 0)
+                            {
+                                Drawing.DrawRect(pos, new Vector2(50, 50), texture);
+                            }
+                            var pos2 = Helper.WorldToMinimap(realPos);
+                            Drawing.DrawRect(pos2 - new Vector2(10, 10), new Vector2(10, 10), texture);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[Draw]: Tinker");
+                }
+
+            }
+            if (Members.Menu.Item("tech.Enable").GetValue<bool>())
+            {
+                try
+                {
+                    if (Members.Techies != null && Members.Techies.IsValid)
+                    {
+                        var baseList =
+                            ObjectManager.GetEntities<Unit>()
+                                .Where(x => x.IsAlive && x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team != Members.MyHero.Team && !Bombs.Contains(x));
+                        foreach (var unit in baseList)
+                        {
+                            Bombs.Add(unit);
+                        }
+                        foreach (var bomb in Bombs)
+                        {
+                            if (!bomb.IsValid)
+                                continue;
+                            if (bomb.IsVisible)
+                                continue;
+                            var realPos = bomb.Position;
+                            var pos = Drawing.WorldToScreen(realPos);
+                            var texture = bomb.Spellbook.Spell1 != null
+                                ? Textures.GetTexture("materials/ensage_ui/other/npc_dota_techies_remote_mine.vmat")
+                                : Textures.GetTexture("materials/ensage_ui/other/npc_dota_techies_land_mine.vmat");
+                            if (pos.X > 0 && pos.Y > 0)
+                            {
+                                Drawing.DrawRect(pos, new Vector2(50, 50), texture);
+                            }
+                            var pos2 = Helper.WorldToMinimap(realPos);
+                            Drawing.DrawRect(pos2 - new Vector2(15, 15), new Vector2(15, 15), texture);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[Draw]: Techies");
+                }
+
             }
             if (Members.Menu.Item("scan.Enable").GetValue<bool>())
             {

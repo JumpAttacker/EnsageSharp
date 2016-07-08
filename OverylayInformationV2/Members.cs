@@ -23,6 +23,8 @@ namespace OverlayInformation
         public static Hero Leshrac { get; set; }
         public static Hero LifeStealer { get; set; }
         public static Unit ScanEnemy { get; set; }
+        public static Hero Tinker { get; set; }
+        public static Hero Techies { get; set; }
 
         public static List<Hero> Heroes=new List<Hero>();
         public static List<Hero> AllyHeroes=new List<Hero>();
