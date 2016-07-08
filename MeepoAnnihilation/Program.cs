@@ -768,7 +768,7 @@ namespace MeepoAnnihilation
                     Utils.Sleep(500, "jungle_farm_w_stop" + name);
                 }
             }
-            if (!Utils.SleepCheck(name + "attack")) return;
+            if (!Utils.SleepCheck(name + "attack") || me.IsAttacking()) return;
             Utils.Sleep(500, name + "attack");
             me.Attack(s.CampPosition);
         }
