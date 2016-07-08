@@ -328,6 +328,27 @@ namespace OverlayInformation
                                     new Vector2(textSize.Y, 0),
                                     Color.White,
                                     FontFlags.AntiAlias | FontFlags.StrikeOut);
+                                if (Members.Menu.Item("ultimate.Icon.Extra.Enable").GetValue<bool>() && ultimate.ManaCost > v.Mana)
+                                {
+                                    ultimateCd =
+                                    ((int)Math.Min(Math.Abs(v.Mana - ultimate.ManaCost), 999)).ToString(
+                                        CultureInfo.InvariantCulture);
+                                    textSize = Drawing.MeasureText(ultimateCd, "Arial",
+                                        new Vector2((float)(size.Y * .50), size.Y / 2), FontFlags.AntiAlias);
+                                    textPos = startPos + new Vector2(size.X - textSize.X, 0);
+                                    Drawing.DrawRect(textPos - new Vector2(0, 0),
+                                        new Vector2(textSize.X, textSize.Y),
+                                        new Color(0, 0, 0, 200));
+                                    Drawing.DrawText(
+                                        ultimateCd,
+                                        textPos,
+                                        new Vector2(textSize.Y, 0),
+                                        Color.White,
+                                        FontFlags.AntiAlias | FontFlags.StrikeOut);
+                                    Drawing.DrawRect(startPos,
+                                        new Vector2(size.X, size.Y),
+                                        new Color(0, 50, 155, 100));
+                                }
                                 break;
                             case AbilityState.NotEnoughMana:
                                 ultimateCd =
@@ -335,7 +356,7 @@ namespace OverlayInformation
                                         CultureInfo.InvariantCulture);
                                 textSize = Drawing.MeasureText(ultimateCd, "Arial",
                                     new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
-                                textPos = startPos + new Vector2(0, size.Y - textSize.Y);
+                                textPos = startPos + new Vector2(size.X - textSize.X, 0);
                                 Drawing.DrawRect(textPos - new Vector2(0, 0),
                                     new Vector2(textSize.X, textSize.Y),
                                     new Color(0, 0, 0, 200));

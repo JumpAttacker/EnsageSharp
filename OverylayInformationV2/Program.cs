@@ -63,6 +63,9 @@ namespace OverlayInformation
             ultimate.AddItem(new MenuItem("ultimate.Enable", "Enable").SetValue(true));
             ultimate.AddItem(new MenuItem("ultimate.Icon.Enable", "Draw Icon").SetValue(true));
             ultimate.AddItem(
+                new MenuItem("ultimate.Icon.Extra.Enable", "Draw Mana req with cd").SetValue(true)
+                    .SetTooltip("render lack of mana when spell on cooldown"));
+            ultimate.AddItem(
                 new MenuItem("ultimate.Type", "Type of drawing").SetValue(
                     new StringList(new[] { "Draw Icon", "Draw Line" }))).ValueChanged += (sender, args) =>
                     {
