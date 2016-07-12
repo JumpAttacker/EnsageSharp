@@ -182,7 +182,7 @@ namespace MorphlingAnnihilation
                 {
                     if (curentHp < minHp)
                     {
-                        if (me.HasModifier("modifier_morphling_morph_str"))
+                        if (!me.HasModifier("modifier_morphling_morph_str"))
                         {
                             //Game.PrintMessage("need more hp", MessageType.ChatMessage);
                             toStr.ToggleAbility();
@@ -194,7 +194,7 @@ namespace MorphlingAnnihilation
                         toStr.ToggleAbility();
                     }
                 }
-                Utils.Sleep(150,"trans");
+                Utils.Sleep(150, "trans");
             }
             if (Menu.Item("safetp").GetValue<bool>() && Utils.SleepCheck("safetp"))
             {
