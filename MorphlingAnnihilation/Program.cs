@@ -6,16 +6,16 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
+using Ensage.Common.Objects.UtilityObjects;
 
 namespace MorphlingAnnihilation
 {
-    class Program
+    internal static class Program
     {
         private static bool _loaded;
         private static readonly string Ver = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-
         private static readonly Menu Menu = new Menu("Morphling Annihilation", "morph", true, "npc_dota_hero_morphling",true);
-
+        private static readonly Dictionary<Unit,Orbwalker> OrbDictinary=new Dictionary<Unit, Orbwalker>();
         enum Orders
         {
             Fight,
@@ -27,7 +27,6 @@ namespace MorphlingAnnihilation
         {
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += OnUpdate;
-
             Menu.AddItem(new MenuItem("hotkey", "HotKey").SetValue(new KeyBind('F', KeyBindType.Press)));
             var dick = new Dictionary<string, bool>
             {
@@ -50,13 +49,13 @@ namespace MorphlingAnnihilation
             safetp.AddItem(new MenuItem("safetp", "Use replicate on low hp").SetValue(true));
             safetp.AddItem(new MenuItem("minHpForSafeTp", "Minimum HP").SetValue(new Slider(100, 100, 5000)));
             Menu.AddSubMenu(safetp);
-
             Menu.AddToMainMenu();
+            Orbwalking.Load();
         }
 
         private static void OnUpdate(EventArgs args)
         {
-            var me = ObjectMgr.LocalHero;
+            var me = ObjectManager.LocalHero;
 
             if (!_loaded)
             {
@@ -81,23 +80,35 @@ namespace MorphlingAnnihilation
             {
                 Game.PrintMessage(ability.Name,MessageType.ChatMessage);
             }*/
-            var illus = ObjectMgr.GetEntities<Hero>().Where(x => x.IsIllusion && x.IsControllable && x.IsAlive).ToArray();
-            var replicate = illus.FirstOrDefault(x => x.Modifiers.Any(y => y.Name == "modifier_morph_replicate"));
-            var hybrid = illus.FirstOrDefault(x => x.Modifiers.Any(y => y.Name == "modifier_morph_hybrid_special"));
+            
+            var illus = ObjectManager.GetEntities<Hero>().Where(x => x.IsIllusion && x.IsControllable && x.IsAlive).ToArray();
+            var replicate = illus.FirstOrDefault(x => x.HasModifier("modifier_morph_replicate"));
+            var hybrid = illus.FirstOrDefault(x => x.HasModifier("modifier_morph_hybrid_special"));
             Hero target;
             if (replicate != null && Utils.SleepCheck("orderTimer"))
             {
+                Orbwalker orb;
+                if (!OrbDictinary.TryGetValue(replicate,out orb))
+                {
+                    OrbDictinary.Add(replicate,new Orbwalker(replicate));
+                }
                 var index = Menu.Item("replicateAction").GetValue<StringList>().SelectedIndex;
                 switch (index)
                 {
                     case (int)Orders.Fight:
                         target = ClosestToMouse(me, 350);
-                        if (target != null) replicate.Attack(target);
+                        if (target != null)
+                        {
+                            if (orb != null)
+                                orb.OrbwalkOn(target);
+                            else
+                                replicate.Attack(target);
+                        }
                         else replicate.Move(Game.MousePosition);
                         break;
                     case (int)Orders.GoBack:
                         var fount =
-                            ObjectMgr.GetEntities<Unit>()
+                            ObjectManager.GetEntities<Unit>()
                                 .FirstOrDefault(x => x.Team == me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
                         if (fount != null) replicate.Move(fount.Position);
                         break;
@@ -108,6 +119,11 @@ namespace MorphlingAnnihilation
             
             if (hybrid != null && Utils.SleepCheck("orderTimer2"))
             {
+                Orbwalker orb;
+                if (!OrbDictinary.TryGetValue(hybrid, out orb))
+                {
+                    OrbDictinary.Add(hybrid, new Orbwalker(hybrid));
+                }
                 var index = Menu.Item("hybridAction").GetValue<StringList>().SelectedIndex;
                 switch (index)
                 {
@@ -136,14 +152,17 @@ namespace MorphlingAnnihilation
                                     hybrid.Move(target.Position);
                             }
                             else
-                                hybrid.Attack(target);
+                                if (orb != null)
+                                    orb.OrbwalkOn(target);
+                                else
+                                    hybrid.Attack(target);
                         }
                         else if (!hybrid.IsChanneling())
                             hybrid.Move(Game.MousePosition);
                         break;
                     case (int)Orders.GoBack:
                         var fount =
-                            ObjectMgr.GetEntities<Unit>()
+                            ObjectManager.GetEntities<Unit>()
                                 .FirstOrDefault(x => x.Team == me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
                         if (fount != null) hybrid.Move(fount.Position);
                         break;
@@ -163,13 +182,13 @@ namespace MorphlingAnnihilation
                 {
                     if (curentHp < minHp)
                     {
-                        if (me.Modifiers.All(x => x.Name != "modifier_morphling_morph_str"))
+                        if (me.HasModifier("modifier_morphling_morph_str"))
                         {
                             //Game.PrintMessage("need more hp", MessageType.ChatMessage);
                             toStr.ToggleAbility();
                         }
                     }
-                    else if (me.Modifiers.Any(x => x.Name == "modifier_morphling_morph_str"))
+                    else if (me.HasModifier("modifier_morphling_morph_str"))
                     {
                         //Game.PrintMessage("disable hp", MessageType.ChatMessage);
                         toStr.ToggleAbility();
@@ -195,7 +214,15 @@ namespace MorphlingAnnihilation
 
             target = ClosestToMouse(me,350);
 
-            if (target==null) return;
+            if (target == null)
+            {
+                if (Utils.SleepCheck("move_Cd"))
+                {
+                    Utils.Sleep(100, "move_Cd");
+                    me.Move(Game.MousePosition);
+                }
+                return;
+            }
 
             var eb = me.FindItem("item_ethereal_blade");
             var dist = me.Distance2D(target);
@@ -245,7 +272,8 @@ namespace MorphlingAnnihilation
                 Utils.Sleep(800 + Game.Ping, "comboAct");
                 return;
             }
-            me.Move(Game.MousePosition);
+            Orbwalking.Orbwalk(target);
+            //me.Move(Game.MousePosition);
             Utils.Sleep(250 + Game.Ping, "comboAct");
         }
 
