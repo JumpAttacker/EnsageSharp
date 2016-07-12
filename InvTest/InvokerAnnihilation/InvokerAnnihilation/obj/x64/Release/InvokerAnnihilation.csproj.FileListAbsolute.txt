@@ -1,0 +1,14 @@
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\InvokerAnnihilation.exe.config
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\InvokerAnnihilation.exe
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\InvokerAnnihilation.pdb
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\Ensage.Common.dll
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\Ensage.dll
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\SharpDX.Direct3D9.dll
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\SharpDX.dll
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\Newtonsoft.Json.dll
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\EnsageSharp.Sandbox.dll
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\Ensage.Common.pdb
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\bin\Release\EnsageSharp.Sandbox.pdb
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\obj\x64\Release\InvokerAnnihilation.csprojResolveAssemblyReference.cache
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\obj\x64\Release\InvokerAnnihilation.exe
+C:\Users\Jumbo\Documents\Visual Studio 2013\Projects\InvokerAnnihilation - копия\InvokerAnnihilation\obj\x64\Release\InvokerAnnihilation.pdb

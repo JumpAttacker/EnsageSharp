@@ -10,6 +10,7 @@ using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
+using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
 
 namespace InvokerAnnihilation
@@ -947,7 +948,7 @@ namespace InvokerAnnihilation
             return any;
         }
 
-        private static bool AnyShitInRange(Hero x,out Vector3 newPosForSS, List<Hero> validHeroes=null)
+        private static bool AnyShitInRange(Hero x,out Vector3 newPosForSs, List<Hero> validHeroes=null)
         {
             if (validHeroes==null)
                 validHeroes=Heroes.GetByTeam(_myHero.GetEnemyTeam()).Where(q => q.IsValid && q.IsAlive && q.IsVisible).ToList();
@@ -966,7 +967,7 @@ namespace InvokerAnnihilation
                     {
                         if (CheckForEnemy(startPos+new Vector3(X, Y,0), validHeroes,x))
                         {
-                            newPosForSS=startPos+new Vector3(X,Y,0);
+                            newPosForSs=startPos+new Vector3(X,Y,0);
                             return true;
                         }
                         Y += Menu.Item("ssAutoInStunned.Accuracy").GetValue<Slider>().Value;
@@ -974,7 +975,7 @@ namespace InvokerAnnihilation
                     X += Menu.Item("ssAutoInStunned.Accuracy").GetValue<Slider>().Value;
                 }
             }
-            newPosForSS = new Vector3();
+            newPosForSs = new Vector3();
             return any;
         }
 
@@ -1031,7 +1032,7 @@ namespace InvokerAnnihilation
                 Utils.Sleep(Game.Ping + 50, "GettingNeededSpells");
             }
         }
-
+        private static readonly Dictionary<Unit,Orbwalker> OrbDictinary=new Dictionary<Unit, Orbwalker>();
         private static void ComboInAction(Hero me, Hero target)
         {
             #region Init
@@ -1086,19 +1087,34 @@ namespace InvokerAnnihilation
                 PrintInfo(s.StoredName());
             }*/
             var myBoys = ObjectManager.GetEntities<Unit>().Where(x => x.Team == me.Team && x.IsControllable && x.IsAlive && Utils.SleepCheck(x.Handle.ToString()));
-            foreach (var myBoy in myBoys)
-            {
-                if (myBoy is Hero && !target.IsInvul())
+            if (!target.IsInvul())
+                foreach (var myBoy in myBoys)
                 {
-                    Orbwalking.Orbwalk(target, 0, 0, false, true);
+                    if (myBoy is Hero)
+                    {
+                        //Orbwalking.Orbwalk(target, 0, 0, false, true);
+                    }
+                    else
+                    {
+                        Orbwalker orb;
+                        if (!OrbDictinary.TryGetValue(myBoy, out orb))
+                        {
+                            OrbDictinary.Add(myBoy, new Orbwalker(myBoy));
+                        }
+                        orb = null;
+                        if (orb != null)
+                        {
+                            orb.Attack(target, true);
+                        }
+                        else
+                        {
+                            myBoy.Attack(target);
+                            Utils.Sleep(300, myBoy.Handle.ToString());
+                        }
+
+                    }
+
                 }
-                else
-                {
-                    myBoy.Attack(target);
-                    Utils.Sleep(300, myBoy.Handle.ToString()); 
-                }
-                
-            }
             if (me.CanUseItems())
             {
                 if (urn != null && urn.CanBeCasted(target))
@@ -1111,11 +1127,11 @@ namespace InvokerAnnihilation
                         Utils.Sleep(300, urn.StoredName());
                     }
                 }
-                if (_stage > 0 && !target.IsHexed() && !target.IsStunned())
+                if (_stage > 0 && !target.IsHexed())
                 {
                     if (hex != null && hex.CanBeCasted(target) &&
                         Menu.Item("items").GetValue<AbilityToggler>().IsEnabled(hex.StoredName()) &&
-                        Utils.SleepCheck("items"))
+                        Utils.SleepCheck("items") && !target.IsStunned())
                     {
                         hex.UseAbility(target);
                         Utils.Sleep(300, "items");
@@ -1160,7 +1176,12 @@ namespace InvokerAnnihilation
                 case 1:
                     if (Combos[_combo].CheckEul())
                     {
-                        if (eul == null || eul.AbilityState != AbilityState.Ready) return;
+                        if (eul == null || eul.AbilityState != AbilityState.Ready)
+                        {
+                            if (!target.IsInvul())
+                                Orbwalking.Orbwalk(target, 10);
+                            return;
+                        }
                         if (me.Distance2D(target) <= eul.CastRange+50)
                         {
                             eul.UseAbility(target);
@@ -1181,7 +1202,8 @@ namespace InvokerAnnihilation
                 default:
                     if (Combos[_combo].GetComboAbilities().Length < _stage - 1 && !target.IsInvul())
                     {
-                        Orbwalking.Orbwalk(target, 0, 0, false, true);
+                        if (!target.IsInvul())
+                            Orbwalking.Orbwalk(target, 10);
                         _stage = 1;
                         //me.Attack(target);
                         //Utils.Sleep(1000, "StageCheck");
@@ -1234,6 +1256,11 @@ namespace InvokerAnnihilation
                                         invoke.UseAbility();
                                         Utils.Sleep(100, "StageCheck");
                                     }
+                                    else
+                                    {
+                                        if (!target.IsInvul())
+                                            Orbwalking.Orbwalk(target);
+                                    }
                                 }
                                 else
                                     try
@@ -1255,7 +1282,7 @@ namespace InvokerAnnihilation
                     }
                     else if (!target.IsInvul())
                     {
-                        Orbwalking.Orbwalk(target, 0, 0, false, true);
+                        Orbwalking.Orbwalk(target);
                         //me.Attack(target);
                         //Utils.Sleep(1000, "StageCheck");
                         return;
