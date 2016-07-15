@@ -104,7 +104,7 @@ namespace OverlayInformation
             if (Members.Menu.Item("invoker.Enable").GetValue<bool>() && Members.Invoker != null && Members.Invoker.IsValid)
             {
                 //string[] modname = {"modifier_invoker_emp", "modifier_invoker_sun_strike"};
-                const string modname = "modifier_invoker_emp";
+                const string modname = "modifier_invoker_sun_strike";
                 try
                 {
                     foreach (var t in baseList.Where(x => !InSys.Contains(x) && x.HasModifier(modname)))
@@ -305,11 +305,15 @@ namespace OverlayInformation
                 try
                 {
                     var aapos = Drawing.WorldToScreen(AAunit.Position);
-                    if (aapos.X > 0 && aapos.Y > 0)
+                    if (!aapos.IsZero)
                     {
-                        Drawing.DrawLine(Drawing.WorldToScreen(Members.MyHero.Position), aapos, Color.AliceBlue);
-                        const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
-                        Drawing.DrawRect(aapos, new Vector2(50, 50), Drawing.GetTexture(name));
+                        var myHeroPos = Drawing.WorldToScreen(Members.MyHero.Position);
+                        if (!myHeroPos.IsZero)
+                        {
+                            Drawing.DrawLine(Drawing.WorldToScreen(Members.MyHero.Position), aapos, Color.AliceBlue);
+                            const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
+                            Drawing.DrawRect(aapos, new Vector2(50, 50), Drawing.GetTexture(name));
+                        }
                     }
                 }
                 catch (Exception)

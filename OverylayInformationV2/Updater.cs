@@ -49,62 +49,74 @@ namespace OverlayInformation
                         if (!Members.Apparition &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_AncientApparition))
                         {
+                            Printer.Print("Apparition detected");
                             Members.Apparition = true;
                         }
                         if (Members.PAisHere == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_PhantomAssassin))
                         {
+                            Printer.Print("PhantomAssss detected");
                             Members.PAisHere = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_PhantomAssassin);
                         }
                         if (!Members.BaraIsHere &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_SpiritBreaker))
                         {
+                            Printer.Print("BaraIsHere detected");
                             Members.BaraIsHere = true;
                         }
                         if (Members.Mirana == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Mirana))
                         {
+                            Printer.Print("Mirana detected");
                             Members.Mirana = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Mirana);
                         }
                         if (Members.Windrunner == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner))
                         {
+                            Printer.Print("Windrunner detected");
                             Members.Windrunner = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner);
                         }
                         if (Members.Invoker == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Invoker))
                         {
+                            Printer.Print("Invoker detected");
                             Members.Invoker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Invoker);
                         }
                         if (Members.Kunkka == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka))
                         {
+                            Printer.Print("Kunkka detected");
                             Members.Kunkka = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka);
                         }
                         if (Members.Lina == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Lina))
                         {
+                            Printer.Print("Lina detected");
                             Members.Lina = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Lina);
                         }
                         if (Members.Leshrac == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac))
                         {
+                            Printer.Print("Leshrac detected");
                             Members.Leshrac = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac);
                         }
                         if (Members.LifeStealer == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Life_Stealer))
                         {
+                            Printer.Print("LifeStealer detected");
                             Members.LifeStealer = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Life_Stealer);
                         }
 
                         if (Members.Techies == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Techies))
                         {
+                            Printer.Print("Techies detected");
                             Members.Techies = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Techies);
                         }
                         if (Members.Tinker == null &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Tinker))
                         {
+                            Printer.Print("Tinker detected");
                             Members.Tinker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Tinker);
                         }
                     }
