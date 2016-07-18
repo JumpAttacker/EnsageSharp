@@ -37,11 +37,12 @@ namespace ArcAnnihilation
                     .Where(
                         x =>
                             x.IsAlive && x.IsControllable && x.Team == me.Team &&
-                            x.Modifiers.Any(y=>y.Name=="modifier_kill")).ToList();
+                            x.Modifiers.Any(y => y.Name == "modifier_kill")).ToList();
                 if (_clones.Any())
                     Utils.Sleep(100, "Tempest.refresh");
                 return _clones;
             }
+
             public static IEnumerable<Hero> GetFullyCloneList(Hero me)
             {
                 if (!Utils.SleepCheck("Tempest.refresh.fully")) return _clonesF;
@@ -53,6 +54,7 @@ namespace ArcAnnihilation
                     Utils.Sleep(100, "Tempest.refresh.fully");
                 return _clonesF;
             } 
+
         }
         public class Necronomicon
         {

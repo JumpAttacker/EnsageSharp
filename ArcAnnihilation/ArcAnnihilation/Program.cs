@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -50,7 +51,7 @@ namespace ArcAnnihilation
         private static int _tick;
         private static readonly Dictionary<uint, int> LastAttackStart = new Dictionary<uint, int>();
         private static readonly Dictionary<uint, NetworkActivity> LastActivity = new Dictionary<uint, NetworkActivity>();
-
+        private static readonly List<Spell> SpellBaseList=new List<Spell>(); 
         private static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
         {
             {"item_mask_of_madness", 1},
@@ -158,6 +159,7 @@ namespace ArcAnnihilation
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Player.OnExecuteOrder += Player_OnExecuteAction;
+            Game.OnWndProc += Game_OnWndProc;
             //var dict = Items.ToDictionary(item => item, item => true);
             Menu.AddItem(new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('G', KeyBindType.Press)));
             Menu.AddItem(new MenuItem("spamHotkey", "Spark Spam").SetValue(new KeyBind('H', KeyBindType.Press)));
@@ -165,6 +167,12 @@ namespace ArcAnnihilation
                 new MenuItem("hotkeyClone", "ComboKey with Clones").SetValue(new KeyBind('Z', KeyBindType.Toggle)));
             //Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
             Menu.AddItem(new MenuItem("LockTarget", "Lock Target").SetValue(true));
+            
+            var drawItems = new Menu("Items Drawing", "ItemsDrawing");
+            drawItems.AddItem(new MenuItem("DrawItems", "Draw Items on cooldown").SetValue(true));
+            drawItems.AddItem(new MenuItem("DrawItems.pos.x", "Position X").SetValue(new Slider(0, 0, 2500)));
+            drawItems.AddItem(new MenuItem("DrawItems.pos.y", "Position Y").SetValue(new Slider(0, 0, 2500)));
+
             Menu.AddItem(new MenuItem("AutoMidas", "Auto Midas").SetValue(true));
             Menu.AddItem(
                 new MenuItem("FirstClone", "Ez Heal").SetValue(true)
@@ -233,7 +241,7 @@ namespace ArcAnnihilation
                 new MenuItem("order", "Clone Order Selection").SetValue(
                     new StringList(new[] {"monkey", "caster", "nothing"}, 1)));
 
-
+            Menu.AddSubMenu(drawItems);
             Menu.AddSubMenu(difblade);
             Menu.AddSubMenu(daggerSelection);
             Menu.AddSubMenu(autoheal);
@@ -241,6 +249,29 @@ namespace ArcAnnihilation
             Menu.AddSubMenu(autoPush);
             autoPush.AddSubMenu(antiFeed);
             Menu.AddToMainMenu();
+        }
+
+        private static bool KeyState;
+        private static void Game_OnWndProc(WndEventArgs args)
+        {
+            var startPos = new Vector2(Menu.Item("DrawItems.pos.x").GetValue<Slider>().Value,
+                Menu.Item("DrawItems.pos.y").GetValue<Slider>().Value);
+            var size = new Vector2(40, 25);
+            var extraButtonPos = startPos - new Vector2(0, 20);
+            var extraButtonSize = new Vector2(size.X*6*0.7f, 19);
+            if (!Utils.IsUnderRectangle(Game.MouseScreenPosition, extraButtonPos.X, extraButtonPos.Y,
+                extraButtonSize.X, extraButtonSize.Y)) return;
+            if (args.Msg == (ulong) Utils.WindowsMessages.WM_LBUTTONUP)
+            {
+                KeyState = false;
+                args.Process = false;
+            }
+
+            if (args.Msg == (ulong) Utils.WindowsMessages.WM_LBUTTONDOWN)
+            {
+                KeyState = true;
+                args.Process = false;
+            }
         }
 
         /**
@@ -370,6 +401,83 @@ namespace ArcAnnihilation
         {
             //Drawing.DrawText($"x:{Game.MousePosition.X} y:{Game.MousePosition.Y}",Game.MouseScreenPosition+new Vector2(150,150),Color.Red,FontFlags.Custom);
             if (!_loaded) return;
+            if (Menu.Item("DrawItems").GetValue<bool>())
+            {
+                var startPos = new Vector2(Menu.Item("DrawItems.pos.x").GetValue<Slider>().Value,
+                    Menu.Item("DrawItems.pos.y").GetValue<Slider>().Value);
+                var itemCount = 0;
+                var size = new Vector2(40, 25);
+                var extraButtonPos = startPos - new Vector2(0, 20);
+                var extraButtonSize = new Vector2(size.X*6*0.7f, 19);
+                if (Utils.IsUnderRectangle(Game.MouseScreenPosition, extraButtonPos.X, extraButtonPos.Y,
+                    extraButtonSize.X, extraButtonSize.Y))
+                {
+                    Drawing.DrawRect(extraButtonPos, extraButtonSize,
+                        new Color(0, 155, 255, 255), true);
+                    Drawing.DrawRect(extraButtonPos, extraButtonSize,
+                        new Color(0, 0, 0, 140));
+                    var textSize = Drawing.MeasureText("Move me", "Arial",
+                        new Vector2((float) (extraButtonSize.Y*.90), extraButtonSize.Y/2), FontFlags.AntiAlias);
+                    var textPos = extraButtonPos +
+                                  new Vector2((extraButtonSize.X - textSize.X)/2, (extraButtonSize.Y - textSize.Y)/2);
+                    Drawing.DrawText(
+                        "Move me",
+                        textPos,
+                        new Vector2(textSize.Y, 0),
+                        Color.White,
+                        FontFlags.AntiAlias | FontFlags.StrikeOut);
+                }
+                if (KeyState)
+                {
+                    Menu.Item("DrawItems.pos.x").SetValue(new Slider((int) Game.MouseScreenPosition.X - 50, 0, 2500));
+                    Menu.Item("DrawItems.pos.y")
+                        .SetValue(new Slider((int) ((int) Game.MouseScreenPosition.Y + extraButtonSize.Y/2), 0, 2500));
+                }
+                Drawing.DrawRect(startPos, new Vector2(size.X*6*0.7f, size.Y*1.15f),
+                    new Color(0, 155, 255, 255), true); 
+                foreach (var f in SpellBaseList)
+                {
+                    if (itemCount>6)
+                        return;
+                    var cd = f.GetCooldown();
+                    if (cd > 0)
+                    {
+                        if (Utils.SleepCheck("draw_items_cooldown" + f.Name))
+                        {
+                            Utils.Sleep(500, "draw_items_cooldown" + f.Name);
+                            f.SetCooldown(f.GetCooldown()-0.5f);
+                        }
+                        var itemPos = startPos + new Vector2(2+size.X*itemCount*0.7f, 2);
+                        
+                        Drawing.DrawRect(itemPos, size,
+                            f.GetTexture());
+                        var cooldown =
+                                    ((int)Math.Min(cd+1, 999)).ToString(CultureInfo.InvariantCulture);
+                        var textSize = Drawing.MeasureText(cooldown, "Arial",
+                            new Vector2((float) (size.Y*.75), size.Y/2), FontFlags.AntiAlias);
+                        var textPos = itemPos + new Vector2(0, size.Y - textSize.Y);
+                        Drawing.DrawRect(textPos - new Vector2(0, 0),
+                            new Vector2(textSize.X, textSize.Y),
+                            new Color(0, 0, 0, 200));
+                        Drawing.DrawText(
+                            cooldown,
+                            textPos,
+                            new Vector2(textSize.Y, 0),
+                            Color.White,
+                            FontFlags.AntiAlias | FontFlags.StrikeOut);
+                        itemCount++;
+                    }
+                }
+                var kek = SpellBaseList.Where(x => x.GetCooldown() <= 0).ToList();
+                foreach (var item in kek)
+                {
+                    SpellBaseList.Remove(item);
+                    //Print("Kick from ItemCooldownBase: " + item.Name);
+                }
+                
+
+            }
+
             if (Menu.Item("AutoPush.DrawLine").GetValue<bool>() &&
                 Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active &&
                 !Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
@@ -545,6 +653,23 @@ namespace ArcAnnihilation
                 LastAttackStart.Remove(handle);
                 LastAttackStart.Add(handle, _tick);
             }
+            foreach (var clone in Objects.Tempest.GetCloneList(_mainHero))
+            {
+                foreach (var item in clone.Inventory.Items.Where(x=>x.Cooldown>0))
+                {
+                    var spell = SpellBaseList.Find(x => x.Name == item.StoredName());
+                    if (spell==null)
+                    {
+                        SpellBaseList.Add(new Spell(item));
+                        //Print("Init new item: "+item.StoredName());
+                    }
+                    else
+                    {
+                        spell.SetCooldown(item.Cooldown);
+                    }
+                }
+            }
+            
 
             #region code for spark spam
             if (Menu.Item("spamHotkey").GetValue<KeyBind>().Active)
@@ -583,6 +708,7 @@ namespace ArcAnnihilation
             var midas = _mainHero.FindItem("item_hand_of_midas");
             if (midas != null && Menu.Item("AutoMidas").GetValue<bool>())
             {
+                //Print("Me: "+midas.Cooldown);
                 if (midas.CanBeCasted() && Utils.SleepCheck(_mainHero.Handle + "midas") && _mainHero.IsAlive && !_mainHero.IsInvisible())
                 {
                     var enemy = ObjectManager.GetEntities<Unit>()
@@ -604,7 +730,19 @@ namespace ArcAnnihilation
                 foreach (var clone in Objects.Tempest.GetCloneList(_mainHero).Where(x => Utils.SleepCheck(x.Handle + "midas")))
                 {
                     midas = clone.FindItem("item_hand_of_midas");
-                    if (midas == null || !midas.CanBeCasted()) continue;
+                    /*Print("----------- ");
+                    foreach (var item in clone.Inventory.Items)
+                    {
+                        Print(item.Cost+"item: "+item.Name+": "+item.Cooldown+"/"+item.CooldownLength+". State: "+item.AbilityState);
+                        
+                    }
+                    foreach (var spell in clone.Spellbook.Spells.Where(x=>x.IsAbilityType(AbilityType.Basic)))
+                    {
+                        Print("item: "+spell.Name+": "+spell.Cooldown+"/"+spell.CooldownLength+". State: "+spell.AbilityState);
+                    }*/
+                    
+                    if (midas == null || !midas.CanBeCasted() || SpellBaseList.Find(x => x.Name == midas.StoredName())!=null) continue;
+                    
                     var enemy = ObjectManager.GetEntities<Unit>()
                             .Where(
                                 x =>
@@ -964,7 +1102,7 @@ namespace ArcAnnihilation
                 var enumerable = inv as Item[] ?? inv.ToArray();
 
                 // use dagger if available
-                var dagger = enumerable.Any(x => x.Name == "item_blink" && x.Cooldown == 0);
+                var dagger = enumerable.Any(x => x.Name == "item_blink" && (x.Cooldown == 0 && SpellBaseList.Find(z => x.Name == x.StoredName())==null));
                 
                 // uses all items available
                 ItemUsage(hero, enumerable, target, d,
@@ -1140,7 +1278,7 @@ namespace ArcAnnihilation
             if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime")) return;
             // use all items given in Items list (line 53)
             var inventory =
-                inv.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted()
+                inv.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
                     /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
             var items =
                 inventory.Where(
@@ -1151,8 +1289,14 @@ namespace ArcAnnihilation
                           (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
                          x.CastRange >= distance)).OrderByDescending(y => Items[y.StoredName()]);
             var v = items.FirstOrDefault();
+            
             if (v != null && Utils.SleepCheck("item_cd"+me.Handle))
             {
+                Print(v.Name);
+                if (v.Name == "item_manta")
+                {
+                    Print("cd: "+v.Cooldown+"/"+(SpellBaseList.Find(z => z.Name == v.Name)==null));
+                }
                 //Print(v.Name+"["+Game.GameTime+"]");
                 if (v.IsAbilityBehavior(AbilityBehavior.NoTarget))
                 {
