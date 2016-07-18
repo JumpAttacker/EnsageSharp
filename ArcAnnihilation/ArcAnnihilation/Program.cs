@@ -1292,11 +1292,11 @@ namespace ArcAnnihilation
             
             if (v != null && Utils.SleepCheck("item_cd"+me.Handle))
             {
-                Print(v.Name);
+                /*Print(v.Name);
                 if (v.Name == "item_manta")
                 {
                     Print("cd: "+v.Cooldown+"/"+(SpellBaseList.Find(z => z.Name == v.Name)==null));
-                }
+                }*/
                 //Print(v.Name+"["+Game.GameTime+"]");
                 if (v.IsAbilityBehavior(AbilityBehavior.NoTarget))
                 {
