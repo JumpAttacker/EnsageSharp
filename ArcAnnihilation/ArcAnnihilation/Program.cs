@@ -1404,6 +1404,8 @@ namespace ArcAnnihilation
                         hero.HasModifier("modifier_item_diffusal_blade_slow");
                     var repel = hero.FindModifier("modifier_omniknight_repel")!=null;
                     var guard = hero.FindModifier("modifier_omninight_guardian_angel")!=null;
+                    var dust = inventory.Find(x => x.Name == "item_dust");
+                    dust?.UseAbility();
                     if (mod && !repel && !guard)
                     {
                         continue;
