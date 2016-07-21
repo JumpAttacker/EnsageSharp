@@ -37,16 +37,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\Ensage.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\PlaySharp\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\Ensage.Common.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\PlaySharp\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\SharpDX.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\PlaySharp\References\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\PlaySharp\References\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,6 +58,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Combo.cs" />
+    <Compile Include="Initialization.cs" />
+    <Compile Include="Members.cs" />
+    <Compile Include="Printer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
