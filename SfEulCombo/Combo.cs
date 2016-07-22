@@ -18,7 +18,10 @@ namespace SfEulCombo
         public static void Game_OnUpdate(EventArgs args)
         {
             if (!Members.Menu.Item("combo.Key").GetValue<KeyBind>().Active)
+            {
+                Members.Target = null;
                 return;
+            }
 
             if (Game.IsPaused)
                 return;
