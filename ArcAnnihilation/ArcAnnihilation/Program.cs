@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -109,6 +108,7 @@ namespace ArcAnnihilation
             "item_clarity",
             "item_enchanted_mango",
             "item_bottle",
+            "item_dust",
             "item_diffusal_blade_2"
         };
 
@@ -153,7 +153,7 @@ namespace ArcAnnihilation
         }
 
         #endregion
-
+        //if (args.GetNewValue<KeyBind>().Active)
         private static void Main()
         {
             Game.OnUpdate += Game_OnUpdate;
@@ -167,6 +167,7 @@ namespace ArcAnnihilation
                 new MenuItem("hotkeyClone", "ComboKey with Clones").SetValue(new KeyBind('Z', KeyBindType.Toggle)));
             //Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
             Menu.AddItem(new MenuItem("LockTarget", "Lock Target").SetValue(true));
+            Menu.AddItem(new MenuItem("MagneticField", "Use Magnetic Field for Faster Kill").SetValue(true));
             
             var drawItems = new Menu("Items Drawing", "ItemsDrawing");
             drawItems.AddItem(new MenuItem("DrawItems", "Draw Items on cooldown").SetValue(true));
@@ -251,9 +252,18 @@ namespace ArcAnnihilation
             Menu.AddToMainMenu();
         }
 
-        private static bool KeyState;
+        private static bool _keyState;
         private static void Game_OnWndProc(WndEventArgs args)
         {
+            if (Game.IsChatOpen)
+                return;
+            if (args.Msg == (ulong) Utils.WindowsMessages.WM_KEYDOWN &&
+                (args.WParam == Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Key ||
+                 args.WParam == Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Key ||
+                 args.WParam == Menu.Item("hotkeyClone").GetValue<KeyBind>().Key))
+            {
+                args.Process = false;
+            }
             var startPos = new Vector2(Menu.Item("DrawItems.pos.x").GetValue<Slider>().Value,
                 Menu.Item("DrawItems.pos.y").GetValue<Slider>().Value);
             var size = new Vector2(40, 25);
@@ -263,13 +273,13 @@ namespace ArcAnnihilation
                 extraButtonSize.X, extraButtonSize.Y)) return;
             if (args.Msg == (ulong) Utils.WindowsMessages.WM_LBUTTONUP)
             {
-                KeyState = false;
+                _keyState = false;
                 args.Process = false;
             }
 
             if (args.Msg == (ulong) Utils.WindowsMessages.WM_LBUTTONDOWN)
             {
-                KeyState = true;
+                _keyState = true;
                 args.Process = false;
             }
         }
@@ -369,7 +379,10 @@ namespace ArcAnnihilation
                             needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
                             if (needed != null && needed.CanBeCasted())
                             {
-                                needed.UseAbility(sender.Hero);
+                                if (needed.StoredName() == "item_dust")
+                                    needed.UseAbility();
+                                else
+                                    needed.UseAbility(sender.Hero);
                                 args.Process = false;
                             }
                             break;
@@ -427,7 +440,7 @@ namespace ArcAnnihilation
                         Color.White,
                         FontFlags.AntiAlias | FontFlags.StrikeOut);
                 }
-                if (KeyState)
+                if (_keyState)
                 {
                     Menu.Item("DrawItems.pos.x").SetValue(new Slider((int) Game.MouseScreenPosition.X - 50, 0, 2500));
                     Menu.Item("DrawItems.pos.y")
@@ -817,7 +830,7 @@ namespace ArcAnnihilation
                             x =>Utils.SleepCheck(x.Handle + "AutoPush.Attack") && !x.IsAttacking()))
             {
                 if (Menu.Item("AntiFeed.Enable").GetValue<bool>() &&
-                    Ensage.Common.Objects.Heroes.GetByTeam(necr.GetEnemyTeam())
+                    Heroes.GetByTeam(necr.GetEnemyTeam())
                         .Any(
                             x =>
                                 x.IsAlive && x.IsVisible &&
@@ -1112,6 +1125,7 @@ namespace ArcAnnihilation
                 SpellsUsage(hero, target, d, dagger);
                 // do orbwalking if enabled
                 // otherwise simply attack target
+                if (hero.IsDisarmed() || !Utils.SleepCheck("magField")) continue;
                 if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
                 {
                     Orbwalk(hero, target, Menu.Item("OrbWalking.bonusWindupMs").GetValue<Slider>().Value);
@@ -1147,20 +1161,19 @@ namespace ArcAnnihilation
 
         private static void SparkSpam(Hero me)
         {
+            Ability spell;
             foreach (var hero in Objects.Tempest.GetCloneList(me))
             {
-                var spell = hero.Spellbook.Spell3;
+                spell = hero.Spellbook.Spell3;
                 if (spell == null || !spell.CanBeCasted() || !Utils.SleepCheck("spam" + hero.Handle)) continue;
                 spell.UseAbility(Game.MousePosition);
-                Utils.Sleep(400, "spam" + hero.Handle);
+                Utils.Sleep(1000, "spam" + hero.Handle);
             }
             if (!me.IsAlive || !Utils.SleepCheck("spam" + me.Handle)) return;
-            {
-                var spell = me.Spellbook.Spell3;
-                if (spell == null || !spell.CanBeCasted()) return;
-                spell.UseAbility(Game.MousePosition);
-                Utils.Sleep(400, "spam" + me.Handle);
-            }
+            spell = me.Spellbook.Spell3;
+            if (spell == null || !spell.CanBeCasted()) return;
+            spell.UseAbility(Game.MousePosition);
+            Utils.Sleep(1000, "spam" + me.Handle);
         }
 
         private static void DoCombo(Hero me, Hero target)
@@ -1247,7 +1260,13 @@ namespace ArcAnnihilation
             }
             if (w != null && w.CanBeCasted() && Utils.SleepCheck(w.Name) && !me.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 && !daggerIsReady)
             {
-                w.UseAbility(Prediction.InFront(me,200));
+                if (!Menu.Item("MagneticField").GetValue<bool>() && target.IsMelee)
+                {
+                    Utils.Sleep(500, "magField");
+                    w.UseAbility(Prediction.InFront(me, -250));
+                }
+                else
+                    w.UseAbility(Prediction.InFront(me, 250));
                 Utils.Sleep(500, w.Name);
             }
             if (e != null && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady)
@@ -1275,7 +1294,7 @@ namespace ArcAnnihilation
         **/
         private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, double distance, bool useBkb, bool byIllusion = false)
         {
-            if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime")) return;
+            if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime") || me.IsStunned()) return;
             // use all items given in Items list (line 53)
             var inventory =
                 inv.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
@@ -1405,7 +1424,11 @@ namespace ArcAnnihilation
                     var repel = hero.FindModifier("modifier_omniknight_repel")!=null;
                     var guard = hero.FindModifier("modifier_omninight_guardian_angel")!=null;
                     var dust = inventory.Find(x => x.Name == "item_dust");
-                    dust?.UseAbility();
+                    if (dust != null)
+                    {
+                        dust.UseAbility();
+                        Utils.Sleep(250, dust.StoredName() + me.Handle);
+                    }
                     if (mod && !repel && !guard)
                     {
                         continue;
@@ -1482,7 +1505,7 @@ namespace ArcAnnihilation
                         Utils.Sleep(500, item.Name + me.Handle);
                     }
                 }
-                foreach (var hero in Ensage.Common.Objects.Heroes.GetByTeam(me.Team).Where(x=>x!=null && x.IsValid && x.IsAlive && x.Distance2D(me)<=600 && (x.IsHexed() || x.IsSilenced())))
+                foreach (var hero in Heroes.GetByTeam(me.Team).Where(x=>x!=null && x.IsValid && x.IsAlive && x.Distance2D(me)<=600 && (x.IsHexed() || x.IsSilenced())))
                 {
                     foreach (var item in toList)
                     {
