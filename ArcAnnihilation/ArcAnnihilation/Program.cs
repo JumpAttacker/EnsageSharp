@@ -26,6 +26,7 @@ namespace ArcAnnihilation
         private static Vector3 _pushLaneBot = new Vector3(5827, -5229, 384);
         private static Vector3 _pushLaneMid = new Vector3(1, 1, 384);
         private static float _myHull;
+        private static bool DrawType;
         private static readonly Dictionary<Vector3, string> LaneDictionary = new Dictionary<Vector3, string>()
         {
             {new Vector3(-6080, 5805, 384), "top"}, 
@@ -167,12 +168,21 @@ namespace ArcAnnihilation
                 new MenuItem("hotkeyClone", "ComboKey with Clones").SetValue(new KeyBind('Z', KeyBindType.Toggle)));
             //Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
             Menu.AddItem(new MenuItem("LockTarget", "Lock Target").SetValue(true));
-            Menu.AddItem(new MenuItem("MagneticField", "Use Magnetic Field for Faster Kill").SetValue(true));
-            
+            Menu.AddItem(new MenuItem("MagneticField", "Use Magnetic Field for Faster Kill").SetValue(true))
+                .SetTooltip(
+                    "if enable, try to cast in font on hero, disable-> try to cast for defence from melee heroes");
+            Menu.AddItem(new MenuItem("Dust.Check", "Dust Usage: Check if target can go invis").SetValue(true))
+                .SetTooltip("by ur tempest in combo");
+
             var drawItems = new Menu("Items Drawing", "ItemsDrawing");
             drawItems.AddItem(new MenuItem("DrawItems", "Draw Items on cooldown").SetValue(true));
-            drawItems.AddItem(new MenuItem("DrawItems.pos.x", "Position X").SetValue(new Slider(0, 0, 2500)));
-            drawItems.AddItem(new MenuItem("DrawItems.pos.y", "Position Y").SetValue(new Slider(0, 0, 2500)));
+            drawItems.AddItem(new MenuItem("Draw.Order.Type", "Draw Type: New").SetValue(true))
+                .SetTooltip("use new way for drawing current orders").ValueChanged += (sender, args) =>
+                {
+                    DrawType = args.GetNewValue<bool>();
+                };
+            drawItems.AddItem(new MenuItem("DrawItems.pos.x", "Position X").SetValue(new Slider(500, 0, 2500)));
+            drawItems.AddItem(new MenuItem("DrawItems.pos.y", "Position Y").SetValue(new Slider(500, 0, 2500)));
 
             Menu.AddItem(new MenuItem("AutoMidas", "Auto Midas").SetValue(true));
             Menu.AddItem(
@@ -255,7 +265,7 @@ namespace ArcAnnihilation
         private static bool _keyState;
         private static void Game_OnWndProc(WndEventArgs args)
         {
-            if (Game.IsChatOpen)
+            if (Game.IsChatOpen || !_loaded)
                 return;
             if (args.Msg == (ulong) Utils.WindowsMessages.WM_KEYDOWN &&
                 (args.WParam == Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Key ||
@@ -276,7 +286,6 @@ namespace ArcAnnihilation
                 _keyState = false;
                 args.Process = false;
             }
-
             if (args.Msg == (ulong) Utils.WindowsMessages.WM_LBUTTONDOWN)
             {
                 _keyState = true;
@@ -291,6 +300,8 @@ namespace ArcAnnihilation
         **/
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
+            if (!_loaded)
+                return;
             #region code for monkey
             if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int)Orders.Monkey && !Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
             {
@@ -422,8 +433,9 @@ namespace ArcAnnihilation
                 var size = new Vector2(40, 25);
                 var extraButtonPos = startPos - new Vector2(0, 20);
                 var extraButtonSize = new Vector2(size.X*6*0.7f, 19);
-                if (Utils.IsUnderRectangle(Game.MouseScreenPosition, extraButtonPos.X, extraButtonPos.Y,
-                    extraButtonSize.X, extraButtonSize.Y))
+                var isIn = Utils.IsUnderRectangle(Game.MouseScreenPosition, extraButtonPos.X, extraButtonPos.Y,
+                    extraButtonSize.X, extraButtonSize.Y);
+                if (isIn)
                 {
                     Drawing.DrawRect(extraButtonPos, extraButtonSize,
                         new Color(0, 155, 255, 255), true);
@@ -447,18 +459,86 @@ namespace ArcAnnihilation
                         .SetValue(new Slider((int) ((int) Game.MouseScreenPosition.Y + extraButtonSize.Y/2), 0, 2500));
                 }
                 Drawing.DrawRect(startPos, new Vector2(size.X*6*0.7f, size.Y*1.15f),
-                    new Color(0, 155, 255, 255), true); 
+                    new Color(0, 155, 255, 255), true);
+                if (DrawType)
+                {
+                    if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active && !isIn)
+                    {
+                        Drawing.DrawRect(extraButtonPos, extraButtonSize,
+                            new Color(0, 155, 255, 255), true);
+                        var text = "Auto Heal " +
+                                   $"[{Utils.KeyToText(Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Key)}]";
+                        var textSize = Drawing.MeasureText(text, "Arial",
+                            new Vector2((float) (extraButtonSize.Y*.90), extraButtonSize.Y/2), FontFlags.AntiAlias);
+                        var textPos = extraButtonPos +
+                                      new Vector2((extraButtonSize.X - textSize.X)/2, (extraButtonSize.Y - textSize.Y)/2);
+                        Drawing.DrawText(
+                            text,
+                            textPos,
+                            new Vector2(textSize.Y, 0),
+                            Color.White,
+                            FontFlags.AntiAlias | FontFlags.StrikeOut);
+                    }
+                    if (Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
+                    {
+                        extraButtonPos = startPos + new Vector2(0, size.Y);
+                        var boxSize = new Vector2(size.X*6*0.7f, size.Y*1.15f);
+                        Drawing.DrawRect(extraButtonPos, boxSize,
+                            new Color(0, 155, 255, 255), true);
+                        var text = "Clone Mode " +
+                                   $"[{Utils.KeyToText(Menu.Item("hotkeyClone").GetValue<KeyBind>().Key)}]";
+                        var textSize = Drawing.MeasureText(text, "Arial",
+                            new Vector2((float) (boxSize.Y*.6), boxSize.Y/2), FontFlags.AntiAlias);
+                        var imageSize = new Vector2((float) (boxSize.Y*0.60 + 10), (float) (boxSize.Y*0.60));
+                        textSize += new Vector2(imageSize.X, 0);
+                        var textPos = extraButtonPos +
+                                      new Vector2((boxSize.X - textSize.X)/2, boxSize.Y/2 - textSize.Y/2);
+                            //+ new Vector2(2, boxSize.Y / 2 - textSize.Y / 2);
+                        Drawing.DrawText(
+                            text,
+                            textPos,
+                            new Vector2(textSize.Y, 0),
+                            Color.White,
+                            FontFlags.AntiAlias | FontFlags.StrikeOut);
+                        var itemPos = textPos + new Vector2(10 + textSize.X - imageSize.X, 0);
+                        if (_globalTarget2 != null)
+                        {
+                            Drawing.DrawRect(itemPos, imageSize,
+                                Textures.GetHeroTexture(_globalTarget2.StoredName()));
+                            Drawing.DrawRect(itemPos, imageSize, Color.Black, true);
+                        }
+                    }
+                    else if (Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
+                    {
+                        extraButtonPos = startPos + new Vector2(0, size.Y);
+                        var boxSize = new Vector2(size.X*6*0.7f, size.Y*1.15f);
+                        Drawing.DrawRect(extraButtonPos, boxSize,
+                            new Color(0, 155, 255, 255), true);
+                        var text = "Auto Push " +
+                                   $"[{Utils.KeyToText(Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Key)}]";
+                        var textSize = Drawing.MeasureText(text, "Arial",
+                            new Vector2((float) (boxSize.Y*.6), boxSize.Y/2), FontFlags.AntiAlias);
+                        var textPos = extraButtonPos +
+                                      new Vector2((boxSize.X - textSize.X)/2, boxSize.Y/2 - textSize.Y/2);
+                        Drawing.DrawText(
+                            text,
+                            textPos,
+                            new Vector2(textSize.Y, 0),
+                            Color.White,
+                            FontFlags.AntiAlias | FontFlags.StrikeOut);
+                    }
+                }
                 foreach (var f in SpellBaseList)
                 {
                     if (itemCount>6)
-                        return;
+                        continue;
                     var cd = f.GetCooldown();
                     if (cd > 0)
                     {
                         if (Utils.SleepCheck("draw_items_cooldown" + f.Name))
                         {
                             Utils.Sleep(500, "draw_items_cooldown" + f.Name);
-                            f.SetCooldown(f.GetCooldown()-0.5f);
+                            f.SetCooldown(f.GetCooldown()-0.500f);
                         }
                         var itemPos = startPos + new Vector2(2+size.X*itemCount*0.7f, 2);
                         
@@ -487,7 +567,6 @@ namespace ArcAnnihilation
                     SpellBaseList.Remove(item);
                     //Print("Kick from ItemCooldownBase: " + item.Name);
                 }
-                
 
             }
 
@@ -526,22 +605,32 @@ namespace ArcAnnihilation
             {
                 var startPos = new Vector2(Drawing.Width - 250, 100);
                 var size = new Vector2(180, 90);
-                Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
-                Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
-                Drawing.DrawText("Clone Mode is Active" + $"[{Utils.KeyToText(Menu.Item("hotkeyClone").GetValue<KeyBind>().Key)}]", startPos + new Vector2(10, 10),new Vector2(20), new Color(0, 155, 255),
-                    FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
-                    FontFlags.StrikeOut);
+                if (!DrawType)
+                {
+                    Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
+                    Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
+                    Drawing.DrawText(
+                        "Clone Mode is Active" +
+                        $"[{Utils.KeyToText(Menu.Item("hotkeyClone").GetValue<KeyBind>().Key)}]",
+                        startPos + new Vector2(10, 10), new Vector2(20), new Color(0, 155, 255),
+                        FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
+                        FontFlags.StrikeOut);
+                }
                 if (_globalTarget2 != null && _globalTarget2.IsAlive)
                 {
-                    pos = Drawing.WorldToScreen(_globalTarget2.Position);
-                    Drawing.DrawText("CloneTarget", pos, new Vector2(0, 50), Color.Red,
-                        FontFlags.AntiAlias | FontFlags.DropShadow);
-                    var name = "materials/ensage_ui/heroes_horizontal/" + _globalTarget2.Name.Replace("npc_dota_hero_", "") + ".vmat";
-                    size=new Vector2(50,50);
-                    Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(13, -6),
-                        Drawing.GetTexture(name));
-                    Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(14, -5),
-                        new Color(0, 0, 0, 255), true);
+                    if (!DrawType)
+                    {
+                        pos = Drawing.WorldToScreen(_globalTarget2.Position);
+                        Drawing.DrawText("CloneTarget", pos, new Vector2(0, 50), Color.Red,
+                            FontFlags.AntiAlias | FontFlags.DropShadow);
+                        var name = "materials/ensage_ui/heroes_horizontal/" +
+                                   _globalTarget2.Name.Replace("npc_dota_hero_", "") + ".vmat";
+                        size = new Vector2(50, 50);
+                        Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(13, -6),
+                            Drawing.GetTexture(name));
+                        Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(14, -5),
+                            new Color(0, 0, 0, 255), true);
+                    }
                     foreach (var me in Objects.Tempest.GetCloneList(_mainHero).ToList())
                     {
                         DrawEffects(me,_globalTarget2);
@@ -552,7 +641,7 @@ namespace ArcAnnihilation
                     }
                 }
             }
-            else if (Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
+            else if (!DrawType && Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
             {
                 var startPos = new Vector2(Drawing.Width - 250, 100);
                 var size = new Vector2(180, 40);
@@ -562,7 +651,7 @@ namespace ArcAnnihilation
                     FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
                     FontFlags.StrikeOut);
             }
-            if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
+            if (!DrawType && Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
             {
                 var startPos = new Vector2(Drawing.Width - 250, 190);
                 var size = new Vector2(180, 30);
@@ -578,13 +667,34 @@ namespace ArcAnnihilation
             Drawing.DrawText("Target", pos, new Vector2(0, 50), Color.Red, FontFlags.AntiAlias | FontFlags.DropShadow);
             foreach (var me in Objects.Tempest.GetCloneList(_mainHero).ToList())
             {
-                DrawEffects(me, _globalTarget2);
+                try
+                {
+                    DrawEffects(me, _globalTarget);
+                }
+                catch { Print("error Type: 1"); }
+            
             }
             foreach (var me in Objects.Necronomicon.GetNecronomicons(_mainHero).ToList())
             {
-                DrawEffects(me, _globalTarget2);
+                try
+                {
+                    DrawEffects(me, _globalTarget);
+                }
+                catch (Exception)
+                {
+                    Print("error Type: 2");
+                }
+                
             }
-            DrawEffects(_mainHero, _globalTarget2);
+            try
+            {
+                DrawEffects(_mainHero, _globalTarget);
+            }
+            catch (Exception)
+            {
+                Print("error Type: 3");
+            }
+            
         }
 
         /**
@@ -617,6 +727,7 @@ namespace ArcAnnihilation
                 LastAttackStart.Clear();
                 LastActivity.Clear();
                 _myHull = _mainHero.HullRadius;
+                DrawType = Menu.Item("Draw.Order.Type").GetValue<bool>();
             }
 
             if (!Game.IsInGame || _mainHero == null)
@@ -1253,7 +1364,7 @@ namespace ArcAnnihilation
             var e = spellbook.SpellE;
 
 
-            if (q != null && q.CanBeCasted() && q.CastRange >= distance && Utils.SleepCheck(me.Handle+q.Name))
+            if (q != null && q.CanBeCasted() && q.CastRange+me.HullRadius+target.HullRadius >= distance && Utils.SleepCheck(me.Handle+q.Name))
             {
                 q.UseAbility(target);
                 Utils.Sleep(500, me.Handle + q.Name);
@@ -1424,7 +1535,7 @@ namespace ArcAnnihilation
                     var repel = hero.FindModifier("modifier_omniknight_repel")!=null;
                     var guard = hero.FindModifier("modifier_omninight_guardian_angel")!=null;
                     var dust = inventory.Find(x => x.Name == "item_dust");
-                    if (dust != null)
+                    if (dust != null && (!Menu.Item("Dust.Check").GetValue<bool>() || target.CanGoInvis() || target.IsInvisible()))
                     {
                         dust.UseAbility();
                         Utils.Sleep(250, dust.StoredName() + me.Handle);
