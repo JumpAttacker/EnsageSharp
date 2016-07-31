@@ -26,7 +26,7 @@ namespace ArcAnnihilation
         private static Vector3 _pushLaneBot = new Vector3(5827, -5229, 384);
         private static Vector3 _pushLaneMid = new Vector3(1, 1, 384);
         private static float _myHull;
-        private static bool DrawType;
+        private static bool _drawType;
         private static readonly Dictionary<Vector3, string> LaneDictionary = new Dictionary<Vector3, string>()
         {
             {new Vector3(-6080, 5805, 384), "top"}, 
@@ -167,7 +167,7 @@ namespace ArcAnnihilation
             Menu.AddItem(
                 new MenuItem("hotkeyClone", "ComboKey with Clones").SetValue(new KeyBind('Z', KeyBindType.Toggle)));
             //Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
-            Menu.AddItem(new MenuItem("LockTarget", "Lock Target").SetValue(true));
+            Menu.AddItem(new MenuItem("LockTarget", "Lock target").SetValue(true));
             Menu.AddItem(new MenuItem("MagneticField", "Use Magnetic Field for Faster Kill").SetValue(true))
                 .SetTooltip(
                     "if enable, try to cast in font on hero, disable-> try to cast for defence from melee heroes");
@@ -179,7 +179,7 @@ namespace ArcAnnihilation
             drawItems.AddItem(new MenuItem("Draw.Order.Type", "Draw Type: New").SetValue(true))
                 .SetTooltip("use new way for drawing current orders").ValueChanged += (sender, args) =>
                 {
-                    DrawType = args.GetNewValue<bool>();
+                    _drawType = args.GetNewValue<bool>();
                 };
             drawItems.AddItem(new MenuItem("DrawItems.pos.x", "Position X").SetValue(new Slider(500, 0, 2500)));
             drawItems.AddItem(new MenuItem("DrawItems.pos.y", "Position Y").SetValue(new Slider(500, 0, 2500)));
@@ -237,7 +237,7 @@ namespace ArcAnnihilation
             difblade.AddItem(
                 new MenuItem("Diffusal.PurgEnemy", "Purge Selection").SetValue(new StringList(new[]
                 {
-                    "Only on Main Target",
+                    "Only on Main target",
                     "For all Enemies in cast range",
                     "No one"
                 }, 1)));
@@ -460,7 +460,7 @@ namespace ArcAnnihilation
                 }
                 Drawing.DrawRect(startPos, new Vector2(size.X*6*0.7f, size.Y*1.15f),
                     new Color(0, 155, 255, 255), true);
-                if (DrawType)
+                if (_drawType)
                 {
                     if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active && !isIn)
                     {
@@ -605,7 +605,7 @@ namespace ArcAnnihilation
             {
                 var startPos = new Vector2(Drawing.Width - 250, 100);
                 var size = new Vector2(180, 90);
-                if (!DrawType)
+                if (!_drawType)
                 {
                     Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 100));
                     Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
@@ -618,7 +618,7 @@ namespace ArcAnnihilation
                 }
                 if (_globalTarget2 != null && _globalTarget2.IsAlive)
                 {
-                    if (!DrawType)
+                    if (!_drawType)
                     {
                         pos = Drawing.WorldToScreen(_globalTarget2.Position);
                         Drawing.DrawText("CloneTarget", pos, new Vector2(0, 50), Color.Red,
@@ -641,7 +641,7 @@ namespace ArcAnnihilation
                     }
                 }
             }
-            else if (!DrawType && Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
+            else if (!_drawType && Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
             {
                 var startPos = new Vector2(Drawing.Width - 250, 100);
                 var size = new Vector2(180, 40);
@@ -651,7 +651,7 @@ namespace ArcAnnihilation
                     FontFlags.AntiAlias | FontFlags.DropShadow | FontFlags.Additive | FontFlags.Custom |
                     FontFlags.StrikeOut);
             }
-            if (!DrawType && Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
+            if (!_drawType && Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
             {
                 var startPos = new Vector2(Drawing.Width - 250, 190);
                 var size = new Vector2(180, 30);
@@ -664,7 +664,7 @@ namespace ArcAnnihilation
 
             if (_globalTarget == null || !_globalTarget.IsAlive) return;
             pos = Drawing.WorldToScreen(_globalTarget.Position);
-            Drawing.DrawText("Target", pos, new Vector2(0, 50), Color.Red, FontFlags.AntiAlias | FontFlags.DropShadow);
+            Drawing.DrawText("target", pos, new Vector2(0, 50), Color.Red, FontFlags.AntiAlias | FontFlags.DropShadow);
             foreach (var me in Objects.Tempest.GetCloneList(_mainHero).ToList())
             {
                 try
@@ -727,7 +727,7 @@ namespace ArcAnnihilation
                 LastAttackStart.Clear();
                 LastActivity.Clear();
                 _myHull = _mainHero.HullRadius;
-                DrawType = Menu.Item("Draw.Order.Type").GetValue<bool>();
+                _drawType = Menu.Item("Draw.Order.Type").GetValue<bool>();
             }
 
             if (!Game.IsInGame || _mainHero == null)
@@ -1419,7 +1419,21 @@ namespace ArcAnnihilation
                           (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
                          x.CastRange >= distance)).OrderByDescending(y => Items[y.StoredName()]);
             var v = items.FirstOrDefault();
-            
+            if (v == null && target.IsMelee)
+            {
+                
+                var pike = inventory.Find(x => x.StoredName() == "item_hurricane_pike");
+                if (pike != null && pike.CanBeCasted(target) && target.Distance2D(me)<=pike.GetCastRange() && Utils.SleepCheck("item_cd"+me.Handle))
+                {
+                    var angle = (float)Math.Max(
+                        Math.Abs(target.RotationRad - Utils.DegreeToRadian(target.FindAngleBetween(me.Position))) - 0.20, 0);
+                    if (!Prediction.IsTurning(target) && angle==0)
+                    {
+                        pike.UseAbility(target);
+                        Utils.Sleep(500, "item_cd" + me.Handle);
+                    }
+                }
+            }
             if (v != null && Utils.SleepCheck("item_cd"+me.Handle))
             {
                 /*Print(v.Name);
