@@ -69,6 +69,24 @@ namespace OverlayInformation
                     }
                 }
             }
+            if (Members.Menu.Item("arc.Enable").GetValue<bool>())
+            {
+                if (Members.ArcWarden != null && Members.ArcWarden.IsValid)
+                {
+                    foreach (var arc in baseList.Where(x => !InSys.Contains(x) && x.HasModifier("modifier_arc_warden_spark_wraith_thinker"))
+                        )
+                    {
+                        InSys.Add(arc);
+                        ParticleEffect effect;
+                        if (!ShowMeMoreEffect.TryGetValue(arc, out effect))
+                        {
+                            effect = arc.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                            effect.SetControlPoint(1, new Vector3(375, 0, 0));
+                            ShowMeMoreEffect.Add(arc, effect);
+                        }
+                    }
+                }
+            }
             if (Members.Menu.Item("apparition.Enable").GetValue<bool>() && Members.Apparition)
             {
                 foreach (var t in baseList.Where(t => !InSys.Contains(t) && t.DayVision == 550).Where(t => !Members.AAlist.Contains(t.Handle)))

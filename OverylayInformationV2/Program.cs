@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
@@ -141,6 +143,8 @@ namespace OverlayInformation
             var lifestealer = new Menu("", "life stealer", false, "life_stealer_infest", true);
             lifestealer.AddItem(new MenuItem("lifestealer.Enable", "Enable").SetValue(true));
             lifestealer.AddItem(new MenuItem("lifestealer.creeps.Enable", "Enable for creeps").SetValue(true));
+            var arc = new Menu("", "arc",textureName: "arc_warden_spark_wraith",showTextWithTexture:true);
+            arc.AddItem(new MenuItem("arc.Enable", "Enable").SetValue(true));
             var scan = new Menu("Enemy Scanning Ability", "Scan");
             scan.AddItem(new MenuItem("scan.Enable", "Enable").SetValue(true));
             //var cour = new Menu("Courier", "Courier");
@@ -222,6 +226,7 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(lifestealer);
             showMeMore.AddSubMenu(tech);
             showMeMore.AddSubMenu(tinker);
+            showMeMore.AddSubMenu(arc);
             showMeMore.AddSubMenu(scan);
             settings.AddSubMenu(showIllusion);
             settings.AddSubMenu(runevision);

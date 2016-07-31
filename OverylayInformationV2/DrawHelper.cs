@@ -192,8 +192,7 @@ namespace OverlayInformation
                             .Where(x => x!=null && x.IsValid && Members.Menu.Item("dangitems.List").GetValue<AbilityToggler>().IsEnabled(x.Name))
                     )
                 {
-                    var itemname = string.Format("materials/ensage_ui/items/{0}.vmat",
-                    item.Name.Replace("item_", ""));
+                    var itemname = $"materials/ensage_ui/items/{item.Name.Replace("item_", "")}.vmat";
                     Drawing.DrawRect(iPos + new Vector2(count, 50),
                         new Vector2(iSize.X / 3, (float)(iSize.Y * 2.5)),
                         Textures.GetTexture(itemname));
@@ -299,8 +298,7 @@ namespace OverlayInformation
                             ultimate.AbilityState == AbilityState.NotEnoughMana) ||
                          Utils.IsUnderRectangle(Game.MouseScreenPosition, ultPos.X, ultPos.Y, 15, 15)))
                     {
-                        var texturename = string.Format("materials/ensage_ui/spellicons/{0}.vmat",
-                            ultimate.StoredName());
+                        var texturename = $"materials/ensage_ui/spellicons/{ultimate.StoredName()}.vmat";
                         pos = Helper.GetTopPanelPosition(v);
                         var startPos = pos + new Vector2(0, 7*4 + size.Y);
                         size = new Vector2(size.X, size.Y + 15);
@@ -566,7 +564,7 @@ namespace OverlayInformation
                         }
                         if (spell.AbilityState == AbilityState.OnCooldown)
                         {
-                            var text = string.Format("{0:0.#}", cd);
+                            var text = $"{cd:0.#}";
                             var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 200),
                                 FontFlags.None);
                             var textPos = start +
@@ -622,24 +620,21 @@ namespace OverlayInformation
                 if (!Members.RoshIsAlive)
                 {
                     if (Members.RoshanMinutes < 8)
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 7 - Members.RoshanMinutes, 59 - Members.RoshanSeconds,
-                            10 - Members.RoshanMinutes,
-                            59 - Members.RoshanSeconds);
+                        text =
+                            $"Roshan: {7 - Members.RoshanMinutes}:{59 - Members.RoshanSeconds:0.} - {10 - Members.RoshanMinutes}:{59 - Members.RoshanSeconds:0.}";
                     else if (Members.RoshanMinutes == 8)
                     {
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 8 - Members.RoshanMinutes, 59 - Members.RoshanSeconds,
-                            10 - Members.RoshanMinutes,
-                            59 - Members.RoshanSeconds);
+                        text =
+                            $"Roshan: {8 - Members.RoshanMinutes}:{59 - Members.RoshanSeconds:0.} - {10 - Members.RoshanMinutes}:{59 - Members.RoshanSeconds:0.}";
                     }
                     else if (Members.RoshanMinutes == 9)
                     {
-                        text = string.Format("Roshan: {0}:{1:0.} - {2}:{3:0.}", 9 - Members.RoshanMinutes, 59 - Members.RoshanSeconds,
-                            10 - Members.RoshanMinutes,
-                            59 - Members.RoshanSeconds);
+                        text =
+                            $"Roshan: {9 - Members.RoshanMinutes}:{59 - Members.RoshanSeconds:0.} - {10 - Members.RoshanMinutes}:{59 - Members.RoshanSeconds:0.}";
                     }
                     else
                     {
-                        text = string.Format("Roshan: {0}:{1:0.}", 0, 59 - Members.RoshanSeconds);
+                        text = $"Roshan: {0}:{59 - Members.RoshanSeconds:0.}";
                         if (59 - Members.RoshanSeconds <= 1)
                         {
                             Members.RoshIsAlive = true;

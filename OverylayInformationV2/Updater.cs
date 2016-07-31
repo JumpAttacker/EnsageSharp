@@ -119,6 +119,12 @@ namespace OverlayInformation
                             Printer.Print("Tinker detected");
                             Members.Tinker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Tinker);
                         }
+                        if (Members.ArcWarden == null &&
+                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_ArcWarden))
+                        {
+                            Printer.Print("ArcWarden detected");
+                            Members.ArcWarden = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_ArcWarden);
+                        }
                     }
                 }
                 if (!UpdatePrediction.Sleeping /*&& Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>()*/)

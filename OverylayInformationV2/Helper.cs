@@ -55,10 +55,10 @@ namespace OverlayInformation
 
         public static void GenerateSideMessage(string hero, string spellName)
         {
-            var msg = new SideMessage(hero, new Vector2(200, 60));
-            msg.AddElement(new Vector2(006, 06), new Vector2(72, 36), Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
-            msg.AddElement(new Vector2(078, 12), new Vector2(64, 32), Drawing.GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
-            msg.AddElement(new Vector2(142, 06), new Vector2(72, 36), Drawing.GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
+            var msg = new SideMessage(hero, new Vector2(226, 59));
+            msg.AddElement(new Vector2(9, 9), new Vector2(73, 41), Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
+            msg.AddElement(new Vector2(97, 2), new Vector2(50, 50), Drawing.GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
+            msg.AddElement(new Vector2(163, 9), new Vector2(75, 41), Drawing.GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
             msg.CreateMessage();
         }
         public static Vector3 FindVector(Vector3 first, double ret, float distance)

@@ -116,16 +116,15 @@ namespace OverlayInformation
                         }
                         else
                         {
-                            texturename = string.Format("materials/ensage_ui/items/{0}.vmat",
-                                item.Name.Replace("item_", ""));
+                            texturename = $"materials/ensage_ui/items/{item.Name.Replace("item_", "")}.vmat";
                         }
                         if (item is Bottle)
                         {
                             var bottletype = item as Bottle;
                             if (bottletype.StoredRune != RuneType.None)
                             {
-                                texturename = string.Format("materials/ensage_ui/items/{0}.vmat",
-                                    item.Name.Replace("item_", "") + "_" + bottletype.StoredRune);
+                                texturename =
+                                    $"materials/ensage_ui/items/{item.Name.Replace("item_", "") + "_" + bottletype.StoredRune}.vmat";
                             }
                         }
                         var itemPos = heroPos + new Vector2(size.X / 7 * n + 5, 0);
@@ -170,27 +169,21 @@ namespace OverlayInformation
                     Textures.GetTexture("materials/ensage_ui/heroes_horizontal/" +
                                         v.StoredName().Substring("npc_dota_hero_".Length) + ".vmat"));
                 var n = 0;
+
                 foreach (var item in items)
                 {
                     try
                     {
-                        string texturename;
-                        if (item.IsRecipe)
-                        {
-                            texturename = "materials/ensage_ui/items/recipe.vmat";
-                        }
-                        else
-                        {
-                            texturename = string.Format("materials/ensage_ui/items/{0}.vmat",
-                                item.Name.Replace("item_", ""));
-                        }
+                        var texturename = item.IsRecipe
+                            ? "materials/ensage_ui/items/recipe.vmat"
+                            : $"materials/ensage_ui/items/{item.Name.Replace("item_", "")}.vmat";
                         if (item is Bottle)
                         {
                             var bottletype = item as Bottle;
                             if (bottletype.StoredRune != RuneType.None)
                             {
-                                texturename = string.Format("materials/ensage_ui/items/{0}.vmat",
-                                    item.Name.Replace("item_", "") + "_" + bottletype.StoredRune);
+                                texturename =
+                                    $"materials/ensage_ui/items/{item.Name.Replace("item_", "") + "_" + bottletype.StoredRune}.vmat";
                             }
                         }
                         var itemPos = heroPos + new Vector2(size.X/7, 0) + new Vector2(size.X/7*n + 5, 0);
