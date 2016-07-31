@@ -17,7 +17,7 @@ namespace ModifierVision
             if (!Checker)
                 return;
             var refresh = Members.System.ToList();
-            foreach (var heroModifier in refresh.Where(x=>x.Owner==null || !x.Owner.IsAlive))
+            foreach (var heroModifier in refresh.Where(x=> x.Owner == null || !x.Owner.IsValid || !x.Owner.IsAlive))
             {
                 Members.System.Remove(heroModifier);
             }
@@ -41,7 +41,10 @@ namespace ModifierVision
                 }
                 var counter = 0;
                 var extra = isHero ? 0 : 5;
-                var startPos = HUDInfo.GetHPbarPosition(target) + new Vector2(0, HUDInfo.GetHpBarSizeY()*2+extra) +
+                var hudPos = HUDInfo.GetHPbarPosition(target);
+                if (hudPos.IsZero)
+                    continue;
+                var startPos = hudPos + new Vector2(0, HUDInfo.GetHpBarSizeY()*2+extra) +
                                new Vector2(Members.Menu.Item("ExtraPos.X").GetValue<Slider>().Value,
                                    Members.Menu.Item("ExtraPos.Y").GetValue<Slider>().Value);
                 var size = new Vector2(Members.Menu.Item("Settings.IconSize").GetValue<Slider>().Value,
