@@ -45,7 +45,7 @@ namespace ArcAnnihilation
 
         };
 
-        private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true, "npc_dota_hero_arc_warden", true);
+        private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true);
         private static Hero _globalTarget;
         private static Hero _globalTarget2;
         private static int _tick;
