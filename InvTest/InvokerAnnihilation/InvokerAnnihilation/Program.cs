@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -215,10 +214,16 @@ namespace InvokerAnnihilation
             settings.AddItem(new MenuItem("items", "Items:").SetValue(new AbilityToggler(items)));
             settings.AddItem(new MenuItem("moving", "MoveToEnemy").SetValue(true).SetTooltip("while combing"));
 
+            var aInvis = new Menu("Auto Invis", "Auto Invis");
+            aInvis.AddItem(new MenuItem("AutoInvis", "Enable").SetValue(false));
+            aInvis.AddItem(new MenuItem("AutoInvis_enemy_check", "Check for any enemy in range").SetValue(true).SetTooltip("in 1000 range"));
+            
+            aInvis.AddItem(new MenuItem("MinHealth_for_invis", "Min Health").SetValue(new Slider(15,0,100)));
 
             combo.AddSubMenu(showComboMenuPos);
             //combo.AddSubMenu(showCurrentCombo);
             Menu.AddSubMenu(settings);
+            Menu.AddSubMenu(aInvis);
             Menu.AddSubMenu(smart);
             Menu.AddSubMenu(sunStrikeSettings);
             sunStrikeSettings.AddSubMenu(ssonstun);
@@ -281,7 +286,7 @@ namespace InvokerAnnihilation
 */
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
-            if (!Menu.Item("smartIsActive").GetValue<bool>()) return;
+            if (!Menu.Item("smartIsActive").GetValue<bool>() || !Utils.SleepCheck("flee_mode")) return;
             if (args.Order != Order.AttackTarget && args.Order != Order.MoveLocation && _inAction) return;
             var me = sender.Hero;
             Ability spell = null;
@@ -436,7 +441,9 @@ namespace InvokerAnnihilation
         private static bool _ghostMode;
         private static bool _leftMouseIsPress;
         private static readonly bool[,] OpenStatus=new bool[15,15];
-
+        private static bool AutoInvis => Menu.Item("AutoInvis").GetValue<bool>();
+        private static bool AutoInvis_checker => Menu.Item("AutoInvis_enemy_check").GetValue<bool>();
+        private static int MinHealth => Menu.Item("MinHealth_for_invis").GetValue<Slider>().Value;
         private static void Drawing_OnDraw(EventArgs args)
         {
             var me = _myHero;
@@ -565,7 +572,6 @@ namespace InvokerAnnihilation
             Drawing.DrawRect(pos, size2, new Color(0, 155, 255, 255), true);
             var i = 0;
 
-            var max = Combos.Length;
             foreach (var comboStruct in Combos)
             {
                 var sizeY = 4 + i*(_size.Y + 2);
@@ -729,10 +735,10 @@ namespace InvokerAnnihilation
                 switch (Menu.Item("OnMoving").GetValue<StringList>().SelectedIndex)
                 {
                     case (int) SmartSphereEnum.Quas:
-                        spell = Abilities.FindAbility("invoker_quas");;
+                        spell = Abilities.FindAbility("invoker_quas");
                         break;
                     case (int) SmartSphereEnum.Wex:
-                        spell = Abilities.FindAbility("invoker_wex");;
+                        spell = Abilities.FindAbility("invoker_wex");
                         break;
                 }
                 if (me.NetworkActivity == NetworkActivity.Move && me.NetworkActivity != _lastAct && !me.IsInvisible())
@@ -750,25 +756,24 @@ namespace InvokerAnnihilation
             #endregion
 
             #region Flee mode
-
             if (_ghostMode && Utils.SleepCheck("flee_mode") && !me.IsInvisible())
             {
-                var q = Abilities.FindAbility("invoker_quas");;
-                var w = Abilities.FindAbility("invoker_wex");;
+                var q = Abilities.FindAbility("invoker_quas");
+                var w = Abilities.FindAbility("invoker_wex");
                 var active1 = me.Spellbook.Spell4;
                 var active2 = me.Spellbook.Spell5;
-                
-                if (q?.Level > 0 && w?.Level > 0 )
+
+                if (q?.Level > 0 && w?.Level > 0)
                 {
                     var ghostwalk = Abilities.FindAbility("invoker_ghost_walk");
-                    if (ghostwalk==null || ghostwalk.Cooldown>0) return;
+                    if (ghostwalk == null || ghostwalk.Cooldown > 0) return;
                     if (active1.Equals(ghostwalk) || active2.Equals(ghostwalk))
                     {
                         w.UseAbility();
                         w.UseAbility();
                         w.UseAbility();
                         ghostwalk.UseAbility();
-                        Utils.Sleep(500,"flee_mode");
+                        Utils.Sleep(500, "flee_mode");
                     }
                     else
                     {
@@ -777,10 +782,19 @@ namespace InvokerAnnihilation
                         w.UseAbility();
                         w.UseAbility();
                         ghostwalk.UseAbility();
-                        Utils.Sleep(500,"flee_mode");
+                        Utils.Sleep(500, "flee_mode");
                     }
                 }
-                
+
+            }
+
+            #endregion
+
+            #region AutoInvis
+            if (AutoInvis && Utils.SleepCheck("flee_mode") && !me.IsInvisible() && me.Health/me.MaximumHealth*100<=MinHealth)
+            {
+                CastAutoInvis(me);
+
             }
 
             #endregion
@@ -930,6 +944,40 @@ namespace InvokerAnnihilation
                 ComboInAction(me, target);
             */
             #endregion
+        }
+
+        private static void CastAutoInvis(Hero me)
+        {
+            if (AutoInvis_checker)
+                if (!Heroes.GetByTeam(me.GetEnemyTeam()).Any(x => x != null && x.IsValid && x.IsAlive && x.IsVisible && x.Distance2D(me) <= 1000))
+                    return;
+            var q = Abilities.FindAbility("invoker_quas");
+            var w = Abilities.FindAbility("invoker_wex");
+            var active1 = me.Spellbook.Spell4;
+            var active2 = me.Spellbook.Spell5;
+
+            if (q?.Level > 0 && w?.Level > 0)
+            {
+                var ghostwalk = Abilities.FindAbility("invoker_ghost_walk");
+                if (ghostwalk == null || ghostwalk.Cooldown > 0) return;
+                if (active1.Equals(ghostwalk) || active2.Equals(ghostwalk))
+                {
+                    w.UseAbility();
+                    w.UseAbility();
+                    w.UseAbility();
+                    ghostwalk.UseAbility();
+                    Utils.Sleep(500, "flee_mode");
+                }
+                else
+                {
+                    InvokeNeededSpells(me, ghostwalk);
+                    w.UseAbility();
+                    w.UseAbility();
+                    w.UseAbility();
+                    ghostwalk.UseAbility();
+                    Utils.Sleep(500, "flee_mode");
+                }
+            }
         }
 
         private static bool CheckForKillSteal(Hero x, double damage)
