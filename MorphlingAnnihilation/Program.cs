@@ -194,7 +194,7 @@ namespace MorphlingAnnihilation
                         toStr.ToggleAbility();
                     }
                 }
-                Utils.Sleep(150, "trans");
+                Utils.Sleep(150+Game.Ping, "trans");
             }
             if (Menu.Item("safetp").GetValue<bool>() && Utils.SleepCheck("safetp"))
             {
