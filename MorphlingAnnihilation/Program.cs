@@ -48,9 +48,17 @@ namespace MorphlingAnnihilation
             var safetp = new Menu("Safe Tp", "Safetpout", false, "morphling_morph_replicate", true);
             safetp.AddItem(new MenuItem("safetp", "Use replicate on low hp").SetValue(true));
             safetp.AddItem(new MenuItem("minHpForSafeTp", "Minimum HP").SetValue(new Slider(100, 100, 5000)));
+
+            Menu.AddItem(new MenuItem("debug", "Debug Messages").SetValue(false));
             Menu.AddSubMenu(safetp);
             Menu.AddToMainMenu();
             Orbwalking.Load();
+        }
+
+        public static void Print(string str, bool print = false)
+        {
+            if (print || Menu.Item("debug").GetValue<bool>())
+                Game.PrintMessage(str, MessageType.ChatMessage);
         }
 
         private static void OnUpdate(EventArgs args)
@@ -184,13 +192,13 @@ namespace MorphlingAnnihilation
                     {
                         if (!me.HasModifier("modifier_morphling_morph_str"))
                         {
-                            //Game.PrintMessage("need more hp", MessageType.ChatMessage);
+                            Print($"need more hp => {curentHp - minHp}");
                             toStr.ToggleAbility();
                         }
                     }
                     else if (me.HasModifier("modifier_morphling_morph_str"))
                     {
-                        //Game.PrintMessage("disable hp", MessageType.ChatMessage);
+                        Print("disable hp");
                         toStr.ToggleAbility();
                     }
                 }
