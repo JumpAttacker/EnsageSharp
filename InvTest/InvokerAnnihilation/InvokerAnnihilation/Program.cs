@@ -161,6 +161,7 @@ namespace InvokerAnnihilation
                 new MenuItem("hotkeyNext", "Next Combo").SetValue(new KeyBind(0x6D, KeyBindType.Press))
                     .SetTooltip("default hotkey is numpad [-]"));
             combo.AddItem(new MenuItem("ShowComboMenu", "Show Combo Menu").SetValue(true));
+            combo.AddItem(new MenuItem("ComboSwitcher", "Auto Switch combo").SetValue(false));
             //combo.AddItem(new MenuItem("ShowCurrentCombo", "Show Current Combo").SetValue(true));
 
 
@@ -212,7 +213,7 @@ namespace InvokerAnnihilation
             };
             var settings = new Menu("Settings", "Settings");
             settings.AddItem(new MenuItem("items", "Items:").SetValue(new AbilityToggler(items)));
-            settings.AddItem(new MenuItem("moving", "MoveToEnemy").SetValue(true).SetTooltip("while combing"));
+            settings.AddItem(new MenuItem("moving", "Move To Enemy").SetValue(false).SetTooltip("while combing"));
 
             var aInvis = new Menu("Auto Invis", "Auto Invis");
             aInvis.AddItem(new MenuItem("AutoInvis", "Enable").SetValue(false));
@@ -442,7 +443,8 @@ namespace InvokerAnnihilation
         private static bool _leftMouseIsPress;
         private static readonly bool[,] OpenStatus=new bool[15,15];
         private static bool AutoInvis => Menu.Item("AutoInvis").GetValue<bool>();
-        private static bool AutoInvis_checker => Menu.Item("AutoInvis_enemy_check").GetValue<bool>();
+        private static bool AutoInvisChecker => Menu.Item("AutoInvis_enemy_check").GetValue<bool>();
+        private static bool ComboSwitcher => Menu.Item("ComboSwitcher").GetValue<bool>();
         private static int MinHealth => Menu.Item("MinHealth_for_invis").GetValue<Slider>().Value;
         private static void Drawing_OnDraw(EventArgs args)
         {
@@ -866,7 +868,7 @@ namespace InvokerAnnihilation
                         else
                         {
                             //hero.Modifiers.ForEach(modifier => Print("2. "+modifier.Name));
-                            var extramod = hero.FindModifier("modifier_ember_spirit_searing_chains");
+                            var extramod = hero.FindModifier("modifier_ember_spirit_searing_chains")??hero.FindModifier("modifier_axe_berserkers_call");
                             if (extramod != null && extramod.RemainingTime >= 1.7 + Game.Ping/1000)
                             {
                                 var spells = me.Spellbook;
@@ -948,7 +950,7 @@ namespace InvokerAnnihilation
 
         private static void CastAutoInvis(Hero me)
         {
-            if (AutoInvis_checker)
+            if (AutoInvisChecker)
                 if (!Heroes.GetByTeam(me.GetEnemyTeam()).Any(x => x != null && x.IsValid && x.IsAlive && x.IsVisible && x.Distance2D(me) <= 1000))
                     return;
             var q = Abilities.FindAbility("invoker_quas");
@@ -1226,8 +1228,10 @@ namespace InvokerAnnihilation
                     {
                         if (eul == null || eul.AbilityState != AbilityState.Ready)
                         {
+                            if (eul == null && ComboSwitcher)
+                                _combo = _combo == _maxCombo - 1 ? _combo = 0 : _combo + 1;
                             if (!target.IsInvul())
-                                Orbwalking.Orbwalk(target, 10);
+                                Orbwalking.Orbwalk(target, 10, followTarget: true);
                             return;
                         }
                         if (me.Distance2D(target) <= eul.CastRange+50)
@@ -1251,8 +1255,10 @@ namespace InvokerAnnihilation
                     if (Combos[_combo].GetComboAbilities().Length < _stage - 1 && !target.IsInvul())
                     {
                         if (!target.IsInvul())
-                            Orbwalking.Orbwalk(target, 10);
+                            Orbwalking.Orbwalk(target, 10, followTarget: true);
                         _stage = 1;
+                        if (ComboSwitcher)
+                            _combo = _combo == _maxCombo - 1 ? _combo = 0 : _combo + 1;
                         //me.Attack(target);
                         //Utils.Sleep(1000, "StageCheck");
                         return;
@@ -1307,7 +1313,9 @@ namespace InvokerAnnihilation
                                     else
                                     {
                                         if (!target.IsInvul())
-                                            Orbwalking.Orbwalk(target);
+                                        {
+                                            Orbwalking.Orbwalk(target, followTarget: true);
+                                        }
                                     }
                                 }
                                 else
@@ -1330,9 +1338,7 @@ namespace InvokerAnnihilation
                     }
                     else if (!target.IsInvul())
                     {
-                        Orbwalking.Orbwalk(target);
-                        //me.Attack(target);
-                        //Utils.Sleep(1000, "StageCheck");
+                        Orbwalking.Orbwalk(target, followTarget: true);
                         return;
                     }
                     break;
@@ -1401,21 +1407,30 @@ namespace InvokerAnnihilation
                 }
                 else
                 {
-                    var time = 250f;
-                    if (Equals(spellForCast, tornado))
+                    if (me.Distance2D(target) <= 800)
                     {
-                        if (nextSpell) time += me.Distance2D(target)/spellForCast.GetProjectileSpeed()*1000 + Game.Ping;
+                        var time = 250f;
+                        if (Equals(spellForCast, tornado))
+                        {
+                            if (nextSpell)
+                                time += me.Distance2D(target)/spellForCast.GetProjectileSpeed()*1000 + Game.Ping + 150;
 
-                        spellForCast.CastSkillShot(target, me.Position,spellForCast.StoredName());
-                        //Game.PrintMessage("CastSkillShot "+spellForCast.CastSkillShot(target, me.Position,spellForCast.StoredName()),MessageType.ChatMessage);
+                            spellForCast.CastSkillShot(target, me.Position, spellForCast.StoredName());
+                            //Game.PrintMessage("CastSkillShot "+spellForCast.CastSkillShot(target, me.Position,spellForCast.StoredName()),MessageType.ChatMessage);
+                        }
+                        else
+                        {
+                            //Game.PrintMessage("suka: " + spellForCast.StoredName(),MessageType.ChatMessage);
+                            UseSpell(spellForCast, target, me);
+                        }
+                        Utils.Sleep(time, "StageCheck");
+                        _stage++;
                     }
-                    else
+                    else if (Utils.SleepCheck("range_moving"))
                     {
-                        //Game.PrintMessage("suka: " + spellForCast.StoredName(),MessageType.ChatMessage);
-                        UseSpell(spellForCast, target,me);
+                        Utils.Sleep(200, "range_moving");
+                        me.Move(target.Position);
                     }
-                    Utils.Sleep(time, "StageCheck");
-                    _stage++;
                 }
             }
         }
@@ -1454,13 +1469,25 @@ namespace InvokerAnnihilation
 
         private static void UseSpell(Ability spellForCast, Hero target,Hero me)
         {
-            if (spellForCast.CanBeCasted(target))
+            if (spellForCast.IsAbilityBehavior(AbilityBehavior.Point))
+            {
+                spellForCast.UseAbility(target.Position);
+                return;
+            }
+            if (spellForCast.IsAbilityBehavior(AbilityBehavior.NoTarget))
+            {
+                spellForCast.UseAbility();
+                return;
+            }
+            if (!spellForCast.IsAbilityBehavior(AbilityBehavior.UnitTarget)) return;
+            if (spellForCast.TargetTeamType == TargetTeamType.Enemy || spellForCast.TargetTeamType == TargetTeamType.All)
             {
                 spellForCast.UseAbility(target);
             }
-            spellForCast.UseAbility();
-            spellForCast.UseAbility(target.Position);
-            spellForCast.UseAbility(me);
+            else
+            {
+                spellForCast.UseAbility(me);
+            }
         }
 
         private static Hero ClosestToMouse(Hero source, float range = 1000)
