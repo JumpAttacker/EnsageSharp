@@ -116,13 +116,22 @@ namespace OverlayInformation
         
         public static Vector2 GetTopPanelPosition(Hero v)
         {
-            Vector2 pos;
-            if (Members.TopPanelPostiion.TryGetValue(v.StoredName(), out pos))
+            try
             {
-                return pos;
+                Vector2 pos;
+                if (Members.TopPanelPostiion.TryGetValue(v.StoredName(), out pos))
+                {
+                    return pos;
+                }
+                Members.TopPanelPostiion.Add(v.StoredName(), HUDInfo.GetTopPanelPosition(v));
+                return HUDInfo.GetTopPanelPosition(v);
             }
-            Members.TopPanelPostiion.Add(v.StoredName(), HUDInfo.GetTopPanelPosition(v));
-            return HUDInfo.GetTopPanelPosition(v);
+            catch (Exception e)
+            {
+                Printer.Print("GetTopPanelPosition: "+e.Message);
+                return new Vector2();
+            }
+            
         }
 
         public static DotaTexture GetHeroTextureMinimap(string heroName)

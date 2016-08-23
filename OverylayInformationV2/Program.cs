@@ -132,6 +132,9 @@ namespace OverlayInformation
             lina.AddItem(new MenuItem("lina.Enable", "Enable").SetValue(true));
             var invoker = new Menu("", "invoker", false, "invoker_sun_strike", true);
             invoker.AddItem(new MenuItem("invoker.Enable", "Enable").SetValue(true));
+            invoker.AddItem(new MenuItem("invoker.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            invoker.AddItem(new MenuItem("invoker.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
+            invoker.AddItem(new MenuItem("invoker.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
             var lesh = new Menu("", "lesh", false, "leshrac_split_earth", true);
             lesh.AddItem(new MenuItem("lesh.Enable", "Enable").SetValue(true));
             var kunkka = new Menu("", "kunkka", false, "kunkka_torrent", true);
@@ -167,6 +170,8 @@ namespace OverlayInformation
                 {"item_ward_observer", true},
                 {"item_ward_sentry", true},
                 {"item_black_king_bar", true},
+                {"item_invis_sword", true},
+                {"item_silver_edge", true},
                 {"item_ward_dispenser", true}
             };
             dangItem.AddItem(new MenuItem("dangitems.List", "Items: ").SetValue(new AbilityToggler(dict)));

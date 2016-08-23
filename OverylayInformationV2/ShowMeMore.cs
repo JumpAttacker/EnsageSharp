@@ -131,9 +131,14 @@ namespace OverlayInformation
                         ParticleEffect effect;
                         if (!ShowMeMoreEffect.TryGetValue(t, out effect))
                         {
-                            effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                            //effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
                             var range = 175;
-                            effect.SetControlPoint(1, new Vector3(range, 0, 0));
+                            effect = t.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf");
+                            var r = Members.Menu.Item("invoker.Red").GetValue<Slider>().Value;
+                            var g = Members.Menu.Item("invoker.Green").GetValue<Slider>().Value;
+                            var b = Members.Menu.Item("invoker.Blue").GetValue<Slider>().Value;
+                            effect.SetControlPoint(1, new Vector3(r, g, b));
+                            effect.SetControlPoint(2, new Vector3(range, 255, 0));
                             ShowMeMoreEffect.Add(t, effect);
                         }
                     }
