@@ -108,8 +108,16 @@ namespace OverlayInformation
                         ParticleEffect effect;
                         if (!ShowMeMoreEffect.TryGetValue(t, out effect))
                         {
-                            effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
-                            effect.SetControlPoint(1, new Vector3(225, 0, 0));
+                            /*effect = t.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf");
+                            effect.SetControlPoint(1, new Vector3(225, 0, 0));*/
+
+                            effect = t.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf");
+                            var r = Members.Menu.Item("kunkka.Red").GetValue<Slider>().Value;
+                            var g = Members.Menu.Item("kunkka.Green").GetValue<Slider>().Value;
+                            var b = Members.Menu.Item("kunkka.Blue").GetValue<Slider>().Value;
+                            effect.SetControlPoint(1, new Vector3(r, g, b));
+                            effect.SetControlPoint(2, new Vector3(225, 255, 0));
+
                             ShowMeMoreEffect.Add(t, effect);
                         }
                     }

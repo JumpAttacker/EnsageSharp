@@ -138,7 +138,10 @@ namespace OverlayInformation
             var lesh = new Menu("", "lesh", false, "leshrac_split_earth", true);
             lesh.AddItem(new MenuItem("lesh.Enable", "Enable").SetValue(true));
             var kunkka = new Menu("", "kunkka", false, "kunkka_torrent", true);
-            kunkka.AddItem(new MenuItem("kunkka.Enable", "Torrent Enable").SetValue(true));
+            kunkka.AddItem(new MenuItem("kunkka.Enable", "Enable").SetValue(true));
+            kunkka.AddItem(new MenuItem("kunkka.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            kunkka.AddItem(new MenuItem("kunkka.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
+            kunkka.AddItem(new MenuItem("kunkka.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
             var tech = new Menu("", "tech", false, "npc_dota_hero_techies", true);
             tech.AddItem(new MenuItem("tech.Enable", "Enable").SetValue(true));
             var tinker = new Menu("", "tinker", false, "npc_dota_hero_tinker", true);
