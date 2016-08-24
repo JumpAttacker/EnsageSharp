@@ -475,9 +475,9 @@ namespace OverlayInformation
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    Printer.Print("[Draw]: charge");
+                    Printer.Print("[Draw]: charge "+e.Message);
                 }
             }
             if (Members.Menu.Item("lifestealer.Enable").GetValue<bool>() && Members.LifeStealer != null && Members.LifeStealer.IsValid && !Members.LifeStealer.IsVisible)

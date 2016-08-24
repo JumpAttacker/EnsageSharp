@@ -22,9 +22,11 @@ namespace OverlayInformation
                 "npc_dota_beastmaster_boar_2",
                 "npc_dota_beastmaster_boar_3",
                 "npc_dota_beastmaster_boar_4",
-            }; 
+            };
+
             public static void Update(EventArgs args)
             {
+
                 if (!Checker.IsActive()) return;
                 if (!HeroUpdate.Sleeping)
                 {
@@ -36,14 +38,18 @@ namespace OverlayInformation
                     HeroUpdate.Sleep(2000);
                     if (Members.Heroes.Count < 10)
                     {
-                        Members.Heroes =
+                        /*Members.Heroes =
                             Heroes.All.Where(
+                                x =>
+                                    x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName())).ToList();*/
+                        Members.Heroes =
+                            ObjectManager.GetEntities<Hero>().Where(
                                 x =>
                                     x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName())).ToList();
                         Members.AllyHeroes = Members.Heroes.Where(x => x.Team == Members.MyHero.Team).ToList();
                         Members.EnemyHeroes =
                             Members.Heroes.Where(x => x.Team == Members.MyHero.GetEnemyTeam()).ToList();
-                        
+                        //Printer.Print($"Heroes.All: {Heroes.All.Count}; Members.Heroes: {Members.Heroes.Count}");
                         //Printer.Print("STATUS:[all] " + Members.Heroes.Count+ " [enemy] " + Members.EnemyHeroes.Count + " [ally] " + Members.AllyHeroes.Count);
                         if (!Members.Apparition &&
                             Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_AncientApparition))
