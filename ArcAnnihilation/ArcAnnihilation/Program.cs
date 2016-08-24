@@ -45,7 +45,7 @@ namespace ArcAnnihilation
 
         };
 
-        private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true);
+        private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true, "npc_dota_hero_arc_warden", true);
         private static Hero _globalTarget;
         private static Hero _globalTarget2;
         private static int _tick;
@@ -119,8 +119,27 @@ namespace ArcAnnihilation
             "item_diffusal_blade_2"
         };
 
-        #endregion
+        private static readonly List<string> AbilityList = new List<string>
+        {
+            "arc_warden_flux",
+            "arc_warden_magnetic_field",
+            "arc_warden_spark_wraith",
+            "arc_warden_tempest_double"
+        };
+        private static readonly List<string> PushList = new List<string>
+        {
+            "arc_warden_magnetic_field",
+            "arc_warden_spark_wraith"
+        };
 
+        #endregion
+        /*
+         * OrderByDescending(
+                                x =>
+                                MainMenu.ComboKeysMenu.Item("Ability#.ComboOrder")
+                                    .GetValue<PriorityChanger>()
+                                    .GetPriority(x.Value.StoredName())
+         * */
         #region Enums
 
         private enum Orders
@@ -155,13 +174,32 @@ namespace ArcAnnihilation
 
         #endregion
         //if (args.GetNewValue<KeyBind>().Active)
+
+        private static bool IsAbilityEnable(string name, bool tempest = false, bool calcForPushing = false)
+        {
+            return !calcForPushing
+                ? Menu.Item(tempest ? "spellTempest" : "spellHero").GetValue<AbilityToggler>().IsEnabled(name)
+                : Menu.Item("AutoPush.Abilites").GetValue<AbilityToggler>().IsEnabled(name);
+        }
+
+        private static uint GetComboOrder(Item y, bool byIllusion)
+        {
+            Print(Menu.Item("itemTempest").Name);
+            if (Menu.Item(byIllusion ? "customOrderTempest" : "customOrderHero").GetValue<bool>())
+                return Menu.Item(byIllusion ? "itemTempest" : "itemHero")
+                    .GetValue<PriorityChanger>()
+                    .GetPriority(y.StoredName());
+            return Items[y.StoredName()];
+        }
         private static void Main()
         {
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Player.OnExecuteOrder += Player_OnExecuteAction;
             Game.OnWndProc += Game_OnWndProc;
-            //var dict = Items.ToDictionary(item => item, item => true);
+            var dict = AbilityList.ToDictionary(item => item, item => true);
+            var dict2 = AbilityList.ToDictionary(item => item, item => true);
+            var pushAbilities = PushList.ToDictionary(item => item, item => true);
             Menu.AddItem(new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('G', KeyBindType.Press)));
             Menu.AddItem(new MenuItem("spamHotkey", "Spark Spam").SetValue(new KeyBind('H', KeyBindType.Press)));
             Menu.AddItem(
@@ -173,6 +211,34 @@ namespace ArcAnnihilation
                     "if enable, try to cast in font on hero, disable-> try to cast for defence from melee heroes");
             Menu.AddItem(new MenuItem("Dust.Check", "Dust Usage: Check if target can go invis").SetValue(true))
                 .SetTooltip("by ur tempest in combo");
+
+            var usages = new Menu("Using in combo", "usages");
+
+            var mainHero = new Menu("For Main Hero", "mainHero");
+            var spellHero = new Menu("Spells:", "HeroSpells");
+            var itemHero = new Menu("Items:", "HeroItems");
+
+            var tempest = new Menu("Tempest", "tempest");
+            var spellTempest = new Menu("Spells:", "TempestSpells");
+            var itemTempest = new Menu("Items:", "TempestItems");
+
+            itemHero.AddItem(new MenuItem("customOrderHero", "Use Custom Order").SetValue(false));
+            itemHero.AddItem(new MenuItem("itemHero", "Items:").SetValue(new PriorityChanger(Items.Keys.ToList())));
+
+            itemTempest.AddItem(new MenuItem("customOrderTempest", "Use Custom Order").SetValue(false));
+            itemTempest.AddItem(new MenuItem("itemTempest", "Items:").SetValue(new PriorityChanger(Items.Keys.ToList())));
+
+            spellHero.AddItem(new MenuItem("spellHero", "Ability:").SetValue(new AbilityToggler(dict)));
+            spellTempest.AddItem(new MenuItem("spellTempest", "Ability:").SetValue(new AbilityToggler(dict2)));
+
+            Menu.AddSubMenu(usages);
+            usages.AddSubMenu(mainHero);
+            usages.AddSubMenu(tempest);
+            mainHero.AddSubMenu(spellHero);
+            mainHero.AddSubMenu(itemHero);
+            tempest.AddSubMenu(spellTempest);
+            tempest.AddSubMenu(itemTempest);
+
 
             var drawItems = new Menu("Items Drawing", "ItemsDrawing");
             drawItems.AddItem(new MenuItem("DrawItems", "Draw Items on cooldown").SetValue(true));
@@ -200,6 +266,7 @@ namespace ArcAnnihilation
             autoPush.AddItem(new MenuItem("AutoPush.Enable", "Enable").SetValue(new KeyBind('V', KeyBindType.Toggle)));
             autoPush.AddItem(new MenuItem("AutoPush.DrawLine", "Draw line").SetValue(false));
             autoPush.AddItem(new MenuItem("AutoPush.Travels", "Use Travel Boots").SetValue(true));
+            autoPush.AddItem(new MenuItem("AutoPush.Abilites", "Abilities for pushing").SetValue(new AbilityToggler(pushAbilities)));
             autoPush.AddItem(
                 new MenuItem("AutoPush.UnAggro.Enable", "UnAggro under tower").SetValue(true)
                     .SetTooltip(
@@ -1030,7 +1097,9 @@ namespace ArcAnnihilation
                     if (Utils.SleepCheck("Tempest.Attack.Tower.Cd" + handle))
                     {
                         var spell = hero.Spellbook.Spell2;
-                        if (spell != null && spell.CanBeCasted() && Utils.SleepCheck("shield" + handle)) // handle used to uniquely identify the current hero's cooldowns
+                        if (spell != null && IsAbilityEnable(spell.StoredName(), calcForPushing: true) &&
+                            spell.CanBeCasted() && Utils.SleepCheck("shield" + handle))
+                            // handle used to uniquely identify the current hero's cooldowns
                         {
                             spell.UseAbility(Prediction.InFront(hero, 100));
                             Utils.Sleep(1500, "shield" + handle);
@@ -1056,6 +1125,22 @@ namespace ArcAnnihilation
                 // if there are creeps in the vicinity, make tempest use mjollnir and necronomicon
                 if (enemyCreeps.Any(x => x.Distance2D(hero) <= 800) && isTempest)
                 {
+                    var spell = hero.Spellbook.Spell3;
+                    if (spell != null && IsAbilityEnable(spell.StoredName(), calcForPushing: true) &&
+                        spell.CanBeCasted() && Utils.SleepCheck(spell.StoredName() + handle))
+                    // handle used to uniquely identify the current hero's cooldowns
+                    {
+                        spell.UseAbility(enemyCreeps.First().Position);
+                        Utils.Sleep(1500, spell.StoredName() + handle);
+                    }
+                    spell = hero.Spellbook.Spell2;
+                    if (enemyCreeps.Count>=2 && spell != null && IsAbilityEnable(spell.StoredName(), calcForPushing: true) &&
+                        spell.CanBeCasted() && Utils.SleepCheck(spell.StoredName() + handle))
+                    // handle used to uniquely identify the current hero's cooldowns
+                    {
+                        spell.UseAbility(Prediction.InFront(hero, 100));
+                        Utils.Sleep(1500, spell.StoredName() + handle);
+                    }
                     foreach (var item in autoPushItems)
                     {
                         if (item.Name != "item_mjollnir")
@@ -1233,7 +1318,7 @@ namespace ArcAnnihilation
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
 
-                SpellsUsage(hero, target, d, dagger);
+                SpellsUsage(hero, target, d, dagger,true);
                 // do orbwalking if enabled
                 // otherwise simply attack target
                 if (hero.IsDisarmed() || !Utils.SleepCheck("magField")) continue;
@@ -1302,7 +1387,7 @@ namespace ArcAnnihilation
                     inv = hero.Inventory.Items;
                     enumerable = inv as Item[] ?? inv.ToArray();
                     dagger = enumerable.Any(x => x.Name == "item_blink" && x.Cooldown == 0);
-                    SpellsUsage(hero, target, d, dagger);
+                    SpellsUsage(hero, target, d, dagger,true);
                     ItemUsage(hero, enumerable, target, d,
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
@@ -1342,7 +1427,7 @@ namespace ArcAnnihilation
             inv = me.Inventory.Items;
             enumerable = inv as Item[] ?? inv.ToArray();
             dagger = enumerable.Any(x=>x.Name=="item_blink" && x.Cooldown==0);
-            SpellsUsage(me, target, distance, dagger);
+            SpellsUsage(me, target, distance, dagger,false);
             ItemUsage(me,enumerable, target, distance,
                 Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Me ||
                 Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All);
@@ -1356,7 +1441,7 @@ namespace ArcAnnihilation
         * 3) Use E with prediction (based on enemy pathing) if blink dagger is not available
         * 4) Use R if available (?)
         **/
-        private static void SpellsUsage(Hero me, Hero target, double distance,bool daggerIsReady)
+        private static void SpellsUsage(Hero me, Hero target, double distance, bool daggerIsReady, bool tempest)
         {
             var spellbook = me.Spellbook;
             var q = spellbook.SpellQ;
@@ -1364,12 +1449,12 @@ namespace ArcAnnihilation
             var e = spellbook.SpellE;
 
 
-            if (q != null && q.CanBeCasted() && q.CastRange+me.HullRadius+target.HullRadius >= distance && Utils.SleepCheck(me.Handle+q.Name))
+            if (q != null && IsAbilityEnable(q.StoredName(),tempest) && q.CanBeCasted() && q.CastRange+me.HullRadius+target.HullRadius >= distance && Utils.SleepCheck(me.Handle+q.Name))
             {
                 q.UseAbility(target);
                 Utils.Sleep(500, me.Handle + q.Name);
             }
-            if (w != null && w.CanBeCasted() && Utils.SleepCheck(w.Name) && !me.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 && !daggerIsReady)
+            if (w != null && IsAbilityEnable(w.StoredName(), tempest) && w.CanBeCasted() && Utils.SleepCheck(w.Name) && !me.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 && !daggerIsReady)
             {
                 if (!Menu.Item("MagneticField").GetValue<bool>() && target.IsMelee)
                 {
@@ -1380,7 +1465,7 @@ namespace ArcAnnihilation
                     w.UseAbility(Prediction.InFront(me, 250));
                 Utils.Sleep(500, w.Name);
             }
-            if (e != null && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady)
+            if (e != null && IsAbilityEnable(e.StoredName(), tempest) && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady)
             {
                 var predVector3 = target.NetworkActivity == NetworkActivity.Move && Menu.Item("usePrediction").GetValue<bool>()
                         ? Prediction.InFront(target, target.MovementSpeed * 3 + Game.Ping / 1000)
@@ -1389,7 +1474,7 @@ namespace ArcAnnihilation
                 Utils.Sleep(500, me.Handle + e.Name);
             }
             var r = me.Spellbook.SpellR;
-            if (r == null || !r.CanBeCasted() || !Utils.SleepCheck(me.Handle + r.Name) || distance>900) return;
+            if (r == null || !IsAbilityEnable(r.StoredName(), tempest) || !r.CanBeCasted() || !Utils.SleepCheck(me.Handle + r.Name) || distance>900) return;
             r.UseAbility();
             Utils.Sleep(500, me.Handle + r.Name);
         }
@@ -1417,8 +1502,9 @@ namespace ArcAnnihilation
                         ((x.CastRange == 0 &&
                           distance <=
                           (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
-                         x.CastRange >= distance)).OrderByDescending(y => Items[y.StoredName()]);
+                         x.CastRange >= distance)).OrderByDescending(y => GetComboOrder(y, byIllusion));
             var v = items.FirstOrDefault();
+            Print(v.StoredName());
             if (v == null && target.IsMelee)
             {
                 
@@ -1450,7 +1536,18 @@ namespace ArcAnnihilation
                 {
                     if (v.TargetTeamType == TargetTeamType.Enemy || v.TargetTeamType == TargetTeamType.All)
                     {
-                        v.UseAbility(target);
+                        if (v.IsDisable())
+                        {
+                            Print(v.Name);
+                            v.CastStun(target);
+                        }
+                        else if (v.IsSilence())
+                        {
+                            if (!target.IsSilenced())
+                                v.UseAbility(target);
+                        }
+                        else
+                            v.UseAbility(target);
                     }
                     else
                     {
@@ -1606,6 +1703,8 @@ namespace ArcAnnihilation
                 Utils.Sleep(500, refresher?.Name + me.Handle);
             }
         }
+
+        
 
         private static void TryToDispell(Hero me, List<Item> toList, bool both, bool main, bool tempest)
         {
