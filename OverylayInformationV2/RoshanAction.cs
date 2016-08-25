@@ -7,7 +7,7 @@ namespace OverlayInformation
 {
     internal static class RoshanAction
     {
-        private static readonly Sleeper Sleeper=new Sleeper();
+        private static Sleeper Sleeper;
         public static void Roshan(EventArgs args)
         {
             if (!Checker.IsActive()) return;
@@ -23,6 +23,11 @@ namespace OverlayInformation
             {
                 Members.RoshIsAlive = true;
             }
+        }
+
+        public static void Flush()
+        {
+            Sleeper = new Sleeper();
         }
     }
 }

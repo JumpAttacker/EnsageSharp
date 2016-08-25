@@ -21,7 +21,14 @@ namespace OverlayInformation
             {RuneType.None, ""},
             {RuneType.Regeneration, "materials/ensage_ui/minirunes/regen.vmat"}
         };
-        private static readonly Sleeper Sleeper = new Sleeper();
+
+        private static Sleeper Sleeper;
+
+        public static void Flush()
+        {
+            Sleeper = new Sleeper();
+        }
+
         public static void Draw(EventArgs args)
         {
             if (!Checker.IsActive()) return;

@@ -247,6 +247,7 @@ namespace OverlayInformation
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
 
+            new HeroesList();
             
             if (Drawing.Direct3DDevice9 != null)
                 Members.RoshanFont = new Font(
@@ -281,18 +282,25 @@ namespace OverlayInformation
                 Members.Apparition = false;
                 Members.Mirana = null;
                 Members.Windrunner = null;
-
+                Updater.HeroList.Flush();
+                Updater.BaseList.Flush();
+                Updater.PlayerList.Flush();
                 Game.OnUpdate += Updater.HeroList.Update;
                 //Game.OnUpdate += Updater.PlayerList.Update;
                 Game.OnUpdate += Updater.BaseList.Update;
                 Game.OnUpdate += Devolp.ConsoleCommands;
+                RoshanAction.Flush();
                 Game.OnUpdate += RoshanAction.Roshan;
                 Game.OnUpdate += Game_OnUpdate;
 
                 Drawing.OnDraw += DrawHelper.Overlay;
+
                 Drawing.OnDraw += ItemPanel.Draw;
+                ShowMeMore.Flush();
                 Drawing.OnDraw += ShowMeMore.Draw;
+                Runes.Flush();
                 Drawing.OnDraw += Runes.Draw;
+                
 
                 Drawing.OnPreReset += DrawHelper.Render.Drawing_OnPreReset;
                 Drawing.OnPostReset += DrawHelper.Render.Drawing_OnPostReset;

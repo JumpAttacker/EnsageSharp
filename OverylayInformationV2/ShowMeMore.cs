@@ -13,7 +13,7 @@ namespace OverlayInformation
 {
     internal static class ShowMeMore
     {
-        private static readonly Sleeper Sleeper=new Sleeper();
+        private static Sleeper _sleeper;
         private static Unit AAunit { get; set; }
         private static readonly List<Unit> InSys = new List<Unit>();
         private static readonly List<Unit> Bombs = new List<Unit>();
@@ -28,8 +28,8 @@ namespace OverlayInformation
         public static void ShowIllustion()
         {
             if (!Members.Menu.Item("showillusion.Enable").GetValue<bool>()) return;
-            if (Sleeper.Sleeping) return;
-            Sleeper.Sleep(300);
+            if (_sleeper.Sleeping) return;
+            _sleeper.Sleep(300);
             var illusions = ObjectManager.GetEntities<Hero>()
                 .Where(x => x.IsValid && x.IsIllusion).ToList();
             foreach (var s in illusions)
@@ -535,6 +535,11 @@ namespace OverlayInformation
                 }
             }
 
+        }
+
+        public static void Flush()
+        {
+            _sleeper=new Sleeper();
         }
     }
 }

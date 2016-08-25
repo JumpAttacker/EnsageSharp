@@ -12,10 +12,10 @@ namespace OverlayInformation
     {
         public abstract class HeroList
         {
-            private static readonly Sleeper AbilityUpdate = new Sleeper();
+            private static Sleeper _abilityUpdate = new Sleeper();
             //private static readonly Sleeper ItemUpdate = new Sleeper();
-            private static readonly Sleeper HeroUpdate = new Sleeper();
-            private static readonly Sleeper UpdatePrediction = new Sleeper();
+            private static Sleeper _heroUpdate = new Sleeper();
+            private static Sleeper _updatePrediction = new Sleeper();
             private static readonly List<string> IgnoreList=new List<string>
             {
                 "npc_dota_beastmaster_boar_1",
@@ -28,14 +28,14 @@ namespace OverlayInformation
             {
 
                 if (!Checker.IsActive()) return;
-                if (!HeroUpdate.Sleeping)
+                if (!_heroUpdate.Sleeping)
                 {
                     /*foreach (var enemyHero in Members.EnemyHeroes)
                     {
                         var worth = enemyHero.Inventory.Items.Aggregate<Item, long>(0, (current, item) => current + item.Cost);
                         Printer.Print(enemyHero.Name + " --> " + worth);
                     }*/
-                    HeroUpdate.Sleep(2000);
+                    _heroUpdate.Sleep(2000);
                     if (Members.Heroes.Count < 10)
                     {
                         /*Members.Heroes =
@@ -43,9 +43,14 @@ namespace OverlayInformation
                                 x =>
                                     x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName())).ToList();*/
                         Members.Heroes =
+                            HeroesList.All.Where(
+                                x =>
+                                    x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName()))
+                                .ToList();
+                        /*Members.Heroes =
                             ObjectManager.GetEntities<Hero>().Where(
                                 x =>
-                                    x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName())).ToList();
+                                    x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName())).ToList();*/
                         Members.AllyHeroes = Members.Heroes.Where(x => x.Team == Members.MyHero.Team).ToList();
                         Members.EnemyHeroes =
                             Members.Heroes.Where(x => x.Team == Members.MyHero.GetEnemyTeam()).ToList();
@@ -132,9 +137,9 @@ namespace OverlayInformation
                         }
                     }
                 }
-                if (!UpdatePrediction.Sleeping /*&& Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>()*/)
+                if (!_updatePrediction.Sleeping /*&& Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>()*/)
                 {
-                    UpdatePrediction.Sleep(1);
+                    _updatePrediction.Sleep(1);
                     var time = Game.GameTime;
                     foreach (var v in Members.EnemyHeroes.Where(x=>x.IsAlive))
                     {
@@ -158,9 +163,9 @@ namespace OverlayInformation
                         }
                     }
                 }
-                if (!AbilityUpdate.Sleeping)
+                if (!_abilityUpdate.Sleeping)
                 {
-                    AbilityUpdate.Sleep(1000);
+                    _abilityUpdate.Sleep(1000);
                     foreach (var hero in /*Members.Heroes */Manager.HeroManager.GetViableHeroes())
                     {
                         /*if ((hero.ClassID==ClassID.CDOTA_Unit_Hero_DoomBringer || hero.ClassID==ClassID.CDOTA_Unit_Hero_Rubick) && !hero.IsVisible)
@@ -217,17 +222,24 @@ namespace OverlayInformation
                     }
                 }
             }
+
+            public static void Flush()
+            {
+                _abilityUpdate = new Sleeper();
+                _heroUpdate = new Sleeper();
+                _updatePrediction = new Sleeper();
+            }
         }
 
         public abstract class PlayerList
         {
-            private static readonly Sleeper Sleeper = new Sleeper();
+            private static Sleeper _sleeper = new Sleeper();
 
             public static void Update(EventArgs args)
             {
                 if (!Checker.IsActive()) return;
-                if (Sleeper.Sleeping) return;
-                Sleeper.Sleep(2000);
+                if (_sleeper.Sleeping) return;
+                _sleeper.Sleep(2000);
                 if (Members.Players.Count(x => x != null && x.IsValid && x.Hero.IsValid) < 10)
                 {
                     Members.Players = Players.All.Where(x => x != null && x.IsValid && x.Hero!=null && x.Hero.IsValid).ToList();
@@ -235,22 +247,31 @@ namespace OverlayInformation
                     Members.EnemyPlayers = Members.Players.Where(x => x.Team == Members.MyHero.GetEnemyTeam()).ToList();
                 }
             }
+            public static void Flush()
+            {
+                _sleeper = new Sleeper();
+            }
 
         }
 
         public abstract class BaseList
         {
-            private static readonly Sleeper Sleeper = new Sleeper();
+            private static Sleeper _sleeper = new Sleeper();
 
             public static void Update(EventArgs args)
             {
                 if (!Checker.IsActive()) return;
-                if (Sleeper.Sleeping) return;
-                Sleeper.Sleep(100);
+                if (_sleeper.Sleeping) return;
+                _sleeper.Sleep(100);
                 Members.BaseList =
                     ObjectManager.GetEntities<Unit>()
                         .Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team == Members.MyHero.GetEnemyTeam())
                         .ToList();
+            }
+
+            public static void Flush()
+            {
+                _sleeper = new Sleeper();
             }
         }
     }
