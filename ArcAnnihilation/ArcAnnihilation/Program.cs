@@ -1504,10 +1504,8 @@ namespace ArcAnnihilation
                           (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
                          x.CastRange >= distance)).OrderByDescending(y => GetComboOrder(y, byIllusion));
             var v = items.FirstOrDefault();
-            Print(v.StoredName());
             if (v == null && target.IsMelee)
             {
-                
                 var pike = inventory.Find(x => x.StoredName() == "item_hurricane_pike");
                 if (pike != null && pike.CanBeCasted(target) && target.Distance2D(me)<=pike.GetCastRange() && Utils.SleepCheck("item_cd"+me.Handle))
                 {
