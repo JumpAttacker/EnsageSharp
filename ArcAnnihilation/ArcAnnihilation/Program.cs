@@ -192,7 +192,7 @@ namespace ArcAnnihilation
         }
         private static bool IsItemEnable(string name, bool tempest = false)
         {
-            return Menu.Item(tempest ? "spellTempest" : "spellHero").GetValue<AbilityToggler>().IsEnabled(name);
+            return Menu.Item(tempest ? "itemTempestEnable" : "itemHeroEnable").GetValue<AbilityToggler>().IsEnabled(name);
         }
 
         private static uint GetComboOrder(Item y, bool byIllusion)
@@ -1522,7 +1522,7 @@ namespace ArcAnnihilation
             if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime") || me.IsStunned()) return;
             // use all items given in Items list (line 53)
             var inventory =
-                inv.Where(x => /*IsItemEnable(x.StoredName()) &&*/ x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
+                inv.Where(x => IsItemEnable(x.StoredName(), byIllusion) && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
                     /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
             var items =
                 inventory.Where(
