@@ -172,8 +172,17 @@ namespace ArcAnnihilation
             NoOne
         }
 
+        private enum TargetSelectedEnum
+        {
+            ClosestToMouse,
+            FastestKilable,
+            ClosestToHero
+        }
+
         #endregion
         //if (args.GetNewValue<KeyBind>().Active)
+
+        private static TargetSelectedEnum TargetSelection => (TargetSelectedEnum)Menu.Item("TargetSelection").GetValue<StringList>().SelectedIndex;
 
         private static bool IsAbilityEnable(string name, bool tempest = false, bool calcForPushing = false)
         {
@@ -325,7 +334,10 @@ namespace ArcAnnihilation
             //il.AddItem(new MenuItem("orderList", "Use order list").SetValue(false));
             Menu.AddItem(
                 new MenuItem("order", "Clone Order Selection").SetValue(
-                    new StringList(new[] {"monkey", "caster", "nothing"}, 1)));
+                    new StringList(new[] { "monkey", "caster", "nothing" }, 1)));
+            Menu.AddItem(
+                new MenuItem("TargetSelection", "Target Selection").SetValue(
+                    new StringList(new[] { "ClosestToMouse", "FastestKilable", "ClosestToHero" })));
 
             Menu.AddSubMenu(drawItems);
             Menu.AddSubMenu(difblade);
@@ -889,7 +901,11 @@ namespace ArcAnnihilation
                 // if target is not valid, set target to the hero closest to the mouse
                 if (_globalTarget2 == null || !_globalTarget2.IsValid || !_globalTarget2.IsAlive)
                 {
-                    _globalTarget2 = ClosestToMouse(_mainHero, 500);
+                    _globalTarget2 = TargetSelection == TargetSelectedEnum.ClosestToMouse
+                        ? ClosestToMouse(_mainHero, 500)
+                        : TargetSelection == TargetSelectedEnum.ClosestToHero
+                            ? ClosestToHero(_mainHero, 500)
+                            : FastestKillable(_mainHero, 500);
                 }
                 if (_globalTarget2 != null && _globalTarget2.IsValid && _globalTarget2.IsAlive)
                 {
@@ -1506,7 +1522,7 @@ namespace ArcAnnihilation
             if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime") || me.IsStunned()) return;
             // use all items given in Items list (line 53)
             var inventory =
-                inv.Where(x => IsItemEnable(x.StoredName()) && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
+                inv.Where(x => /*IsItemEnable(x.StoredName()) &&*/ x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
                     /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
             var items =
                 inventory.Where(
@@ -1667,12 +1683,6 @@ namespace ArcAnnihilation
             var refreshItems = inventory.Where(
                 x =>
                     Items.Keys.Contains(x.StoredName()));
-            /*Print("-------------");
-            foreach (var refreshItem in refreshItems)
-            {
-                Print(refreshItem.StoredName());
-            }*/
-            //Print(refreshItems.Count().ToString());
             if (refreshItems.Any()) return;
             var r = me.Spellbook.SpellR;
             if (r == null || r.CanBeCasted()) return;
@@ -1680,8 +1690,6 @@ namespace ArcAnnihilation
             refresher?.UseAbility();
             Utils.Sleep(500, refresher?.Name + me.Handle);
         }
-
-        
 
         private static void TryToDispell(Hero me, List<Item> toList, bool both, bool main, bool tempest)
         {
@@ -1816,6 +1824,28 @@ namespace ArcAnnihilation
                             x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible &&
                             x.Distance2D(mousePosition) <= range /*&& !x.IsMagicImmune()*/)
                     .OrderBy(x => x.Distance2D(mousePosition));
+            return enemyHeroes.FirstOrDefault();
+        }
+        private static Hero ClosestToHero(Hero source, float range = 600)
+        {
+            var mousePosition = Game.MousePosition;
+            var enemyHeroes = ObjectManager.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible &&
+                            x.Distance2D(mousePosition) <= range /*&& !x.IsMagicImmune()*/)
+                    .OrderBy(x => x.Distance2D(source.Position));
+            return enemyHeroes.FirstOrDefault();
+        }
+        private static Hero FastestKillable(Hero source, float range = 600)
+        {
+            var mousePosition = Game.MousePosition;
+            var enemyHeroes = ObjectManager.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            x.Team == source.GetEnemyTeam() && !x.IsIllusion && x.IsAlive && x.IsVisible &&
+                            x.Distance2D(mousePosition) <= range /*&& !x.IsMagicImmune()*/)
+                    .OrderBy(x => x.Health);
             return enemyHeroes.FirstOrDefault();
         }
 
