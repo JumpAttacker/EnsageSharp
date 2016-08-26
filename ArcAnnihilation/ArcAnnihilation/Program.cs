@@ -181,10 +181,14 @@ namespace ArcAnnihilation
                 ? Menu.Item(tempest ? "spellTempest" : "spellHero").GetValue<AbilityToggler>().IsEnabled(name)
                 : Menu.Item("AutoPush.Abilites").GetValue<AbilityToggler>().IsEnabled(name);
         }
+        private static bool IsItemEnable(string name, bool tempest = false)
+        {
+            return Menu.Item(tempest ? "spellTempest" : "spellHero").GetValue<AbilityToggler>().IsEnabled(name);
+        }
 
         private static uint GetComboOrder(Item y, bool byIllusion)
         {
-            Print(Menu.Item("itemTempest").Name);
+            //Print(Menu.Item("itemTempest").Name);
             if (Menu.Item(byIllusion ? "customOrderTempest" : "customOrderHero").GetValue<bool>())
                 return Menu.Item(byIllusion ? "itemTempest" : "itemHero")
                     .GetValue<PriorityChanger>()
@@ -200,6 +204,8 @@ namespace ArcAnnihilation
             var dict = AbilityList.ToDictionary(item => item, item => true);
             var dict2 = AbilityList.ToDictionary(item => item, item => true);
             var pushAbilities = PushList.ToDictionary(item => item, item => true);
+            var itemListHero = Items.Keys.ToList().ToDictionary(item => item, item => true);
+            var itemListTempest = Items.Keys.ToList().ToDictionary(item => item, item => true);
             Menu.AddItem(new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('G', KeyBindType.Press)));
             Menu.AddItem(new MenuItem("spamHotkey", "Spark Spam").SetValue(new KeyBind('H', KeyBindType.Press)));
             Menu.AddItem(
@@ -222,9 +228,11 @@ namespace ArcAnnihilation
             var spellTempest = new Menu("Spells:", "TempestSpells");
             var itemTempest = new Menu("Items:", "TempestItems");
 
+            itemHero.AddItem(new MenuItem("itemHeroEnable", "Toggle Items:").SetValue(new AbilityToggler(itemListHero)));
             itemHero.AddItem(new MenuItem("customOrderHero", "Use Custom Order").SetValue(false));
             itemHero.AddItem(new MenuItem("itemHero", "Items:").SetValue(new PriorityChanger(Items.Keys.ToList())));
 
+            itemTempest.AddItem(new MenuItem("itemTempestEnable", "Toggle Items:").SetValue(new AbilityToggler(itemListTempest)));
             itemTempest.AddItem(new MenuItem("customOrderTempest", "Use Custom Order").SetValue(false));
             itemTempest.AddItem(new MenuItem("itemTempest", "Items:").SetValue(new PriorityChanger(Items.Keys.ToList())));
 
@@ -694,7 +702,7 @@ namespace ArcAnnihilation
                                    _globalTarget2.Name.Replace("npc_dota_hero_", "") + ".vmat";
                         size = new Vector2(50, 50);
                         Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(13, -6),
-                            Drawing.GetTexture(name));
+                            Textures.GetTexture(name));
                         Drawing.DrawRect(startPos + new Vector2(10, 35), size + new Vector2(14, -5),
                             new Color(0, 0, 0, 255), true);
                     }
@@ -1473,8 +1481,13 @@ namespace ArcAnnihilation
                 e.UseAbility(predVector3);
                 Utils.Sleep(500, me.Handle + e.Name);
             }
+            
             var r = me.Spellbook.SpellR;
-            if (r == null || !IsAbilityEnable(r.StoredName(), tempest) || !r.CanBeCasted() || !Utils.SleepCheck(me.Handle + r.Name) || distance>900) return;
+            if (!IsAbilityEnable(r.StoredName(), tempest))
+                return;
+            if (r == null || !IsAbilityEnable(r.StoredName(), tempest) || !r.CanBeCasted() ||
+                !Utils.SleepCheck(me.Handle + r.Name) || distance > 900 || Objects.Tempest.GetCloneList(me).Any())
+                return;
             r.UseAbility();
             Utils.Sleep(500, me.Handle + r.Name);
         }
@@ -1493,12 +1506,12 @@ namespace ArcAnnihilation
             if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime") || me.IsStunned()) return;
             // use all items given in Items list (line 53)
             var inventory =
-                inv.Where(x => Utils.SleepCheck(x.Name + me.Handle) && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
+                inv.Where(x => IsItemEnable(x.StoredName()) && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
                     /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
             var items =
                 inventory.Where(
                     x =>
-                        Items.Keys.Contains(x.Name) &&
+                        Utils.SleepCheck(x.Name + me.Handle) && Items.Keys.Contains(x.Name) &&
                         ((x.CastRange == 0 &&
                           distance <=
                           (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
@@ -1506,7 +1519,7 @@ namespace ArcAnnihilation
             var v = items.FirstOrDefault();
             if (v == null && target.IsMelee)
             {
-                var pike = inventory.Find(x => x.StoredName() == "item_hurricane_pike");
+                var pike = inventory.Find(x => Utils.SleepCheck(x.Name + me.Handle) && x.StoredName() == "item_hurricane_pike");
                 if (pike != null && pike.CanBeCasted(target) && target.Distance2D(me)<=pike.GetCastRange() && Utils.SleepCheck("item_cd"+me.Handle))
                 {
                     var angle = (float)Math.Max(
@@ -1536,8 +1549,10 @@ namespace ArcAnnihilation
                     {
                         if (v.IsDisable())
                         {
-                            Print(v.Name);
-                            v.CastStun(target);
+                            if (v.CastStun(target))
+                            {
+
+                            }
                         }
                         else if (v.IsSilence())
                         {
@@ -1556,15 +1571,16 @@ namespace ArcAnnihilation
                 {
                     if (distance > 1150)
                     {
+                        var angle = me.FindAngleBetween(target.Position, true);
                         var point = new Vector3(
                             (float)
                                 (target.Position.X -
                                  Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value*
-                                 Math.Cos(me.FindAngleBetween(target.Position, true))),
+                                 Math.Cos(angle)),
                             (float)
                                 (target.Position.Y -
                                  Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value*
-                                 Math.Sin(me.FindAngleBetween(target.Position, true))),
+                                 Math.Sin(angle)),
                             target.Position.Z);
                         var dist = me.Distance2D(point);
                         if (dist >= Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value && dist <= 1150)
@@ -1578,51 +1594,7 @@ namespace ArcAnnihilation
                 Utils.Sleep(500, v.Name + me.Handle);
                 Utils.Sleep(100, "item_cd"+me.Handle);
             }
-            //var count = 0;
-            /*
-            foreach (var item in items)
-            {
-                Print(++count+". "+item.Name+" ("+Items[item.Name]+")");
-                // code for using blink
-                if (item.Name == "item_blink")
-                {
-                    // if target is more than blink range away
-                    if (distance > 1150)
-                    {
-                        // sets blink point to position given by CloseRange menu slider
-                        var point = new Vector3(
-                            (float)
-                                (target.Position.X -
-                                 Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value*
-                                 Math.Cos(me.FindAngleBetween(target.Position, true))),
-                            (float)
-                                (target.Position.Y -
-                                 Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value*
-                                 Math.Sin(me.FindAngleBetween(target.Position, true))),
-                            target.Position.Z);
-                        var dist = me.Distance2D(point);
-                        if (dist >= Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value && dist <= 1150)
-                        {
-                            item.UseAbility(point);
-                            Utils.Sleep(500, item.Name + me.Handle);
-                            Utils.Sleep(150, "DaggerTime");
-                            return;
-                        }
-                    }
-                    else if (distance>Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value)
-                    {
-                        item.UseAbility(target.Position);
-                        Utils.Sleep(500, item.Name + me.Handle);
-                    }
-                    continue;
-                    //return;
-                }
-                item.UseAbility();
-                item.UseAbility(target);
-                item.UseAbility(target.Position);
-                item.UseAbility(me);
-                Utils.Sleep(500, item.Name + me.Handle);
-            }*/
+            
             
             // purge enemies if menu setting enabled
             var purgeAll = Menu.Item("Diffusal.PurgEnemy").GetValue<StringList>().SelectedIndex == (int)PurgeSelection.AllEnemies;
@@ -1643,7 +1615,7 @@ namespace ArcAnnihilation
                         hero.HasModifier("modifier_item_diffusal_blade_slow");
                     var repel = hero.FindModifier("modifier_omniknight_repel")!=null;
                     var guard = hero.FindModifier("modifier_omninight_guardian_angel")!=null;
-                    var dust = inventory.Find(x => x.Name == "item_dust");
+                    var dust = inventory.Find(x => Utils.SleepCheck(x.Name + me.Handle) && x.Name == "item_dust");
                     if (dust != null && (!Menu.Item("Dust.Check").GetValue<bool>() || target.CanGoInvis() || target.IsInvisible()))
                     {
                         dust.UseAbility();
@@ -1656,7 +1628,7 @@ namespace ArcAnnihilation
                     var items2 =
                     inventory.Where(
                         x =>
-                            CloneOnlyComboItems.Contains(x.Name) &&
+                            Utils.SleepCheck(x.Name + me.Handle) && CloneOnlyComboItems.Contains(x.Name) &&
                             (me.Distance2D(hero) <= 650)).ToList();
                     foreach (var item in items2)
                     {
@@ -1675,7 +1647,7 @@ namespace ArcAnnihilation
             {
                 var dif = inventory.Where(
                     x =>
-                        CloneOnlyComboItems.Contains(x.Name)).ToList();
+                        Utils.SleepCheck(x.Name + me.Handle) && CloneOnlyComboItems.Contains(x.Name)).ToList();
                 if (dif.Any())
                     TryToDispell(me, dif, both, main, tempest);
             }
@@ -1683,7 +1655,7 @@ namespace ArcAnnihilation
             // code for using bkb
             if (useBkb && distance<900)
             {
-                var bkb = inventory.FirstOrDefault(x => x.Name == "item_black_king_bar");
+                var bkb = inventory.FirstOrDefault(x => Utils.SleepCheck(x.Name + me.Handle) && x.Name == "item_black_king_bar");
                 if (bkb != null && bkb.CanBeCasted() && Utils.SleepCheck(bkb.Name + me.Handle))
                 {
                     bkb.UseAbility();
@@ -1692,14 +1664,21 @@ namespace ArcAnnihilation
             }
 
             // Uses ultimate if all items expect of refresher was casted
-            if (!items.Any()) return;
+            var refreshItems = inventory.Where(
+                x =>
+                    Items.Keys.Contains(x.StoredName()));
+            /*Print("-------------");
+            foreach (var refreshItem in refreshItems)
             {
-                var r = me.Spellbook.SpellR;
-                if (r == null || r.CanBeCasted()) return;
-                var refresher = inventory.FirstOrDefault(x => x.Name == "item_refresher");
-                refresher?.UseAbility();
-                Utils.Sleep(500, refresher?.Name + me.Handle);
-            }
+                Print(refreshItem.StoredName());
+            }*/
+            //Print(refreshItems.Count().ToString());
+            if (refreshItems.Any()) return;
+            var r = me.Spellbook.SpellR;
+            if (r == null || r.CanBeCasted()) return;
+            var refresher = inventory.FirstOrDefault(x => Utils.SleepCheck(x.Name + me.Handle) && x.Name == "item_refresher");
+            refresher?.UseAbility();
+            Utils.Sleep(500, refresher?.Name + me.Handle);
         }
 
         
