@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
@@ -290,6 +288,7 @@ namespace OverlayInformation
                 Game.OnUpdate += Updater.BaseList.Update;
                 Game.OnUpdate += Devolp.ConsoleCommands;
                 RoshanAction.Flush();
+                AutoItems.Flush();
                 Game.OnUpdate += RoshanAction.Roshan;
                 Game.OnUpdate += Game_OnUpdate;
 
@@ -322,6 +321,7 @@ namespace OverlayInformation
                 }
                 catch (Exception)
                 {
+                    Printer.Print("Members.Menu.AddToMainMenu();");
                 }
 
             };
@@ -355,8 +355,7 @@ namespace OverlayInformation
                 }
                 catch (Exception)
                 {
-                    
-                    throw;
+                    Printer.PrintError("Members.Menu.RemoveFromMainMenu();");
                 }
                 
             };

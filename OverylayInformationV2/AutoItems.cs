@@ -10,13 +10,18 @@ namespace OverlayInformation
     {
         private static Item _midas;
         private static Item _phase;
-        private static readonly Sleeper Sleeper=new Sleeper();
+        private static Sleeper _sleeper;
+
+        public static void Flush()
+        {
+            _sleeper = new Sleeper();
+        }
 
         public static void Action()
         {
             if (!Members.Menu.Item("autoitems.Enable").GetValue<bool>()) return;
-            if (Sleeper.Sleeping || Members.MyHero.IsInvisible() || !Members.MyHero.IsAlive) return;
-            Sleeper.Sleep(250);
+            if (_sleeper.Sleeping || Members.MyHero.IsInvisible() || !Members.MyHero.IsAlive) return;
+            _sleeper.Sleep(250);
             if (Members.Menu.Item("autoitems.List").GetValue<AbilityToggler>().IsEnabled("item_hand_of_midas"))
             {
                 if (_midas == null || !_midas.IsValid)

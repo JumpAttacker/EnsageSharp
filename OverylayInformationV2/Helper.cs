@@ -58,9 +58,9 @@ namespace OverlayInformation
             try
             {
                 var msg = new SideMessage(hero, new Vector2(226, 59));
-                msg.AddElement(new Vector2(9, 9), new Vector2(73, 41), Drawing.GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
-                msg.AddElement(new Vector2(97, 2), new Vector2(50, 50), Drawing.GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
-                msg.AddElement(new Vector2(163, 9), new Vector2(75, 41), Drawing.GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
+                msg.AddElement(new Vector2(9, 9), new Vector2(73, 41), Textures.GetTexture("materials/ensage_ui/heroes_horizontal/" + hero + ".vmat"));
+                msg.AddElement(new Vector2(97, 2), new Vector2(50, 50), Textures.GetTexture("materials/ensage_ui/other/arrow_usual.vmat"));
+                msg.AddElement(new Vector2(163, 9), new Vector2(75, 41), Textures.GetTexture("materials/ensage_ui/spellicons/" + spellName + ".vmat"));
                 msg.CreateMessage();
             }
             catch (Exception)
@@ -146,7 +146,7 @@ namespace OverlayInformation
         {
             var name = "materials/ensage_ui/miniheroes/" + heroName.Substring("npc_dota_hero_".Length) + ".vmat";
 
-            return Drawing.GetTexture(name);
+            return Textures.GetTexture(name);
         }
     }
 }

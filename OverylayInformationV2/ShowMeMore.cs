@@ -467,6 +467,17 @@ namespace OverlayInformation
                                     "spirit_breaker_charge_of_darkness");
                                 InSys.Add(v);
                             }
+                            else
+                            {
+                                var pos = HUDInfo.GetHPbarPosition(v);
+                                if (!pos.IsZero)
+                                {
+                                    Drawing.DrawRect(pos - new Vector2(50, 0), new Vector2(30, 30),
+                                        Textures.GetSpellTexture("spirit_breaker_charge_of_darkness"));
+                                    Drawing.DrawRect(pos - new Vector2(50, 0), new Vector2(30, 30),
+                                        Color.Red,true);
+                                }
+                            }
                         }
                         else
                         {
