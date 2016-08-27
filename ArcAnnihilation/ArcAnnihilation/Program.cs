@@ -1549,7 +1549,7 @@ namespace ArcAnnihilation
                     }
                 }
             }
-            var slarkMod = target.HasModifiers(new[] {"modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses"});
+            var slarkMod = target.HasModifiers(new[] { "modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses" },false);
             if (v != null && Utils.SleepCheck("item_cd"+me.Handle))
             {
                 /*Print(v.Name);
