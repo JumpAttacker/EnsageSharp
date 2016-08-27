@@ -80,6 +80,8 @@ namespace ArcAnnihilation
             {"item_mjollnir", 1},
 
             {"item_sheepstick", 5}
+
+            /*{"item_dust", 4}*/
         };
 
         private static readonly List<string> AutoPushItems = new List<string>
@@ -1522,7 +1524,7 @@ namespace ArcAnnihilation
             if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime") || me.IsStunned()) return;
             // use all items given in Items list (line 53)
             var inventory =
-                inv.Where(x => IsItemEnable(x.StoredName(), byIllusion) && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
+                inv.Where(x => (IsItemEnable(x.StoredName(), byIllusion) || CloneOnlyComboItems.Contains(x.StoredName()) || x.StoredName()=="item_dust") && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
                     /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
             var items =
                 inventory.Where(
@@ -1547,6 +1549,7 @@ namespace ArcAnnihilation
                     }
                 }
             }
+            var slarkMod = target.HasModifiers(new[] {"modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses"});
             if (v != null && Utils.SleepCheck("item_cd"+me.Handle))
             {
                 /*Print(v.Name);
@@ -1565,15 +1568,17 @@ namespace ArcAnnihilation
                     {
                         if (v.IsDisable())
                         {
-                            if (v.CastStun(target))
-                            {
+                            if (!slarkMod)
+                                if (v.CastStun(target))
+                                {
 
-                            }
+                                }
                         }
                         else if (v.IsSilence())
                         {
-                            if (!target.IsSilenced())
-                                v.UseAbility(target);
+                            if (!slarkMod)
+                                if (!target.IsSilenced())
+                                    v.UseAbility(target);
                         }
                         else
                             v.UseAbility(target);
