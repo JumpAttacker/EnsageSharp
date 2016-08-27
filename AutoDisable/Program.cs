@@ -220,6 +220,7 @@ namespace Auto_Disable
                     var blink = v.FindItem("item_blink");
                     var forcestaff = v.FindItem("item_force_staff");
                     var dpActivated =
+                        v.HasModifiers(new[] {"modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses"},false);
                     var enumerable = items as IList<Item> ?? items.ToList();
                     var distance = me.Distance2D(v);
                     //var angle =
