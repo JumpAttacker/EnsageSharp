@@ -1580,6 +1580,14 @@ namespace ArcAnnihilation
                                 if (!target.IsSilenced())
                                     v.UseAbility(target);
                         }
+                        else if ((v.StoredName().Contains("dagon") || v.StoredName() == "item_ethereal_blade") &&
+                                 target.HasModifiers(
+                                     new[]
+                                     {
+                                         "modifier_templar_assassin_refraction_absorb",
+                                         "modifier_templar_assassin_refraction_absorb_stacks"
+                                     }, false))
+                            Print("underRefraction",print:false);
                         else
                             v.UseAbility(target);
                     }
@@ -1948,9 +1956,10 @@ namespace ArcAnnihilation
             Console.ForegroundColor = clr;
         }
 
-        private static void Print(string toString, MessageType type = MessageType.ChatMessage)
+        private static void Print(string toString, MessageType type = MessageType.ChatMessage,bool print=true)
         {
-            Game.PrintMessage(toString, type);
+            if (print)
+                Game.PrintMessage(toString, type);
         }
         #endregion
     }
