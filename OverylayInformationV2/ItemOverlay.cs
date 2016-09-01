@@ -17,6 +17,7 @@ namespace OverlayInformation
         private static Sleeper _sleeper;
         private static bool IsEnable => Members.Menu.Item("itemOverlay.Enable").GetValue<bool>();
         private static bool DangeItems => Members.Menu.Item("itemOverlay.DangItems").GetValue<bool>();
+        private static bool DangOldMethod => Members.Menu.Item("itemOverlay.OldMethod").GetValue<bool>();
         private static bool IsAlly => Members.Menu.Item("itemOverlay.Ally").GetValue<bool>();
         private static bool IsEnemy => Members.Menu.Item("itemOverlay.Enemy").GetValue<bool>();
         private static float Size => (float) Members.Menu.Item("itemOverlay.Size").GetValue<Slider>().Value/100;
@@ -117,7 +118,14 @@ namespace OverlayInformation
             var maxSizeX = Math.Max((float)items.Count/2*newSize.X + DefSize/(float) 2.6, halfSize);
             pos -= new Vector2(-halfSize + maxSizeX, DefSize + DefSize/Extra);
             if (DangeItems && forEnemy)
+            {
                 items = items.Where(Check).ToList();
+                if (DangOldMethod)
+                {
+                    DrawOldMethod(v,items);
+                    return;
+                }
+            }
             foreach (var item in items)
             {
                 var extraPos = new Vector2(DefSize*count, 0);
@@ -128,6 +136,32 @@ namespace OverlayInformation
                 Drawing.DrawRect(itemPos, newSize + DefSize / (float)2.6, Textures.GetItemTexture(item.StoredName()));
                 DrawState(item, normalPos, normalSize,v.Mana);
                 count++;
+            }
+        }
+
+        private static void DrawOldMethod(Hero v,List<Item> Items)
+        {
+            float count = 0;
+            var iPos = HUDInfo.GetHPbarPosition(v);
+            var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v), HUDInfo.GetHpBarSizeY(v));
+            foreach (var item in Items)
+            {
+                var itemname = Textures.GetItemTexture(item.StoredName());
+                Drawing.DrawRect(iPos + new Vector2(count, 50),
+                    new Vector2(iSize.X/3, (float) (iSize.Y*2.5)),
+                    itemname);
+                if (item.AbilityState == AbilityState.OnCooldown)
+                {
+                    var cd = ((int) item.Cooldown).ToString(CultureInfo.InvariantCulture);
+                    Drawing.DrawText(cd, iPos + new Vector2(count, 40), Color.White,
+                        FontFlags.AntiAlias | FontFlags.DropShadow);
+                }
+                if (item.AbilityState == AbilityState.NotEnoughMana)
+                {
+                    Drawing.DrawRect(iPos + new Vector2(count, 50),
+                        new Vector2(iSize.X/4, (float) (iSize.Y*2.5)), new Color(0, 0, 200, 100));
+                }
+                count += iSize.X/4;
             }
         }
 

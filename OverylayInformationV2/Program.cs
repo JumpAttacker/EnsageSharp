@@ -176,6 +176,7 @@ namespace OverlayInformation
 
             //var dangItem = new Menu("Dangerous items", "dangitems");
             itemOverlay.AddItem(new MenuItem("itemOverlay.DangItems", "Draw only dangerous items").SetValue(false)).SetTooltip("show if enemy has Dangerous items. Working only for enemy heroes");
+            itemOverlay.AddItem(new MenuItem("itemOverlay.OldMethod", "Use old method for drawing dangItems").SetValue(false));
             
             var dict = new Dictionary<string, bool>
             {
