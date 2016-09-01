@@ -68,6 +68,8 @@
     <Compile Include="Helper.cs" />
     <Compile Include="HeroesList.cs" />
     <Compile Include="ItemPanel.cs" />
+    <Compile Include="ItemOverlay.cs" />
+    <Compile Include="Manabars.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Members.cs" />
     <Compile Include="Printer.cs" />

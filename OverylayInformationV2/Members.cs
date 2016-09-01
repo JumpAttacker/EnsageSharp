@@ -54,5 +54,9 @@ namespace OverlayInformation
         public static bool Apparition; 
         public static readonly List<uint> AAlist=new List<uint>();
         public static bool IsClicked;
+
+        public static Manabars Manabars;
+        public static ItemOverlay ItemOverlay;
+        public static HeroesList HeroesList;
     }
 }

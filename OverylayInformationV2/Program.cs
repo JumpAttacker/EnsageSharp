@@ -160,8 +160,23 @@ namespace OverlayInformation
             runevision.AddItem(new MenuItem("runevision.PrintText.Enable", "Print text on rune-spawning").SetValue(true));
             runevision.AddItem(new MenuItem("runevision.DrawOnMinimap.Enable", "Draw rune on minimap").SetValue(true));
             //===========================
-            var dangItem = new Menu("Dangerous items", "dangitems");
-            dangItem.AddItem(new MenuItem("dangitems.Enable", "Enable").SetValue(false)).SetTooltip("show if enemy has Dangerous items");
+            var itemOverlay = new Menu("Item overlay", "itemOverlay");
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Enable", "Enable").SetValue(false)).SetTooltip("will show all items on heroes");
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(100,1,200)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra", "Extra").SetValue(new Slider(26, 1, 100)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Ally", "Enable for ally").SetValue(true));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Enemy", "Enable for enemy").SetValue(true));
+            var manaBars = new Menu("Manabars", "manaBars");
+            manaBars.AddItem(new MenuItem("manaBars.Enable", "Enable").SetValue(true));
+            manaBars.AddItem(new MenuItem("manaBars.Size", "Size").SetValue(new Slider(75, 1, 150)));
+            
+            manaBars.AddItem(new MenuItem("manaBars.Red", "Red").SetValue(new Slider(65, 0, 255)).SetFontColor(Color.Red));
+            manaBars.AddItem(new MenuItem("manaBars.Green", "Green").SetValue(new Slider(105, 0, 255)).SetFontColor(Color.Green));
+            manaBars.AddItem(new MenuItem("manaBars.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
+
+            //var dangItem = new Menu("Dangerous items", "dangitems");
+            itemOverlay.AddItem(new MenuItem("itemOverlay.DangItems", "Draw only dangerous items").SetValue(false)).SetTooltip("show if enemy has Dangerous items. Working only for enemy heroes");
+            
             var dict = new Dictionary<string, bool>
             {
                 {"item_gem", true},
@@ -175,7 +190,7 @@ namespace OverlayInformation
                 {"item_silver_edge", true},
                 {"item_ward_dispenser", true}
             };
-            dangItem.AddItem(new MenuItem("dangitems.List", "Items: ").SetValue(new AbilityToggler(dict)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.List", "Items: ").SetValue(new AbilityToggler(dict)));
             //===========================
             autoItems.AddItem(new MenuItem("autoitems.Enable", "Enable").SetValue(true));
             var autoitemlist = new Dictionary<string, bool>
@@ -236,8 +251,10 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(scan);
             settings.AddSubMenu(showIllusion);
             settings.AddSubMenu(runevision);
-            settings.AddSubMenu(dangItem);
+            //settings.AddSubMenu(dangItem);
             settings.AddSubMenu(itemPanel);
+            settings.AddSubMenu(itemOverlay);
+            settings.AddSubMenu(manaBars);
             settings.AddSubMenu(autoItems);
             settings.AddSubMenu(lastPosition);
             settings.AddSubMenu(netWorth);
@@ -245,8 +262,10 @@ namespace OverlayInformation
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
 
-            new HeroesList();
-            
+            Members.HeroesList = new HeroesList();
+            Members.Manabars = new Manabars();
+            Members.ItemOverlay = new ItemOverlay();
+
             if (Drawing.Direct3DDevice9 != null)
                 Members.RoshanFont = new Font(
                     Drawing.Direct3DDevice9,
@@ -307,7 +326,7 @@ namespace OverlayInformation
                 Game.OnWndProc += Game_OnWndProc;
                 AppDomain.CurrentDomain.DomainUnload += DrawHelper.Render.CurrentDomainDomainUnload;
                 Game.OnFireEvent += FireEvent.Game_OnGameEvent;
-
+                
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Members.Menu.DisplayName +
                     " By Jumpering" +

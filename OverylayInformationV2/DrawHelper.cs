@@ -25,8 +25,8 @@ namespace OverlayInformation
                 DrawSpellPanel(Members.Menu.Item("spellpanel.Targets").GetValue<StringList>().SelectedIndex);
             if (Members.Menu.Item("toppanel.Enable").GetValue<bool>())
                 DrawTopPanel(Members.Menu.Item("toppanel.Targets").GetValue<StringList>().SelectedIndex);
-            if (Members.Menu.Item("dangitems.Enable").GetValue<bool>())
-                DrawDangeItems();
+            /*if (Members.Menu.Item("dangitems.Enable").GetValue<bool>())
+                DrawDangeItems();*/
             if (Members.Menu.Item("lastPosition.Enable").GetValue<bool>())
                 DrawLastPosition();
             if (Members.Menu.Item("netWorth.Enable").GetValue<bool>())
@@ -171,44 +171,52 @@ namespace OverlayInformation
         {
             foreach (var hero in Manager.HeroManager.GetEnemyViableHeroes())
             {
-                if (Manager.HeroManager.GetItemList(hero)==null) continue;
-                var iPos = HUDInfo.GetHPbarPosition(hero);
-                var iSize = new Vector2(HUDInfo.GetHPBarSizeX(hero), HUDInfo.GetHpBarSizeY(hero));
-                float count = 0;
-                List<Item> items;
                 try
                 {
-                    if (!Members.ItemDictionary.TryGetValue(hero.Name, out items))
+                    if (Manager.HeroManager.GetItemList(hero) == null) continue;
+                    var iPos = HUDInfo.GetHPbarPosition(hero);
+                    var iSize = new Vector2(HUDInfo.GetHPBarSizeX(hero), HUDInfo.GetHpBarSizeY(hero));
+                    float count = 0;
+                    List<Item> items;
+                    try
+                    {
+                        if (!Members.ItemDictionary.TryGetValue(hero.Name, out items))
+                            continue;
+                    }
+                    catch (Exception)
+                    {
+                        Printer.Print("[DrawDangeItems]: " + hero.StoredName());
                         continue;
-                }
-                catch (Exception)
-                {
-                    Printer.Print("[DrawDangeItems]: " + hero.StoredName());
-                    continue;
-                }
-                foreach (
-                    var item in
-                        items
-                            .Where(x => x!=null && x.IsValid && Members.Menu.Item("dangitems.List").GetValue<AbilityToggler>().IsEnabled(x.Name))
-                    )
-                {
-                    var itemname = $"materials/ensage_ui/items/{item.Name.Replace("item_", "")}.vmat";
-                    Drawing.DrawRect(iPos + new Vector2(count, 50),
-                        new Vector2(iSize.X / 3, (float)(iSize.Y * 2.5)),
-                        Textures.GetTexture(itemname));
-                    if (item.AbilityState == AbilityState.OnCooldown)
-                    {
-                        var cd = ((int)item.Cooldown).ToString(CultureInfo.InvariantCulture);
-                        Drawing.DrawText(cd, iPos + new Vector2(count, 40), Color.White,
-                            FontFlags.AntiAlias | FontFlags.DropShadow);
                     }
-                    if (item.AbilityState == AbilityState.NotEnoughMana)
+                    foreach (
+                        var item in
+                            items
+                                .Where(x => x != null && x.IsValid && Members.Menu.Item("dangitems.List").GetValue<AbilityToggler>().IsEnabled(x.Name))
+                        )
                     {
+                        var itemname = $"materials/ensage_ui/items/{item.Name.Replace("item_", "")}.vmat";
                         Drawing.DrawRect(iPos + new Vector2(count, 50),
-                            new Vector2(iSize.X / 4, (float)(iSize.Y * 2.5)), new Color(0, 0, 200, 100));
+                            new Vector2(iSize.X / 3, (float)(iSize.Y * 2.5)),
+                            Textures.GetTexture(itemname));
+                        if (item.AbilityState == AbilityState.OnCooldown)
+                        {
+                            var cd = ((int)item.Cooldown).ToString(CultureInfo.InvariantCulture);
+                            Drawing.DrawText(cd, iPos + new Vector2(count, 40), Color.White,
+                                FontFlags.AntiAlias | FontFlags.DropShadow);
+                        }
+                        if (item.AbilityState == AbilityState.NotEnoughMana)
+                        {
+                            Drawing.DrawRect(iPos + new Vector2(count, 50),
+                                new Vector2(iSize.X / 4, (float)(iSize.Y * 2.5)), new Color(0, 0, 200, 100));
+                        }
+                        count += iSize.X / 4;
                     }
-                    count += iSize.X / 4;
                 }
+                catch (Exception e)
+                {
+                    Printer.Print($"[DrawDangeItems]: all --> {e.StackTrace}");
+                }
+                
             }
         }
 
@@ -236,16 +244,24 @@ namespace OverlayInformation
             {
                 foreach (var v in selectedHeroes)
                 {
-                    var pos = Helper.GetTopPanelPosition(v) +
-                              new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
-                                  Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
-                    var temp = HUDInfo.GetTopPanelSize(v);
-                    var size = new Vector2((float) temp[0], (float) temp[1]);
-                    var healthDelta = new Vector2(v.Health*size.X/v.MaximumHealth, 0);
-                    var manaDelta = new Vector2(v.Mana*size.X/v.MaximumMana, 0);
-                    DrawHealthPanel(pos, size, healthDelta);
-                    DrawManaPanel(pos, size, manaDelta);
-                    DrawStatus(pos,v, size);
+                    try
+                    {
+                        var pos = Helper.GetTopPanelPosition(v) +
+                                  new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
+                                      Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
+                        var temp = HUDInfo.GetTopPanelSize(v);
+                        var size = new Vector2((float)temp[0], (float)temp[1]);
+                        var healthDelta = new Vector2(v.Health * size.X / v.MaximumHealth, 0);
+                        var manaDelta = new Vector2(v.Mana * size.X / v.MaximumMana, 0);
+                        DrawHealthPanel(pos, size, healthDelta);
+                        DrawManaPanel(pos, size, manaDelta);
+                        DrawStatus(pos, v, size);
+                    }
+                    catch (Exception)
+                    {
+                        Printer.Print($"[DrawTopPanel: selectedHeroes] --> {v!=null && v.IsValid}");
+                    }
+                    
                 }
             }
             if (!Members.Menu.Item("ultimate.Enable").GetValue<bool>()) return;
