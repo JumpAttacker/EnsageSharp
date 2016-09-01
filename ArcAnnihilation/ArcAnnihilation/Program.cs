@@ -306,10 +306,12 @@ namespace ArcAnnihilation
             /*daggerSelection.AddItem(
                             new MenuItem("Dagger.Enable", "Enable Dagger").SetValue(true));*/
             daggerSelection.AddItem(
-                new MenuItem("Dagger.CloseRange", "Min distance between target and blink position").SetValue(
-                    new Slider(200, 100, 800)));
+                new MenuItem("Dagger.CloseRange", "Extra Distance for blink").SetValue(
+                    new Slider(200, 100, 800))).SetTooltip("1200 (dagger's default range) + your value");
             daggerSelection.AddItem(
-                new MenuItem("Dagger.MinDistance", "Min distance for blink").SetValue(new Slider(400, 100, 800)));
+                new MenuItem("Dagger.MinDistance", "Min distance for blink").SetValue(new Slider(400, 100, 800))).SetTooltip("dont use blink if you are in this range");
+            daggerSelection.AddItem(
+                new MenuItem("Dagger.ExtraDistance", "Min distance between target & blink pos").SetValue(new Slider(50, 50, 800)));
 
             var difblade = new Menu("Diffusal blade", "item_diffusal_blade", false, "item_diffusal_blade",true);
             difblade.AddItem(
@@ -1617,7 +1619,18 @@ namespace ArcAnnihilation
                     }
                     else if (distance > Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value)
                     {
-                        v.UseAbility(target.Position);
+                        var angle = me.FindAngleBetween(target.Position, true);
+                        var point = new Vector3(
+                            (float)
+                                (target.Position.X -
+                                 Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value *
+                                 Math.Cos(angle)),
+                            (float)
+                                (target.Position.Y -
+                                 Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value *
+                                 Math.Sin(angle)),
+                            target.Position.Z);
+                        v.UseAbility(point);
                     }
                 }
                 Utils.Sleep(500, v.Name + me.Handle);
