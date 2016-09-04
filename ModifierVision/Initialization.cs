@@ -53,7 +53,8 @@ namespace ModifierVision
             };
             Events.OnClose += (sender, args) =>
             {
-                Members.System.Clear();
+                if (Members.System != null)
+                    Members.System.Clear();
                 Drawing.OnDraw -= Action.OnDraw;
                 Unit.OnModifierAdded -= Action.ModifierAdded;
                 Unit.OnModifierRemoved -= Action.ModifierRemoved;
