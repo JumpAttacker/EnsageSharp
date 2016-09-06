@@ -21,7 +21,7 @@ namespace OverlayInformation
         public static void Overlay(EventArgs args)
         {
             if (!Checker.IsActive()) return;
-            if (Members.Menu.Item("spellpanel.Enable").GetValue<bool>())
+            if (Members.Menu.Item("spellpanel.Enable").GetValue<bool>() && Members.Menu.Item("spellpanel.OldMethod.Enable").GetValue<bool>())
                 DrawSpellPanel(Members.Menu.Item("spellpanel.Targets").GetValue<StringList>().SelectedIndex);
             if (Members.Menu.Item("toppanel.Enable").GetValue<bool>())
                 DrawTopPanel(Members.Menu.Item("toppanel.Targets").GetValue<StringList>().SelectedIndex);

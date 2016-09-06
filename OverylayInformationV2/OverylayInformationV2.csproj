@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="AutoItems.cs" />
     <Compile Include="Checker.cs" />
+    <Compile Include="DamageCalculation.cs" />
     <Compile Include="Devolp.cs" />
     <Compile Include="DrawHelper.cs" />
     <Compile Include="FireEvent.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="HeroesList.cs" />
     <Compile Include="ItemPanel.cs" />
     <Compile Include="ItemOverlay.cs" />
+    <Compile Include="AbilityOverlay.cs" />
     <Compile Include="Manabars.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Members.cs" />

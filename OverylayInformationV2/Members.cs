@@ -58,5 +58,7 @@ namespace OverlayInformation
         public static Manabars Manabars;
         public static ItemOverlay ItemOverlay;
         public static HeroesList HeroesList;
+        public static DamageCalculation DamageCalculation;
+        public static AbilityOverlay AbilityOverlay;
     }
 }

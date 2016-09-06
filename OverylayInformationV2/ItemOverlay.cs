@@ -18,6 +18,7 @@ namespace OverlayInformation
         private static bool IsEnable => Members.Menu.Item("itemOverlay.Enable").GetValue<bool>();
         private static bool DangeItems => Members.Menu.Item("itemOverlay.DangItems").GetValue<bool>();
         private static bool DangOldMethod => Members.Menu.Item("itemOverlay.OldMethod").GetValue<bool>();
+        private static bool IsChargesEnable => Members.Menu.Item("itemOverlay.DrawCharges").GetValue<bool>();
         private static bool IsAlly => Members.Menu.Item("itemOverlay.Ally").GetValue<bool>();
         private static bool IsEnemy => Members.Menu.Item("itemOverlay.Enemy").GetValue<bool>();
         private static float Size => (float) Members.Menu.Item("itemOverlay.Size").GetValue<Slider>().Value/100;
@@ -128,14 +129,23 @@ namespace OverlayInformation
             }
             foreach (var item in items)
             {
-                var extraPos = new Vector2(DefSize*count, 0);
-                var itemPos = pos + extraPos;
-                var normalSize = newSize + new Vector2(4, DefSize/(float) 2.6 + 4);
-                var normalPos = itemPos - new Vector2(2, 2);
-                Drawing.DrawRect(normalPos, newSize+new Vector2(4, DefSize / (float)2.6+4), Color.Black);
-                Drawing.DrawRect(itemPos, newSize + DefSize / (float)2.6, Textures.GetItemTexture(item.StoredName()));
-                DrawState(item, normalPos, normalSize,v.Mana);
-                count++;
+                try
+                {
+                    var tex = Textures.GetItemTexture(item.StoredName());
+                    var extraPos = new Vector2(DefSize * count, 0);
+                    var itemPos = pos + extraPos;
+                    var normalSize = newSize + new Vector2(4, DefSize / (float)2.6 + 4);
+                    var normalPos = itemPos - new Vector2(2, 2);
+                    Drawing.DrawRect(normalPos, newSize + new Vector2(4, DefSize / (float)2.6 + 4), Color.Black);
+                    Drawing.DrawRect(itemPos, newSize + DefSize / (float)2.6, tex);
+                    DrawState(item, normalPos, normalSize, v.Mana);
+                    count++;
+                }
+                catch (Exception)
+                {
+                    
+                }
+                
             }
         }
 
@@ -174,13 +184,14 @@ namespace OverlayInformation
         {
             var itemPos = itemPos2 + new Vector2(1, 0);
             var size = normalSize - new Vector2(14, 3);
+            
             if (item.AbilityState == AbilityState.OnCooldown)
             {
                 var ultimateCd =
                     ((int) Math.Min(item.Cooldown + 1, 99)).ToString(CultureInfo.InvariantCulture);
                 var textSize = Drawing.MeasureText(ultimateCd, "Arial",
                     new Vector2((float)(size.Y * .75), size.Y / 2), FontFlags.AntiAlias);
-                var textPos = itemPos + new Vector2(0, size.Y - textSize.Y);
+                var textPos = itemPos + new Vector2(2, (normalSize.Y - textSize.Y) / 2);
                 Drawing.DrawRect(textPos - new Vector2(0, 0),
                     new Vector2(textSize.X, textSize.Y),
                     new Color(0, 0, 0, 200));
@@ -197,7 +208,7 @@ namespace OverlayInformation
                     CultureInfo.InvariantCulture);
                 var textSize = Drawing.MeasureText(ultimateCd, "Arial",
                     new Vector2((float)(size.Y * .75), size.Y / 2), FontFlags.AntiAlias);
-                var textPos = itemPos + new Vector2(0, size.Y - textSize.Y);
+                var textPos = itemPos + new Vector2(2, (normalSize.Y - textSize.Y)/2);
                 Drawing.DrawRect(itemPos,
                     normalSize,
                     new Color(0, 75, 155, 155));
@@ -207,6 +218,27 @@ namespace OverlayInformation
                     new Vector2(textSize.Y, 0),
                     Color.White,
                     FontFlags.AntiAlias | FontFlags.StrikeOut);
+            }
+            else if (IsChargesEnable && item.IsDisplayingCharges)
+            {
+                var curCharge = item.CurrentCharges;
+                if (curCharge > 0)
+                {
+                    var ultimateCd =
+                        ((int) Math.Min(curCharge, 99)).ToString(CultureInfo.InvariantCulture);
+                    var textSize = Drawing.MeasureText(ultimateCd, "Arial",
+                        new Vector2((float) (size.Y*.5), size.Y/2), FontFlags.AntiAlias);
+                    var textPos = itemPos + new Vector2(1, normalSize.Y - textSize.Y);
+                    Drawing.DrawRect(textPos - new Vector2(0, 0),
+                        new Vector2(textSize.X, textSize.Y),
+                        new Color(0, 0, 0, 200));
+                    Drawing.DrawText(
+                        ultimateCd,
+                        textPos,
+                        new Vector2(textSize.Y, 0),
+                        Color.White,
+                        FontFlags.AntiAlias | FontFlags.StrikeOut);
+                }
             }
         }
     }

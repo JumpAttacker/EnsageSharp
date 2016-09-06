@@ -54,11 +54,19 @@ namespace OverlayInformation
             spellPanel.AddItem(
                 new MenuItem("spellpanel.Targets", "Draw For: ").SetValue(
                     new StringList(new[] { "Both", "Ally Team", "Enemy Team" })));
-            spellPanel.AddItem(new MenuItem("spellPanel.distBetweenSpells", "Distance spells").SetValue(new Slider(36, 0, 200)));
-            spellPanel.AddItem(new MenuItem("spellPanel.DistBwtweenLvls", "Distance lvls").SetValue(new Slider(6, 0, 200)));
-            spellPanel.AddItem(new MenuItem("spellPanel.SizeSpell", "Level size").SetValue(new Slider(3, 1, 25)));
-            spellPanel.AddItem(new MenuItem("spellPanel.ExtraPosX", "Extra Position X").SetValue(new Slider(25)));
-            spellPanel.AddItem(new MenuItem("spellPanel.ExtraPosY", "Extra Position Y").SetValue(new Slider(125, 0, 400)));
+            var oldMethod = new Menu("OldMethod", "oldMethod");
+            oldMethod.AddItem(new MenuItem("spellpanel.OldMethod.Enable", "Enable").SetValue(true));
+            oldMethod.AddItem(new MenuItem("spellPanel.distBetweenSpells", "Distance spells").SetValue(new Slider(36, 0, 200)));
+            oldMethod.AddItem(new MenuItem("spellPanel.DistBwtweenLvls", "Distance lvls").SetValue(new Slider(6, 0, 200)));
+            oldMethod.AddItem(new MenuItem("spellPanel.SizeSpell", "Level size").SetValue(new Slider(3, 1, 25)));
+            oldMethod.AddItem(new MenuItem("spellPanel.ExtraPosX", "Extra Position X").SetValue(new Slider(25)));
+            oldMethod.AddItem(new MenuItem("spellPanel.ExtraPosY", "Extra Position Y").SetValue(new Slider(125, 0, 400)));
+            //---0-0-0-0-0-
+            var newMethod = new Menu("New Method", "newMethod");
+            newMethod.AddItem(new MenuItem("spellpanel.NewMethod.Enable", "Enable").SetValue(false));
+            newMethod.AddItem(new MenuItem("spellpanel.NewMethod.IconSize", "Icon Size").SetValue(new Slider(25, 1, 100)));
+            newMethod.AddItem(new MenuItem("spellpanel.NewMethod.SizeLevel", "Text Size (for level)").SetValue(new Slider(50, 0, 150)));
+            newMethod.AddItem(new MenuItem("spellpanel.NewMethod.Size", "Text Size (for cooldown/mana)").SetValue(new Slider(50, 0, 150)));
             //===========================
             ultimate.AddItem(new MenuItem("ultimate.Enable", "Enable").SetValue(true));
             ultimate.AddItem(new MenuItem("ultimate.Icon.Enable", "Draw Icon").SetValue(true));
@@ -162,6 +170,7 @@ namespace OverlayInformation
             //===========================
             var itemOverlay = new Menu("Item overlay", "itemOverlay");
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enable", "Enable").SetValue(false)).SetTooltip("will show all items on heroes");
+            itemOverlay.AddItem(new MenuItem("itemOverlay.DrawCharges", "Draw Charges").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(100,1,200)));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Extra", "Extra").SetValue(new Slider(26, 1, 100)));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Ally", "Enable for ally").SetValue(true));
@@ -223,10 +232,18 @@ namespace OverlayInformation
             netWorth.AddItem(new MenuItem("netWorth.Green", "Green").SetValue(new Slider(182, 0, 255)).SetFontColor(Color.Green));
             netWorth.AddItem(new MenuItem("netWorth.Blue", "Blue").SetValue(new Slider(98, 0, 255)).SetFontColor(Color.Blue));
             //===========================
+            var dmgCalc = new Menu("Damage Calculation", "dmgCalc");
+            dmgCalc.AddItem(new MenuItem("dmgCalc.Enable", "Enable").SetValue(true)).SetTooltip("showing dmg from ur abilities");
+            dmgCalc.AddItem(new MenuItem("dmgCalc.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            dmgCalc.AddItem(new MenuItem("dmgCalc.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
+            dmgCalc.AddItem(new MenuItem("dmgCalc.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
+            //===========================
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Hax.enable", "Hax in lobby").SetValue(false));
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
             //===========================
+            spellPanel.AddSubMenu(oldMethod);
+            spellPanel.AddSubMenu(newMethod);
             topPanel.AddSubMenu(ultimate);
             topPanel.AddSubMenu(health);
             topPanel.AddSubMenu(mana);
@@ -259,6 +276,7 @@ namespace OverlayInformation
             settings.AddSubMenu(autoItems);
             settings.AddSubMenu(lastPosition);
             settings.AddSubMenu(netWorth);
+            settings.AddSubMenu(dmgCalc);
 
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
@@ -266,6 +284,8 @@ namespace OverlayInformation
             Members.HeroesList = new HeroesList();
             Members.Manabars = new Manabars();
             Members.ItemOverlay = new ItemOverlay();
+            Members.DamageCalculation = new DamageCalculation();
+            Members.AbilityOverlay = new AbilityOverlay();
 
             if (Drawing.Direct3DDevice9 != null)
                 Members.RoshanFont = new Font(
