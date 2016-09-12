@@ -17,6 +17,8 @@ namespace OverlayInformation
         private static float TextSizeLevel => (float) Members.Menu.Item("spellpanel.NewMethod.SizeLevel").GetValue<Slider>().Value/100;
         private static float TextSize => (float) Members.Menu.Item("spellpanel.NewMethod.Size").GetValue<Slider>().Value/100;
         private static float IconSize => (float) Members.Menu.Item("spellpanel.NewMethod.IconSize").GetValue<Slider>().Value;
+        private static float ExtraX => (float) Members.Menu.Item("spellpanel.NewMethod.ExtraX").GetValue<Slider>().Value;
+        private static float ExtraY => (float) Members.Menu.Item("spellpanel.NewMethod.ExtraY").GetValue<Slider>().Value;
         public AbilityOverlay()
         {
             _loaded = false;
@@ -76,6 +78,7 @@ namespace OverlayInformation
                         continue;
                     var spells = Manager.HeroManager.GetAbilityList(v);
                     pos += new Vector2(0,HUDInfo.GetHPBarSizeX());
+                    pos += new Vector2(ExtraX, ExtraY);
                     var counter = 0;
                     var size = new Vector2(IconSize, IconSize);
                     foreach (var ability in spells)
@@ -157,7 +160,6 @@ namespace OverlayInformation
                 }
                 catch (Exception e)
                 {
-                    throw;
                     Printer.Print($"[AbilityOverlay]: {v.StoredName()} : {e.HelpLink}");
                 }
             }

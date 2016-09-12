@@ -54,7 +54,7 @@ namespace OverlayInformation
             spellPanel.AddItem(
                 new MenuItem("spellpanel.Targets", "Draw For: ").SetValue(
                     new StringList(new[] { "Both", "Ally Team", "Enemy Team" })));
-            var oldMethod = new Menu("OldMethod", "oldMethod");
+            var oldMethod = new Menu("OldMethod", "Without Textures");
             oldMethod.AddItem(new MenuItem("spellpanel.OldMethod.Enable", "Enable").SetValue(true));
             oldMethod.AddItem(new MenuItem("spellPanel.distBetweenSpells", "Distance spells").SetValue(new Slider(36, 0, 200)));
             oldMethod.AddItem(new MenuItem("spellPanel.DistBwtweenLvls", "Distance lvls").SetValue(new Slider(6, 0, 200)));
@@ -62,11 +62,13 @@ namespace OverlayInformation
             oldMethod.AddItem(new MenuItem("spellPanel.ExtraPosX", "Extra Position X").SetValue(new Slider(25)));
             oldMethod.AddItem(new MenuItem("spellPanel.ExtraPosY", "Extra Position Y").SetValue(new Slider(125, 0, 400)));
             //---0-0-0-0-0-
-            var newMethod = new Menu("New Method", "newMethod");
+            var newMethod = new Menu("New Method", "With Textures");
             newMethod.AddItem(new MenuItem("spellpanel.NewMethod.Enable", "Enable").SetValue(false));
             newMethod.AddItem(new MenuItem("spellpanel.NewMethod.IconSize", "Icon Size").SetValue(new Slider(25, 1, 100)));
             newMethod.AddItem(new MenuItem("spellpanel.NewMethod.SizeLevel", "Text Size (for level)").SetValue(new Slider(50, 0, 150)));
             newMethod.AddItem(new MenuItem("spellpanel.NewMethod.Size", "Text Size (for cooldown/mana)").SetValue(new Slider(50, 0, 150)));
+            newMethod.AddItem(new MenuItem("spellpanel.NewMethod.ExtraX", "Extra position X").SetValue(new Slider(0, -150, 150)));
+            newMethod.AddItem(new MenuItem("spellpanel.NewMethod.ExtraY", "Extra position Y").SetValue(new Slider(0, -150, 150)));
             //===========================
             ultimate.AddItem(new MenuItem("ultimate.Enable", "Enable").SetValue(true));
             ultimate.AddItem(new MenuItem("ultimate.Icon.Enable", "Draw Icon").SetValue(true));
