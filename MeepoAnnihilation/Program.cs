@@ -743,7 +743,7 @@ namespace MeepoAnnihilation
 
             var mySet = MeepoSet.Find(x => Equals(x.Hero, me));
             var w = mySet.SpellW;
-            if (w != null && w.CanBeCasted())
+            if (w != null && Menu.Item("JungleFarm.AutoW").GetValue<bool>() && w.CanBeCasted())
             {
                 var enemy =
                     ObjectManager
