@@ -6,9 +6,12 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.AbilityInfo;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.Damage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
+using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
 
 // ReSharper disable UnusedMember.Local
@@ -78,11 +81,16 @@ namespace ArcAnnihilation
             {"item_necronomicon_2", 2},
             {"item_necronomicon_3", 2},
             {"item_mjollnir", 1},
+            //{ "item_hurricane_pike",1},
 
             {"item_sheepstick", 5}
 
             /*{"item_dust", 4}*/
         };
+        private static int CloseRange => Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value;
+        private static int MinDistance => Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value;
+        private static int ExtraDistance => Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value;
+        private static Sleeper _ethereal;
 
         private static readonly List<string> AutoPushItems = new List<string>
         {
@@ -817,6 +825,7 @@ namespace ArcAnnihilation
                     MessageType.LogMessage);
                 LastAttackStart.Clear();
                 LastActivity.Clear();
+                _ethereal=new Sleeper();
                 _myHull = _mainHero.HullRadius;
                 _drawType = Menu.Item("Draw.Order.Type").GetValue<bool>();
             }
@@ -1342,11 +1351,10 @@ namespace ArcAnnihilation
                 var dagger = enumerable.Any(x => x.Name == "item_blink" && (x.Cooldown == 0 && SpellBaseList.Find(z => x.Name == x.StoredName())==null));
                 
                 // uses all items available
-                ItemUsage(hero, enumerable, target, d,
+                if (ItemUsage(hero, enumerable, target, d,
                     Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
-                    Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
-
-                SpellsUsage(hero, target, d, dagger,true);
+                    Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true))
+                    SpellsUsage(hero, target, d, dagger, true);
                 // do orbwalking if enabled
                 // otherwise simply attack target
                 if (hero.IsDisarmed() || !Utils.SleepCheck("magField")) continue;
@@ -1493,7 +1501,7 @@ namespace ArcAnnihilation
                     w.UseAbility(Prediction.InFront(me, 250));
                 Utils.Sleep(500, w.Name);
             }
-            if (e != null && IsAbilityEnable(e.StoredName(), tempest) && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady)
+            if (e != null && IsAbilityEnable(e.StoredName(), tempest) && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady && !Prediction.IsTurning(target))
             {
                 var predVector3 = target.NetworkActivity == NetworkActivity.Move && Menu.Item("usePrediction").GetValue<bool>()
                         ? Prediction.InFront(target, target.MovementSpeed * 3 + Game.Ping / 1000)
@@ -1521,12 +1529,16 @@ namespace ArcAnnihilation
         * 4) Uses bkb if enabled
         * 5) Uses ultimate if all items expect of refresher was casted
         **/
-        private static void ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, double distance, bool useBkb, bool byIllusion = false)
+        private static bool ItemUsage(Hero me, IEnumerable<Item> inv, Hero target, double distance, bool useBkb, bool byIllusion = false)
         {
-            if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime") || me.IsStunned()) return;
+            if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime") || me.IsStunned()) return false;
             // use all items given in Items list (line 53)
             var inventory =
-                inv.Where(x => (IsItemEnable(x.StoredName(), byIllusion) || CloneOnlyComboItems.Contains(x.StoredName()) || x.StoredName()=="item_dust") && x.CanBeCasted() && (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name)==null)
+                inv.Where(
+                    x =>
+                        (IsItemEnable(x.StoredName(), byIllusion) || CloneOnlyComboItems.Contains(x.StoredName()) ||
+                         x.StoredName() == "item_dust" || x.StoredName() == "item_hurricane_pike") && x.CanBeCasted() &&
+                        (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name) == null)
                     /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
             var items =
                 inventory.Where(
@@ -1535,30 +1547,151 @@ namespace ArcAnnihilation
                         ((x.CastRange == 0 &&
                           distance <=
                           (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
-                         x.CastRange >= distance)).OrderByDescending(y => GetComboOrder(y, byIllusion));
+                         x.CastRange+50 >= distance)).OrderByDescending(y => GetComboOrder(y, byIllusion));
+            var slarkMod = target.HasModifiers(new[] { "modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses" }, false);
+            foreach (var item in items)
+            {
+                var name = item.StoredName();
+                if (name == "item_ethereal_blade")
+                    _ethereal.Sleep(1000);
+                if (name == "item_dagon" || name == "item_dagon_2" || name == "item_dagon_3" || name == "item_dagon_4" || name == "item_dagon_5")
+                    if (_ethereal.Sleeping && !target.HasModifier("modifier_item_ethereal_blade_ethereal"))
+                        continue;
+                if (item.IsAbilityBehavior(AbilityBehavior.NoTarget))
+                {
+                    item.UseAbility();
+                    Print($"[Using]: {item.Name} (10)", print: false);
+                }
+                else if (item.IsAbilityBehavior(AbilityBehavior.UnitTarget))
+                    if (item.TargetTeamType == TargetTeamType.Enemy || item.TargetTeamType == TargetTeamType.All ||
+                        item.TargetTeamType == TargetTeamType.Custom)
+                    {
+                        if (item.IsDisable())
+                        {
+                            if (!slarkMod && !target.IsLinkensProtected())
+                                if (item.CastStun(target))
+                                {
+                                    Print($"[Using]: {item.Name} (9)", print: false);
+                                    Utils.Sleep(350, $"{item.Name + me.Handle}");
+                                    continue;
+                                }
+                        }
+                        else if (item.IsSilence())
+                        {
+                            if (!slarkMod)
+                                if (!target.IsSilenced())
+                                {
+                                    item.UseAbility(target);
+                                    Print($"[Using]: {item.Name} (8)", print: false);
+                                }
+                        }
+                        else if ((item.StoredName().Contains("dagon") || item.StoredName() == "item_ethereal_blade") &&
+                                 target.HasModifiers(
+                                     new[]
+                                     {
+                                         "modifier_templar_assassin_refraction_absorb",
+                                         "modifier_templar_assassin_refraction_absorb_stacks",
+                                         "modifier_oracle_fates_edict",
+                                         "modifier_abaddon_borrowed_time"
+                                     }, false))
+                        {
+                            Print("can damage this shit", print: false);
+                            continue;
+                        }
+                        else
+                        {
+                            item.UseAbility(target);
+                            Print($"[Using]: {item.Name} (1)", print: false);
+                            Utils.Sleep(350, $"{item.Name + me.Handle}");
+                            continue;
+                        }
+                        
+                        /*item.UseAbility(target);
+                        Print($"[Using]: {item.Name} (3)", print: false);*/
+                    }
+                    else
+                    {
+                        item.UseAbility(me);
+                        Print($"[Using]: {item.Name} (4)", print: false);
+                    }
+                else
+                {
+                    if (name == "item_blink")
+                    {
+                        if (distance > 115)
+                        {
+                            var angle = me.FindAngleBetween(target.Position, true);
+                            var point = new Vector3(
+                                (float)
+                                    (target.Position.X -
+                                     CloseRange*
+                                     Math.Cos(angle)),
+                                (float)
+                                    (target.Position.Y -
+                                     CloseRange*
+                                     Math.Sin(angle)),
+                                target.Position.Z);
+                            var dist = me.Distance2D(point);
+                            if (dist >= MinDistance && dist <= 1150)
+                            {
+                                item.UseAbility(point);
+                                Print($"[Using]: {item.Name} (5)", print: false);
+                            }
+                        }
+                        else if (distance > MinDistance)
+                        {
+                            var angle = me.FindAngleBetween(target.Position, true);
+                            var point = new Vector3(
+                                (float)
+                                    (target.Position.X -
+                                     ExtraDistance*
+                                     Math.Cos(angle)),
+                                (float)
+                                    (target.Position.Y -
+                                     ExtraDistance*
+                                     Math.Sin(angle)),
+                                target.Position.Z);
+                            item.UseAbility(point);
+                            Print($"[Using]: {item.Name} (6)", print: false);
+                        }
+                    }
+                    else
+                    {
+                        item.UseAbility(target.NetworkPosition);
+                        Print($"[Using]: {item.Name} (7)", print: false);
+                    }
+                }
+                Utils.Sleep(250, $"{item.Name + me.Handle}");
+            }
+
+            #region old shit
+            /*
             var v = items.FirstOrDefault();
             if (v == null && target.IsMelee)
             {
-                var pike = inventory.Find(x => Utils.SleepCheck(x.Name + me.Handle) && x.StoredName() == "item_hurricane_pike");
-                if (pike != null && pike.CanBeCasted(target) && target.Distance2D(me)<=pike.GetCastRange() && Utils.SleepCheck("item_cd"+me.Handle))
+                var pike =
+                    inventory.Find(x => Utils.SleepCheck(x.Name + me.Handle) && x.StoredName() == "item_hurricane_pike");
+                if (pike != null && pike.CanBeCasted(target) && target.Distance2D(me) <= pike.GetCastRange() &&
+                    Utils.SleepCheck("item_cd" + me.Handle))
                 {
-                    var angle = (float)Math.Max(
-                        Math.Abs(target.RotationRad - Utils.DegreeToRadian(target.FindAngleBetween(me.Position))) - 0.20, 0);
-                    if (!Prediction.IsTurning(target) && angle==0)
+                    var angle = (float) Math.Max(
+                        Math.Abs(target.RotationRad - Utils.DegreeToRadian(target.FindAngleBetween(me.Position))) - 0.20,
+                        0);
+                    if (!Prediction.IsTurning(target) && angle == 0)
                     {
                         pike.UseAbility(target);
                         Utils.Sleep(500, "item_cd" + me.Handle);
                     }
                 }
             }
-            var slarkMod = target.HasModifiers(new[] { "modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses" },false);
-            if (v != null && Utils.SleepCheck("item_cd"+me.Handle))
+
+            if (v != null && Utils.SleepCheck("item_cd" + me.Handle))
             {
                 /*Print(v.Name);
                 if (v.Name == "item_manta")
                 {
                     Print("cd: "+v.Cooldown+"/"+(SpellBaseList.Find(z => z.Name == v.Name)==null));
-                }*/
+                }
                 //Print(v.Name+"["+Game.GameTime+"]");
                 if (v.IsAbilityBehavior(AbilityBehavior.NoTarget))
                 {
@@ -1570,7 +1703,7 @@ namespace ArcAnnihilation
                     {
                         if (v.IsDisable())
                         {
-                            if (!slarkMod)
+                            if (!slarkMod && !target.IsLinkensProtected())
                                 if (v.CastStun(target))
                                 {
 
@@ -1589,7 +1722,7 @@ namespace ArcAnnihilation
                                          "modifier_templar_assassin_refraction_absorb",
                                          "modifier_templar_assassin_refraction_absorb_stacks"
                                      }, false))
-                            Print("underRefraction",print:false);
+                            Print("underRefraction", print: false);
                         else
                             v.UseAbility(target);
                     }
@@ -1598,7 +1731,7 @@ namespace ArcAnnihilation
                         v.UseAbility(me);
                     }
                 }
-                else 
+                else
                 {
                     if (distance > 1150)
                     {
@@ -1623,21 +1756,47 @@ namespace ArcAnnihilation
                         var point = new Vector3(
                             (float)
                                 (target.Position.X -
-                                 Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value *
+                                 Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value*
                                  Math.Cos(angle)),
                             (float)
                                 (target.Position.Y -
-                                 Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value *
+                                 Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value*
                                  Math.Sin(angle)),
                             target.Position.Z);
                         v.UseAbility(point);
                     }
                 }
                 Utils.Sleep(500, v.Name + me.Handle);
-                Utils.Sleep(100, "item_cd"+me.Handle);
+                Utils.Sleep(100, "item_cd" + me.Handle);
             }
-            
-            
+            */
+            #endregion
+
+            var pike = inventory.Find(x => Utils.SleepCheck(x.Name + me.Handle) && x.Name == "item_hurricane_pike");
+            if (pike!=null && pike.IsValid)
+            {
+                Print("pike");
+                if (target.IsMelee)
+                {
+                    if (target.Distance2D(me) <= pike.GetCastRange())
+                    {
+                        var angle = (float)Math.Max(
+                            Math.Abs(target.RotationRad -
+                                     Utils.DegreeToRadian(target.FindAngleBetween(me.Position))) - 0.20, 0);
+                        Print(angle.ToString());
+                        if (!Prediction.IsTurning(target) && angle == 0)
+                        {
+                            pike.UseAbility(target);
+                            Utils.Sleep(500, pike.Name + me.Handle);
+                        }
+                    }
+                    else
+                    {
+                        Print("asd");
+                    }
+                }
+            }
+
             // purge enemies if menu setting enabled
             var purgeAll = Menu.Item("Diffusal.PurgEnemy").GetValue<StringList>().SelectedIndex == (int)PurgeSelection.AllEnemies;
             
@@ -1680,6 +1839,7 @@ namespace ArcAnnihilation
                 }
             }
 
+
             // code for diffusal blade dispelling 
             var both = Menu.Item("Diffusal.Dispel").GetValue<StringList>().SelectedIndex == (int)DispelSelection.Both;
             var main = Menu.Item("Diffusal.Dispel").GetValue<StringList>().SelectedIndex == (int)DispelSelection.Me;
@@ -1709,12 +1869,13 @@ namespace ArcAnnihilation
             var refreshItems = inventory.Where(
                 x =>
                     Items.Keys.Contains(x.StoredName()));
-            if (refreshItems.Any()) return;
+            if (refreshItems.Any()) return !items.Any();
             var r = me.Spellbook.SpellR;
-            if (r == null || r.CanBeCasted()) return;
+            if (r == null || r.CanBeCasted()) return !items.Any();
             var refresher = inventory.FirstOrDefault(x => Utils.SleepCheck(x.Name + me.Handle) && x.Name == "item_refresher");
             refresher?.UseAbility();
             Utils.Sleep(500, refresher?.Name + me.Handle);
+            return !items.Any();
         }
 
         private static void TryToDispell(Hero me, List<Item> toList, bool both, bool main, bool tempest)
