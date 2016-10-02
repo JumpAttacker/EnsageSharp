@@ -179,6 +179,8 @@ namespace OverlayInformation
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enemy", "Enable for enemy").SetValue(true));
             var manaBars = new Menu("Manabars", "manaBars");
             manaBars.AddItem(new MenuItem("manaBars.Enable", "Enable").SetValue(true));
+            manaBars.AddItem(new MenuItem("manaBars.Nums.Enable", "Enable digital values").SetValue(true));
+            manaBars.AddItem(new MenuItem("manaBars.Nums.Size", "Dig Size").SetValue(new Slider(75, 1, 150)));
             manaBars.AddItem(new MenuItem("manaBars.Size", "Size").SetValue(new Slider(75, 1, 150)));
             
             manaBars.AddItem(new MenuItem("manaBars.Red", "Red").SetValue(new Slider(65, 0, 255)).SetFontColor(Color.Red));

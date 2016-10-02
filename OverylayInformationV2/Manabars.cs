@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
@@ -11,6 +12,8 @@ namespace OverlayInformation
     {
         private static bool _loaded;
         private static bool IsEnable => Members.Menu.Item("manaBars.Enable").GetValue<bool>();
+        private static bool IsNumsEnable => Members.Menu.Item("manaBars.Nums.Enable").GetValue<bool>();
+        private static float DigSize => (float)Members.Menu.Item("manaBars.Nums.Size").GetValue<Slider>().Value / 100;
         private static float ManaBarSize => (float) Members.Menu.Item("manaBars.Size").GetValue<Slider>().Value/100;
         private static int R => Members.Menu.Item("manaBars.Red").GetValue<Slider>().Value;
         private static int G => Members.Menu.Item("manaBars.Green").GetValue<Slider>().Value;
@@ -65,6 +68,23 @@ namespace OverlayInformation
                     Drawing.DrawRect(pos, size, Color.Black);
                     Drawing.DrawRect(pos, new Vector2(manaDelta.X, size.Y), new Color(R, G, B, 255));
                     Drawing.DrawRect(pos, size, Color.Black, true);
+
+                    if (IsNumsEnable)
+                    {
+                        var text = $"{(int)v.Mana}/{(int)v.MaximumMana}";
+                        var textSize = Drawing.MeasureText(text, "Arial",
+                            new Vector2((float)(size.Y * DigSize), size.Y / 2), FontFlags.AntiAlias);
+                        var textPos = pos + new Vector2(size.X/2 - textSize.X/2, size.Y - textSize.Y);
+                        /*Drawing.DrawRect(textPos - new Vector2(0, 0),
+                            new Vector2(textSize.X, textSize.Y),
+                            new Color(0, 0, 0, 200));*/
+                        Drawing.DrawText(
+                            text,
+                            textPos,
+                            new Vector2(textSize.Y, 0),
+                            Color.White,
+                            FontFlags.AntiAlias | FontFlags.StrikeOut);
+                    }
                 }
                 catch (Exception)
                 {
