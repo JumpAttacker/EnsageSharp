@@ -11,6 +11,7 @@ namespace PerfectBlink
     internal static class Program
     {
         private static readonly Menu Menu=new Menu("Perfect Blink","PerfectBlink",true,"item_blink",true);
+        private static bool EnableAfterTp => Menu.Item("PB.AfterTp").GetValue<bool>();
         private static void Main()
         {
             Player.OnExecuteOrder += Player_OnExecuteAction;
@@ -21,6 +22,9 @@ namespace PerfectBlink
                     " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
                     MessageType.LogMessage);
             Menu.AddItem(new MenuItem("PB.Enable", "Enable")).SetValue(true);
+            Menu.AddItem(new MenuItem("PB.AfterTp", "Enable after tp"))
+                .SetValue(false)
+                .SetTooltip("May cause a slight delay. If you're playing on tinker, better disable this function");
             Menu.AddToMainMenu();
         }
 
@@ -74,6 +78,8 @@ namespace PerfectBlink
                 100);
             if (_me.HasModifier("modifier_teleporting"))
             {
+                if (!EnableAfterTp)
+                    return;
                 _shouldCheckForModifier = true;
                 _myAbility = args.Ability;
                 args.Process = false;
