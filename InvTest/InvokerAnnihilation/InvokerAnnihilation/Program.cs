@@ -41,6 +41,9 @@ namespace InvokerAnnihilation
         //============================================================
         private static Hero _globalTarget;
         //============================================================
+        private static bool IsOrbwalking => Menu.Item("orbwalk.Enable").GetValue<bool>();
+        private static bool IsQuickCastActive => Menu.Item("quickCast.Key").GetValue<KeyBind>().Active;
+        private static int OrbMinDist => Menu.Item("orbwalk.minDistance").GetValue<Slider>().Value;
         private enum SmartSphereEnum
         {
            Quas=0,Wex=1,Exort=2 
@@ -81,6 +84,34 @@ namespace InvokerAnnihilation
                 var emp = Abilities.FindAbility("invoker_emp");
                 var alacrity = Abilities.FindAbility("invoker_alacrity");
                 var meteor = Abilities.FindAbility("invoker_chaos_meteor");
+
+                var list = new List<string>()
+                {
+                    ss.StoredName(),
+                    coldsnap.StoredName(),
+                    ghostwalk.StoredName(),
+                    icewall.StoredName(),
+                    tornado.StoredName(),
+                    blast.StoredName(),
+                    forgeSpirit.StoredName(),
+                    emp.StoredName(),
+                    alacrity.StoredName(),
+                    meteor.StoredName()
+                };
+                var dict = new Dictionary<string, bool>
+                {
+                    { list[0],false},
+                    { list[1],false},
+                    { list[2],false},
+                    { list[3],false},
+                    { list[4],false},
+                    { list[5],false},
+                    { list[6],true},
+                    { list[7],false},
+                    { list[8],true},
+                    { list[9],false},
+                };
+                Menu.Item("quickCast.Abilities").SetValue(new PriorityChanger(list,new AbilityToggler(dict),"kek"));
 
                 SpellInfo.Add(ss.Name, new SpellStruct(e, e, e));
                 SpellInfo.Add(coldsnap.Name, new SpellStruct(q, q, q));
@@ -213,17 +244,32 @@ namespace InvokerAnnihilation
             };
             var settings = new Menu("Settings", "Settings");
             settings.AddItem(new MenuItem("items", "Items:").SetValue(new AbilityToggler(items)));
-            settings.AddItem(new MenuItem("moving", "Move To Enemy").SetValue(false).SetTooltip("while combing"));
+            //settings.AddItem(new MenuItem("moving", "Move To Enemy").SetValue(false).SetTooltip("while combing"));
+            
 
             var aInvis = new Menu("Auto Invis", "Auto Invis");
             aInvis.AddItem(new MenuItem("AutoInvis", "Enable").SetValue(false));
             aInvis.AddItem(new MenuItem("AutoInvis_enemy_check", "Check for any enemy in range").SetValue(true).SetTooltip("in 1000 range"));
-            
             aInvis.AddItem(new MenuItem("MinHealth_for_invis", "Min Health").SetValue(new Slider(15,0,100)));
 
+
+
+            var quickCast = new Menu("Quick Cast", "quickCast");
+            quickCast.AddItem(
+                new MenuItem("quickCast.Key", "Key").SetValue(new KeyBind(0, KeyBindType.Press)));
+            quickCast.AddItem(new MenuItem("quickCast.Abilities", "Abilities:").SetValue(new PriorityChanger()));
+            quickCast.AddItem(new MenuItem("quickCast.UseAlacrityOnlyOnForge", "Use alacrity only on forge spirit").SetValue(false));
+
+
+            var orbmenu = new Menu("Orbwalking", "Orbwalking");
+            orbmenu.AddItem(new MenuItem("orbwalk.Enable", "Enable Orbwalking").SetValue(true).SetTooltip("or just auto attacking"));
+            orbmenu.AddItem(new MenuItem("orbwalk.minDistance", "Min distance").SetValue(new Slider(100, 0, 700)));
+            orbmenu.AddItem(new MenuItem("orbwalkType", "OrbWalking: chase enemy").SetValue(true).SetTooltip("or your mouse"));
             combo.AddSubMenu(showComboMenuPos);
             //combo.AddSubMenu(showCurrentCombo);
             Menu.AddSubMenu(settings);
+            settings.AddSubMenu(orbmenu);
+            Menu.AddSubMenu(quickCast);
             Menu.AddSubMenu(aInvis);
             Menu.AddSubMenu(smart);
             Menu.AddSubMenu(sunStrikeSettings);
@@ -787,7 +833,6 @@ namespace InvokerAnnihilation
                         Utils.Sleep(500, "flee_mode");
                     }
                 }
-
             }
 
             #endregion
@@ -799,6 +844,11 @@ namespace InvokerAnnihilation
 
             }
 
+            #endregion
+
+            #region QuickCast
+
+            DoQCast();
             #endregion
 
             #region Auto ss on stunned enemy
@@ -918,6 +968,9 @@ namespace InvokerAnnihilation
 
             if (!_inAction)
             {
+                if (_globalTarget!=null && _globalTarget.IsValid)
+                    if (ComboSwitcher)
+                        _combo = _startComboPosition;
                 _globalTarget = null;
                 return;
             }
@@ -946,6 +999,59 @@ namespace InvokerAnnihilation
                 ComboInAction(me, target);
             */
             #endregion
+        }
+
+        private static PriorityChanger QCast => Menu.Item("quickCast.Abilities").GetValue<PriorityChanger>();
+        private static bool AlOnForge => Menu.Item("quickCast.UseAlacrityOnlyOnForge").GetValue<bool>();
+        private static void DoQCast()
+        {
+            if (!IsQuickCastActive)
+                return;
+            if (!Utils.SleepCheck("stop qcast"))
+                return;
+            var spells = QCast.ItemList;
+            var viable =
+                spells.Where(
+                    x =>
+                        QCast.AbilityToggler.IsEnabled(x) && Utils.SleepCheck(x + "qcast") &&
+                        Abilities.FindAbility(x).Cooldown <= 0)
+                    .OrderByDescending(y => QCast.GetPriority(y));
+            var active1 = _myHero.Spellbook.Spell4;
+            var active2 = _myHero.Spellbook.Spell5;
+            foreach (var ability in viable.Select(Abilities.FindAbility))
+            {
+                if (active1.Equals(ability) || active2.Equals(ability))
+                {
+                    if (ability.StoredName() == "invoker_alacrity" && AlOnForge)
+                    {
+                        var forge = FindForge();
+                        if (forge != null)
+                            UseSpell(ability, FindForge(), _myHero, true);
+                    }
+                    else
+                        UseSpell(ability, ClosestToMouse(_myHero), _myHero);
+                    Utils.Sleep(250, ability.StoredName() + "qcast");
+                }
+                else
+                {
+                    InvokeNeededSpells(_myHero, ability);
+                    Utils.Sleep(250, "stop qcast");
+                }
+                return;
+            }
+
+            //InvokeNeededSpells;
+        }
+
+        private static Unit FindForge()
+        {
+            var forge =
+                ObjectManager.GetEntities<Unit>()
+                    .Where(
+                        x =>
+                            x.ClassID == ClassID.CDOTA_BaseNPC_Invoker_Forged_Spirit && x.IsAlive &&
+                            x.Team == _myHero.Team && x.Distance2D(_myHero)<=800);
+            return forge.FirstOrDefault();
         }
 
         private static void CastAutoInvis(Hero me)
@@ -986,6 +1092,8 @@ namespace InvokerAnnihilation
         {
             return !Menu.Item("ssAutoInStunned.KillSteal").GetValue<bool>() || x.Health <= damage;
         }
+
+        private static bool ChaseEnemyOrbwalking => Menu.Item("orbwalkType").GetValue<bool>();
 
         private static bool CheckForEnemy(Vector3 pos, List<Hero> validHeroes,Hero main)
         {
@@ -1044,7 +1152,7 @@ namespace InvokerAnnihilation
                    _myHero.Distance2D(x) <= Menu.Item("ssAutoInStunned.Range").GetValue<Slider>().Value;
         }
 
-        private static void InvokeNeededSpells(Hero me,Ability neededAbility=null)
+        private static void InvokeNeededSpells(Hero me, Ability neededAbility = null)
         {
             var spell1 = _spellForCast = neededAbility ?? Combos[_combo].GetComboAbilities()[0];
             var spell2 = _spellForCast = neededAbility ?? Combos[_combo].GetComboAbilities()[1];
@@ -1083,6 +1191,7 @@ namespace InvokerAnnihilation
             }
         }
         private static readonly Dictionary<Unit,Orbwalker> OrbDictinary=new Dictionary<Unit, Orbwalker>();
+        private static int _startComboPosition;
         private static void ComboInAction(Hero me, Hero target)
         {
             #region Init
@@ -1125,6 +1234,8 @@ namespace InvokerAnnihilation
             {
                 _initNewCombo = true;
                 _stage = 1;
+                if (ComboSwitcher)
+                    _startComboPosition = _combo;
                 //PrintInfo("Starting new combo! " + $"[{_combo + 1}] target: {target.StoredName()}");
             }
             if (!Utils.SleepCheck("StageCheck")) return;
@@ -1230,8 +1341,8 @@ namespace InvokerAnnihilation
                         {
                             if (eul == null && ComboSwitcher)
                                 _combo = _combo == _maxCombo - 1 ? _combo = 0 : _combo + 1;
-                            if (!target.IsInvul())
-                                Orbwalking.Orbwalk(target, 10, followTarget: true);
+                            TryToAttack(target, me);
+                            
                             return;
                         }
                         if (me.Distance2D(target) <= eul.CastRange+50)
@@ -1254,8 +1365,8 @@ namespace InvokerAnnihilation
                 default:
                     if (Combos[_combo].GetComboAbilities().Length < _stage - 1 && !target.IsInvul())
                     {
-                        if (!target.IsInvul())
-                            Orbwalking.Orbwalk(target, 10, followTarget: true);
+                        TryToAttack(target, me);
+
                         _stage = 1;
                         if (ComboSwitcher)
                             _combo = _combo == _maxCombo - 1 ? _combo = 0 : _combo + 1;
@@ -1275,7 +1386,7 @@ namespace InvokerAnnihilation
                     }
                     if (nextSpell != null && nextSpell.AbilityState == AbilityState.Ready)
                     {
-                        if (Equals(nextSpell, icewall) || Menu.Item("moving").GetValue<bool>())
+                        if (Equals(nextSpell, icewall) /*|| Menu.Item("moving").GetValue<bool>()*/)
                         {
                             CastIceWall(me, target, false, icewall);
                         }
@@ -1312,10 +1423,7 @@ namespace InvokerAnnihilation
                                     }
                                     else
                                     {
-                                        if (!target.IsInvul())
-                                        {
-                                            Orbwalking.Orbwalk(target, followTarget: true);
-                                        }
+                                        TryToAttack(target, me);
                                     }
                                 }
                                 else
@@ -1338,7 +1446,8 @@ namespace InvokerAnnihilation
                     }
                     else if (!target.IsInvul())
                     {
-                        Orbwalking.Orbwalk(target, followTarget: true);
+                        TryToAttack(target, me);
+
                         return;
                     }
                     break;
@@ -1350,6 +1459,21 @@ namespace InvokerAnnihilation
             //Game.PrintMessage($"refreshPos {Combos[_combo].GetRefreshPos()} Combo: {_combo} Stage: {_stage}",MessageType.ChatMessage);
             refresher.UseAbility();
             _stage --;
+        }
+
+        private static void TryToAttack(Hero target,Hero me)
+        {
+            if (!target.IsInvul())
+                if (IsOrbwalking && target.Distance2D(me)>=OrbMinDist)
+                    Orbwalking.Orbwalk(target, 10, followTarget: ChaseEnemyOrbwalking);
+                else
+                {
+                    if (Utils.SleepCheck("attack_cd_autoattacking"))
+                    {
+                        me.Attack(target);
+                        Utils.Sleep(250, "attack_cd_autoattacking");
+                    }
+                }
         }
 
         private static void LetsTryCastSpell(Hero me, Hero target, Ability spellForCast, bool nextSpell=false)
@@ -1456,7 +1580,7 @@ namespace InvokerAnnihilation
                 }
                 else if (!target.IsInvul())
                 {
-                    Orbwalking.Orbwalk(target,0,0,false,true);
+                    TryToAttack(target,me);
                 }
             }
             else
@@ -1467,11 +1591,12 @@ namespace InvokerAnnihilation
             }
         }
 
-        private static void UseSpell(Ability spellForCast, Hero target,Hero me)
+        private static void UseSpell(Ability spellForCast, Unit target,Hero me,bool itsall=false)
         {
+            var targ = target?.Position ?? Game.MousePosition;
             if (spellForCast.IsAbilityBehavior(AbilityBehavior.Point))
             {
-                spellForCast.UseAbility(target.Position);
+                spellForCast.UseAbility(targ);
                 return;
             }
             if (spellForCast.IsAbilityBehavior(AbilityBehavior.NoTarget))
@@ -1482,11 +1607,12 @@ namespace InvokerAnnihilation
             if (!spellForCast.IsAbilityBehavior(AbilityBehavior.UnitTarget)) return;
             if (spellForCast.TargetTeamType == TargetTeamType.Enemy || spellForCast.TargetTeamType == TargetTeamType.All)
             {
-                spellForCast.UseAbility(target);
+                if (target != null)
+                    spellForCast.UseAbility(target);
             }
             else
             {
-                spellForCast.UseAbility(me);
+                spellForCast.UseAbility(itsall?target:me);
             }
         }
 
