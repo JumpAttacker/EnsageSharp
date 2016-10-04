@@ -90,6 +90,7 @@ namespace ArcAnnihilation
         private static int CloseRange => Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value;
         private static int MinDistance => Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value;
         private static int ExtraDistance => Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value;
+        private static int OrbMinDist => Menu.Item("OrbWalking.minDistance").GetValue<Slider>().Value;
         private static Sleeper _ethereal;
 
         private static readonly List<string> AutoPushItems = new List<string>
@@ -306,6 +307,9 @@ namespace ArcAnnihilation
             var orbwalnking = new Menu("OrbWalking", "ow");
             orbwalnking.AddItem(
                             new MenuItem("OrbWalking.Enable", "Enable OrbWalking").SetValue(true));
+            orbwalnking.AddItem(
+                new MenuItem("OrbWalking.minDistance", "Min distance").SetValue(new Slider(100, 0, 600)));
+
             orbwalnking.AddItem(
                 new MenuItem("OrbWalking.bonusWindupMs", "Bonus Windup Time").SetValue(new Slider(100, 100, 1000))
                     .SetTooltip("Time between attacks"));
@@ -1970,7 +1974,8 @@ namespace ArcAnnihilation
             {
                 return;
             }
-            if (target != null) me.Move(target.Position);
+            if (target?.Distance2D(me) >= OrbMinDist)
+                me.Move(target.Position);
             Utils.Sleep(100, "!Orbwalk.Move");
         }
 
