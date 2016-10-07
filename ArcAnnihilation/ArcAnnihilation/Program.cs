@@ -1102,15 +1102,19 @@ namespace ArcAnnihilation
             // note: chooses creep furthest away from unit to TP to
             if (travelBoots != null && !enemyCreeps.Any(x => x.Distance2D(hero) <= 1000) && !isChannel && Menu.Item("AutoPush.Travels").GetValue<bool>())
             {
-                if (creepWithEnemy == null)
+                var mod = hero.FindModifier("modifier_kill");
+                if (mod == null || mod.RemainingTime >= 10)
                 {
-                    creepWithEnemy = myCreeps.OrderByDescending(x => x.Distance2D(hero)).FirstOrDefault(); 
-                }
-                if (creepWithEnemy != null)
-                {
-                    travelBoots.UseAbility(creepWithEnemy);
-                    Utils.Sleep(500, "Tempest.Travels.Cd" + handle);
-                    return;
+                    if (creepWithEnemy == null)
+                    {
+                        creepWithEnemy = myCreeps.OrderByDescending(x => x.Distance2D(hero)).FirstOrDefault();
+                    }
+                    if (creepWithEnemy != null)
+                    {
+                        travelBoots.UseAbility(creepWithEnemy);
+                        Utils.Sleep(500, "Tempest.Travels.Cd" + handle);
+                        return;
+                    }
                 }
             }
             if (isChannel) return;
@@ -1488,7 +1492,7 @@ namespace ArcAnnihilation
             var w = spellbook.SpellW;
             var e = spellbook.SpellE;
 
-
+            
             if (q != null && IsAbilityEnable(q.StoredName(),tempest) && q.CanBeCasted() && q.CastRange+me.HullRadius+target.HullRadius >= distance && Utils.SleepCheck(me.Handle+q.Name))
             {
                 q.UseAbility(target);
@@ -1541,7 +1545,7 @@ namespace ArcAnnihilation
                 inv.Where(
                     x =>
                         (IsItemEnable(x.StoredName(), byIllusion) || CloneOnlyComboItems.Contains(x.StoredName()) ||
-                         x.StoredName() == "item_dust" || x.StoredName() == "item_hurricane_pike") && x.CanBeCasted() &&
+                         x.StoredName() == "item_dust" || x.StoredName() == "item_hurricane_pike" || x.StoredName() == "item_black_king_bar") && x.CanBeCasted() &&
                         (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name) == null)
                     /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
             var items =
