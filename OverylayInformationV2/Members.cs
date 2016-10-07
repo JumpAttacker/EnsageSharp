@@ -60,5 +60,6 @@ namespace OverlayInformation
         public static HeroesList HeroesList;
         public static DamageCalculation DamageCalculation;
         public static AbilityOverlay AbilityOverlay;
+        public static List<Courier> CourList;
     }
 }

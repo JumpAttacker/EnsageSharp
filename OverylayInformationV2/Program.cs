@@ -161,6 +161,8 @@ namespace OverlayInformation
             arc.AddItem(new MenuItem("arc.Enable", "Enable").SetValue(true));
             var scan = new Menu("Enemy Scanning Ability", "Scan");
             scan.AddItem(new MenuItem("scan.Enable", "Enable").SetValue(true));
+            var courEsp = new Menu("Courier on Minimap", "Cour");
+            courEsp.AddItem(new MenuItem("Cour.Enable", "Enable").SetValue(true));
             //var cour = new Menu("Courier", "Courier");
             //cour.AddItem(new MenuItem("Courier.Enable", "Enable").SetValue(true)).SetTooltip("draw courier position on minimap");
             //===========================
@@ -177,6 +179,7 @@ namespace OverlayInformation
             itemOverlay.AddItem(new MenuItem("itemOverlay.Extra", "Extra").SetValue(new Slider(26, 1, 100)));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Ally", "Enable for ally").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enemy", "Enable for enemy").SetValue(true));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Cour", "Enable for couriers").SetValue(true)).SetTooltip("only for enemy");
             var manaBars = new Menu("Manabars", "manaBars");
             manaBars.AddItem(new MenuItem("manaBars.Enable", "Enable").SetValue(true));
             manaBars.AddItem(new MenuItem("manaBars.Nums.Enable", "Enable digital values").SetValue(true));
@@ -271,6 +274,7 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(tinker);
             showMeMore.AddSubMenu(arc);
             showMeMore.AddSubMenu(scan);
+            showMeMore.AddSubMenu(courEsp);
             settings.AddSubMenu(showIllusion);
             settings.AddSubMenu(runevision);
             //settings.AddSubMenu(dangItem);

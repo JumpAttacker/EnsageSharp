@@ -104,6 +104,14 @@ namespace OverlayInformation
             {
                 return Members.BaseList;
             }
+            public static List<Courier> GetCouriersList()
+            {
+                return Members.CourList;
+            }
+            public static List<Courier> GetViableCouriersList()
+            {
+                return Members.CourList.Where(x=>x!=null && x.IsValid && x.IsAlive && x.IsVisible).ToList();
+            }
         }
     }
 }

@@ -331,6 +331,18 @@ namespace OverlayInformation
         {
             if (!Checker.IsActive()) return;
             if (!Members.Menu.Item("showmemore.Enable").GetValue<bool>()) return;
+            if (Members.Menu.Item("Cour.Enable").GetValue<bool>())
+            {
+                foreach (var courier in Manager.BaseManager.GetViableCouriersList())
+                {
+                    var pos = Helper.WorldToMinimap(courier.Position);
+                    if (pos.IsZero)
+                        continue;
+                    var courType = courier.IsFlying ? "courier_flying" : "courier";
+                    string name = $"materials/ensage_ui/other/{courType}.vmat";
+                    Drawing.DrawRect(pos - new Vector2(7, 7), new Vector2(15, 15), Drawing.GetTexture(name));
+                }
+            }
             if (Members.Menu.Item("apparition.Enable").GetValue<bool>() && AAunit != null && AAunit.IsValid)
             {
                 try

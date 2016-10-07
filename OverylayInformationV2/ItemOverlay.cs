@@ -7,6 +7,7 @@ using Ensage.Common;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.Items;
 using SharpDX;
 
 namespace OverlayInformation
@@ -21,11 +22,12 @@ namespace OverlayInformation
         private static bool IsChargesEnable => Members.Menu.Item("itemOverlay.DrawCharges").GetValue<bool>();
         private static bool IsAlly => Members.Menu.Item("itemOverlay.Ally").GetValue<bool>();
         private static bool IsEnemy => Members.Menu.Item("itemOverlay.Enemy").GetValue<bool>();
+        private static bool IsCour => Members.Menu.Item("itemOverlay.Cour").GetValue<bool>();
         private static float Size => (float) Members.Menu.Item("itemOverlay.Size").GetValue<Slider>().Value/100;
         private static float Extra => (float) Members.Menu.Item("itemOverlay.Extra").GetValue<Slider>().Value/10;
 
 
-        private static float DefSize;
+        private static float _defSize;
 
         public ItemOverlay()
         {
@@ -65,7 +67,7 @@ namespace OverlayInformation
                 return;
             if (!IsEnable)
                 return;
-            DefSize = HUDInfo.GetHPBarSizeX() / 6 * Size;
+            _defSize = HUDInfo.GetHPBarSizeX() / 6 * Size;
             if (IsAlly)
                 foreach (var v in Manager.HeroManager.GetAllyViableHeroes())
                 {
@@ -91,6 +93,66 @@ namespace OverlayInformation
                         Printer.Print($"[ItemOverlay][enemy]: {v.StoredName()}");
                     }
                 }
+            if (IsCour)
+            {
+                foreach (var cour in Manager.BaseManager.GetViableCouriersList())
+                {
+                    try
+                    {
+                        DrawItems(cour);
+                    }
+                    catch (Exception)
+                    {
+                        Printer.Print($"[ItemOverlay][cour]: {cour.StoredName()}");
+                    }
+                }
+            }
+        }
+
+        private static void DrawItems(Unit v)
+        {
+            var pos = HUDInfo.GetHPbarPosition(v);
+            if (pos.IsZero)
+                return;
+            List<Item> items;
+            try
+            {
+                if (!Members.ItemDictionary.TryGetValue(v.Handle.ToString(), out items))
+                {
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                Printer.Print("[ItemOverlay][DrawItems][Courier]: " + v.StoredName());
+                return;
+            }
+
+            var count = 0;
+            var itemBoxSizeY = (float)(_defSize / 1.24);
+            var newSize = new Vector2(_defSize, itemBoxSizeY);
+            var halfSize = HUDInfo.GetHPBarSizeX() / 2;
+            var maxSizeX = Math.Max((float)items.Count / 2 * newSize.X + _defSize / (float)2.6, halfSize);
+            pos -= new Vector2(-halfSize + maxSizeX, _defSize + _defSize / Extra);
+            foreach (var item in items)
+            {
+                try
+                {
+                    var tex = Textures.GetItemTexture(item.StoredName());
+                    var extraPos = new Vector2(_defSize * count, 0);
+                    var itemPos = pos + extraPos;
+                    var normalSize = newSize + new Vector2(4, _defSize / (float)2.6 + 4);
+                    var normalPos = itemPos - new Vector2(2, 2);
+                    Drawing.DrawRect(normalPos, newSize + new Vector2(4, _defSize / (float)2.6 + 4), Color.Black);
+                    Drawing.DrawRect(itemPos, newSize + _defSize / (float)2.6, tex);
+                    DrawState(item, normalPos, normalSize, v.Mana);
+                    count++;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
         }
 
         private static void DrawItems(Hero v, bool forEnemy)
@@ -113,11 +175,11 @@ namespace OverlayInformation
             }
             
             var count = 0;
-            var itemBoxSizeY = (float)(DefSize / 1.24);
-            var newSize = new Vector2(DefSize, itemBoxSizeY);
+            var itemBoxSizeY = (float)(_defSize / 1.24);
+            var newSize = new Vector2(_defSize, itemBoxSizeY);
             var halfSize = HUDInfo.GetHPBarSizeX()/2;
-            var maxSizeX = Math.Max((float)items.Count/2*newSize.X + DefSize/(float) 2.6, halfSize);
-            pos -= new Vector2(-halfSize + maxSizeX, DefSize + DefSize/Extra);
+            var maxSizeX = Math.Max((float)items.Count/2*newSize.X + _defSize/(float) 2.6, halfSize);
+            pos -= new Vector2(-halfSize + maxSizeX, _defSize + _defSize/Extra);
             if (DangeItems && forEnemy)
             {
                 items = items.Where(Check).ToList();
@@ -132,31 +194,41 @@ namespace OverlayInformation
                 try
                 {
                     var tex = Textures.GetItemTexture(item.StoredName());
-                    var extraPos = new Vector2(DefSize * count, 0);
+                    if (item is Bottle)
+                    {
+                        var bottletype = item as Bottle;
+                        if (bottletype.StoredRune != RuneType.None)
+                        {
+                            tex =
+                                Textures.GetTexture(
+                                    $"materials/ensage_ui/items/{item.Name.Replace("item_", "") + "_" + bottletype.StoredRune}.vmat");
+                        }
+                    }
+                    var extraPos = new Vector2(_defSize * count, 0);
                     var itemPos = pos + extraPos;
-                    var normalSize = newSize + new Vector2(4, DefSize / (float)2.6 + 4);
+                    var normalSize = newSize + new Vector2(4, _defSize / (float)2.6 + 4);
                     var normalPos = itemPos - new Vector2(2, 2);
-                    Drawing.DrawRect(normalPos, newSize + new Vector2(4, DefSize / (float)2.6 + 4), Color.Black);
-                    Drawing.DrawRect(itemPos, newSize + DefSize / (float)2.6, tex);
+                    Drawing.DrawRect(normalPos, newSize + new Vector2(4, _defSize / (float)2.6 + 4), Color.Black);
+                    Drawing.DrawRect(itemPos, newSize + _defSize / (float)2.6, tex);
                     DrawState(item, normalPos, normalSize, v.Mana);
                     count++;
                 }
                 catch (Exception)
                 {
-                    
+                    // ignored
                 }
-                
             }
         }
 
-        private static void DrawOldMethod(Hero v,List<Item> Items)
+        private static void DrawOldMethod(Hero v,List<Item> items)
         {
             float count = 0;
             var iPos = HUDInfo.GetHPbarPosition(v);
             var iSize = new Vector2(HUDInfo.GetHPBarSizeX(v), HUDInfo.GetHpBarSizeY(v));
-            foreach (var item in Items)
+            foreach (var item in items)
             {
                 var itemname = Textures.GetItemTexture(item.StoredName());
+                
                 Drawing.DrawRect(iPos + new Vector2(count, 50),
                     new Vector2(iSize.X/3, (float) (iSize.Y*2.5)),
                     itemname);

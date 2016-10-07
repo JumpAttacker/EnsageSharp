@@ -5,7 +5,6 @@ using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
-
 namespace OverlayInformation
 {
     internal abstract class Updater
@@ -16,6 +15,7 @@ namespace OverlayInformation
             //private static readonly Sleeper ItemUpdate = new Sleeper();
             private static Sleeper _heroUpdate = new Sleeper();
             private static Sleeper _updatePrediction = new Sleeper();
+            private static Sleeper _courUpdater = new Sleeper();
             private static readonly List<string> IgnoreList=new List<string>
             {
                 "npc_dota_beastmaster_boar_1",
@@ -28,6 +28,21 @@ namespace OverlayInformation
             {
 
                 if (!Checker.IsActive()) return;
+                if (!_courUpdater.Sleeping)
+                {
+                    _courUpdater.Sleep(100);
+                    Members.CourList =
+                        ObjectManager.GetEntities<Courier>().Where(x => x.Team != Members.MyHero.Team).ToList();
+                    foreach (var courier in Members.CourList)
+                    {
+                        if (Members.ItemDictionary.ContainsValue(
+                            courier.Inventory.Items.Where(x => x.IsValid).ToList())) continue;
+                        var items = courier.Inventory.Items.ToList();
+                        Members.ItemDictionary.Remove(courier.Handle.ToString());
+                        Members.ItemDictionary.Add(courier.Handle.ToString(),
+                            items.Where(x => x.IsValid).ToList());
+                    }
+                }
                 if (!_heroUpdate.Sleeping)
                 {
                     /*foreach (var enemyHero in Members.EnemyHeroes)
@@ -228,6 +243,7 @@ namespace OverlayInformation
                 _abilityUpdate = new Sleeper();
                 _heroUpdate = new Sleeper();
                 _updatePrediction = new Sleeper();
+                _courUpdater=new Sleeper();
             }
         }
 
