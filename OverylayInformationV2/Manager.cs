@@ -110,7 +110,14 @@ namespace OverlayInformation
             }
             public static List<Courier> GetViableCouriersList()
             {
-                return Members.CourList.Where(x=>x!=null && x.IsValid && x.IsAlive && x.IsVisible).ToList();
+                try
+                {
+                    return Members.CourList.Where(x => x != null && x.IsValid && x.IsAlive && x.IsVisible).ToList();
+                }
+                catch (Exception)
+                {
+                    return new List<Courier>();
+                }
             }
         }
     }

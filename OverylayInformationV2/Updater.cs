@@ -5,6 +5,8 @@ using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.Heroes;
+
 namespace OverlayInformation
 {
     internal abstract class Updater
@@ -62,6 +64,13 @@ namespace OverlayInformation
                                 x =>
                                     x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName()))
                                 .ToList();
+                        /*Printer.Print($"---------------");
+                        foreach (var source in Members.Heroes.Where(x=>x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo))
+                        {
+                            var hero = source as Meepo;
+                            var isIllusion = hero.IsIllusion();
+                            if (hero != null) Printer.Print($"Hero({isIllusion}): {hero.Name}");
+                        }*/
                         /*Members.Heroes =
                             ObjectManager.GetEntities<Hero>().Where(
                                 x =>
