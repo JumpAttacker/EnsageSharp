@@ -84,7 +84,8 @@ namespace OverlayInformation
                 items =
                     items.Where(
                         x =>
-                            !InSys.Contains(x) && AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0).ToList();
+                            !InSys.Contains(x) && AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0)
+                        .ToList();
                 foreach (var spell in items)
                 {
                     InSys.Add(spell);
@@ -117,7 +118,24 @@ namespace OverlayInformation
                             x =>
                                 AbilityDamage.CalculateDamage(x, Members.MyHero, v,
                                     minusMagicResistancePerc: haveEb ? 40 : 0));
-                    var healthAfterShit = (int) (v.Health - myDmg);
+                    var health = v.Health;
+                    var extraLife =
+                        (uint) (Manager.HeroManager.GetItemList(v)
+                            .Any(x => x.StoredName() == "item_infused_raindrop" && x.Cooldown <= 0)
+                            ? 120
+                            : 0);
+                    if (extraLife > 100)
+                    {
+                        var needToCalcExtraLife =
+                            InSys.Any(
+                                x =>
+                                    x.DamageType == DamageType.Magical &&
+                                    AbilityDamage.CalculateDamage(x, Members.MyHero, v,
+                                        minusMagicResistancePerc: haveEb ? 40 : 0) > 120);
+                        health += needToCalcExtraLife ? extraLife : 0;
+                    }
+                    
+                    var healthAfterShit = (int) (health - myDmg);
                     var size = HUDInfo.GetHpBarSizeY();
                     var text = $"{healthAfterShit} ({myDmg})";
                     var textSize = Drawing.MeasureText(text, "Arial",

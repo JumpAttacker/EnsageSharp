@@ -210,8 +210,11 @@ namespace OverlayInformation
             itemOverlay.AddItem(new MenuItem("itemOverlay.List", "Items: ").SetValue(new AbilityToggler(dict)));
             //===========================
             autoItems.AddItem(new MenuItem("autoitems.Enable", "Enable").SetValue(true));
+            autoItems.AddItem(new MenuItem("autoItems.Percent", "Health(%) for auto stick").SetValue(new Slider(15)));
+            autoItems.AddItem(new MenuItem("autoItems.Percent2", "Mana(%) for auto stick").SetValue(new Slider(15)));
             var autoitemlist = new Dictionary<string, bool>
             {
+                {"item_magic_wand", true},
                 {"item_phase_boots", true},
                 {"item_hand_of_midas", true}
             };

@@ -10,6 +10,7 @@ namespace OverlayInformation
     {
         private static Item _midas;
         private static Item _phase;
+        private static Item _stick;
         private static Sleeper _sleeper;
 
         public static void Flush()
@@ -52,6 +53,15 @@ namespace OverlayInformation
                     !Members.MyHero.IsChanneling() && Members.MyHero.NetworkActivity == NetworkActivity.Move)
                 {
                     _phase.UseAbility();
+                }
+            }
+            if (Members.Menu.Item("autoitems.List").GetValue<AbilityToggler>().IsEnabled("item_magic_wand"))
+            {
+                if (_stick == null || !_stick.IsValid)
+                    _stick = Members.MyHero.FindItem("item_magic_wand") ?? Members.MyHero.FindItem("item_magic_stick");
+                if (_stick != null && _stick.CanBeCasted() && _stick.CurrentCharges > 0 && (Helper.CheckForPercents(Members.MyHero) || Helper.CheckForPercents(Members.MyHero,false)))
+                {
+                    _stick.UseAbility();
                 }
             }
         }

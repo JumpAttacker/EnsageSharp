@@ -1,6 +1,7 @@
 using System;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using SharpDX;
 
@@ -51,6 +52,22 @@ namespace OverlayInformation
             var screenY = Drawing.Height - scaledY - py;
 
             return new Vector2((float)Math.Floor(screenX), (float)Math.Floor(screenY));
+        }
+        private static int AutoItemsStickHealth => Members.Menu.Item("autoItems.Percent").GetValue<Slider>().Value;
+        private static int AutoItemsStickMana => Members.Menu.Item("autoItems.Percent2").GetValue<Slider>().Value;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="checkForHealth">true -> health; false -> mana</param>
+        /// <returns></returns>
+        public static bool CheckForPercents(Hero x,bool checkForHealth=true)
+        {
+            var health = checkForHealth ? x.Health : x.Mana;
+            var maxHealth = checkForHealth ? x.MaximumHealth : x.MaximumMana;
+            var percent = (float)((float)health / (float)maxHealth * 100);
+            //Printer.Print($"H[{health}]MH[{maxHealth}]Min%[{MinPercHealthForRelocate}]Final%[{percent}]");
+            return percent <= (checkForHealth ? AutoItemsStickHealth : AutoItemsStickMana);
         }
 
         public static void GenerateSideMessage(string hero, string spellName)
