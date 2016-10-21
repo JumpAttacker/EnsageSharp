@@ -1,0 +1,12 @@
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\TinkerAnnihilation.exe.config
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\TinkerAnnihilation.exe
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\TinkerAnnihilation.pdb
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\Ensage.Common.dll
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\Ensage.dll
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\SharpDX.Direct3D9.dll
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\SharpDX.dll
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\bin\Debug\Ensage.Common.pdb
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\obj\x64\Debug\TinkerAnnihilation.csprojResolveAssemblyReference.cache
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\obj\x64\Debug\TinkerAnnihilation.exe
+C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\TinkerAnnihilation\TinkerAnnihilation\obj\x64\Debug\TinkerAnnihilation.pdb
