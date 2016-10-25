@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Ensage;
 
@@ -41,12 +42,19 @@ namespace TinkerAnnihilation
                 Printer.Print($"[{_name}][NewEffect]: {target.Name}");
                 Game.OnUpdate += args =>
                 {
-                    if (eff!=null && eff.IsValid && !eff.IsDestroyed)
+                    if (!Game.IsInGame) return;
+                    try
                     {
+                        if (eff == null || !eff.IsValid || eff.IsDestroyed) return;
                         var frontPoint = Helper.InFront(Members.MyHero, target, range);
                         eff.SetControlPoint(1, target.Position);
                         eff.SetControlPoint(2, frontPoint);
                     }
+                    catch (Exception)
+                    {
+                        
+                    }
+                    
                 };
             }
             else

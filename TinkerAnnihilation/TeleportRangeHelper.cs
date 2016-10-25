@@ -43,6 +43,7 @@ namespace TinkerAnnihilation
             var name = args.Modifier.Name;
             if (name.Contains("teleporting"))
             {
+                //Printer.Print($"{sender.Name}: teleporting");
                 if (sender.ClassID == ClassID.CDOTA_Unit_Hero_Tinker)
                 {
                     _teleportCaster = sender;
@@ -50,7 +51,7 @@ namespace TinkerAnnihilation
             }
             else if (name.Contains("boots"))
             {
-
+                //Printer.Print($"{sender.Name}: boots");
                 if (sender.Team==Members.MyTeam)
                 DelayAction.Add(new DelayActionItem(100, () =>
                 {

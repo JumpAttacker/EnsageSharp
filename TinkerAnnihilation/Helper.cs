@@ -92,6 +92,7 @@ namespace TinkerAnnihilation
             var wasRearmed = true;
             var templarStacks = globalTarget.FindModifier("modifier_templar_assassin_refraction_absorb_stacks");
             var stacks = templarStacks?.StackCount ?? 0;
+            var hasRainDrop = globalTarget.FindItem("item_infused_raindrop", true)?.Cooldown <= 0;
             while (mana>5 && allItems.Count(x=>mana>x.ManaCost)>0 && wasRearmed)
             {
                 wasRearmed = false;
@@ -106,13 +107,13 @@ namespace TinkerAnnihilation
                             Printer.ConsolePrint($"[mana]: {mana} (+150) soul ring");
                             continue;
                         }
-                        
+
                         var mCost = x.ManaCost;
                         if (!(mana - mCost > 0)) break;
                         mana -= mCost;
 
-                        var dmgFromSpell= AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget, minusMagicResistancePerc: extraDamage);
-
+                        var dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
+                            minusMagicResistancePerc: extraDamage);
 
                         if (stacks > 0)
                         {
@@ -121,18 +122,14 @@ namespace TinkerAnnihilation
                         }
                         else
                         {
+                            if (AbilityDamage.GetDamageType(x) == DamageType.Magical && hasRainDrop && dmgFromSpell > 120)
+                            {
+                                hasRainDrop = false;
+                                dmgFromSpell = -120;
+                                dmgFromSpell = Math.Max(dmgFromSpell, 0);
+                            }
                             myDmg += dmgFromSpell;
                         }
-
-                        /*var health = globalTarget.Health;
-                        var extraLife =
-                            (uint)(globalTarget.FindItem("item_infused_raindrop",true)?.Cooldown<=0?120:0);
-
-                        if (extraLife > 100)
-                        {
-                            var needToCalcExtraLife = dmgFromSpell > 120;
-                            health += needToCalcExtraLife ? extraLife : 0;
-                        }*/
                         //Printer.Print($"[mana]: {mana} (-{mCost}) {x.StoredName()} -> damage: {myDmg}");
 
                         if (x.StoredName() == rearm.StoredName())

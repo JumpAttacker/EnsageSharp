@@ -88,6 +88,7 @@ namespace TinkerAnnihilation
                 Drawing.OnDraw -= ComboAction.Drawing_OnDraw;
                 Unit.OnModifierAdded -= TeleportRangeHelper.Unit_OnModifierAdded;
                 Unit.OnModifierRemoved -= TeleportRangeHelper.UnitOnOnModifierRemoved;
+                
                 _loaded = false;
             };
         }
@@ -112,6 +113,7 @@ namespace TinkerAnnihilation
             Drawing.OnDraw += ComboAction.Drawing_OnDraw;
             Unit.OnModifierAdded += TeleportRangeHelper.Unit_OnModifierAdded;
             Unit.OnModifierRemoved += TeleportRangeHelper.UnitOnOnModifierRemoved;
+            
         }
 
         private static void UpdateItems(EventArgs args)
