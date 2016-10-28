@@ -137,7 +137,7 @@ namespace OverlayInformation
                     
                     var healthAfterShit = (int) (health - myDmg);
                     var size = HUDInfo.GetHpBarSizeY();
-                    var text = $"{healthAfterShit} ({myDmg})";
+                    var text = $"{healthAfterShit} ({(int) myDmg})";
                     var textSize = Drawing.MeasureText(text, "Arial",
                             new Vector2((float)(size * 1.5), 500), FontFlags.AntiAlias);
                     var textPos = pos + new Vector2(HUDInfo.GetHPBarSizeX()+4,0);

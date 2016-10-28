@@ -4,6 +4,7 @@ using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
+using SharpDX;
 using SharpDX.Direct3D9;
 using Color = SharpDX.Color;
 using Font = SharpDX.Direct3D9.Font;
@@ -16,6 +17,15 @@ namespace OverlayInformation
     {
         private static void Main()
         {
+            /*Entity.OnParticleEffectAdded += (entity, eventArgs) =>
+            {
+                var partName = eventArgs.Name;
+                var name = entity.Name;
+                if (!partName.Contains("teleport"))
+                    return;
+
+                Printer.Print(entity.Name +": "+ eventArgs.Name);
+            };*/
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var topPanel = new Menu("Top Panel", "toppanel");
             var spellPanel = new Menu("Spell Panel", "spellPanel");
@@ -115,6 +125,7 @@ namespace OverlayInformation
             var charge = new Menu("", "charge", false, "spirit_breaker_charge_of_darkness", true);
             charge.AddItem(new MenuItem("tooltip", "When Charge on your Main Hero").SetFontColor(Color.Red));
             charge.AddItem(new MenuItem("charge.Enable", "Enable").SetValue(true));
+            charge.AddItem(new MenuItem("charge.Rect.Enable", "Draw red box").SetValue(false));
             charge.AddItem(new MenuItem("charge.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
             charge.AddItem(new MenuItem("charge.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontColor( Color.Green));
             charge.AddItem(new MenuItem("charge.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Blue));
@@ -156,7 +167,8 @@ namespace OverlayInformation
             tinker.AddItem(new MenuItem("tinker.Enable", "Enable").SetValue(true));
             var lifestealer = new Menu("", "life stealer", false, "life_stealer_infest", true);
             lifestealer.AddItem(new MenuItem("lifestealer.Enable", "Enable").SetValue(true));
-            lifestealer.AddItem(new MenuItem("lifestealer.creeps.Enable", "Enable for creeps").SetValue(true));
+            lifestealer.AddItem(new MenuItem("lifestealer.Icon.Enable", "Draw icon near hero").SetValue(false));
+            lifestealer.AddItem(new MenuItem("lifestealer.creeps.Enable", "Draw icon near creep").SetValue(false));
             var arc = new Menu("", "arc",textureName: "arc_warden_spark_wraith",showTextWithTexture:true);
             arc.AddItem(new MenuItem("arc.Enable", "Enable").SetValue(true));
             var scan = new Menu("Enemy Scanning Ability", "Scan");
@@ -251,6 +263,13 @@ namespace OverlayInformation
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Hax.enable", "Hax in lobby").SetValue(false));
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
+            devolper.AddItem(new MenuItem("Dev.CreepsDisabler.enable", "Disable spawn creeps").SetValue(false))
+                .ValueChanged +=
+                (sender, args) =>
+                {
+                    var type = args.GetNewValue<bool>() ? "enable" : "disable";
+                    Game.ExecuteCommand($"dota_creeps_no_spawning_{type}");
+                };
             //===========================
             spellPanel.AddSubMenu(oldMethod);
             spellPanel.AddSubMenu(newMethod);
@@ -348,6 +367,9 @@ namespace OverlayInformation
                 Drawing.OnDraw += ItemPanel.Draw;
                 ShowMeMore.Flush();
                 Drawing.OnDraw += ShowMeMore.Draw;
+                Entity.OnParticleEffectAdded += ShowMeMore.Entity_OnParticleEffectAdded;
+                Unit.OnModifierAdded += ShowMeMore.OnModifierAdded;
+                Unit.OnModifierRemoved += ShowMeMore.OnModifierRemoved;
                 Runes.Flush();
                 Drawing.OnDraw += Runes.Draw;
                 
@@ -366,9 +388,15 @@ namespace OverlayInformation
                     MessageType.LogMessage);
                 Printer.PrintSuccess("> " + Members.Menu.DisplayName + " loaded v" +
                                      Assembly.GetExecutingAssembly().GetName().Version);
+
+                /*Entity.OnParticleEffectAdded += Entity_OnParticleEffectAdded;
+                Drawing.OnDraw += Drawing_OnDraw;*/
+
                 try
                 {
                     Members.Menu.AddToMainMenu();
+                    if (Members.Menu.Item("Dev.CreepsDisabler.enable").GetValue<bool>())
+                        Game.ExecuteCommand("dota_creeps_no_spawning_enable");
                 }
                 catch (Exception)
                 {
@@ -388,6 +416,9 @@ namespace OverlayInformation
                 Drawing.OnDraw -= DrawHelper.Overlay;
                 Drawing.OnDraw -= ItemPanel.Draw;
                 Drawing.OnDraw -= ShowMeMore.Draw;
+                Entity.OnParticleEffectAdded -= ShowMeMore.Entity_OnParticleEffectAdded;
+                Unit.OnModifierAdded -= ShowMeMore.OnModifierAdded;
+                Unit.OnModifierRemoved -= ShowMeMore.OnModifierRemoved;
                 Drawing.OnDraw -= Runes.Draw;
                 Drawing.OnPreReset -= DrawHelper.Render.Drawing_OnPreReset;
                 Drawing.OnPostReset -= DrawHelper.Render.Drawing_OnPostReset;
@@ -410,6 +441,48 @@ namespace OverlayInformation
                 }
                 
             };
+        }
+
+        private static List<Vector3> Points=new List<Vector3>();
+        private static void Drawing_OnDraw(EventArgs args)
+        {
+            if (Game.IsKeyDown(9))
+            {
+                Points.Clear();
+            }
+            foreach (var p in Points)
+            {
+                var pos = Helper.WorldToMinimap(p);
+                Drawing.DrawCircle(pos, 2, 50, Color.White);
+                pos = Drawing.WorldToScreen(p);
+                Drawing.DrawCircle(pos, 10, 50, Color.White);
+            }
+        }
+
+        private static int num = 1;
+        private static void Entity_OnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
+        {
+            if (args.Name.Contains("ui_"))
+                return;
+            /*if (args.Name.Contains("base"))
+                return;*/
+            if (sender.Name.Contains("port"))
+                return;
+            /*if (sender.Name.Contains("sven"))
+                Printer.PrintInfo($"{sender.Name}: {args.Name}");*/
+            /*if (args.Name.Contains("flame"))
+            {
+                return;
+            }
+            if (args.Name.Contains("head_fire"))
+            {
+                return;
+            }*/
+            if (!args.ParticleEffect.Position.IsZero)
+            Points.Add(args.ParticleEffect.Position);
+            Printer.Print($"{sender.Name}: {args.Name}");
+            //effect322 = new ParticleEffect("particles/units/heroes/hero_spirit_breaker/spirit_breaker_charge_target.vpcf", v, ParticleAttachment.OverheadFollow);
+            //effect322[num++] = new ParticleEffect("particles/units/heroes/hero_spirit_breaker/spirit_breaker_charge_target.vpcf",args.ParticleEffect.Position);
         }
 
         private static void Game_OnWndProc(WndEventArgs args)

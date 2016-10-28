@@ -120,6 +120,8 @@ namespace OverlayInformation
 
         private static void DrawLastPosition()
         {
+            //var particleAttachment = ParticleAttachment.OverheadFollow;
+           // new ParticleEffect(@"", target, ParticleAttachment.OverheadFollow);
             foreach (var hero in Members.EnemyHeroes.Where(x => x.IsAlive && !x.IsVisible))
             {
                 if (Members.Menu.Item("lastPosition.Enable.Minimap").GetValue<bool>())

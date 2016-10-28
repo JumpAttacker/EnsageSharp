@@ -327,6 +327,8 @@ namespace OverlayInformation
             }
         }
 
+        private static bool BaraDrawRect => Members.Menu.Item("charge.Rect.Enable").GetValue<bool>();
+        private static bool LifeStealerBox => Members.Menu.Item("lifestealer.Icon.Enable").GetValue<bool>();
         public static void Draw(EventArgs args)
         {
             if (!Checker.IsActive()) return;
@@ -478,11 +480,13 @@ namespace OverlayInformation
                                 Helper.GenerateSideMessage(v.Name.Replace("npc_dota_hero_", ""),
                                     "spirit_breaker_charge_of_darkness");
                                 InSys.Add(v);
+                                //effect322 = new ParticleEffect("particles/units/heroes/hero_spirit_breaker/spirit_breaker_charge_target.vpcf", v, ParticleAttachment.OverheadFollow);
+                                //v.AddParticleEffect("particles/units/heroes/hero_spirit_breaker/spirit_breaker_charge_target.vpcf");
                             }
                             else
                             {
                                 var pos = HUDInfo.GetHPbarPosition(v);
-                                if (!pos.IsZero)
+                                if (!pos.IsZero && BaraDrawRect)
                                 {
                                     Drawing.DrawRect(pos - new Vector2(50, 0), new Vector2(30, 30),
                                         Textures.GetSpellTexture("spirit_breaker_charge_of_darkness"));
@@ -508,17 +512,18 @@ namespace OverlayInformation
                 try
                 {
                     const string modname = "modifier_life_stealer_infest_effect";
-                    foreach (var t in Manager.HeroManager.GetEnemyViableHeroes().Where(x => x.HasModifier(modname)))
-                    {
-                        var size3 = new Vector2(10, 20) + new Vector2(13, -6);
-                        var w2SPos = HUDInfo.GetHPbarPosition(t);
-                        if (w2SPos.IsZero)
-                            continue;
-                        var name = "materials/ensage_ui/miniheroes/" +
-                                   Members.LifeStealer.StoredName().Replace("npc_dota_hero_", "") + ".vmat";
-                        Drawing.DrawRect(w2SPos - new Vector2(size3.X/2, size3.Y/2), size3,
-                            Drawing.GetTexture(name));
-                    }
+                    if (LifeStealerBox)
+                        foreach (var t in Manager.HeroManager.GetEnemyViableHeroes().Where(x => x.HasModifier(modname)))
+                        {
+                            var size3 = new Vector2(10, 20) + new Vector2(13, -6);
+                            var w2SPos = HUDInfo.GetHPbarPosition(t);
+                            if (w2SPos.IsZero)
+                                continue;
+                            var name = "materials/ensage_ui/miniheroes/" +
+                                       Members.LifeStealer.StoredName().Replace("npc_dota_hero_", "") + ".vmat";
+                            Drawing.DrawRect(w2SPos - new Vector2(size3.X/2, size3.Y/2), size3,
+                                Drawing.GetTexture(name));
+                        }
                     if (Members.Menu.Item("lifestealer.creeps.Enable").GetValue<bool>())
                         foreach (var t in Creeps.All.Where(x => x != null && x.IsAlive && x.HasModifier(modname)))
                         {
@@ -563,6 +568,89 @@ namespace OverlayInformation
         public static void Flush()
         {
             _sleeper=new Sleeper();
+        }
+
+        public static void Entity_OnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
+        {
+
+        }
+
+        private static readonly Dictionary<uint, ParticleEffect> BaraEffect=new Dictionary<uint, ParticleEffect>(); 
+        private static readonly Dictionary<uint, ParticleEffect> LifeStealerEffect=new Dictionary<uint, ParticleEffect>(); 
+        public static void OnModifierAdded(Unit sender, ModifierChangedEventArgs args)
+        {
+            var modifier = args.Modifier;
+            var handle = sender.Handle;
+            if (Members.Menu.Item("charge.Enable").GetValue<bool>() && Members.BaraIsHere && sender.Team == Members.MyPlayer.Team)
+            {
+                if (modifier.Name == "modifier_spirit_breaker_charge_of_darkness_vision")
+                {
+                    ParticleEffect effect;
+                    if (!BaraEffect.TryGetValue(handle, out effect))
+                    {
+                        var effectName = "materials/ensage_ui/particles/spirit_breaker_charge_target.vpcf";
+                        if (!(sender is Hero))
+                        {
+                            effectName = "particles/units/heroes/hero_spirit_breaker/spirit_breaker_charge_target.vpcf";
+                        }
+                        BaraEffect.Add(handle,
+                            new ParticleEffect(effectName, sender, ParticleAttachment.OverheadFollow));
+                        return;
+                    }
+                }
+            }
+            if (Members.Menu.Item("lifestealer.Enable").GetValue<bool>() && Members.LifeStealer != null && Members.LifeStealer.IsValid)
+            {
+                if (modifier.Name == "modifier_life_stealer_infest_effect")
+                {
+                    ParticleEffect effect;
+                    if (!LifeStealerEffect.TryGetValue(handle, out effect))
+                    {
+                        var effectName = "materials/ensage_ui/particles/life_stealer_infested_unit.vpcf";
+                        if (!(sender is Hero))
+                        {
+                            effectName = "particles/units/heroes/hero_life_stealer/life_stealer_infested_unit.vpcf";
+                        }
+                        LifeStealerEffect.Add(handle,
+                            new ParticleEffect(effectName, sender, ParticleAttachment.OverheadFollow));
+                        return;
+                    }
+                }
+            }
+        }
+
+        public static void OnModifierRemoved(Unit sender, ModifierChangedEventArgs args)
+        {
+            var modifier = args.Modifier;
+            var handle = sender.Handle;
+            if (Members.Menu.Item("charge.Enable").GetValue<bool>() && Members.BaraIsHere && sender.Team == Members.MyPlayer.Team)
+            {
+                if (modifier.Name == "modifier_spirit_breaker_charge_of_darkness_vision")
+                {
+                    ParticleEffect effect;
+                    if (BaraEffect.TryGetValue(handle, out effect))
+                    {
+                        if (effect != null && effect.IsValid)
+                            effect.Dispose();
+                        BaraEffect.Remove(handle);
+                        return;
+                    }
+                }
+            }
+            if (Members.Menu.Item("lifestealer.Enable").GetValue<bool>() && Members.LifeStealer != null && Members.LifeStealer.IsValid)
+            {
+                if (modifier.Name == "modifier_life_stealer_infest_effect")
+                {
+                    ParticleEffect effect;
+                    if (LifeStealerEffect.TryGetValue(handle, out effect))
+                    {
+                        if (effect != null && effect.IsValid)
+                            effect.Dispose();
+                        LifeStealerEffect.Remove(handle);
+                        return;
+                    }
+                }
+            }
         }
     }
 }
