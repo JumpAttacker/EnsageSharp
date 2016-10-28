@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 
 namespace ArcAnnihilation
 {
@@ -37,7 +38,7 @@ namespace ArcAnnihilation
                     .Where(
                         x =>
                             x.IsAlive && x.IsControllable && x.Team == me.Team &&
-                            x.Modifiers.Any(y => y.Name == "modifier_kill")).ToList();
+                            x.Modifiers.Any(z=>z.Name=="modifier_kill")).ToList();
                 if (_clones.Any())
                     Utils.Sleep(100, "Tempest.refresh");
                 return _clones;

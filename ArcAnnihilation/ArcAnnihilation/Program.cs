@@ -907,7 +907,7 @@ namespace ArcAnnihilation
                                     !x.IsMagicImmune() && x.Team != _mainHero.Team &&
                                     (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
                                      x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
-                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && !x.IsAncient && x.IsAlive &&
                                     x.Distance2D(_mainHero) <= 600).OrderByDescending(x => x.Health)
                             .DefaultIfEmpty(null)
                             .FirstOrDefault();
@@ -939,7 +939,7 @@ namespace ArcAnnihilation
                                     !x.IsMagicImmune() && x.Team != _mainHero.Team &&
                                     (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
                                      x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
-                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
+                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && !x.IsAncient && x.IsAlive &&
                                     x.Distance2D(clone) <= 600).OrderByDescending(x => x.Health)
                             .DefaultIfEmpty(null)
                             .FirstOrDefault();
@@ -1326,7 +1326,7 @@ namespace ArcAnnihilation
                 // do orbwalking if enabled
                 // otherwise simply attack target
                 if (hero.IsDisarmed() || !Utils.SleepCheck("magField")) continue;
-                if (Menu.Item("OrbWalking.Enable").GetValue<bool>() && OrbMinDist > hero.Distance2D(target))
+                if (Menu.Item("OrbWalking.Enable").GetValue<bool>() && OrbMinDist < hero.Distance2D(target))
                 {
                     Orbwalk(hero, target);
                 }
@@ -1918,6 +1918,7 @@ namespace ArcAnnihilation
                 return;
             }
             orb.OrbwalkOn(target, followTarget: true);
+            Print($"Me({me.Handle})");
         }
 
         private static Hero ClosestToMouse(Hero source, float range = 600)
