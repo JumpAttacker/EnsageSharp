@@ -6,9 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.AbilityInfo;
 using Ensage.Common.Extensions;
-using Ensage.Common.Extensions.Damage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
@@ -51,9 +49,6 @@ namespace ArcAnnihilation
         private static readonly Menu Menu = new Menu("Arc Annihilation", "arc", true, "npc_dota_hero_arc_warden", true);
         private static Hero _globalTarget;
         private static Hero _globalTarget2;
-        private static int _tick;
-        private static readonly Dictionary<uint, int> LastAttackStart = new Dictionary<uint, int>();
-        private static readonly Dictionary<uint, NetworkActivity> LastActivity = new Dictionary<uint, NetworkActivity>();
         private static readonly List<Spell> SpellBaseList=new List<Spell>(); 
         private static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
         {
@@ -144,13 +139,7 @@ namespace ArcAnnihilation
         };
 
         #endregion
-        /*
-         * OrderByDescending(
-                                x =>
-                                MainMenu.ComboKeysMenu.Item("Ability#.ComboOrder")
-                                    .GetValue<PriorityChanger>()
-                                    .GetPriority(x.Value.StoredName())
-         * */
+        
         #region Enums
 
         private enum Orders
@@ -191,7 +180,6 @@ namespace ArcAnnihilation
         }
 
         #endregion
-        //if (args.GetNewValue<KeyBind>().Active)
 
         private static TargetSelectedEnum TargetSelection => (TargetSelectedEnum)Menu.Item("TargetSelection").GetValue<StringList>().SelectedIndex;
 
@@ -310,9 +298,9 @@ namespace ArcAnnihilation
             orbwalnking.AddItem(
                 new MenuItem("OrbWalking.minDistance", "Min distance").SetValue(new Slider(100, 0, 600)));
 
-            orbwalnking.AddItem(
+            /*orbwalnking.AddItem(
                 new MenuItem("OrbWalking.bonusWindupMs", "Bonus Windup Time").SetValue(new Slider(100, 100, 1000))
-                    .SetTooltip("Time between attacks"));
+                    .SetTooltip("Time between attacks"));*/
 
             var daggerSelection = new Menu("Dagger", "dagger");
             /*daggerSelection.AddItem(
@@ -827,8 +815,6 @@ namespace ArcAnnihilation
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
                     " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
                     MessageType.LogMessage);
-                LastAttackStart.Clear();
-                LastActivity.Clear();
                 _ethereal=new Sleeper();
                 _myHull = _mainHero.HullRadius;
                 _drawType = Menu.Item("Draw.Order.Type").GetValue<bool>();
@@ -842,44 +828,17 @@ namespace ArcAnnihilation
             if (Game.IsPaused) return;
             #endregion
 
-            _tick = Environment.TickCount;
-            NetworkActivity act;
-            var handle = _mainHero.Handle;
-            if (!LastActivity.TryGetValue(handle, out act) || _mainHero.NetworkActivity != act)
+            foreach (var clone in from clone in Objects.Tempest.GetCloneList(_mainHero)
+                where Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active
+                let enemy = ObjectManager.GetEntities<Unit>()
+                    .Any(
+                        x =>
+                            x.Team == _mainHero.GetEnemyTeam() && x.IsAlive && x.IsVisible &&
+                            x.Distance2D(_mainHero) < Menu.Item("AutoHeal.Range").GetValue<Slider>().Value)
+                where !enemy
+                select clone)
             {
-                LastActivity.Remove(handle);
-                LastActivity.Add(handle, _mainHero.NetworkActivity);
-                if (_mainHero.IsAttacking())
-                {
-                    LastAttackStart.Remove(handle);
-                    LastAttackStart.Add(handle,_tick);
-                }
-            }
-            foreach (var clone in Objects.Tempest.GetCloneList(_mainHero))
-            {
-                #region auto heal code
-                if (Menu.Item("AutoHeal.Enable").GetValue<KeyBind>().Active)
-                {
-                    var enemy = ObjectManager.GetEntities<Unit>()
-                            .Any(
-                                x =>
-                                    x.Team == _mainHero.GetEnemyTeam() && x.IsAlive && x.IsVisible &&
-                                    x.Distance2D(_mainHero) < Menu.Item("AutoHeal.Range").GetValue<Slider>().Value);
-                    if (!enemy) 
-                    {
-                        CloneUseHealItems(clone, _mainHero, clone.Distance2D(_mainHero));
-                    }
-                }
-                #endregion
-
-                // following code updates lastactivity and lastattack state
-                handle = clone.Handle;
-                if (LastActivity.TryGetValue(handle, out act) && clone.NetworkActivity == act) continue;
-                LastActivity.Remove(handle);
-                LastActivity.Add(handle, clone.NetworkActivity);
-                if (!clone.IsAttacking()) continue;
-                LastAttackStart.Remove(handle);
-                LastAttackStart.Add(handle, _tick);
+                CloneUseHealItems(clone, _mainHero, clone.Distance2D(_mainHero));
             }
             foreach (var clone in Objects.Tempest.GetCloneList(_mainHero))
             {
@@ -898,7 +857,6 @@ namespace ArcAnnihilation
                 }
             }
             
-
             #region code for spark spam
             if (Menu.Item("spamHotkey").GetValue<KeyBind>().Active)
             {
@@ -1337,6 +1295,8 @@ namespace ArcAnnihilation
             }
         }
 
+
+        
         /**
         * DoCombo2 takes in a hero, me, and a hero, target, and does the following
         * 1) Use dagger towards the target if available
@@ -1366,9 +1326,9 @@ namespace ArcAnnihilation
                 // do orbwalking if enabled
                 // otherwise simply attack target
                 if (hero.IsDisarmed() || !Utils.SleepCheck("magField")) continue;
-                if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
+                if (Menu.Item("OrbWalking.Enable").GetValue<bool>() && OrbMinDist > hero.Distance2D(target))
                 {
-                    Orbwalk(hero, target, Menu.Item("OrbWalking.bonusWindupMs").GetValue<Slider>().Value);
+                    Orbwalk(hero, target);
                 }
                 else
                 {
@@ -1423,22 +1383,24 @@ namespace ArcAnnihilation
             Item[] enumerable;
             bool dagger;
             double targetHull = target.HullRadius;
-            if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int)Orders.Caster && !Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
+            if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int) Orders.Caster &&
+                !Menu.Item("hotkeyClone").GetValue<KeyBind>().Active)
             {
                 foreach (var hero in Objects.Tempest.GetCloneList(me))
                 {
-                    var d = hero.Distance2D(target)-_myHull-targetHull;
+                    var d = hero.Distance2D(target) - _myHull - targetHull;
                     inv = hero.Inventory.Items;
                     enumerable = inv as Item[] ?? inv.ToArray();
                     dagger = enumerable.Any(x => x.Name == "item_blink" && x.Cooldown == 0);
-                    SpellsUsage(hero, target, d, dagger,true);
+                    SpellsUsage(hero, target, d, dagger, true);
                     ItemUsage(hero, enumerable, target, d,
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
                     if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
                     {
-                        Orbwalk(hero, target, Menu.Item("OrbWalking.bonusWindupMs").GetValue<Slider>().Value);
+                        Orbwalk(hero, target);
                     }
+                    else
                     {
                         if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) continue;
                         hero.Attack(target);
@@ -1446,14 +1408,25 @@ namespace ArcAnnihilation
                     }
                 }
             }
-            var illusions = ObjectManager.GetEntities<Hero>().Where(x => x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion && !x.HasModifier("modifier_kill")).ToList();
+            var illusions =
+                ObjectManager.GetEntities<Hero>()
+                    .Where(
+                        x =>
+                            x.IsAlive && x.IsControllable && x.Team == me.Team && x.IsIllusion &&
+                            !x.HasModifier("modifier_kill"))
+                    .ToList();
             foreach (var illusion in illusions.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle)))
             {
                 illusion.Attack(target);
                 Utils.Sleep(350, "clone_attacking" + illusion.Handle);
             }
             var necr = Objects.Necronomicon.GetNecronomicons(me);
-            foreach (var necronomicon in necr.TakeWhile(illusion => Utils.SleepCheck("clone_attacking" + illusion.Handle) && illusion.Distance2D(target) <= 1500 && !Equals(illusion, me)))
+            foreach (
+                var necronomicon in
+                    necr.TakeWhile(
+                        illusion =>
+                            Utils.SleepCheck("clone_attacking" + illusion.Handle) && illusion.Distance2D(target) <= 1500 &&
+                            !Equals(illusion, me)))
             {
                 necronomicon.Attack(target);
                 var spell = necronomicon.Spellbook.Spell1;
@@ -1492,13 +1465,15 @@ namespace ArcAnnihilation
             var w = spellbook.SpellW;
             var e = spellbook.SpellE;
 
-            
-            if (q != null && IsAbilityEnable(q.StoredName(),tempest) && q.CanBeCasted() && q.CastRange+me.HullRadius+target.HullRadius >= distance && Utils.SleepCheck(me.Handle+q.Name))
+
+            if (q != null && IsAbilityEnable(q.StoredName(), tempest) && q.CanBeCasted() && q.CanHit(target) &&
+                Utils.SleepCheck(me.Handle + q.Name))
             {
                 q.UseAbility(target);
                 Utils.Sleep(500, me.Handle + q.Name);
             }
-            if (w != null && IsAbilityEnable(w.StoredName(), tempest) && w.CanBeCasted() && Utils.SleepCheck(w.Name) && !me.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 && !daggerIsReady)
+            if (w != null && IsAbilityEnable(w.StoredName(), tempest) && w.CanBeCasted() && Utils.SleepCheck(w.Name) &&
+                !me.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 && !daggerIsReady)
             {
                 if (!Menu.Item("MagneticField").GetValue<bool>() && target.IsMelee)
                 {
@@ -1509,15 +1484,17 @@ namespace ArcAnnihilation
                     w.UseAbility(Prediction.InFront(me, 250));
                 Utils.Sleep(500, w.Name);
             }
-            if (e != null && IsAbilityEnable(e.StoredName(), tempest) && e.CanBeCasted() && Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady && !Prediction.IsTurning(target))
+            if (e != null && IsAbilityEnable(e.StoredName(), tempest) && e.CanBeCasted() &&
+                Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady && !Prediction.IsTurning(target))
             {
-                var predVector3 = target.NetworkActivity == NetworkActivity.Move && Menu.Item("usePrediction").GetValue<bool>()
-                        ? Prediction.InFront(target, target.MovementSpeed * 3 + Game.Ping / 1000)
-                        : target.Position;
+                var predVector3 = target.NetworkActivity == NetworkActivity.Move &&
+                                  Menu.Item("usePrediction").GetValue<bool>()
+                    ? Prediction.InFront(target, target.MovementSpeed*3 + Game.Ping/1000)
+                    : target.Position;
                 e.UseAbility(predVector3);
-                Utils.Sleep(500, me.Handle + e.Name);
+                Utils.Sleep(1000, me.Handle + e.Name);
             }
-            
+
             var r = me.Spellbook.SpellR;
             if (!IsAbilityEnable(r.StoredName(), tempest))
                 return;
@@ -1555,7 +1532,7 @@ namespace ArcAnnihilation
                         ((x.CastRange == 0 &&
                           distance <=
                           (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
-                         x.CastRange+50 >= distance)).OrderByDescending(y => GetComboOrder(y, byIllusion));
+                         /*x.CastRange+50 >= distance*/x.CanHit(target))).OrderByDescending(y => GetComboOrder(y, byIllusion));
             var slarkMod = target.HasModifiers(new[] { "modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses" }, false);
             foreach (var item in items)
             {
@@ -1626,7 +1603,7 @@ namespace ArcAnnihilation
                 {
                     if (name == "item_blink")
                     {
-                        if (distance > 115)
+                        if (distance > 1150)
                         {
                             var angle = me.FindAngleBetween(target.Position, true);
                             var point = new Vector3(
@@ -1783,7 +1760,6 @@ namespace ArcAnnihilation
             var pike = inventory.Find(x => Utils.SleepCheck(x.Name + me.Handle) && x.Name == "item_hurricane_pike");
             if (pike!=null && pike.IsValid)
             {
-                Print("pike");
                 if (target.IsMelee)
                 {
                     if (target.Distance2D(me) <= pike.GetCastRange())
@@ -1791,7 +1767,6 @@ namespace ArcAnnihilation
                         var angle = (float)Math.Max(
                             Math.Abs(target.RotationRad -
                                      Utils.DegreeToRadian(target.FindAngleBetween(me.Position))) - 0.20, 0);
-                        Print(angle.ToString());
                         if (!Prediction.IsTurning(target) && angle == 0)
                         {
                             pike.UseAbility(target);
@@ -1800,7 +1775,6 @@ namespace ArcAnnihilation
                     }
                     else
                     {
-                        Print("asd");
                     }
                 }
             }
@@ -1930,85 +1904,20 @@ namespace ArcAnnihilation
             }
         }
 
-        private static void Orbwalk(Hero me,Unit target,float bonusWindupMs = 100,float bonusRange = 0)
+        private static readonly Dictionary<uint, Orbwalker> OrbDict = new Dictionary<uint, Orbwalker>();
+        private static void Orbwalk(Hero me,Unit target)
         {
             if (me == null)
             {
                 return;
             }
-            var targetHull = 0f;
-            if (target != null)
+            Orbwalker orb;
+            if (!OrbDict.TryGetValue(me.Handle, out orb))
             {
-                targetHull = target.HullRadius;
-            }
-            float distance = 0;
-            if (target != null)
-            {
-                var pos = Prediction.InFront(
-                    me,
-                    (float)((Game.Ping / 1000 + me.GetTurnTime(target.Position)) * me.MovementSpeed));
-                distance = pos.Distance2D(target) - me.Distance2D(target);
-            }
-
-            // target is valid if it is alive, visbile, not invulnerable, not in ethereal state, and is within attack range
-            var isValid = target != null && target.IsValid && target.IsAlive && target.IsVisible && !target.IsInvul()
-                          && !target.HasModifiers(new[] { "modifier_ghost_state", "modifier_item_ethereal_blade_slow" },
-                              false) && target.Distance2D(me)
-                          <= (me.GetAttackRange() + me.HullRadius + 50 + targetHull + bonusRange + Math.Max(distance, 0));
-
-            // attack and set cooldown on attack timer if possible to attack
-            if (isValid || (target != null && me.IsAttacking() && me.GetTurnTime(target.Position) < 0.1))
-            {
-                var canAttack = !AttackOnCooldown(me,target, bonusWindupMs)
-                                && !target.IsAttackImmune() && !target.IsInvul() && me.CanAttack();
-                if (canAttack && Utils.SleepCheck("!Orbwalk.Attack"))
-                {
-                    me.Attack(target);
-                    Utils.Sleep(
-                        UnitDatabase.GetAttackPoint(me) * 1000 + me.GetTurnTime(target) * 1000,
-                        "!Orbwalk.Attack");
-                    return;
-                }
-            }
-
-            // do animation cancelling by walking to the target location if possible to cancel
-            var canCancel = (CanCancelAnimation(me) && AttackOnCooldown(me,target, bonusWindupMs))
-                            || (!isValid && !me.IsAttacking() && CanCancelAnimation(me));
-            if (!canCancel || !Utils.SleepCheck("!Orbwalk.Move") || !Utils.SleepCheck("!Orbwalk.Attack"))
-            {
+                OrbDict.Add(me.Handle, new Orbwalker(me));
                 return;
             }
-            if (target?.Distance2D(me) >= OrbMinDist)
-                me.Move(target.Position);
-            Utils.Sleep(100, "!Orbwalk.Move");
-        }
-
-        private static bool AttackOnCooldown(Hero me, Entity target = null, float bonusWindupMs = 0)
-        {
-            if (me == null)
-            {
-                return false;
-            }
-            var turnTime = 0d;
-            if (target != null)
-            {
-                //turnTime = me.GetTurnTime(target);
-                turnTime = me.GetTurnTime(target)
-                           + Math.Max(me.Distance2D(target) - me.GetAttackRange() - 100, 0) / me.MovementSpeed;
-            }
-            int lastAttackStart;
-            LastAttackStart.TryGetValue(me.Handle,out lastAttackStart);
-            return lastAttackStart + UnitDatabase.GetAttackRate(me)*1000 - Game.Ping - turnTime*1000 - 75
-                   + bonusWindupMs >= _tick;
-        }
-
-        private static bool CanCancelAnimation(Hero me, float delay = 0f)
-        {
-            int lastAttackStart;
-            LastAttackStart.TryGetValue(me.Handle, out lastAttackStart);
-            var time = _tick - lastAttackStart;
-            var cancelDur = UnitDatabase.GetAttackPoint(me) * 1000 - Game.Ping + 100 - delay;
-            return time >= cancelDur;
+            orb.OrbwalkOn(target, followTarget: true);
         }
 
         private static Hero ClosestToMouse(Hero source, float range = 600)
