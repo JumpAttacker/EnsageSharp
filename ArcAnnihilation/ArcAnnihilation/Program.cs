@@ -1035,6 +1035,8 @@ namespace ArcAnnihilation
         **/
         private static void DoShit(Unit hero, bool isTempest=false)
         {
+            if (!hero.IsAlive)
+                return;
             // setting variables
             var handle = hero.Handle;
             var items = isTempest ? hero.Inventory.Items.ToList() : null;
