@@ -83,6 +83,8 @@ namespace TinkerAnnihilation
                 _ethereal = new Sleeper();
             var laser = Abilities.FindAbility("tinker_laser");
             var rockets = Abilities.FindAbility("tinker_heat_seeking_missile");
+            if (_spellSleeper.Sleeping(Abilities.FindAbility("tinker_rearm")))
+                return;
             if (IsEnableKillSteal && !IsComboHero)
             {
                 foreach (var x in Heroes.GetByTeam(Members.MyHero.GetEnemyTeam())
@@ -106,9 +108,7 @@ namespace TinkerAnnihilation
                 return;
             }
             Helper.HandleEffect(_globalTarget);
-            if (Members.MyHero.IsChanneling() ||
-                _spellSleeper.Sleeping(Abilities.FindAbility("tinker_rearm")) ||
-                _globalTarget.Distance2D(Members.MyHero) > 2500)
+            if (Members.MyHero.IsChanneling() || _globalTarget.Distance2D(Members.MyHero) > 2500)
             {
                 return;
             }
@@ -229,6 +229,7 @@ namespace TinkerAnnihilation
                             if (dist >= MinDistance && dist <= daggerCastRange)
                             {
                                 item.UseAbility(point);
+                                _spellSleeper.Sleep(250, "blink_fix");
                             }
                         }
                         else if (distance > MinDistance)
@@ -245,6 +246,7 @@ namespace TinkerAnnihilation
                                      Math.Sin(angle)),
                                 globalTarget.Position.Z);
                             item.UseAbility(point);
+                            _spellSleeper.Sleep(250,"blink_fix");
                         }
                     }
                     else
@@ -337,9 +339,10 @@ namespace TinkerAnnihilation
                 return;
             var rearm = Abilities.FindAbility("tinker_rearm");
 
-
-
-            if (inventory.Count != 0 || (rockets.CanBeCasted() && Helper.CanRockedHit(globalTarget)) || (laser.CanBeCasted() && laser.CanHit(globalTarget)))
+            if (inventory.Count != 0 ||
+                (rockets.CanBeCasted() && Helper.IsAbilityEnable(rockets.StoredName()) &&
+                 Helper.CanRockedHit(globalTarget)) ||
+                (laser.CanBeCasted() && Helper.IsAbilityEnable(laser.StoredName()) && laser.CanHit(globalTarget)) || _spellSleeper.Sleeping("blink_fix"))
             {
                 Printer.Print($"{inventory.Count}");
                 return;
@@ -349,7 +352,7 @@ namespace TinkerAnnihilation
             {
                 rearm.UseAbility();
                 //_spellSleeper.Sleep(4000 - rearm.Level * 500, rearm);
-                _spellSleeper.Sleep(750, rearm);
+                _spellSleeper.Sleep(750+530, rearm);
                 //Printer.Print("use ream");
             }
         }

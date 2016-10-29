@@ -17,7 +17,7 @@ namespace TinkerAnnihilation
         {
             "tinker_laser",
             "tinker_heat_seeking_missile",
-            "tinker_march_of_the_machines",
+            /*"tinker_march_of_the_machines",*/
             "tinker_rearm"
         };
 

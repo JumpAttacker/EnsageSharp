@@ -67,9 +67,9 @@ namespace TinkerAnnihilation
             
             allItems.AddRange(allItems2);
             
-            if (rocked.Level > 0)
+            if (rocked.Level > 0 && IsAbilityEnable(rocked.StoredName()))
                 allItems.Add(rocked);
-            if (laser.Level > 0)
+            if (laser.Level > 0 && IsAbilityEnable(laser.StoredName()))
                 allItems.Add(laser);
             if (rearm.Level > 0)
                 allItems.Add(rearm);
@@ -164,11 +164,12 @@ namespace TinkerAnnihilation
 
             allItems.AddRange(allItems2);
 
-            if (rocked.Level > 0)
-                allItems.Add(rocked);
-            if (laser.Level > 0)
+            if (laser.Level > 0 && IsAbilityEnable(laser.StoredName()))
                 allItems.Add(laser);
 
+            if (rocked.Level > 0 && IsAbilityEnable(rocked.StoredName()))
+                allItems.Add(rocked);
+            
             var haveEb =
                 allItems.Any(
                     x =>
@@ -212,14 +213,14 @@ namespace TinkerAnnihilation
             return (int) (globalTarget.Health - myDmg);
         }
 
-        private static Dictionary<uint, ParticleEffect> Effects;
+        private static Dictionary<uint, ParticleEffect> _effects;
         public static void HandleEffect(Hero target)
         {
-            if (Effects==null)
-                Effects=new Dictionary<uint, ParticleEffect>();
+            if (_effects==null)
+                _effects=new Dictionary<uint, ParticleEffect>();
             var handle = target.Handle;
             ParticleEffect effect;
-            if (!Effects.TryGetValue(handle, out effect))
+            if (!_effects.TryGetValue(handle, out effect))
             {
                 effect = Members.MyHero.AddParticleEffect("materials/ensage_ui/particles/target.vpcf");
                 /*
@@ -232,7 +233,7 @@ namespace TinkerAnnihilation
                 effect.SetControlPoint(5, new Vector3(Members.TargetR, Members.TargetG, Members.TargetB));
                 effect.SetControlPoint(6, new Vector3(255));
                 effect.SetControlPoint(7, target.Position);
-                Effects.Add(handle,effect);
+                _effects.Add(handle,effect);
             }
             else
             {
@@ -244,10 +245,10 @@ namespace TinkerAnnihilation
         {
             var handle = target.Handle;
             ParticleEffect effect;
-            if (Effects.TryGetValue(handle, out effect))
+            if (_effects.TryGetValue(handle, out effect))
             {
                 effect.Dispose();
-                Effects.Remove(handle);
+                _effects.Remove(handle);
             }
         }
     }
