@@ -1920,7 +1920,6 @@ namespace ArcAnnihilation
                 return;
             }
             orb.OrbwalkOn(target, followTarget: true);
-            Print($"Me({me.Handle})");
         }
 
         private static Hero ClosestToMouse(Hero source, float range = 600)
