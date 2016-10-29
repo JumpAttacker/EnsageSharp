@@ -145,7 +145,7 @@ namespace TinkerAnnihilation
                 laser.CanHit(globalTarget) && !_spellSleeper.Sleeping(laser))
             {
                 laser.UseAbility(globalTarget);
-                _spellSleeper.Sleep(500, laser);
+                _spellSleeper.Sleep(1000, laser);
             }
             var slarkMod = globalTarget.HasModifiers(new[] { "modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses" }, false);
             foreach (var item in inventory.OrderByDescending(Helper.PriorityHelper))
@@ -210,7 +210,7 @@ namespace TinkerAnnihilation
                 {
                     if (name == "item_blink")
                     {
-                        if (singleCombo)
+                        if (singleCombo || _spellSleeper.Sleeping("blink_fix"))
                             continue;
                         if (distance > daggerCastRange+CloseRange)
                         {
@@ -254,7 +254,7 @@ namespace TinkerAnnihilation
                         item.UseAbility(globalTarget.NetworkPosition);
                     }
                 }
-                Utils.Sleep(100, $"{item.Handle}+item_usages");
+                Utils.Sleep(150, $"{item.Handle}+item_usages");
 
                 #region 
 

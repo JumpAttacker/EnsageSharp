@@ -93,7 +93,8 @@ namespace TinkerAnnihilation
             var templarStacks = globalTarget.FindModifier("modifier_templar_assassin_refraction_absorb_stacks");
             var stacks = templarStacks?.StackCount ?? 0;
             var hasRainDrop = globalTarget.FindItem("item_infused_raindrop", true)?.Cooldown <= 0;
-            while (mana>5 && allItems.Count(x=>mana>x.ManaCost)>0 && wasRearmed)
+            var wasNama = mana;
+            while (mana>5 && allItems.Count(x=>mana>x.ManaCost)>0 && wasRearmed && wasNama>=mana)
             {
                 wasRearmed = false;
                 foreach (var x in allItems)
