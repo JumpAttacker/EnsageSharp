@@ -45,13 +45,12 @@ namespace EarthAn
                 _spellSleeper = new MultiSleeper();
             if (_ethereal == null)
                 _ethereal = new Sleeper();
-            GlobalTarget = Helper.ClosestToMouse(Members.MyHero);
             if (!IsComboHero)
             {
                 GlobalTarget = null;
                 return;
             }
-            if (GlobalTarget == null || !GlobalTarget.IsValid)
+            if (GlobalTarget == null || !GlobalTarget.IsValid || !GlobalTarget.IsAlive)
             {
                 GlobalTarget = Helper.ClosestToMouse(Members.MyHero);
                 return;
