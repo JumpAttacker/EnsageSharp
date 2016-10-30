@@ -133,7 +133,7 @@ namespace EarthAn
                     if (stoneCaller.CanBeCasted() && remnant == null)
                     {
                         stoneCaller.UseAbility(pos);
-                        geomagneticGrip.UseAbility(pos);
+                        geomagneticGrip.UseAbility(pos,true);
                         Printer.Print("new");
                     }
                     else if (remnant!=null)
@@ -159,7 +159,7 @@ namespace EarthAn
                 }
                 _spellSleeper.Sleep(250,"combo" + rollingBoulder);
             }
-            else
+            else if (rollingBoulder.Cooldown>=3.5)
             {
                 var myPos = Members.MyHero.Position;
 
@@ -167,24 +167,23 @@ namespace EarthAn
                 var point = new Vector3(
                     (float)
                         (myPos.X +
-                         25 *
+                         100 *
                          Math.Cos(angle)),
                     (float)
                         (myPos.Y +
-                         25 *
+                         100 *
                          Math.Sin(angle)),
                     0);
                 var remnant = Helper.FindRemnant(point, 100) ??
                               Helper.FindRemnantWithModifier(pos, "modifier_earth_spirit_geomagnetic_grip");
-               
                 if (stoneCaller.CanBeCasted() && remnant == null &&
                     Members.MyHero.HasModifier("modifier_earth_spirit_rolling_boulder_caster"))
                 {
                     if (!_spellSleeper.Sleeping("combo" + rollingBoulder + "Caller"))
                     {
-                        Printer.Print("cant find remnant!");
+                        Printer.Print($"cd: ({rollingBoulder.Cooldown}) | cant find remnant!");
                         //stoneCaller.UseAbility(point);
-                        stoneCaller.UseAbility(Members.MyHero.InFront(100));
+                        stoneCaller.UseAbility(Members.MyHero.Position);
                         _spellSleeper.Sleep(2000, "combo" + rollingBoulder + "Caller");
                     }
                 }

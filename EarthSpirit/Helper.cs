@@ -54,7 +54,7 @@ namespace EarthAn
                 .Where(
                     x =>
                         x.ClassID == ClassID.CDOTA_Unit_Earth_Spirit_Stone && x.Team == Members.MyTeam &&
-                        /*pos.Distance2D(x.NetworkPosition) <= 200 &&*/ x.IsAlive && x.HasModifier(mod)).OrderBy(y => pos.Distance2D(y.NetworkPosition));
+                        pos.Distance2D(x.NetworkPosition) <= 1500 && x.IsAlive && x.HasModifier(mod)).OrderBy(y => pos.Distance2D(y.NetworkPosition));
             return remnant.FirstOrDefault();
         }
 
