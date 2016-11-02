@@ -1,11 +1,18 @@
 using System;
 using Ensage;
+using SharpDX;
 
 namespace OverlayInformation
 {
     internal static class Printer
     {
         #region Helpers
+
+        public static string PrintVector(this Vector3 vec)
+        {
+            return $"({vec.X};{vec.Y};{vec.Z})";
+        }
+
         public static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments); ;

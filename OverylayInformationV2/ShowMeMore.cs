@@ -11,6 +11,127 @@ using SharpDX;
 
 namespace OverlayInformation
 {
+    internal class TeleportEffect
+    {
+        public TeleportEffect(ParticleEffect effect, Vector3 position, Vector3 color)
+        {
+            GetEffect = effect;
+            GetPosition = position;
+            GetColor = color;
+        }
+
+        public Vector3 GetColor { get; }
+
+        public Vector3 GetPosition { get; }
+
+        public ParticleEffect GetEffect { get; }
+    }
+    internal class TeleportCatcher
+    {
+        private static List<TeleportEffect> _effectList;
+
+        private static readonly List<Vector3> ColorList = new List<Vector3>()
+        {
+            new Vector3(0.2f, 0.4588235f, 1),
+            new Vector3(0.4f, 1, 0.7490196f),
+            new Vector3(0.7490196f, 0, 0.7490196f),
+            new Vector3(0.9529412f, 0.9411765f, 0.04313726f),
+            new Vector3(1, 0.4196078f, 0),
+            new Vector3(0.9960784f, 0.5254902f, 0.7607843f),
+            new Vector3(0.6313726f, 0.7058824f, 0.2784314f),
+            new Vector3(0.3960784f, 0.8509804f, 0.9686275f),
+            new Vector3(0, 0.5137255f, 0.1294118f),
+            new Vector3(0.6431373f, 0.4117647f, 0)
+        };
+        /*
+         tpCatcher.AddItem(new MenuItem("TpCather.Enable", "Enable").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.Ally", "For Ally").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.Enemy", "For Enemy").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.Map", "Draw on Map").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.MiniMap", "Draw on MiniMap").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(25,1,30)));
+        tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(25,1,30)));
+         * */
+        private static bool DrawOnMap => Members.Menu.Item("TpCather.Map").GetValue<bool>();
+        private static bool DrawOnMiniMap => Members.Menu.Item("TpCather.MiniMap").GetValue<bool>();
+        private static bool MinimapType => Members.Menu.Item("TpCather.MiniMap.Type").GetValue<bool>();
+        private static int MapSize => Members.Menu.Item("TpCather.Map.Size").GetValue<Slider>().Value;
+        private static int MiniMapSize => Members.Menu.Item("TpCather.MiniMap.Size").GetValue<Slider>().Value;
+        public TeleportCatcher()
+        {
+            
+            _effectList = new List<TeleportEffect>();
+            Drawing.OnDraw += args =>
+            {
+                var safeList = new List<TeleportEffect>();
+                foreach (var particleEffect in _effectList)
+                {
+                    var effect = particleEffect.GetEffect;
+                    
+                    if (effect!=null && effect.IsValid && !effect.IsDestroyed)
+                    {
+                        var position = particleEffect.GetPosition;
+                        safeList.Add(particleEffect);
+                        var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
+                        var player =
+                                ObjectManager.GetPlayerByID(
+                                    (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
+                        if (player == null || !player.IsValid)
+                            continue;
+                        var hero = player.Hero;
+                        if (!pos.IsZero)
+                        {
+                            var size = new Vector2(MiniMapSize);
+                            Drawing.DrawRect(pos - size, size,
+                                new Color(particleEffect.GetColor.X, particleEffect.GetColor.Y,
+                                    particleEffect.GetColor.Z));
+                            
+                            //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
+                            if (MinimapType)
+                                Drawing.DrawRect(pos - size, size, Textures.GetHeroTexture(hero.StoredName()));
+                            else
+                                Drawing.DrawRect(pos - size, size, (Color) particleEffect.GetColor);
+                            Drawing.DrawRect(pos - size, size, Color.Black, true);
+                        }
+                        pos = DrawOnMap?Drawing.WorldToScreen(position):new Vector2();
+                        if (!pos.IsZero)
+                        {
+                            var size = new Vector2(MapSize);
+                            Drawing.DrawRect(pos - size, size,
+                                new Color(particleEffect.GetColor.X, particleEffect.GetColor.Y,
+                                    particleEffect.GetColor.Z));
+
+                            //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
+                            Drawing.DrawRect(pos - size, size, Textures.GetHeroTexture(hero.StoredName()));
+                            Drawing.DrawRect(pos - size, size, Color.Black,true);
+                        }
+                    }
+                }
+                _effectList = safeList;
+            };
+        }
+        private static bool ForAlly => Members.Menu.Item("TpCather.Ally").GetValue<bool>();
+        private static bool ForEnemy => Members.Menu.Item("TpCather.Enemy").GetValue<bool>();
+        public void Add(ParticleEffect effect,Vector3 position, Vector3 color)
+        {
+            var eff = new TeleportEffect(effect, position, color);
+            var id = (uint) ColorList.FindIndex(x => x == eff.GetColor);
+            var player = ObjectManager.GetPlayerByID(id);
+            Printer.Print("Id#" + id);
+            if (player == null || !player.IsValid)
+            {
+                Printer.Print("error #" + id);
+                return;
+            }
+            if ((player.Team == Members.MyPlayer.Team && ForAlly) || (player.Team != Members.MyPlayer.Team && ForEnemy))
+            {
+                var hero = player.Hero;
+                _effectList.Add(eff);
+                Printer.Print($"Player: {player.Name} ({id}) | Hero: {hero.GetRealName()} | Color: {eff.GetColor}");
+                //Console.WriteLine($"Color: {color.PrintVector()}");
+            }
+        }
+    }
     internal static class ShowMeMore
     {
         private static Sleeper _sleeper;
@@ -25,13 +146,15 @@ namespace OverlayInformation
         private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect =
             new Dictionary<Unit, ParticleEffect>();
 
+        private static readonly TeleportCatcher TeleportCatcher=new TeleportCatcher();
+
         public static void ShowIllustion()
         {
             if (!Members.Menu.Item("showillusion.Enable").GetValue<bool>()) return;
             if (_sleeper.Sleeping) return;
             _sleeper.Sleep(300);
             var illusions = ObjectManager.GetEntities<Hero>()
-                .Where(x => x.IsValid && x.IsIllusion).ToList();
+                .Where(x => x.Team!=Members.MyHero.Team &&  x.IsValid && x.IsIllusion).ToList();
             foreach (var s in illusions)
                 Helper.HandleEffect(s);
         }
@@ -360,6 +483,13 @@ namespace OverlayInformation
                             Drawing.DrawRect(aapos, new Vector2(50, 50), Drawing.GetTexture(name));
                         }
                     }
+                    aapos = Helper.WorldToMinimap(AAunit.Position);
+                    if (!aapos.IsZero)
+                    {
+                        const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
+                        var size = new Vector2(7, 7);
+                        Drawing.DrawRect(aapos - size, size, Textures.GetTexture(name));
+                    }
                 }
                 catch (Exception)
                 {
@@ -569,10 +699,32 @@ namespace OverlayInformation
         {
             _sleeper=new Sleeper();
         }
-
+        /*
+         tpCatcher.AddItem(new MenuItem("TpCather.Enable", "Enable").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.Ally", "For Ally").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.Enemy", "For Enemy").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.Map", "Draw on Map").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.MiniMap", "Draw on MiniMap").SetValue(true));
+        tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(25,1,30)));
+        tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(25,1,30)));
+         * */
+        private static bool IsEnableTpCather => Members.Menu.Item("TpCather.Enable").GetValue<bool>();
         public static void Entity_OnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
         {
-
+            if (!IsEnableTpCather)
+                return;
+            var name = args.Name;
+            if (name.Contains("teleport"))
+            {
+                DelayAction.Add(10, () =>
+                {
+                    var effect = args.ParticleEffect;
+                    var a = effect.GetControlPoint(0);
+                    var b = effect.GetControlPoint(2);
+                    Printer.Print($"{(name.Contains("start")?"start":"end")}=>A:{a.PrintVector()} B:{b.PrintVector()}");
+                    TeleportCatcher.Add(effect, a, b);
+                });
+            }
         }
 
         private static readonly Dictionary<uint, ParticleEffect> BaraEffect=new Dictionary<uint, ParticleEffect>(); 

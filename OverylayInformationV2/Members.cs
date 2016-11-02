@@ -61,5 +61,13 @@ namespace OverlayInformation
         public static DamageCalculation DamageCalculation;
         public static AbilityOverlay AbilityOverlay;
         public static List<Courier> CourList;
+
+        public static List<string> ShowIllusionList = new List<string>()
+        {
+            "particles/items2_fx/smoke_of_deceit_buff.vpcf",
+            "materials/ensage_ui/particles/illusions_mod.vpcf",
+            "materials/ensage_ui/particles/illusions_mod_v2.vpcf",
+            "particles/items2_fx/shadow_amulet_active_ground_proj.vpcf"
+        };
     }
 }

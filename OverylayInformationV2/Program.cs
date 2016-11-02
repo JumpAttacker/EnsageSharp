@@ -179,6 +179,13 @@ namespace OverlayInformation
             //cour.AddItem(new MenuItem("Courier.Enable", "Enable").SetValue(true)).SetTooltip("draw courier position on minimap");
             //===========================
             showIllusion.AddItem(new MenuItem("showillusion.Enable", "Enable").SetValue(true));
+            showIllusion.AddItem(
+                new MenuItem("showillusion.Type", "Type").SetValue(new StringList(new[] {"Smoke", "new 1" , "new 2" }, 2)));
+            showIllusion.AddItem(new MenuItem("showillusion.X", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            showIllusion.AddItem(new MenuItem("showillusion.Y", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
+            showIllusion.AddItem(new MenuItem("showillusion.Z", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
+            showIllusion.AddItem(new MenuItem("showillusion.Alpha", "Alpha").SetValue(new Slider(40,0,255)));
+            showIllusion.AddItem(new MenuItem("showillusion.Size", "Size").SetValue(new Slider(120,1,250)));
             //===========================
             runevision.AddItem(new MenuItem("runevision.Enable", "Enable").SetValue(true));
             runevision.AddItem(new MenuItem("runevision.PrintText.Enable", "Print text on rune-spawning").SetValue(true));
@@ -192,6 +199,17 @@ namespace OverlayInformation
             itemOverlay.AddItem(new MenuItem("itemOverlay.Ally", "Enable for ally").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enemy", "Enable for enemy").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Cour", "Enable for couriers").SetValue(true)).SetTooltip("only for enemy");
+            var tpCatcher = new Menu("TP Catcher", "TpCather");
+            tpCatcher.AddItem(new MenuItem("TpCather.Enable", "Enable").SetValue(true));
+            tpCatcher.AddItem(new MenuItem("TpCather.Ally", "For Ally").SetValue(true));
+            tpCatcher.AddItem(new MenuItem("TpCather.Enemy", "For Enemy").SetValue(true));
+            tpCatcher.AddItem(new MenuItem("TpCather.Map", "Draw on Map").SetValue(true));
+            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap", "Draw on MiniMap").SetValue(true));
+            tpCatcher.AddItem(
+                new MenuItem("TpCather.MiniMap.Type", "Draw on MiniMap Hero Icon or Rectangle").SetValue(true))
+                .SetTooltip("true=icon; false=rectangle");
+            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(20,5,30)));
+            tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(50,5,50)));
             var manaBars = new Menu("Manabars", "manaBars");
             manaBars.AddItem(new MenuItem("manaBars.Enable", "Enable").SetValue(true));
             manaBars.AddItem(new MenuItem("manaBars.Nums.Enable", "Enable digital values").SetValue(true));
@@ -307,6 +325,7 @@ namespace OverlayInformation
             settings.AddSubMenu(lastPosition);
             settings.AddSubMenu(netWorth);
             settings.AddSubMenu(dmgCalc);
+            settings.AddSubMenu(tpCatcher);
 
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
@@ -391,7 +410,6 @@ namespace OverlayInformation
 
                 /*Entity.OnParticleEffectAdded += Entity_OnParticleEffectAdded;
                 Drawing.OnDraw += Drawing_OnDraw;*/
-
                 try
                 {
                     Members.Menu.AddToMainMenu();
@@ -459,7 +477,6 @@ namespace OverlayInformation
             }
         }
 
-        private static int num = 1;
         private static void Entity_OnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
         {
             if (args.Name.Contains("ui_"))

@@ -115,6 +115,14 @@ namespace OverlayInformation
             return 0;
         }
 
+        private static int IllusionType => Members.Menu.Item("showillusion.Type").GetValue<StringList>().SelectedIndex;
+        private static int IllusionAlpha => Members.Menu.Item("showillusion.Alpha").GetValue<Slider>().Value;
+        private static int IllusionSize => Members.Menu.Item("showillusion.Size").GetValue<Slider>().Value;
+        private static Vector3 IllusionColor
+            =>
+                new Vector3(Members.Menu.Item("showillusion.X").GetValue<Slider>().Value,
+                    Members.Menu.Item("showillusion.Y").GetValue<Slider>().Value,
+                    Members.Menu.Item("showillusion.Z").GetValue<Slider>().Value);
         public static void HandleEffect(Unit unit)
         {
             ParticleEffect effect;
@@ -122,19 +130,34 @@ namespace OverlayInformation
             if (unit.IsAlive /* && unit.IsVisibleToEnemies*/)
             {
                 if (Members.Effects1.TryGetValue(unit, out effect)) return;
-                effect = unit.AddParticleEffect("particles/items2_fx/smoke_of_deceit_buff.vpcf");
-                //particles/items_fx/diffusal_slow.vpcf
-                effect2 = unit.AddParticleEffect("particles/items2_fx/shadow_amulet_active_ground_proj.vpcf");
+                var id = IllusionType;
+                effect = unit.AddParticleEffect(Members.ShowIllusionList[id]);
+                switch (id)
+                {
+                    case 0:
+                        effect2 = unit.AddParticleEffect(Members.ShowIllusionList[Members.ShowIllusionList.Count-1]);
+                        Members.Effects2.Add(unit, effect2);
+                        break;
+                    case 1:
+                        effect.SetControlPoint(1, new Vector3(IllusionSize, IllusionAlpha,0));
+                        effect.SetControlPoint(2, IllusionColor);
+                        break;
+                    case 2:
+                        effect.SetControlPoint(2, new Vector3(IllusionAlpha));
+                        effect.SetControlPoint(3, IllusionColor);
+                        break;
+                }
+                
                 Members.Effects1.Add(unit, effect);
-                Members.Effects2.Add(unit, effect2);
             }
             else
             {
                 if (!Members.Effects1.TryGetValue(unit, out effect)) return;
-                if (!Members.Effects2.TryGetValue(unit, out effect2)) return;
                 effect.Dispose();
-                effect2.Dispose();
+                
                 Members.Effects1.Remove(unit);
+                if (!Members.Effects2.TryGetValue(unit, out effect2)) return;
+                effect2.Dispose();
                 Members.Effects2.Remove(unit);
             }
         }
