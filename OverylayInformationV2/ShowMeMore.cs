@@ -82,28 +82,30 @@ namespace OverlayInformation
                         if (!pos.IsZero)
                         {
                             var size = new Vector2(MiniMapSize);
-                            Drawing.DrawRect(pos - size, size,
+                            /*Drawing.DrawRect(pos - size, size,
                                 new Color(particleEffect.GetColor.X, particleEffect.GetColor.Y,
-                                    particleEffect.GetColor.Z));
+                                    particleEffect.GetColor.Z));*/
                             
                             //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
                             if (MinimapType)
-                                Drawing.DrawRect(pos - size, size, Textures.GetHeroTexture(hero.StoredName()));
+                                Drawing.DrawRect(pos - size/2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
                             else
+                            {
                                 Drawing.DrawRect(pos - size, size, (Color) particleEffect.GetColor);
-                            Drawing.DrawRect(pos - size, size, Color.Black, true);
+                                Drawing.DrawRect(pos - size, size, Color.Black, true);
+                            }
                         }
                         pos = DrawOnMap?Drawing.WorldToScreen(position):new Vector2();
                         if (!pos.IsZero)
                         {
                             var size = new Vector2(MapSize);
-                            Drawing.DrawRect(pos - size, size,
+                            /*Drawing.DrawRect(pos - size, size,
                                 new Color(particleEffect.GetColor.X, particleEffect.GetColor.Y,
-                                    particleEffect.GetColor.Z));
+                                    particleEffect.GetColor.Z));*/
 
                             //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
-                            Drawing.DrawRect(pos - size, size, Textures.GetHeroTexture(hero.StoredName()));
-                            Drawing.DrawRect(pos - size, size, Color.Black,true);
+                            Drawing.DrawRect(pos - size / 2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
+                            //Drawing.DrawRect(pos - size, size, Color.Black,true);
                         }
                     }
                 }
