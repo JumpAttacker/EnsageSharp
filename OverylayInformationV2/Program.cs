@@ -43,6 +43,8 @@ namespace OverlayInformation
 
             var autoItems = new Menu("Auto Items", "autoitems");
             var settings = new Menu("Settings", "Settings");
+            var page1 = new Menu("Page 1", "Page 1");
+            var page2 = new Menu("Page 2", "Page 2");
             //===========================
             itemPanel.AddItem(new MenuItem("itempanel.Enable", "Enable").SetValue(true));
             itemPanel.AddItem(new MenuItem("itempanel.Stash.Enable", "Draw Stash Items").SetValue(true));
@@ -180,7 +182,7 @@ namespace OverlayInformation
             //===========================
             showIllusion.AddItem(new MenuItem("showillusion.Enable", "Enable").SetValue(true));
             showIllusion.AddItem(
-                new MenuItem("showillusion.Type", "Type").SetValue(new StringList(new[] {"Smoke", "new 1" , "new 2" }, 2)));
+                new MenuItem("showillusion.Type", "Type").SetValue(new StringList(new[] {"Smoke", "new 1" , "new 2" , "balloons" }, 2)));
             showIllusion.AddItem(new MenuItem("showillusion.X", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
             showIllusion.AddItem(new MenuItem("showillusion.Y", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
             showIllusion.AddItem(new MenuItem("showillusion.Z", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
@@ -296,10 +298,10 @@ namespace OverlayInformation
             topPanel.AddSubMenu(mana);
             topPanel.AddSubMenu(status);
             topPanel.AddSubMenu(extraPos);
-            settings.AddSubMenu(topPanel);
-            settings.AddSubMenu(spellPanel);
-            settings.AddSubMenu(roshanTimer);
-            settings.AddSubMenu(showMeMore);
+            page1.AddSubMenu(topPanel);
+            page1.AddSubMenu(spellPanel);
+            page1.AddSubMenu(roshanTimer);
+            page1.AddSubMenu(showMeMore);
             showMeMore.AddSubMenu(charge);
             showMeMore.AddSubMenu(blur);
             showMeMore.AddSubMenu(wr);
@@ -315,17 +317,19 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(arc);
             showMeMore.AddSubMenu(scan);
             showMeMore.AddSubMenu(courEsp);
-            settings.AddSubMenu(showIllusion);
-            settings.AddSubMenu(runevision);
+            page1.AddSubMenu(showIllusion);
+            page1.AddSubMenu(runevision);
             //settings.AddSubMenu(dangItem);
-            settings.AddSubMenu(itemPanel);
-            settings.AddSubMenu(itemOverlay);
-            settings.AddSubMenu(manaBars);
-            settings.AddSubMenu(autoItems);
-            settings.AddSubMenu(lastPosition);
-            settings.AddSubMenu(netWorth);
-            settings.AddSubMenu(dmgCalc);
-            settings.AddSubMenu(tpCatcher);
+            settings.AddSubMenu(page1);
+            settings.AddSubMenu(page2);
+            page1.AddSubMenu(itemPanel);
+            page1.AddSubMenu(itemOverlay);
+            page2.AddSubMenu(manaBars);
+            page2.AddSubMenu(autoItems);
+            page2.AddSubMenu(lastPosition);
+            page2.AddSubMenu(netWorth);
+            page2.AddSubMenu(dmgCalc);
+            page2.AddSubMenu(tpCatcher);
 
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);

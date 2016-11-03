@@ -138,13 +138,9 @@ namespace OverlayInformation
                         effect2 = unit.AddParticleEffect(Members.ShowIllusionList[Members.ShowIllusionList.Count-1]);
                         Members.Effects2.Add(unit, effect2);
                         break;
-                    case 1:
-                        effect.SetControlPoint(1, new Vector3(IllusionSize, IllusionAlpha,0));
+                    default:
+                        effect.SetControlPoint(1, new Vector3(IllusionAlpha));
                         effect.SetControlPoint(2, IllusionColor);
-                        break;
-                    case 2:
-                        effect.SetControlPoint(2, new Vector3(IllusionAlpha));
-                        effect.SetControlPoint(3, IllusionColor);
                         break;
                 }
                 

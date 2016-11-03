@@ -67,6 +67,7 @@ namespace OverlayInformation
             "particles/items2_fx/smoke_of_deceit_buff.vpcf",
             "materials/ensage_ui/particles/illusions_mod.vpcf",
             "materials/ensage_ui/particles/illusions_mod_v2.vpcf",
+            "materials/ensage_ui/particles/illusions_mod_balloons.vpcf",
             "particles/items2_fx/shadow_amulet_active_ground_proj.vpcf"
         };
     }

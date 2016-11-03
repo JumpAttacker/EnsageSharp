@@ -67,7 +67,6 @@ namespace OverlayInformation
                 foreach (var particleEffect in _effectList)
                 {
                     var effect = particleEffect.GetEffect;
-                    
                     if (effect!=null && effect.IsValid && !effect.IsDestroyed)
                     {
                         var position = particleEffect.GetPosition;
@@ -116,10 +115,8 @@ namespace OverlayInformation
         private static bool ForEnemy => Members.Menu.Item("TpCather.Enemy").GetValue<bool>();
         public void Add(ParticleEffect effect,Vector3 position, Vector3 color)
         {
-            var eff = new TeleportEffect(effect, position, color);
-            var id = (uint) ColorList.FindIndex(x => x == eff.GetColor);
+            var id = (uint) ColorList.FindIndex(x => x == color);
             var player = ObjectManager.GetPlayerByID(id);
-            Printer.Print("Id#" + id);
             if (player == null || !player.IsValid)
             {
                 Printer.Print("error #" + id);
@@ -127,9 +124,8 @@ namespace OverlayInformation
             }
             if ((player.Team == Members.MyPlayer.Team && ForAlly) || (player.Team != Members.MyPlayer.Team && ForEnemy))
             {
-                var hero = player.Hero;
-                _effectList.Add(eff);
-                Printer.Print($"Player: {player.Name} ({id}) | Hero: {hero.GetRealName()} | Color: {eff.GetColor}");
+                _effectList.Add(new TeleportEffect(effect, position, color));
+                Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
             }
         }
@@ -716,7 +712,7 @@ namespace OverlayInformation
             if (!IsEnableTpCather)
                 return;
             var name = args.Name;
-            if (name.Contains("teleport"))
+            if (name.Contains("teleport_start") || name.Contains("teleport_end"))
             {
                 DelayAction.Add(10, () =>
                 {
