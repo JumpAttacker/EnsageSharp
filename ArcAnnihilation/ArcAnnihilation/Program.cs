@@ -637,8 +637,8 @@ namespace ArcAnnihilation
                     {
                         if (Utils.SleepCheck("draw_items_cooldown" + f.Name))
                         {
-                            Utils.Sleep(200, "draw_items_cooldown" + f.Name);
-                            f.SetCooldown(f.GetCooldown()-200f);
+                            Utils.Sleep(1000, "draw_items_cooldown" + f.Name);
+                            f.SetCooldown(f.GetCooldown()-1);
                             //var time = (f.GetLastTime()-Game.GameTime)%60;
                             //Print($"Time: {time}");
                             //f.SetCooldown(f.GetLastCd() + time);
@@ -865,7 +865,7 @@ namespace ArcAnnihilation
                     else
                     {
                         spell.SetCooldown(item.Cooldown);
-                        spell.Update();
+                        //spell.Update();
                     }
                 }
             }
