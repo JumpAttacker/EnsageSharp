@@ -10,6 +10,8 @@ namespace ArcAnnihilation
         public string Name;
         private float _cd;
         private readonly DotaTexture _texture;
+        private float _lastTime;
+        private float _lastCd;
 
         public Spell(string name,float cooldown)
         {
@@ -28,6 +30,20 @@ namespace ArcAnnihilation
         public void SetCooldown(float cd)
         {
             _cd = cd;
+        }
+
+        public void Update()
+        {
+            _lastTime = Game.GameTime;
+            _lastCd = _cd;
+        }
+        public float GetLastTime()
+        {
+            return _lastTime;
+        }
+        public float GetLastCd()
+        {
+            return _lastCd;
         }
         public float GetCooldown()
         {

@@ -53,6 +53,7 @@ namespace ArcAnnihilation
         private static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
         {
             {"item_mask_of_madness", 1},
+            {"item_ancient_janggo", 1},
             {"item_dagon", 2},
             {"item_dagon_2", 2},
             {"item_dagon_3", 2},
@@ -78,10 +79,17 @@ namespace ArcAnnihilation
             {"item_mjollnir", 1},
             //{ "item_hurricane_pike",1},
 
-            {"item_sheepstick", 5}
+            {"item_sheepstick", 5},
+            {"item_urn_of_shadows", 5}
 
             /*{"item_dust", 4}*/
         };
+        private static readonly List<string> HideItemList=new List<string>
+        {
+            "item_phase_boots"
+            ,"item_invis_sword"
+            ,"item_silver_edge"
+        }; 
         private static int CloseRange => Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value;
         private static int MinDistance => Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value;
         private static int ExtraDistance => Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value;
@@ -331,6 +339,7 @@ namespace ArcAnnihilation
                 }, 1)));
 
             Menu.AddItem(new MenuItem("usePrediction", "Use Prediction For Spark").SetValue(true));
+            Menu.AddItem(new MenuItem("SparkUsage", "Do not use spark if u re not under enemy's vision").SetValue(false));
             Menu.AddItem(
                 new MenuItem("BkbUsage", "Bkb Selection").SetValue(
                     new StringList(new[] {"me", "clones", "all", "no one"}, 1)));
@@ -628,8 +637,11 @@ namespace ArcAnnihilation
                     {
                         if (Utils.SleepCheck("draw_items_cooldown" + f.Name))
                         {
-                            Utils.Sleep(500, "draw_items_cooldown" + f.Name);
-                            f.SetCooldown(f.GetCooldown()-0.500f);
+                            Utils.Sleep(200, "draw_items_cooldown" + f.Name);
+                            //f.SetCooldown(f.GetCooldown()-0.500f);
+                            var time = (f.GetLastTime()-Game.GameTime)%60;
+                            //Print($"Time: {time}");
+                            f.SetCooldown(f.GetLastCd() + time);
                         }
                         var itemPos = startPos + new Vector2(2+size.X*itemCount*0.7f, 2);
                         
@@ -853,6 +865,7 @@ namespace ArcAnnihilation
                     else
                     {
                         spell.SetCooldown(item.Cooldown);
+                        spell.Update();
                     }
                 }
             }
@@ -902,15 +915,17 @@ namespace ArcAnnihilation
                 if (midas.CanBeCasted() && Utils.SleepCheck(_mainHero.Handle + "midas") && _mainHero.IsAlive && !_mainHero.IsInvisible())
                 {
                     var enemy = ObjectManager.GetEntities<Unit>()
-                            .Where(
-                                x =>
-                                    !x.IsMagicImmune() && x.Team != _mainHero.Team &&
-                                    (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
-                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
-                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && !x.IsAncient && x.IsAlive &&
-                                    x.Distance2D(_mainHero) <= 600).OrderByDescending(x => x.Health)
-                            .DefaultIfEmpty(null)
-                            .FirstOrDefault();
+                        .Where(
+                            x =>
+                                !x.IsMagicImmune() && x.Team != _mainHero.Team &&
+                                (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
+                                 x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
+                                 x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral ||
+                                 x.ClassID == ClassID.CDOTA_BaseNPC_Invoker_Forged_Spirit) && x.IsSpawned &&
+                                !x.IsAncient && x.IsAlive &&
+                                x.Distance2D(_mainHero) <= 600).OrderByDescending(x => x.Health)
+                        .DefaultIfEmpty(null)
+                        .FirstOrDefault();
                     if (enemy != null)
                     {
                         Utils.Sleep(500, _mainHero.Handle + "midas");
@@ -1318,13 +1333,30 @@ namespace ArcAnnihilation
                 var enumerable = inv as Item[] ?? inv.ToArray();
 
                 // use dagger if available
-                var dagger = enumerable.Any(x => x.Name == "item_blink" && (x.Cooldown == 0 && SpellBaseList.Find(z => x.Name == x.StoredName())==null));
+                var dagger =
+                    enumerable.Any(
+                        x =>
+                            x.Name == "item_blink" && x.Cooldown == 0 &&
+                            SpellBaseList.Find(z => z.Name == x.StoredName()) == null);
                 
                 // uses all items available
-                if (ItemUsage(hero, enumerable, target, d,
-                    Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
-                    Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true))
-                    SpellsUsage(hero, target, d, dagger, true);
+                if (!hero.IsInvisible())
+                    if (ItemUsage(hero, enumerable, target, d,
+                        Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
+                        Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true))
+                        SpellsUsage(hero, target, d, dagger, true);
+                var invis = hero.FindItem(HideItemList[1]) ?? hero.FindItem(HideItemList[2]);
+                if (invis != null)
+                {
+                    Print("invis!" + Utils.SleepCheck("invis" + invis.Handle) +
+                          $" {invis.CanBeCasted()} {SpellBaseList.Find(z => z.Name == invis.StoredName()) == null}",print:false);
+                    if (Utils.SleepCheck("invis" + invis.Handle) && invis.CanBeCasted() &&
+                        SpellBaseList.Find(z => z.Name == invis.StoredName()) == null)
+                    {
+                        invis.UseAbility();
+                        Utils.Sleep(250, "invis" + invis.Handle);
+                    }
+                }
                 // do orbwalking if enabled
                 // otherwise simply attack target
                 if (hero.IsDisarmed() || !Utils.SleepCheck("magField")) continue;
@@ -1393,11 +1425,22 @@ namespace ArcAnnihilation
                     var d = hero.Distance2D(target) - _myHull - targetHull;
                     inv = hero.Inventory.Items;
                     enumerable = inv as Item[] ?? inv.ToArray();
-                    dagger = enumerable.Any(x => x.Name == "item_blink" && x.Cooldown == 0);
-                    SpellsUsage(hero, target, d, dagger, true);
+                    dagger =
+                        enumerable.Any(
+                            x =>
+                                x.Name == "item_blink" && x.Cooldown == 0 &&
+                                SpellBaseList.Find(z => z.Name == x.StoredName()) == null);
+                    // uses all items available
+                    if (!hero.IsInvisible())
+                        if (ItemUsage(hero, enumerable, target, d,
+                            Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int)BkbUsage.Clones ||
+                            Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int)BkbUsage.All, true))
+                            SpellsUsage(hero, target, d, dagger, true);
+
+                    /*SpellsUsage(hero, target, d, dagger, true);
                     ItemUsage(hero, enumerable, target, d,
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
-                        Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);
+                        Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);*/
                     if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
                     {
                         Orbwalk(hero, target);
@@ -1460,6 +1503,7 @@ namespace ArcAnnihilation
         * 3) Use E with prediction (based on enemy pathing) if blink dagger is not available
         * 4) Use R if available (?)
         **/
+        private static bool SparkUsage => Menu.Item("SparkUsage").GetValue<bool>();
         private static void SpellsUsage(Hero me, Hero target, double distance, bool daggerIsReady, bool tempest)
         {
             var spellbook = me.Spellbook;
@@ -1487,7 +1531,7 @@ namespace ArcAnnihilation
                 Utils.Sleep(500, w.Name);
             }
             if (e != null && IsAbilityEnable(e.StoredName(), tempest) && e.CanBeCasted() &&
-                Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady && !Prediction.IsTurning(target))
+                Utils.SleepCheck(me.Handle + e.Name) && !daggerIsReady && !Prediction.IsTurning(target) && (!SparkUsage || me.IsVisibleToEnemies))
             {
                 var predVector3 = target.NetworkActivity == NetworkActivity.Move &&
                                   Menu.Item("usePrediction").GetValue<bool>()
@@ -1520,8 +1564,19 @@ namespace ArcAnnihilation
         {
             if (me.IsChanneling() || !Utils.SleepCheck("DaggerTime") || me.IsStunned()) return false;
             // use all items given in Items list (line 53)
+            var enumerable = inv as Item[] ?? inv.ToArray();
+            var phase =
+                enumerable.Find(
+                    x =>
+                        x.StoredName() == HideItemList[0] && byIllusion &&
+                        SpellBaseList.Find(z => z.Name == x.Name) == null && Utils.SleepCheck(x.Name + me.Handle));
+            if (phase != null)
+            {
+                phase.UseAbility();
+                Utils.Sleep(250, $"{phase.StoredName() + me.Handle}");
+            }
             var inventory =
-                inv.Where(
+                enumerable.Where(
                     x =>
                         (IsItemEnable(x.StoredName(), byIllusion) || CloneOnlyComboItems.Contains(x.StoredName()) ||
                          x.StoredName() == "item_dust" || x.StoredName() == "item_hurricane_pike" || x.StoredName() == "item_black_king_bar") && x.CanBeCasted() &&
