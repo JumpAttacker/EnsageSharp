@@ -90,8 +90,8 @@ namespace OverlayInformation
                                 Drawing.DrawRect(pos - size/2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
                             else
                             {
-                                Drawing.DrawRect(pos - size, size, (Color) particleEffect.GetColor);
-                                Drawing.DrawRect(pos - size, size, Color.Black, true);
+                                Drawing.DrawRect(pos - size/2, size, (Color) particleEffect.GetColor);
+                                Drawing.DrawRect(pos - size/2, size, Color.Black, true);
                             }
                         }
                         pos = DrawOnMap?Drawing.WorldToScreen(position):new Vector2();

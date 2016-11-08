@@ -139,7 +139,7 @@ namespace OverlayInformation
                         Members.Effects2.Add(unit, effect2);
                         break;
                     default:
-                        effect.SetControlPoint(1, new Vector3(IllusionAlpha));
+                        effect.SetControlPoint(1, new Vector3(IllusionSize, IllusionAlpha, 0));
                         effect.SetControlPoint(2, IllusionColor);
                         break;
                 }
@@ -180,8 +180,8 @@ namespace OverlayInformation
 
         public static DotaTexture GetHeroTextureMinimap(string heroName)
         {
+            if (!heroName.Contains("npc_dota_hero_")) return Textures.GetHeroTexture(heroName);
             var name = "materials/ensage_ui/miniheroes/" + heroName.Substring("npc_dota_hero_".Length) + ".vmat";
-
             return Textures.GetTexture(name);
         }
     }
