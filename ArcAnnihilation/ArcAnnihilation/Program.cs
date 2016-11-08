@@ -638,10 +638,10 @@ namespace ArcAnnihilation
                         if (Utils.SleepCheck("draw_items_cooldown" + f.Name))
                         {
                             Utils.Sleep(200, "draw_items_cooldown" + f.Name);
-                            //f.SetCooldown(f.GetCooldown()-0.500f);
-                            var time = (f.GetLastTime()-Game.GameTime)%60;
+                            f.SetCooldown(f.GetCooldown()-200f);
+                            //var time = (f.GetLastTime()-Game.GameTime)%60;
                             //Print($"Time: {time}");
-                            f.SetCooldown(f.GetLastCd() + time);
+                            //f.SetCooldown(f.GetLastCd() + time);
                         }
                         var itemPos = startPos + new Vector2(2+size.X*itemCount*0.7f, 2);
                         
