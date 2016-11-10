@@ -13,5 +13,10 @@ namespace Wisp_Annihilation
         public static Team MyTeam;
 
         public static List<string> Items;
+
+        public static List<string> WhiteList = new List<string>
+        {
+            ""
+        };
     }
 }

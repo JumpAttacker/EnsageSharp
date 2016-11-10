@@ -17,6 +17,8 @@ namespace Wisp_Annihilation
     {
         private static bool _loaded;
         private static bool IsEnable => Members.Menu.Item("Enable").GetValue<bool>();
+        private static bool TetherInCombo => Members.Menu.Item("Hero.Combo.AutoTether.Enable").GetValue<bool>();
+        
         private static bool IsEnableAutoSaver => Members.Menu.Item("autoSaver.Enable").GetValue<bool>();
         private static bool IsEnableautoTether => Members.Menu.Item("autoTether.Enable").GetValue<bool>();
         private static bool UseOrbWalkker => Members.Menu.Item("OrbWalker.Enable").GetValue<bool>();
@@ -24,7 +26,6 @@ namespace Wisp_Annihilation
         private static bool IsComboHero => Members.Menu.Item("Hero.Hotkey.Combo").GetValue<KeyBind>().Active;
         private static uint HeroAimHotkey => Members.Menu.Item("Hero.Hotkey.Aim").GetValue<KeyBind>().Key;
         private static uint HeroHotkey => Members.Menu.Item("Hero.Hotkey.Combo").GetValue<KeyBind>().Key;
-
         private static void Main()
         {
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
@@ -39,6 +40,13 @@ namespace Wisp_Annihilation
 
             var autoTether = new Menu("Auto Tether", "Auto Tether", false, "wisp_tether", true);
             autoTether.AddItem(new MenuItem("autoTether.Enable", "Enable").SetValue(false));
+            autoTether.AddItem(
+                new MenuItem("autoTether.Enable.Toggle", "Toggle Key").SetValue(new KeyBind(0, KeyBindType.Toggle)))
+                .ValueChanged +=
+                (sender, args) =>
+                {
+                    Members.Menu.Item("autoTether.Enable").SetValue(!IsEnableautoTether);
+                };
             autoTether.AddItem(new AllyHeroesToggler("autoTether.EnableFor", "For", new Dictionary<string, bool>()));
 
 
@@ -48,9 +56,11 @@ namespace Wisp_Annihilation
                 new MenuItem("Hero.Hotkey.Aim", "Enable Spirits Aim for selected enemy").SetValue(new KeyBind('Z', KeyBindType.Toggle)));
             settings.AddItem(
                 new MenuItem("Hero.Hotkey.Combo", "Do Combo Fore Selected Enemy").SetValue(new KeyBind('G', KeyBindType.Press)));
+            settings.AddItem(new MenuItem("Hero.Combo.AutoTether.Enable", "Tether in combo").SetValue(false))
+                .SetTooltip("Will use on closest ally tether. This function disable default @AutoTether");
             settings.AddItem(
                 new MenuItem("itemEnable", "Toggle Items:").SetValue(
-                    new AbilityToggler(new List<string>() {"item_sheepstick"}.ToDictionary(item => item, item => true))));
+                    new AbilityToggler(new Dictionary<string, bool>())));
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
             settings.AddSubMenu(autoSaver);
@@ -124,6 +134,8 @@ namespace Wisp_Annihilation
         private static void AutoTeaser(EventArgs args)
         {
             if (!IsEnableautoTether)
+                return;
+            if (TetherInCombo)
                 return;
             var tether = Abilities.FindAbility("wisp_tether");
             
@@ -353,8 +365,8 @@ namespace Wisp_Annihilation
                 Members.MyHero.Inventory.Items.Where(
                     x =>
                         Helper.IsItemEnable(x.StoredName()) && x.CanBeCasted() &&
-                        (x.GetCastRange() > 0 && Members.MyHero.Distance2D(_globalTarget) <= x.GetCastRange() + 150 ||
-                        (x.GetCastRange() <= 0)) && Utils.SleepCheck($"{x.Handle}+item_usages"))
+                        (x.GetCastRange() > 0 && x.CanHit(_globalTarget) ||
+                         (x.GetCastRange() <= 0)) && Utils.SleepCheck($"{x.Handle}+item_usages"))
                     .ToList();
             foreach (var item in inventory)
             {
@@ -370,29 +382,73 @@ namespace Wisp_Annihilation
                     item.UseAbility(_globalTarget.NetworkPosition);
                 Utils.Sleep(250, $"{item.Handle}+item_usages");
             }
+
+            if (TetherInCombo)
+            {
+                var tether = Abilities.FindAbility("wisp_tether");
+                if (tether == null || tether.Level == 0 || !tether.CanBeCasted() || tether.IsHidden)
+                    return;
+                var anyAllyHero =
+                    Heroes.GetByTeam(Members.MyTeam)
+                        .Where(x => x.IsAlive && tether.CanHit(x))
+                        .OrderBy(y => y.Distance2D(_globalTarget));
+                var anyAllyCreep =
+                    ObjectManager.GetEntities<Unit>()
+                        .Where(x => x != null && x.Team == Members.MyTeam && x.IsAlive && tether.CanHit(x))
+                        .OrderBy(y => y.Distance2D(_globalTarget));
+
+                var hero = anyAllyHero.FirstOrDefault();
+                
+                var creep = anyAllyCreep.FirstOrDefault();
+
+                float dist1=0, dist2=0;
+                if (hero != null)
+                    dist1 = hero.Distance2D(_globalTarget);
+                if (creep != null)
+                    dist2 = creep.Distance2D(_globalTarget);
+                var targetForTether = (dist1 > dist2) ? creep : hero;
+                var mydist = Members.MyHero.Distance2D(_globalTarget);
+                if (targetForTether != null && !targetForTether.Equals(Members.MyHero) && dist1 <= mydist &&
+                    dist2 <= mydist && !_multiSleeper.Sleeping(tether + "in combo"))
+                {
+                    tether.UseAbility(targetForTether);
+                    _multiSleeper.Sleep(250, tether + "in combo");
+                }
+            }
         }
 
         private static void Refresh()
         {
-            
             if (_updater.Sleeping)
                 return;
             _updater.Sleep(500);
             var inventory = Members.MyHero.Inventory.Items;
-            var needToUpdate = false;
-            foreach (var item in inventory)
+            var enumerable = inventory as IList<Item> ?? inventory.ToList();
+            var neededItems = enumerable.Where(item => !Members.Items.Contains(item.StoredName()) &&
+                                                      (item.IsDisable() || item.IsNuke() || item.IsPurge() ||
+                                                       item.IsHeal() || item.IsShield() || item.IsSilence() ||
+                                                       item.IsSlow() || item.IsSkillShot() ||
+                                                       Members.WhiteList.Contains(item.StoredName())));
+            foreach (var item in neededItems)
             {
-                if (!Members.Items.Contains(item.StoredName()) &&
-                    (item.IsDisable() || item.IsNuke() || item.IsPurge() || item.IsHeal() || item.IsShield() || item.IsSilence() || item.IsSlow() || item.IsSkillShot()))
-                {
-                    Members.Items.Add(item.StoredName());
-                    needToUpdate = true;
-                    Printer.Print($"[NewItem]: {item.StoredName()}");
-                }
-            }
-            if (needToUpdate)
+                Members.Items.Add(item.StoredName());
                 Members.Menu.Item("itemEnable")
-                    .SetValue(new AbilityToggler(Members.Items.ToDictionary(x => x, y => true)));
+                    .GetValue<AbilityToggler>().Add(item.StoredName());
+                Printer.Print($"[NewItem]: {item.StoredName()}");
+            }
+            var tempList = enumerable.Select(neededItem => neededItem.StoredName()).ToList();
+            var removeList = new List<string>();
+            foreach (var item in Members.Items.Where(x => !tempList.Contains(x)))
+            {
+                Members.Menu.Item("itemEnable")
+                            .GetValue<AbilityToggler>().Remove(item);
+                removeList.Add(item);
+                Printer.Print($"[RemoveItem]: {item}");
+            }
+            foreach (var item in removeList)
+            {
+                Members.Items.Remove(item);
+            }
         }
     }
 }
