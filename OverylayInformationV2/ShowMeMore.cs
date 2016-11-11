@@ -486,7 +486,7 @@ namespace OverlayInformation
                     {
                         const string name = "materials/ensage_ui/spellicons/ancient_apparition_ice_blast.vmat";
                         var size = new Vector2(7, 7);
-                        Drawing.DrawRect(aapos - size, size, Textures.GetTexture(name));
+                        Drawing.DrawRect(aapos, size, Textures.GetTexture(name));
                     }
                 }
                 catch (Exception)
@@ -514,7 +514,7 @@ namespace OverlayInformation
                                 Drawing.DrawRect(pos, new Vector2(50, 50), texture);
                             }
                             var pos2 = Helper.WorldToMinimap(realPos);
-                            Drawing.DrawRect(pos2 - new Vector2(10, 10), new Vector2(10, 10), texture);
+                            Drawing.DrawRect(pos2, new Vector2(10, 10), texture);
                         }
                     }
                 }
@@ -553,7 +553,7 @@ namespace OverlayInformation
                                 Drawing.DrawRect(pos, new Vector2(50, 50), texture);
                             }
                             var pos2 = Helper.WorldToMinimap(realPos);
-                            Drawing.DrawRect(pos2 - new Vector2(15, 15), new Vector2(15, 15), texture);
+                            Drawing.DrawRect(pos2, new Vector2(15, 15), texture);
                         }
                     }
                 }
@@ -675,7 +675,7 @@ namespace OverlayInformation
                 try
                 {
                     var mod = Members.PAisHere.HasModifier("modifier_phantom_assassin_blur_active");
-                    if (mod && Members.PAisHere.StoredName() == "npc_dota_hero_phantom_assassin")
+                    if (mod && Members.PAisHere!=null && Members.PAisHere.IsValid)
                     {
                         var size3 = new Vector2(10, 20) + new Vector2(13, -6);
                         var w2M = Helper.WorldToMinimap(Members.PAisHere.NetworkPosition);
