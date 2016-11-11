@@ -52,6 +52,7 @@ namespace ArcAnnihilation
         private static readonly List<Spell> SpellBaseList=new List<Spell>(); 
         private static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
         {
+            {"item_hurricane_pike",1 },
             {"item_mask_of_madness", 1},
             {"item_ancient_janggo", 1},
             {"item_dagon", 2},
@@ -670,7 +671,6 @@ namespace ArcAnnihilation
                     SpellBaseList.Remove(item);
                     //Print("Kick from ItemCooldownBase: " + item.Name);
                 }
-
             }
 
             if (Menu.Item("AutoPush.DrawLine").GetValue<bool>() &&
@@ -1506,6 +1506,7 @@ namespace ArcAnnihilation
         private static bool SparkUsage => Menu.Item("SparkUsage").GetValue<bool>();
         private static void SpellsUsage(Hero me, Hero target, double distance, bool daggerIsReady, bool tempest)
         {
+
             var spellbook = me.Spellbook;
             var q = spellbook.SpellQ;
             var w = spellbook.SpellW;
@@ -1588,7 +1589,7 @@ namespace ArcAnnihilation
                         Utils.SleepCheck(x.Name + me.Handle) && Items.Keys.Contains(x.Name) &&
                         ((x.CastRange == 0 &&
                           distance <=
-                          (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 800)) ||
+                          (x.Name == "item_blink" ? 1150 + Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value : 1000)) ||
                          /*x.CastRange+50 >= distance*/x.CanHit(target))).OrderByDescending(y => GetComboOrder(y, byIllusion));
             var slarkMod = target.HasModifiers(new[] { "modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses" }, false);
             foreach (var item in items)
@@ -1599,6 +1600,18 @@ namespace ArcAnnihilation
                 if (name == "item_dagon" || name == "item_dagon_2" || name == "item_dagon_3" || name == "item_dagon_4" || name == "item_dagon_5")
                     if (_ethereal.Sleeping && !target.HasModifier("modifier_item_ethereal_blade_ethereal"))
                         continue;
+                if (name == "item_hurricane_pike")
+                {
+                    var angle = (float) Math.Max(
+                        Math.Abs(me.RotationRad -
+                                 Utils.DegreeToRadian(me.FindAngleBetween(target.Position))) - 0.20, 0);
+                    if (!Prediction.IsTurning(me) && angle == 0 && distance>=600)
+                    {
+                        item.UseAbility(me);
+                        Utils.Sleep(250, $"{name + me.Handle}");
+                    }
+                    continue;
+                }
                 if (item.IsAbilityBehavior(AbilityBehavior.NoTarget))
                 {
                     item.UseAbility();
