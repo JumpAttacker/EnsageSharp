@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Ensage;
+using Ensage.Abilities;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Items;
@@ -92,10 +94,15 @@ namespace OverlayInformation
             if (Members.ItemDictionary.Count == 0) { return; }
             foreach (var v in Members.EnemyHeroes)
             {
+                if (Members.MeepoIgnoreList.Contains(v))
+                    continue;
+                /*var dividedWeStand = v.FindSpell("meepo_divided_we_stand") as DividedWeStand;
+                if (dividedWeStand != null && v.ClassID == ClassID.CDOTA_Unit_Hero_Meepo && dividedWeStand.ID > 0)
+                    continue;*/
                 List<Item> items;
                 try
                 {
-                    if (!Members.StashItemDictionary.TryGetValue(v.Name, out items))
+                    if (!Members.StashItemDictionary.TryGetValue(v.Handle, out items))
                         continue;
                 }
                 catch (Exception)
@@ -109,15 +116,9 @@ namespace OverlayInformation
                 {
                     try
                     {
-                        string texturename;
-                        if (item.IsRecipe)
-                        {
-                            texturename = "materials/ensage_ui/items/recipe.vmat";
-                        }
-                        else
-                        {
-                            texturename = $"materials/ensage_ui/items/{item.Name.Replace("item_", "")}.vmat";
-                        }
+                        var texturename = item.IsRecipe
+                            ? "materials/ensage_ui/items/recipe.vmat"
+                            : $"materials/ensage_ui/items/{item.Name.Replace("item_", "")}.vmat";
                         if (item is Bottle)
                         {
                             var bottletype = item as Bottle;
@@ -152,10 +153,15 @@ namespace OverlayInformation
             if (Members.ItemDictionary.Count == 0) {return;}
             foreach (var v in Members.EnemyHeroes)
             {
+                if (Members.MeepoIgnoreList.Contains(v))
+                    continue;
+                /*var dividedWeStand = v.FindSpell("meepo_divided_we_stand") as DividedWeStand;
+                if (dividedWeStand != null && v.ClassID == ClassID.CDOTA_Unit_Hero_Meepo && dividedWeStand.ID > 0)
+                    continue;*/
                 List<Item> items;
                 try
                 {
-                    if (!Members.ItemDictionary.TryGetValue(v.Name, out items))
+                    if (!Members.ItemDictionary.TryGetValue(v.Handle, out items))
                         continue;
                 }
                 catch (Exception)

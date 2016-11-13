@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Ensage;
+using Ensage.Abilities;
 using Ensage.Common.Menu;
 using SharpDX;
 using Color = SharpDX.Color;
@@ -26,18 +27,21 @@ namespace OverlayInformation
         public static Hero Tinker { get; set; }
         public static Hero Techies { get; set; }
         public static Hero ArcWarden { get; set; }
+        public static Hero Meepo { get; set; }
+        public static DividedWeStand MeepoDivided { get; set; }
 
         public static List<Hero> Heroes=new List<Hero>();
         public static List<Hero> AllyHeroes=new List<Hero>();
         public static List<Hero> EnemyHeroes = new List<Hero>();
+        public static List<Hero> MeepoIgnoreList = new List<Hero>();
         public static List<Player> Players=new List<Player>();
         public static List<Player> AllyPlayers = new List<Player>();
         public static List<Player> EnemyPlayers = new List<Player>();
         public static List<Unit> BaseList=new List<Unit>();
 
-        public static Dictionary<string, List<Ability>> AbilityDictionary;
-        public static Dictionary<string, List<Item>> ItemDictionary;
-        public static Dictionary<string, List<Item>> StashItemDictionary;
+        public static Dictionary<uint, List<Ability>> AbilityDictionary;
+        public static Dictionary<uint, List<Item>> ItemDictionary;
+        public static Dictionary<uint, List<Item>> StashItemDictionary;
         public static Dictionary<string, long> NetWorthDictionary;
 
         public static Font RoshanFont;

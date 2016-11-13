@@ -58,25 +58,13 @@ namespace OverlayInformation
             public static List<Item> GetItemList(Hero h)
             {
                 List<Item> list;
-                return Members.ItemDictionary.TryGetValue(h.StoredName(), out list) ? list : new List<Item>();
+                return Members.ItemDictionary.TryGetValue(h.Handle, out list) ? list : new List<Item>();
             }
 
             public static List<Ability> GetAbilityList(Hero h)
             {
                 List<Ability> list;
-                return Members.AbilityDictionary.TryGetValue(h.StoredName(), out list) ? list : new List<Ability>();
-            }
-
-            public static List<Item> GetItemList(string s)
-            {
-                List<Item> list;
-                return Members.ItemDictionary.TryGetValue(s, out list) ? list : new List<Item>();
-            }
-
-            public static List<Ability> GetAbilityList(string s)
-            {
-                List<Ability> list;
-                return Members.AbilityDictionary.TryGetValue(s, out list) ? list : new List<Ability>();
+                return Members.AbilityDictionary.TryGetValue(h.Handle, out list) ? list : new List<Ability>();
             }
         }
         internal static class PlayerManager

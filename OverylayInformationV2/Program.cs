@@ -355,9 +355,9 @@ namespace OverlayInformation
                 Members.MyHero = ObjectManager.LocalHero;
                 Members.MyPlayer = ObjectManager.LocalPlayer;
                 
-                Members.AbilityDictionary = new Dictionary<string, List<Ability>>();
-                Members.ItemDictionary = new Dictionary<string, List<Item>>();
-                Members.StashItemDictionary = new Dictionary<string, List<Item>>();
+                Members.AbilityDictionary = new Dictionary<uint, List<Ability>>();
+                Members.ItemDictionary = new Dictionary<uint, List<Item>>();
+                Members.StashItemDictionary = new Dictionary<uint, List<Item>>();
                 Members.NetWorthDictionary = new Dictionary<string, long>();
 
                 Members.Heroes = new List<Hero>();

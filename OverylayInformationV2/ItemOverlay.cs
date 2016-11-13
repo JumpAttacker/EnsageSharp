@@ -117,7 +117,7 @@ namespace OverlayInformation
             List<Item> items;
             try
             {
-                if (!Members.ItemDictionary.TryGetValue(v.Handle.ToString(), out items))
+                if (!Members.ItemDictionary.TryGetValue(v.Handle, out items))
                 {
                     return;
                 }
@@ -163,7 +163,7 @@ namespace OverlayInformation
             List<Item> items;
             try
             {
-                if (!Members.ItemDictionary.TryGetValue(v.Name, out items))
+                if (!Members.ItemDictionary.TryGetValue(v.Handle, out items))
                 {
                     return;
                 }

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using Ensage;
+using Ensage.Abilities;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
@@ -40,8 +42,8 @@ namespace OverlayInformation
                         if (Members.ItemDictionary.ContainsValue(
                             courier.Inventory.Items.Where(x => x.IsValid).ToList())) continue;
                         var items = courier.Inventory.Items.ToList();
-                        Members.ItemDictionary.Remove(courier.Handle.ToString());
-                        Members.ItemDictionary.Add(courier.Handle.ToString(),
+                        Members.ItemDictionary.Remove(courier.Handle);
+                        Members.ItemDictionary.Add(courier.Handle,
                             items.Where(x => x.IsValid).ToList());
                     }
                 }
@@ -53,7 +55,7 @@ namespace OverlayInformation
                         Printer.Print(enemyHero.Name + " --> " + worth);
                     }*/
                     _heroUpdate.Sleep(2000);
-                    if (Members.Heroes.Count < 10)
+                    if (Members.Heroes.Count < 10 + (Members.MeepoDivided != null ? Members.MeepoDivided.UnitCount - 1 : 0))
                     {
                         /*Members.Heroes =
                             Heroes.All.Where(
@@ -75,6 +77,20 @@ namespace OverlayInformation
                             ObjectManager.GetEntities<Hero>().Where(
                                 x =>
                                     x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName())).ToList();*/
+
+                        foreach (
+                            var meepo in
+                                Members.Heroes.Where(
+                                    x =>
+                                    {
+                                        var dividedWeStand = x.Spellbook.SpellR as DividedWeStand;
+                                        return dividedWeStand != null && !Members.MeepoIgnoreList.Contains(x) &&
+                                               x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo &&
+                                               dividedWeStand.UnitIndex > 0;
+                                    }))
+                        {
+                            Members.MeepoIgnoreList.Add(meepo);
+                        }
                         Members.AllyHeroes = Members.Heroes.Where(x => x.Team == Members.MyHero.Team).ToList();
                         Members.EnemyHeroes =
                             Members.Heroes.Where(x => x.Team == Members.MyHero.GetEnemyTeam()).ToList();
@@ -159,6 +175,14 @@ namespace OverlayInformation
                             Printer.Print("ArcWarden detected");
                             Members.ArcWarden = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_ArcWarden);
                         }
+                        //DividedWeStand
+                        if (Members.Meepo == null &&
+                            Members.Heroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo))
+                        {
+                            Printer.Print("Meepo detected");
+                            Members.Meepo = Members.Heroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo);
+                            Members.MeepoDivided = (DividedWeStand) Members.Meepo.Spellbook.SpellR;
+                        }
                     }
                 }
                 if (!_updatePrediction.Sleeping /*&& Members.Menu.Item("lastPosition.Enable.Prediction").GetValue<bool>()*/)
@@ -196,8 +220,8 @@ namespace OverlayInformation
                             continue;*/
                         try
                         {
-                            if (!Members.AbilityDictionary.ContainsKey(hero.StoredName()))
-                                Members.AbilityDictionary.Add(hero.StoredName(),
+                            if (!Members.AbilityDictionary.ContainsKey(hero.Handle))
+                                Members.AbilityDictionary.Add(hero.Handle,
                                     hero.Spellbook.Spells.Where(
                                         x =>
                                             x!=null && x.IsValid && x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
@@ -207,8 +231,8 @@ namespace OverlayInformation
                                 !Members.AbilityDictionary.ContainsValue(
                                     hero.Spellbook.Spells.Where(x => x.AbilitySlot.ToString() != "-1").ToList()))
                             {
-                                Members.AbilityDictionary.Remove(hero.StoredName());
-                                Members.AbilityDictionary.Add(hero.StoredName(), hero.Spellbook.Spells.Where(
+                                Members.AbilityDictionary.Remove(hero.Handle);
+                                Members.AbilityDictionary.Add(hero.Handle, hero.Spellbook.Spells.Where(
                                     x =>
                                         x.IsValid && x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
                                             x.AbilitySlot.ToString() != "-1")
@@ -216,13 +240,20 @@ namespace OverlayInformation
 
                             }
                             long worth = 0;
+                            /*if ((hero.ClassID == ClassID.CDOTA_Unit_Hero_Meepo) &&
+                                (hero.FindSpell("meepo_divided_we_stand") as DividedWeStand).UnitIndex > 0)
+                            {
+                                continue;
+                            }*/
+                            if (Members.MeepoIgnoreList.Contains(hero))
+                                continue;
                             Members.NetWorthDictionary.Remove(hero.StoredName());
                             if (!Members.ItemDictionary.ContainsValue(
                                     hero.Inventory.Items.Where(x => x.IsValid).ToList()))
                             {
                                 var items = hero.Inventory.Items.ToList();
-                                Members.ItemDictionary.Remove(hero.StoredName());
-                                Members.ItemDictionary.Add(hero.StoredName(),
+                                Members.ItemDictionary.Remove(hero.Handle);
+                                Members.ItemDictionary.Add(hero.Handle,
                                     items.Where(x => x.IsValid).ToList());
                                 worth += items.Aggregate<Item, long>(0, (current, item) => current + item.Cost);
                             }
@@ -231,8 +262,8 @@ namespace OverlayInformation
                                     hero.Inventory.StashItems.Where(x => x.IsValid).ToList()))
                             {
                                 var items = hero.Inventory.StashItems.ToList();
-                                Members.StashItemDictionary.Remove(hero.StoredName());
-                                Members.StashItemDictionary.Add(hero.StoredName(),
+                                Members.StashItemDictionary.Remove(hero.Handle);
+                                Members.StashItemDictionary.Add(hero.Handle,
                                     items.Where(x => x.IsValid).ToList());
                                 worth += items.Aggregate<Item, long>(0, (current, item) => current + item.Cost);
                             }

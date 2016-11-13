@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Ensage;
+using Ensage.Abilities;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
@@ -55,17 +56,26 @@ namespace OverlayInformation
                 return;
             }
             long maxWorth = 0;
-            var PlayersWithWorth=new List<Hero>();
+            var playersWithWorth=new List<Hero>();
             foreach (var v in Members.Heroes)
             {
                 try
                 {
                     long worth;
                     if (!Members.NetWorthDictionary.TryGetValue(v.StoredName(), out worth))
+                    {
+                        continue;
+                    }
+                    /*var dividedWeStand = v.FindSpell("meepo_divided_we_stand") as DividedWeStand;
+                    if (dividedWeStand != null && (v.ClassID == ClassID.CDOTA_Unit_Hero_Meepo) && dividedWeStand.UnitIndex > 0)
+                    {
+                        continue;
+                    }*/
+                    if (Members.MeepoIgnoreList.Contains(v))
                         continue;
                     if (maxWorth < worth)
                         maxWorth = worth;
-                    PlayersWithWorth.Add(v);
+                    playersWithWorth.Add(v);
                 }
                 catch (Exception)
                 {
@@ -75,9 +85,9 @@ namespace OverlayInformation
             }
 
             if (Members.Menu.Item("netWorth.Order").GetValue<bool>())
-                PlayersWithWorth =
-                    new List<Hero>(PlayersWithWorth.OrderByDescending(x => Members.NetWorthDictionary[x.StoredName()]));
-            foreach (var v in PlayersWithWorth)
+                playersWithWorth =
+                    new List<Hero>(playersWithWorth.OrderByDescending(x => Members.NetWorthDictionary[x.StoredName()]));
+            foreach (var v in playersWithWorth)
             {
                 long worth;
                 try
@@ -182,7 +192,7 @@ namespace OverlayInformation
                     List<Item> items;
                     try
                     {
-                        if (!Members.ItemDictionary.TryGetValue(hero.Name, out items))
+                        if (!Members.ItemDictionary.TryGetValue(hero.Handle, out items))
                             continue;
                     }
                     catch (Exception)
