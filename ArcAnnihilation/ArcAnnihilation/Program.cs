@@ -1580,9 +1580,9 @@ namespace ArcAnnihilation
                 enumerable.Where(
                     x =>
                         (IsItemEnable(x.StoredName(), byIllusion) || CloneOnlyComboItems.Contains(x.StoredName()) ||
-                         x.StoredName() == "item_dust" || x.StoredName() == "item_hurricane_pike" || x.StoredName() == "item_black_king_bar") && x.CanBeCasted() &&
+                         x.StoredName() == "item_dust" || x.StoredName() == "item_black_king_bar") && x.CanBeCasted() &&
                         (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name) == null)
-                    /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/).ToList();
+                    /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/ && CheckForPike(me,target,distance,x) ).ToList();
             var items =
                 inventory.Where(
                     x =>
@@ -1602,14 +1602,8 @@ namespace ArcAnnihilation
                         continue;
                 if (name == "item_hurricane_pike")
                 {
-                    var angle = (float) Math.Max(
-                        Math.Abs(me.RotationRad -
-                                 Utils.DegreeToRadian(me.FindAngleBetween(target.Position))) - 0.20, 0);
-                    if (!Prediction.IsTurning(me) && angle == 0 && distance>=600)
-                    {
-                        item.UseAbility(me);
-                        Utils.Sleep(250, $"{name + me.Handle}");
-                    }
+                    item.UseAbility(me);
+                    Utils.Sleep(250, $"{name + me.Handle}");
                     continue;
                 }
                 if (item.IsAbilityBehavior(AbilityBehavior.NoTarget))
@@ -2027,6 +2021,16 @@ namespace ArcAnnihilation
         #region Effects
 
         private static readonly Dictionary<uint, ParticleEffect> Effects = new Dictionary<uint, ParticleEffect>();
+
+        private static bool CheckForPike(Hero me, Hero target, double distance, Item x)
+        {
+            if (x.StoredName() != "item_hurricane_pike")
+                return true;
+            var angle = (float)Math.Max(
+                        Math.Abs(me.RotationRad -
+                                 Utils.DegreeToRadian(me.FindAngleBetween(target.Position))) - 0.20, 0);
+            return !Prediction.IsTurning(me) && angle == 0 && distance >= 600;
+        }
 
         private static void DrawEffects(Entity me, Entity target)
         {
