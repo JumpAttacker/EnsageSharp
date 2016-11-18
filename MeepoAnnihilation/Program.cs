@@ -664,18 +664,18 @@ namespace MeepoAnnihilation
 
                 #region AutoAttack
 
-                if (Utils.SleepCheck("attack_rate" + handle))
+                if (!target.IsVisible)
                 {
-                    Utils.Sleep(250, "attack_rate" + handle);
-                    if (!target.IsVisible)
+                    if (Utils.SleepCheck("attack_rate" + handle))
                     {
+                        Utils.Sleep(250, "attack_rate" + handle);
                         meepo.Move(Prediction.InFront(target, 250));
                     }
-                    else
-                    {
-                        var orb = OrbWalkManager(meepo);
-                        orb?.OrbwalkOn(target, followTarget: true);
-                    }
+                }
+                else
+                {
+                    var orb = OrbWalkManager(meepo);
+                    orb?.OrbwalkOn(target, followTarget: true);
                 }
 
                 #endregion
