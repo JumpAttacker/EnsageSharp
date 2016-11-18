@@ -16,9 +16,9 @@ namespace OverlayInformation
     {
         private static bool _loaded;
         private static bool IsEnable => Members.Menu.Item("dmgCalc.Enable").GetValue<bool>();
-        private static int R => Members.Menu.Item("dmgCalc.Red").GetValue<Slider>().Value;
-        private static int G => Members.Menu.Item("dmgCalc.Green").GetValue<Slider>().Value;
-        private static int B => Members.Menu.Item("dmgCalc.Blue").GetValue<Slider>().Value;
+        private static int R(string b) => Members.Menu.Item($"{b}.Red").GetValue<Slider>().Value;
+        private static int G(string b) => Members.Menu.Item($"{b}.Green").GetValue<Slider>().Value;
+        private static int B(string b) => Members.Menu.Item($"{b}.Blue").GetValue<Slider>().Value;
 
         private static Sleeper _sleeper;
         public static List<Ability> InSys;
@@ -56,6 +56,11 @@ namespace OverlayInformation
             Game.OnUpdate += GameOnOnUpdate;
         }
 
+        private static void AddToCalcMenu(string s)
+            => Members.Menu.Item("dmgCalc.Abilities").GetValue<AbilityToggler>().Add(s);
+
+        private static bool IsAbilityEnable(string s)
+            => Members.Menu.Item("dmgCalc.Abilities").GetValue<AbilityToggler>().IsEnabled(s);
         private static void GameOnOnUpdate(EventArgs args)
         {
             if (!Checker.IsActive())
@@ -77,6 +82,7 @@ namespace OverlayInformation
                             AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0))
             {
                 InSys.Add(spell);
+                AddToCalcMenu(spell.StoredName());
             }
             try
             {
@@ -89,6 +95,7 @@ namespace OverlayInformation
                 foreach (var spell in items)
                 {
                     InSys.Add(spell);
+                    AddToCalcMenu(spell.StoredName());
                 }
             }
             catch (Exception)
@@ -105,7 +112,13 @@ namespace OverlayInformation
                 return;
             if (InSys == null || InSys.Count==0)
                 return;
-            var haveEb = InSys.Any(x => x.StoredName() == "item_ethereal_blade" && x.CanBeCasted());
+            var haveEb =
+                InSys.Any(
+                    x => IsAbilityEnable(x.StoredName()) && x.StoredName() == "item_ethereal_blade" && x.CanBeCasted());
+            var haveVeil =
+                InSys.Any(
+                    x => IsAbilityEnable(x.StoredName()) && x.StoredName() == "item_veil_of_discord" && x.CanBeCasted());
+            
             foreach (var v in Manager.HeroManager.GetEnemyViableHeroes())
             {
                 try
@@ -113,11 +126,13 @@ namespace OverlayInformation
                     var pos = HUDInfo.GetHPbarPosition(v);
                     if (pos.IsZero)
                         continue;
-                    var myDmg = InSys.Where(x => x.CanBeCasted())
+                    var extraDamage = haveEb && !v.HasModifier("modifier_item_ethereal_blade_ethereal") ? 40 : 0;
+                    extraDamage += haveVeil && !v.HasModifier("modifier_item_veil_of_discord_debuff") ? 25 : 0;
+                    var myDmg = InSys.Where(x => x.CanBeCasted() && IsAbilityEnable(x.StoredName()))
                         .Sum(
                             x =>
                                 AbilityDamage.CalculateDamage(x, Members.MyHero, v,
-                                    minusMagicResistancePerc: haveEb ? 40 : 0));
+                                    minusMagicResistancePerc: extraDamage));
                     var health = v.Health;
                     var extraLife =
                         (uint) (Manager.HeroManager.GetItemList(v)
@@ -141,11 +156,13 @@ namespace OverlayInformation
                     var textSize = Drawing.MeasureText(text, "Arial",
                             new Vector2((float)(size * 1.5), 500), FontFlags.AntiAlias);
                     var textPos = pos + new Vector2(HUDInfo.GetHPBarSizeX()+4,0);
+                    var isEno = healthAfterShit < 0;
+                    var name = isEno ? "killableCol" : "defCol";
                     Drawing.DrawText(
                         text,
                         textPos,
                         new Vector2(textSize.Y, 0),
-                        new Color(R, G, B, 255),
+                        new Color(R(name), G(name), B(name), 255),
                         FontFlags.AntiAlias | FontFlags.StrikeOut);
                 }
                 catch (Exception)

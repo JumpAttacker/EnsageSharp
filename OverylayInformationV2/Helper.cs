@@ -187,9 +187,17 @@ namespace OverlayInformation
 
         public static DotaTexture GetHeroTextureMinimap(string heroName)
         {
-            if (!heroName.Contains("npc_dota_hero_")) return Textures.GetHeroTexture(heroName);
-            var name = "materials/ensage_ui/miniheroes/" + heroName.Substring("npc_dota_hero_".Length) + ".vmat";
-            return Textures.GetTexture(name);
+            try
+            {
+                if (!heroName.Contains("npc_dota_hero_")) return Textures.GetHeroTexture(heroName);
+                var name = "materials/ensage_ui/miniheroes/" + heroName.Substring("npc_dota_hero_".Length) + ".vmat";
+                return Textures.GetTexture(name);
+            }
+            catch (Exception)
+            {
+                return Drawing.GetTexture("materials/ensage_ui/spellicons/doom_bringer_empty1");
+            }
+            
         }
     }
 }

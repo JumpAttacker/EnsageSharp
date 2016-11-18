@@ -276,9 +276,15 @@ namespace OverlayInformation
             //===========================
             var dmgCalc = new Menu("Damage Calculation", "dmgCalc");
             dmgCalc.AddItem(new MenuItem("dmgCalc.Enable", "Enable").SetValue(true)).SetTooltip("showing dmg from ur abilities");
-            dmgCalc.AddItem(new MenuItem("dmgCalc.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
-            dmgCalc.AddItem(new MenuItem("dmgCalc.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
-            dmgCalc.AddItem(new MenuItem("dmgCalc.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
+            dmgCalc.AddItem(new MenuItem("dmgCalc.Abilities", "Abilities: ").SetValue(new AbilityToggler(new Dictionary<string, bool>())));
+            var defCol = new Menu("Default Color", "clrDef");
+            var killableCol = new Menu("Color, When skills damage is enough", "clrEno");
+            defCol.AddItem(new MenuItem("defCol.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            defCol.AddItem(new MenuItem("defCol.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
+            defCol.AddItem(new MenuItem("defCol.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
+            killableCol.AddItem(new MenuItem("killableCol.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            killableCol.AddItem(new MenuItem("killableCol.Green", "Green").SetValue(new Slider(100, 0, 255)).SetFontColor(Color.Green));
+            killableCol.AddItem(new MenuItem("killableCol.Blue", "Blue").SetValue(new Slider(100, 0, 255)).SetFontColor(Color.Blue));
             //===========================
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Hax.enable", "Hax in lobby").SetValue(false));
@@ -330,6 +336,8 @@ namespace OverlayInformation
             page2.AddSubMenu(netWorth);
             page2.AddSubMenu(dmgCalc);
             page2.AddSubMenu(tpCatcher);
+            dmgCalc.AddSubMenu(defCol);
+            dmgCalc.AddSubMenu(killableCol);
 
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
