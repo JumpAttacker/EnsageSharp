@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Ensage;
 using Ensage.Common.Extensions;
 using SharpDX;
@@ -40,8 +39,6 @@ namespace MeepoAnnihilation
         /// <param name="name">
         ///     The name.
         /// </param>
-        /// <param name="canBeHere"></param>
-        /// <param name="delayed"></param>
         public JungleCamp(
             Vector3 campPosition,
             Vector3 stackPosition,
@@ -52,14 +49,14 @@ namespace MeepoAnnihilation
             bool ancients,
             string name)
         {
-            this.CampPosition = campPosition;
-            this.StackPosition = stackPosition;
-            this.WaitPosition = waitPosition;
-            this.Team = team;
-            this.Id = id;
-            this.StackTime = stackTime;
-            this.Ancients = ancients;
-            this.Name = name;
+            CampPosition = campPosition;
+            StackPosition = stackPosition;
+            WaitPosition = waitPosition;
+            Team = team;
+            Id = id;
+            StackTime = stackTime;
+            Ancients = ancients;
+            Name = name;
         }
 
         public JungleCamp()
@@ -112,11 +109,11 @@ namespace MeepoAnnihilation
         /// </summary>
         public Vector3 WaitPosition { get; set; }
 
-        public bool canBeHere { get; set; }
+        public bool CanBeHere { get; set; }
 
-        public bool delayed { get; set; }
+        public bool Delayed { get; set; }
 
-        public Hero stacking { get; set; }
+        public Hero Stacking { get; set; }
 
         #endregion
     }
@@ -253,13 +250,7 @@ namespace MeepoAnnihilation
         /// <summary>
         ///     Gets the get camps.
         /// </summary>
-        public static List<JungleCamp> GetCamps
-        {
-            get
-            {
-                return Camps;
-            }
-        }
+        public static List<JungleCamp> GetCamps => Camps;
 
         #endregion
 
@@ -279,19 +270,19 @@ namespace MeepoAnnihilation
             var pos = me.Position;
             var bestResult =
                 (useTeamCheck
-                    ? Camps.Where(x => x.canBeHere && (ancients || !x.Ancients) && Equals(x.stacking, me))
+                    ? Camps.Where(x => x.CanBeHere && (ancients || !x.Ancients) && Equals(x.Stacking, me))
                         .OrderBy(x => pos.Distance2D(x.WaitPosition))
                         .DefaultIfEmpty(null)
                         .FirstOrDefault()
-                    : Camps.Where(x => x.canBeHere && x.Team == me.Team && (ancients || !x.Ancients) && Equals(x.stacking, me))
+                    : Camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients) && Equals(x.Stacking, me))
                         .OrderBy(x => pos.Distance2D(x.WaitPosition))
                         .DefaultIfEmpty(null)
                         .FirstOrDefault()) ?? (useTeamCheck
-                            ? Camps.Where(x => x.canBeHere && (ancients || !x.Ancients) && x.stacking==null)
+                            ? Camps.Where(x => x.CanBeHere && (ancients || !x.Ancients) && x.Stacking==null)
                                 .OrderBy(x => pos.Distance2D(x.WaitPosition))
                                 .DefaultIfEmpty(null)
                                 .FirstOrDefault()
-                            : Camps.Where(x => x.canBeHere && x.Team == me.Team && (ancients || !x.Ancients) && x.stacking == null)
+                            : Camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients) && x.Stacking == null)
                                 .OrderBy(x => pos.Distance2D(x.WaitPosition))
                                 .DefaultIfEmpty(null)
                                 .FirstOrDefault());
@@ -311,11 +302,11 @@ namespace MeepoAnnihilation
             var pos = me.Position;
             var bestResult =
                 useTeamCheck
-                    ? Camps.Where(x => x.canBeHere && (ancients || !x.Ancients))
+                    ? Camps.Where(x => x.CanBeHere && (ancients || !x.Ancients))
                         .OrderBy(x => pos.Distance2D(x.CampPosition))
                         .DefaultIfEmpty(null)
                         .FirstOrDefault()
-                    : Camps.Where(x => x.canBeHere && x.Team == me.Team && (ancients || !x.Ancients))
+                    : Camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients))
                         .OrderBy(x => pos.Distance2D(x.CampPosition))
                         .DefaultIfEmpty(null)
                         .FirstOrDefault();

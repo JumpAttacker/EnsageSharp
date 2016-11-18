@@ -12,22 +12,22 @@ namespace MeepoAnnihilation
         /// <summary>
         ///     The all.
         /// </summary>
-        public static List<Building> all;
+        public static List<Building> All;
 
         /// <summary>
         ///     The dire.
         /// </summary>
-        public static List<Building> dire;
+        public static List<Building> Dire;
 
         /// <summary>
         ///     The loaded.
         /// </summary>
-        private static bool loaded;
+        private static bool _loaded;
 
         /// <summary>
         ///     The radiant.
         /// </summary>
-        public static List<Building> radiant;
+        public static List<Building> Radiant;
 
         #endregion
 
@@ -38,22 +38,22 @@ namespace MeepoAnnihilation
         /// </summary>
         static Towers()
         {
-            all =
+            All =
                 ObjectManager.GetEntities<Building>()
                     .Where(x => x.IsAlive && x.ClassID == ClassID.CDOTA_BaseNPC_Tower)
                     .ToList();
-            dire = all.Where(x => x.Team == Team.Dire).ToList();
-            radiant = all.Where(x => x.Team == Team.Radiant).ToList();
+            Dire = All.Where(x => x.Team == Team.Dire).ToList();
+            Radiant = All.Where(x => x.Team == Team.Radiant).ToList();
             Events.OnLoad += (sender, args) =>
             {
-                if (loaded)
+                if (_loaded)
                 {
                     return;
                 }
 
                 Load();
             };
-            if (!loaded && ObjectManager.LocalHero != null && Game.IsInGame)
+            if (!_loaded && ObjectManager.LocalHero != null && Game.IsInGame)
             {
                 Load();
             }
@@ -61,7 +61,7 @@ namespace MeepoAnnihilation
             Events.OnClose += (sender, args) =>
             {
                 ObjectManager.OnRemoveEntity -= ObjectMgr_OnRemoveEntity;
-                loaded = false;
+                _loaded = false;
             };
         }
 
@@ -74,14 +74,14 @@ namespace MeepoAnnihilation
         /// </summary>
         private static void Load()
         {
-            all =
+            All =
                 ObjectManager.GetEntities<Building>()
                     .Where(x => x.IsAlive && x.ClassID == ClassID.CDOTA_BaseNPC_Tower)
                     .ToList();
-            dire = all.Where(x => x.Team == Team.Dire).ToList();
-            radiant = all.Where(x => x.Team == Team.Radiant).ToList();
+            Dire = All.Where(x => x.Team == Team.Dire).ToList();
+            Radiant = All.Where(x => x.Team == Team.Radiant).ToList();
             ObjectManager.OnRemoveEntity += ObjectMgr_OnRemoveEntity;
-            loaded = true;
+            _loaded = true;
         }
 
         /// <summary>
@@ -98,14 +98,14 @@ namespace MeepoAnnihilation
                 return;
             }
 
-            all.Remove(tower);
+            All.Remove(tower);
             if (tower.Team == Team.Dire)
             {
-                dire.Remove(tower);
+                Dire.Remove(tower);
             }
             else
             {
-                radiant.Remove(tower);
+                Radiant.Remove(tower);
             }
         }
 
