@@ -88,7 +88,7 @@ namespace MeepoAnnihilation
             Menu.AddItem(new MenuItem("Escape.MinRange", "Min health for autoheal").SetValue(new Slider(300, 0, 4000)));
             Menu.AddItem(
                 new MenuItem("Escape.MinRangePercent", "Min health for autoheal (%)").SetValue(new Slider(15, 0, 100)));
-            Menu.AddItem(new MenuItem("Drawing.PoffSystem", "Poofer").SetValue(true).SetTooltip("All selected meepos will use W spell on himself when first meepo use W spell"));
+            Menu.AddItem(new MenuItem("Drawing.PoffSystem", "Poofer").SetValue(true).SetTooltip("All selected meepos will use W spell on target position when first meepo use W spell"));
             var countDraw = new Menu("Drawing", "Drawing");
             
             countDraw.AddItem(new MenuItem("Drawing.DamageFromPoof", "Draw Poof count on enemy").SetValue(true));
@@ -210,13 +210,15 @@ namespace MeepoAnnihilation
                 (args.Order == Order.AbilityLocation || args.Order == Order.AbilityTarget) &&
                 args.Ability.StoredName() == SpellW[MyHero.Handle].Name)
             {
+                var pos = args.TargetPosition; 
                 foreach (var meepo in _selectedMeepo.Where(x => !Equals(x, me)))
                 {
                     var handle = meepo.Handle;
                     var spell = SpellW[handle];
                     if (spell.CanBeCasted())
                     {
-                        spell.UseAbility(meepo.Position);
+                        //spell.UseAbility(meepo.Position);
+                        spell.UseAbility(pos);
                     }
                 }
             }
@@ -624,7 +626,7 @@ namespace MeepoAnnihilation
                 var mod = target.FindModifier("modifier_meepo_earthbind");
                 var remTime = mod?.RemainingTime ?? 0;
 
-                if (q != null && q.CanBeCasted() && dist <= q.CastRange &&
+                if ((_blink==null || !_blink.CanBeCasted()) && q != null && q.CanBeCasted() && dist <= q.CastRange &&
                     (mod == null || remTime <= .7) &&
                     Utils.SleepCheck("Period_q"))
                 {
@@ -830,16 +832,16 @@ namespace MeepoAnnihilation
                                 _meepoList.Where(
                                     x =>
                                         !Equals(x, me) && x.Distance2D(Fountains.GetAllyFountain()) <= 5000 &&
-                                        !Heroes.GetByTeam(me.GetEnemyTeam()).Any(y => y.Distance2D(x) <= 1500))
+                                        !Heroes.GetByTeam(me.GetEnemyTeam()).Any(y => y.IsAlive && y.IsVisible && y.Distance2D(x) <= 1500))
                                     .OrderBy(z => z.Distance2D(Fountains.GetAllyFountain())).FirstOrDefault();
                             var underTower = Towers.All.Where(x => x.Team == me.GetEnemyTeam())
                                 .Any(x => x.Distance2D(me) <= 800);
-                            if (anyAllyMeepoNearBase!=null && w.CanBeCasted() && !underTower)
+                            if (anyAllyMeepoNearBase != null && w.CanBeCasted() && !underTower)
                             {
                                 if (Utils.SleepCheck("poofTimeToBase" + handle))
                                 {
                                     w.UseAbility(anyAllyMeepoNearBase.Position);
-                                    Utils.Sleep(250, "poofTimeToBase" + handle);
+                                    Utils.Sleep(2000, "poofTimeToBase" + handle);
                                 }
                             }
                             var channeledAbility = me.GetChanneledAbility();
@@ -853,7 +855,7 @@ namespace MeepoAnnihilation
                                 //do nothing while in tp
                             }
                             else if (!underTower && travelBoots != null && travelBoots.CanBeCasted() &&
-                                     me.Distance2D(Fountains.GetAllyFountain()) >= 2000 && Utils.SleepCheck("tp_cd" + handle))
+                                     me.Distance2D(Fountains.GetAllyFountain()) >= 5000 && Utils.SleepCheck("tp_cd" + handle) && Utils.SleepCheck("poofTimeToBase" + handle))
                             {
                                 Utils.Sleep(250, "tp_cd" + handle);
                                 travelBoots.UseAbility(Fountains.GetAllyFountain().Position);
