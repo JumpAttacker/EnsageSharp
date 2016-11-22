@@ -1441,7 +1441,7 @@ namespace ArcAnnihilation
                     ItemUsage(hero, enumerable, target, d,
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Clones ||
                         Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All, true);*/
-                    if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
+                    if (Menu.Item("OrbWalking.Enable").GetValue<bool>() && OrbMinDist < hero.Distance2D(target))
                     {
                         Orbwalk(hero, target);
                     }
@@ -1451,6 +1451,17 @@ namespace ArcAnnihilation
                         hero.Attack(target);
                         Utils.Sleep(350, "clone_attacking" + hero.Handle);
                     }
+                    /*
+                    if (Menu.Item("OrbWalking.Enable").GetValue<bool>())
+                    {
+                        Orbwalk(hero, target);
+                    }
+                    else
+                    {
+                        if (!Utils.SleepCheck("clone_attacking" + hero.Handle)) continue;
+                        hero.Attack(target);
+                        Utils.Sleep(350, "clone_attacking" + hero.Handle);
+                    }*/
                 }
             }
             var illusions =
@@ -1493,7 +1504,17 @@ namespace ArcAnnihilation
             ItemUsage(me,enumerable, target, distance,
                 Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.Me ||
                 Menu.Item("BkbUsage").GetValue<StringList>().SelectedIndex == (int) BkbUsage.All);
-            Orbwalk(me,target);
+            //Orbwalk(me,target);
+            if (Menu.Item("OrbWalking.Enable").GetValue<bool>() && OrbMinDist < me.Distance2D(target))
+            {
+                Orbwalk(me, target);
+            }
+            else
+            {
+                if (!Utils.SleepCheck("clone_attacking" + me.Handle)) return;
+                me.Attack(target);
+                Utils.Sleep(350, "clone_attacking" + me.Handle);
+            }
         }
 
         /**
