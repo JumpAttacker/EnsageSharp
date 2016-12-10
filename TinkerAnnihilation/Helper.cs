@@ -24,6 +24,13 @@ namespace TinkerAnnihilation
                 .OrderBy(x => x.Distance2D(mousePosition));
             return enemyHeroes.FirstOrDefault();
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="unit">face</param>
+        /// <param name="target">where</param>
+        /// <param name="distance"></param>
+        /// <returns></returns>
         public static Vector3 InFront(Unit unit,Unit target, float distance)
         {
             var v = target.Position + (unit.Vector3FromPolarAngle() * distance);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Ensage;
+using Ensage.Common.Extensions;
 
 namespace TinkerAnnihilation
 {
@@ -46,6 +47,11 @@ namespace TinkerAnnihilation
                     try
                     {
                         if (eff == null || !eff.IsValid || eff.IsDestroyed) return;
+                        if (target.HasModifier("modifier_boots_of_travel_incoming"))
+                        {
+                            RemoveEffect(target);
+                            return;
+                        }
                         var frontPoint = Helper.InFront(Members.MyHero, target, range);
                         eff.SetControlPoint(1, target.Position);
                         eff.SetControlPoint(2, frontPoint);

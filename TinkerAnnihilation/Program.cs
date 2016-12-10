@@ -7,6 +7,7 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.Common.Threading;
 using SharpDX;
 
 namespace TinkerAnnihilation
@@ -24,6 +25,10 @@ namespace TinkerAnnihilation
             settings.AddItem(new MenuItem("KillSteal.Enable", "Enable KillSteal").SetValue(true));
             settings.AddItem(
                 new MenuItem("Combo.Enable", "Do Combo Fore Selected Enemy").SetValue(new KeyBind('D', KeyBindType.Press)));
+            settings.AddItem(
+                new MenuItem("RearmBlink.Enable", "Rearm + blink").SetValue(new KeyBind('F', KeyBindType.Press))).ValueChanged+=ReamBlink.OnValueChanged;
+            settings.AddItem(
+                new MenuItem("RearmBlink.ExtraDelay", "Extra Delay for ream+blink").SetValue(new Slider(30, 0, 50)));
             var drawing = new Menu("Drawing", "Drawing");
             drawing.AddItem(
                 new MenuItem("Drawing.EnableDamage", "Draw damage: ").SetValue(
@@ -88,7 +93,7 @@ namespace TinkerAnnihilation
                 Drawing.OnDraw -= ComboAction.Drawing_OnDraw;
                 Unit.OnModifierAdded -= TeleportRangeHelper.Unit_OnModifierAdded;
                 Unit.OnModifierRemoved -= TeleportRangeHelper.UnitOnOnModifierRemoved;
-                
+                GameDispatcher.OnUpdate -= ReamBlink.OnUpdate;
                 _loaded = false;
             };
         }
@@ -113,7 +118,7 @@ namespace TinkerAnnihilation
             Drawing.OnDraw += ComboAction.Drawing_OnDraw;
             Unit.OnModifierAdded += TeleportRangeHelper.Unit_OnModifierAdded;
             Unit.OnModifierRemoved += TeleportRangeHelper.UnitOnOnModifierRemoved;
-            
+            GameDispatcher.OnUpdate += ReamBlink.OnUpdate;
         }
 
         private static void UpdateItems(EventArgs args)
@@ -143,7 +148,6 @@ namespace TinkerAnnihilation
                 Members.Menu.Item("itemEnable")
                     .GetValue<PriorityChanger>().Add(item.StoredName());
                 Printer.Print($"[NewItem]: {item.StoredName()}");
-
             }
         }
     }

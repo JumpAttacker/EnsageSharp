@@ -22,7 +22,7 @@ namespace TinkerAnnihilation
         private static int CloseRange => Members.Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value;
         private static int MinDistance => Members.Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value;
         private static int ExtraDistance => Members.Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value;
-        private static int DamageInderx => Members.Menu.Item("Drawing.EnableDamage").GetValue<StringList>().SelectedIndex;
+        private static int DamageIndex => Members.Menu.Item("Drawing.EnableDamage").GetValue<StringList>().SelectedIndex;
 
         private enum DamageDrawing
         {
@@ -40,11 +40,11 @@ namespace TinkerAnnihilation
             if (!IsEnable)
                 return;
             var closeToMouse = Helper.ClosestToMouse(Members.MyHero);
-            if (DamageInderx == (int)DamageDrawing.OnlyForGlobalTarget && (closeToMouse == null || !closeToMouse.IsValid))
+            if (DamageIndex == (int)DamageDrawing.OnlyForGlobalTarget && (closeToMouse == null || !closeToMouse.IsValid))
             {
                 return;
             }
-            var list = DamageInderx == (int) DamageDrawing.ForAll
+            var list = DamageIndex == (int) DamageDrawing.ForAll
                 ? Heroes.GetByTeam(Members.MyHero.GetEnemyTeam())
                     .Where(x => x.IsAlive && x.IsVisible && !x.IsIllusion() && !x.IsMagicImmune()).ToList()
                 : new List<Hero> {closeToMouse};

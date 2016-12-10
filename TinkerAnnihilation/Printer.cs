@@ -8,7 +8,7 @@ namespace TinkerAnnihilation
         #region Helpers
         public static void PrintInfo(string text, params object[] arguments)
         {
-            PrintEncolored(text, ConsoleColor.White, arguments); ;
+            PrintEncolored(text, ConsoleColor.White, arguments);
         }
 
         public static void PrintSuccess(string text, params object[] arguments)

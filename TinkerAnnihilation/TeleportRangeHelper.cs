@@ -8,7 +8,7 @@ namespace TinkerAnnihilation
 {
     internal class TeleportRangeHelper
     {
-        private static bool inTp;
+        private static bool _inTp;
         public static void UnitOnOnModifierRemoved(Unit sender, ModifierChangedEventArgs args)
         {
             var name = args.Modifier.Name;
@@ -19,7 +19,7 @@ namespace TinkerAnnihilation
                     DelayAction.Add(new DelayActionItem(100, () =>
                     {
                         _teleportCaster = null;
-                        inTp = false;
+                        _inTp = false;
                     }, CancellationToken.None));
 
                 }
@@ -38,7 +38,7 @@ namespace TinkerAnnihilation
 
         public static void Unit_OnModifierAdded(Unit sender, ModifierChangedEventArgs args)
         {
-            if (inTp)
+            if (_inTp)
                 return;
             var name = args.Modifier.Name;
             if (name.Contains("teleporting"))
@@ -49,7 +49,7 @@ namespace TinkerAnnihilation
                     _teleportCaster = sender;
                 }
             }
-            else if (name.Contains("boots"))
+            else if (name.Contains("modifier_boots_of_travel_incoming"))
             {
                 //Printer.Print($"{sender.Name}: boots");
                 if (sender.Team==Members.MyTeam)
@@ -79,7 +79,7 @@ namespace TinkerAnnihilation
                                 effect.SetControlPoint(4, new Vector3(255, 255, 255));
                                 Members.TowerRangEffectHelper2.AddEffect(sender, effect,range);
                             //}
-                            inTp = true;
+                            _inTp = true;
                         }
                     }
                 }, CancellationToken.None));
