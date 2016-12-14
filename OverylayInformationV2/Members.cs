@@ -29,6 +29,7 @@ namespace OverlayInformation
         public static Hero ArcWarden { get; set; }
         public static Hero Meepo { get; set; }
         public static DividedWeStand MeepoDivided { get; set; }
+        public static ClassID MyClass { get; set; }
 
         public static List<Hero> Heroes=new List<Hero>();
         public static List<Hero> AllyHeroes=new List<Hero>();

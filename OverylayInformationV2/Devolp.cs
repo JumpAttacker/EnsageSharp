@@ -11,6 +11,11 @@ namespace OverlayInformation
             if (Game.IsKeyDown(9))
             {
                 Game.ExecuteCommand("dota_hero_refresh");
+                /*foreach (var ability in Members.MyHero.Spellbook.Spells)
+                {
+                    Console.WriteLine("ability: "+ ability.Name + $" [{ability.Level} lvl]");
+                }*/
+                
             }
         }
     }

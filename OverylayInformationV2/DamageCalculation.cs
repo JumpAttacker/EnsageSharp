@@ -5,6 +5,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.AbilityInfo;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.Damage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
@@ -61,6 +62,11 @@ namespace OverlayInformation
 
         private static bool IsAbilityEnable(string s)
             => Members.Menu.Item("dmgCalc.Abilities").GetValue<AbilityToggler>().IsEnabled(s);
+
+        private static readonly List<string> WhiteList = new List<string>
+        {
+            "monkey_king_boundless_strike"
+        };
         private static void GameOnOnUpdate(EventArgs args)
         {
             if (!Checker.IsActive())
@@ -79,7 +85,7 @@ namespace OverlayInformation
                     Members.MyHero.Spellbook.Spells.Where(
                         x =>
                             !x.IsAbilityBehavior(AbilityBehavior.Passive) && !InSys.Contains(x) && x.Level > 0 &&
-                            AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0))
+                            (AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0 || WhiteList.Contains(x.Name))))
             {
                 InSys.Add(spell);
                 AddToCalcMenu(spell.StoredName());
@@ -104,6 +110,10 @@ namespace OverlayInformation
             }
             
         }
+
+        private static readonly int[] MkDmg = {
+            0,80,120,160,200
+        };
         private static void Drawing_OnDraw(EventArgs args)
         {
             if (!Checker.IsActive())
@@ -118,7 +128,18 @@ namespace OverlayInformation
             var haveVeil =
                 InSys.Any(
                     x => IsAbilityEnable(x.StoredName()) && x.StoredName() == "item_veil_of_discord" && x.CanBeCasted());
-            
+            var myPhysDmg = 0;
+            if (Members.MyHero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
+            {
+                var extraMkAbility = Members.MyHero.FindSpell("special_bonus_unique_monkey_king", true)?.Level == 1;
+                var passiveDmg = MkDmg[Members.MyHero.FindSpell("monkey_king_jingu_mastery", true).Level];
+                myPhysDmg = Members.MyHero.MinimumDamage + Members.MyHero.BonusDamage +
+                                (Members.MyHero.HasModifier("modifier_monkey_king_quadruple_tap_bonuses")
+                                    ? passiveDmg
+                                    : 0);
+
+                myPhysDmg *= extraMkAbility ? 3 : 2;
+            }
             foreach (var v in Manager.HeroManager.GetEnemyViableHeroes())
             {
                 try
@@ -130,9 +151,13 @@ namespace OverlayInformation
                     extraDamage += haveVeil && !v.HasModifier("modifier_item_veil_of_discord_debuff") ? 25 : 0;
                     var myDmg = InSys.Where(x => x.CanBeCasted() && IsAbilityEnable(x.StoredName()))
                         .Sum(
-                            x =>
-                                AbilityDamage.CalculateDamage(x, Members.MyHero, v,
+                            x => WhiteList.Contains(x.Name)
+                                ? Calculations.DamageTaken(v,
+                                    myPhysDmg,
+                                    DamageType.Physical, Members.MyHero)
+                                : AbilityDamage.CalculateDamage(x, Members.MyHero, v,
                                     minusMagicResistancePerc: extraDamage));
+                    
                     var health = v.Health;
                     var extraLife =
                         (uint) (Manager.HeroManager.GetItemList(v)

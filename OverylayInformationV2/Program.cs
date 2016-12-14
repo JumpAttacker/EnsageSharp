@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
+using Ensage.Common.Objects;
+using Ensage.Common.Objects.UtilityObjects;
+using Ensage.Common.Threading;
 using SharpDX;
 using SharpDX.Direct3D9;
 using Color = SharpDX.Color;
@@ -13,6 +18,7 @@ using MenuItem = Ensage.Common.Menu.MenuItem;
 
 namespace OverlayInformation
 {
+
     internal static class Program
     {
         private static void Main()
@@ -21,10 +27,23 @@ namespace OverlayInformation
             {
                 var partName = eventArgs.Name;
                 var name = entity.Name;
-                if (!partName.Contains("teleport"))
+                if (partName.Contains("generic_hit_blood"))
+                    Printer.Print("hit! to "+ name);
+                if (partName.Contains("generic_hit_blood"))
                     return;
-
-                Printer.Print(entity.Name +": "+ eventArgs.Name);
+                if (partName.Contains("ui_mouse"))
+                    return;
+                if (name.Contains("portrait"))
+                    return;
+                DelayAction.Add(5, () =>
+                {
+                    var effect = eventArgs.ParticleEffect;
+                    var pos = effect.Position;
+                    var a = effect.GetControlPoint(0);
+                    var senderpos = entity.NetworkPosition;
+                    Printer.Print(name + ": " + partName + $"a: ({pos.PrintVector()}) b: ({a.PrintVector()}) c: ({senderpos.PrintVector()})");
+                });
+                
             };*/
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var topPanel = new Menu("Top Panel", "toppanel");
@@ -212,6 +231,11 @@ namespace OverlayInformation
                 .SetTooltip("true=icon; false=rectangle");
             tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(20,5,30)));
             tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(50,5,50)));
+            /*var hitCather = new Menu("Hit Catcher", "HitCatcher");
+            hitCather.AddItem(new MenuItem("HitCatcher.Enable", "Enable").SetValue(true));
+            hitCather.AddItem(new MenuItem("HitCatcher.Map", "Draw on Map").SetValue(true));
+            hitCather.AddItem(new MenuItem("HitCatcher.MiniMap", "Draw on MiniMap").SetValue(true));
+            hitCather.AddItem(new MenuItem("HitCatcher.DrawLineOnMap", "Draw Line on Map").SetValue(true));*/
             var manaBars = new Menu("Manabars", "manaBars");
             manaBars.AddItem(new MenuItem("manaBars.Enable", "Enable").SetValue(true));
             manaBars.AddItem(new MenuItem("manaBars.Nums.Enable", "Enable digital values").SetValue(true));
@@ -361,6 +385,7 @@ namespace OverlayInformation
             Events.OnLoad += (sender, args) =>
             {
                 Members.MyHero = ObjectManager.LocalHero;
+                Members.MyClass = Members.MyHero.ClassID;
                 Members.MyPlayer = ObjectManager.LocalPlayer;
                 
                 Members.AbilityDictionary = new Dictionary<uint, List<Ability>>();
@@ -398,7 +423,11 @@ namespace OverlayInformation
                 Drawing.OnDraw += ItemPanel.Draw;
                 ShowMeMore.Flush();
                 Drawing.OnDraw += ShowMeMore.Draw;
+
+
                 Entity.OnParticleEffectAdded += ShowMeMore.Entity_OnParticleEffectAdded;
+
+
                 Unit.OnModifierAdded += ShowMeMore.OnModifierAdded;
                 Unit.OnModifierRemoved += ShowMeMore.OnModifierRemoved;
                 Runes.Flush();
