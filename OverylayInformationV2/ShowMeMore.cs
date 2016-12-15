@@ -77,6 +77,7 @@ namespace OverlayInformation
                                     (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
                         if (player == null || !player.IsValid)
                             continue;
+
                         var hero = player.Hero;
                         if (!pos.IsZero)
                         {
@@ -124,8 +125,9 @@ namespace OverlayInformation
             }
             if ((player.Team == Members.MyPlayer.Team && ForAlly) || (player.Team != Members.MyPlayer.Team && ForEnemy))
             {
+                
                 _effectList.Add(new TeleportEffect(effect, position, color));
-                Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
+                //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
             }
         }
@@ -709,6 +711,8 @@ namespace OverlayInformation
         private static bool IsEnableTpCather => Members.Menu.Item("TpCather.Enable").GetValue<bool>();
         public static void Entity_OnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
         {
+            if (!Checker.IsActive())
+                return;
             if (!IsEnableTpCather)
                 return;
             var name = args.Name;
@@ -729,6 +733,8 @@ namespace OverlayInformation
         private static readonly Dictionary<uint, ParticleEffect> LifeStealerEffect=new Dictionary<uint, ParticleEffect>(); 
         public static void OnModifierAdded(Unit sender, ModifierChangedEventArgs args)
         {
+            if (!Checker.IsActive())
+                return;
             var modifier = args.Modifier;
             var handle = sender.Handle;
             if (Members.Menu.Item("charge.Enable").GetValue<bool>() && Members.BaraIsHere && sender.Team == Members.MyPlayer.Team)
