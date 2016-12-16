@@ -9,5 +9,16 @@ namespace ModifierVision
         public static readonly Menu Menu = new Menu("Modifier Vision", "MV", true);
         public static Hero MyHero;
         public static List<HeroModifier> System;
+
+        public static List<string> BlackList = new List<string>
+        {
+            "modifier_slark_essence_shift",
+            "modifier_slark_essence_shift_buff",
+            "modifier_slark_essence_shift_debuff",
+            "modifier_slark_essence_shift_debuff_counter",
+            "modifier_shredder_reactive_armor_stack"
+        };
+
+        public static Dictionary<string, bool> ModiferDictinary = new Dictionary<string, bool>();
     }
 }

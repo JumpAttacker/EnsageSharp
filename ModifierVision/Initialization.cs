@@ -14,6 +14,8 @@ namespace ModifierVision
             var settings = new Menu("Settings", "Settings");
             settings.AddItem(new MenuItem("Enable.Heroes", "Enable for heroes").SetValue(true));
             settings.AddItem(new MenuItem("Enable.Creeps", "Enable for creeps").SetValue(false));
+            /*settings.AddItem(
+                new MenuItem("abilityToggle.!", "modifiers").SetValue(new AbilityToggler(Members.ModiferDictinary)));*/
             settings.AddItem(new MenuItem("Counter.Hero", "Max modifiers for each Hero").SetValue(new Slider(4, 1, 5)));
             settings.AddItem(new MenuItem("Counter.Creep", "Max modifiers for each Creep").SetValue(new Slider(1, 1, 5)));
             settings.AddItem(new MenuItem("Settings.IconSize", "Icon Size").SetValue(new Slider(25, 10, 100)));
@@ -42,6 +44,7 @@ namespace ModifierVision
                 Drawing.OnDraw += Action.OnDraw;
                 Unit.OnModifierAdded += Action.ModifierAdded;
                 Unit.OnModifierRemoved += Action.ModifierRemoved;
+
                 try
                 {
                     Members.Menu.AddToMainMenu();

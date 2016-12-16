@@ -49,7 +49,7 @@ namespace ModifierVision
                                    Members.Menu.Item("ExtraPos.Y").GetValue<Slider>().Value);
                 var size = new Vector2(Members.Menu.Item("Settings.IconSize").GetValue<Slider>().Value,
                     Members.Menu.Item("Settings.IconSize").GetValue<Slider>().Value);
-                foreach (var modifier in modList.Where(x=>x!=null && x.IsValid))
+                foreach (var modifier in modList.Where(x=>x!=null && x.IsValid && !Members.BlackList.Contains(x.Name)))
                 {
                     if (counter >= maxCounter)
                         continue;
@@ -112,8 +112,26 @@ namespace ModifierVision
             if (sender == null || !sender.IsValid || args.Modifier == null || !args.Modifier.IsValid)
                 return;
             var modifier = args.Modifier;
+            if (Members.BlackList.Contains(modifier.Name))
+                return;
             if (modifier.RemainingTime<=1)
                 return;
+            /*var name = modifier.Name.Substring(9);
+            if (Members.Menu.Item("abilityToggle.!").GetValue<AbilityToggler>().Dictionary.ContainsKey(name))
+            {
+                if (!Members.Menu.Item("abilityToggle.!").GetValue<AbilityToggler>().IsEnabled(name))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                Members.Menu.Item("abilityToggle.!").GetValue<AbilityToggler>().Add(name);
+                if (!Members.Menu.Item("abilityToggle.!").GetValue<AbilityToggler>().IsEnabled(name))
+                {
+                    return;
+                }
+            }*/
             if (sender is Hero)
             {
                 if (Members.Menu.Item("Enable.Heroes").GetValue<bool>())
