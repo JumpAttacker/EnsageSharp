@@ -15,6 +15,32 @@ using SharpDX;
 
 namespace MeepoAnnihilation
 {
+    public class CampExtension
+    {
+        public JungleCamp OriginalCamp;
+        public Vector3 CampPosition;
+        public bool Ancients;
+        public uint Id;
+        public string Name;
+        public Vector3 StackPosition;
+        public double StackTime;
+        public Team Team;
+        public Vector3 WaitPosition;
+        public bool Clean;
+        public Hero Master;
+        public CampExtension(JungleCamp camp)
+        {
+            OriginalCamp = camp;
+            CampPosition = camp.CampPosition;
+            Ancients = camp.Ancients;
+            Id = camp.Id;
+            Name = camp.Name;
+            StackPosition = camp.StackPosition;
+            StackTime = camp.StackTime;
+            Team = camp.Team;
+            WaitPosition = camp.WaitPosition;
+        }
+    }
     internal static class Program
     {
         #region Members
@@ -62,15 +88,16 @@ namespace MeepoAnnihilation
 
 
 
-        private static readonly Vector2 IconPos = new Vector2(120, 71);
+        private static Vector2 IconPos
+            => new Vector2(Menu.Item("Drawing.posX").GetValue<Slider>().Value, Menu.Item("Drawing.posY").GetValue<Slider>().Value);
 
-        private const int IconSize = 82;
+        private static int IconSize => Menu.Item("Drawing.Size").GetValue<Slider>().Value;
         private static readonly bool[] MenuIsOpen = new bool[10];
         private static int _selectedId;
         private static List<Entity> _selectedMeepo = new List<Entity>();
         public static readonly Dictionary<uint, Ability> SpellQ = new Dictionary<uint, Ability>();
         public static readonly Dictionary<uint, Ability> SpellW = new Dictionary<uint, Ability>();
-
+        public static List<CampExtension> CampsExtensions = new List<CampExtension>();
         #endregion
 
         #region Main
@@ -89,13 +116,23 @@ namespace MeepoAnnihilation
             Menu.AddItem(
                 new MenuItem("Escape.MinRangePercent", "Min health for autoheal (%)").SetValue(new Slider(15, 0, 100)));
             Menu.AddItem(new MenuItem("Drawing.PoffSystem", "Poofer").SetValue(true).SetTooltip("All selected meepos will use W spell on target position when first meepo use W spell"));
-            var countDraw = new Menu("Drawing", "Drawing");
+            var drawingMenu = new Menu("Drawing", "Drawing");
             
-            countDraw.AddItem(new MenuItem("Drawing.DamageFromPoof", "Draw Poof count on enemy").SetValue(true));
-            countDraw.AddItem(new MenuItem("Drawing.NumOfMeepo", "Draw Number for each meepo").SetValue(true));
-            countDraw.AddItem(new MenuItem("Drawing.NumOfMeepoOnMinimap", "Draw Number for each meepo on minimap").SetValue(true));
-            countDraw.AddItem(new MenuItem("Drawing.NumOfMeepoInMenu", "Draw Number for each meepo in OverlayMenu").SetValue(true));
-            
+            drawingMenu.AddItem(new MenuItem("Drawing.DamageFromPoof", "Draw Poof count on enemy").SetValue(true));
+            drawingMenu.AddItem(new MenuItem("Drawing.NumOfMeepo", "Draw Number for each meepo").SetValue(true));
+            drawingMenu.AddItem(new MenuItem("Drawing.NumOfMeepoOnMinimap", "Draw Number for each meepo on minimap").SetValue(true));
+            drawingMenu.AddItem(new MenuItem("Drawing.NumOfMeepoInMenu", "Draw Number for each meepo in OverlayMenu").SetValue(true));
+            drawingMenu.AddItem(
+                new MenuItem("Drawing.posX", "OverlayMenu pos X").SetValue(new Slider(120, 0,
+                    500)));
+            drawingMenu.AddItem(
+                new MenuItem("Drawing.posY", "OverlayMenu pos Y").SetValue(new Slider(95, 0,
+                    500)));
+            drawingMenu.AddItem(
+                new MenuItem("Drawing.Size", "OverlayMenu size").SetValue(new Slider(75, 0,
+                    500)));
+            drawingMenu.AddItem(new MenuItem("Drawing.PoofState", "Draw poof state in OverlayMenu").SetValue(true));
+
             var autoPush = new Menu("Auto Push", "AutoPush");
             autoPush.AddItem(
                 new MenuItem("AutoPush.Enable", "Push Lane By Selected Meepo(s)").SetValue(new KeyBind('Z',
@@ -136,7 +173,7 @@ namespace MeepoAnnihilation
             Menu.AddSubMenu(autoPush);
             Menu.AddSubMenu(jumgleFarm);
             Menu.AddSubMenu(jungleStack);
-            Menu.AddSubMenu(countDraw);
+            Menu.AddSubMenu(drawingMenu);
             Menu.AddToMainMenu();
 
             Events.OnLoad += (sender, args) =>
@@ -167,7 +204,13 @@ namespace MeepoAnnihilation
                 MeepoSet.Clear();
                 ScaleX = Drawing.Width / 1920f;
                 ScaleY = Drawing.Height / 1080f;
-                
+
+                CampsExtensions.Clear();
+                foreach (var camp in JungleCamps.GetCamps)
+                {
+                    CampsExtensions.Add(new CampExtension(camp));
+                }
+
             };
             Events.OnClose += (sender, args) =>
             {
@@ -303,6 +346,7 @@ namespace MeepoAnnihilation
                         new Color(0, 155, 255, 155));
                     Drawing.DrawText(OrderStates[handle].ToString(), IconPos + new Vector2(5, IconSize) * (count-1), 
                     new Vector2(20, 5), Color.Red, FontFlags.AntiAlias | FontFlags.Additive | FontFlags.Custom);*/
+                    
                     if (Menu.Item("Drawing.NumOfMeepoInMenu").GetValue<bool>())
                     {
                         var sizeY = HUDInfo.GetHpBarSizeY();
@@ -320,6 +364,36 @@ namespace MeepoAnnihilation
                     DrawButton(IconPos + new Vector2(0, IconSize)* meepo.Id, 70, 30, ref MenuIsOpen[meepo.Id],
                         new Color(0, 155, 255, 150), new Color(0, 0, 0, 100), OrderStates[handle].ToString(),
                         _selectedMeepo.Contains(meepo.Hero));
+                    if (Menu.Item("Drawing.PoofState").GetValue<bool>())
+                    {
+                        var w = meepo.SpellW;
+                        if (w.IsInAbilityPhase)
+                        {
+                            var delta = (float) ((Game.RawGameTime - meepo.PoofStartTime)*70/1.5);
+                            Drawing.DrawRect(IconPos + new Vector2(0, 32 + (IconSize) * meepo.Id), new Vector2(delta, 10),
+                                Color.White);
+                            Drawing.DrawRect(IconPos + new Vector2(0, 32 + (IconSize) * meepo.Id), new Vector2(70, 10),
+                                new Color(0,0,0,100));
+                            Drawing.DrawRect(IconPos + new Vector2(0, 32 + (IconSize) * meepo.Id), new Vector2(70, 10),
+                                Color.Black, true);
+                        }
+                        else
+                        {
+                            var state = w.AbilityState;
+                            var clr = state == AbilityState.NotEnoughMana
+                                ? new Color(0, 155, 255, 120)
+                                : state == AbilityState.Ready
+                                    ? new Color(0, 0, 0, 0)
+                                    : new Color(255, 50, 50, 120);
+                            Drawing.DrawRect(IconPos + new Vector2(0, 32 + (IconSize)*meepo.Id), new Vector2(20, 20),
+                                Textures.GetSpellTexture(w.StoredName()));
+                            Drawing.DrawRect(IconPos + new Vector2(0, 32 + (IconSize)*meepo.Id), new Vector2(20, 20),
+                                clr);
+                            Drawing.DrawRect(IconPos + new Vector2(0, 32 + (IconSize)*meepo.Id), new Vector2(20, 20),
+                                Color.Black, true);
+
+                        }
+                    }
                     if (MenuIsOpen[meepo.Id])
                     {
                         _selectedId = 0;
@@ -374,7 +448,7 @@ namespace MeepoAnnihilation
                     }
                     if (Menu.Item("Drawing.NumOfMeepoOnMinimap").GetValue<bool>())
                     {
-                        var w2SPos = meepo.Hero.NetworkPosition.WorldToMinimap();//WorldToMinimap(meepo.NetworkPosition);
+                        var w2SPos = meepo.Hero.Position.WorldToMinimap();//WorldToMinimap(meepo.NetworkPosition);
                         var sizeY = HUDInfo.GetHpBarSizeY();
                         var text = meepo.Id+1;
                         Drawing.DrawText(
@@ -494,6 +568,18 @@ namespace MeepoAnnihilation
             RefreshMeepoList();
             foreach (var meepo in MeepoSet)
             {
+                var w = meepo.SpellW;
+                if (w.IsInAbilityPhase)
+                {
+                    if (meepo.PoofStartTime == float.MaxValue)
+                    {
+                        meepo.PoofStartTime = Game.RawGameTime;
+                    }
+                }
+                else if (meepo.PoofStartTime != float.MaxValue)
+                {
+                    meepo.PoofStartTime = float.MaxValue;
+                }
                 SafeTp(meepo.Hero, meepo.SpellW);
             }
 

@@ -25,6 +25,8 @@ namespace MeepoAnnihilation
         public Ability SpellW => Program.SpellW[Hero.Handle];
 
         public int Id { get; set; }
+
+        public float PoofStartTime;
     
         public MeepoSettings(Meepo meepo)
         {
@@ -40,6 +42,7 @@ namespace MeepoAnnihilation
             }
             Id = dividedWeStand.UnitIndex;
             Game.PrintMessage($"Init new Meepo: (Id: {Id})",MessageType.ChatMessage);
+            PoofStartTime = float.MaxValue;
         }
     }
 }
