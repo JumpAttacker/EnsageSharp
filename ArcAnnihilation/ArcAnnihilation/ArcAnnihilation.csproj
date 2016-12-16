@@ -45,6 +45,12 @@
     <Reference Include="Ensage.Common">
       <HintPath>C:\Program Files (x86)\6LmEQsuox\References\Ensage.Common.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>C:\Program Files (x86)\6LmEQsuox\Core\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="PlaySharp.Toolkit">
+      <HintPath>C:\Program Files (x86)\6LmEQsuox\Core\PlaySharp.Toolkit.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX">
       <HintPath>C:\Program Files (x86)\6LmEQsuox\References\SharpDX.dll</HintPath>
     </Reference>
@@ -59,6 +65,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core.cs" />
     <Compile Include="Objects.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

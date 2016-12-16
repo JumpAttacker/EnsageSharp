@@ -6,7 +6,6 @@ namespace ArcAnnihilation
 {
     public class Spell
     {
-        private Ability spell;
         public string Name;
         private float _cd;
         private readonly DotaTexture _texture;
@@ -19,11 +18,10 @@ namespace ArcAnnihilation
             _cd = cooldown;
             _texture = Textures.GetItemTexture(Name);
         }
-        public Spell(Ability Ab)
+        public Spell(Ability ab)
         {
-            Name = Ab.StoredName();
-            spell = Ab;
-            _cd = spell.Cooldown;
+            Name = ab.StoredName();
+            _cd = ab.Cooldown;
             _texture = Textures.GetItemTexture(Name);
         }
 
@@ -32,10 +30,10 @@ namespace ArcAnnihilation
             _cd = cd;
         }
 
-        public void Update()
+        public void Update(Ability ability)
         {
-            _lastTime = Game.GameTime;
-            _lastCd = _cd;
+            _lastTime = Game.RawGameTime;
+            _lastCd = ability.Cooldown;
         }
         public float GetLastTime()
         {
@@ -47,7 +45,7 @@ namespace ArcAnnihilation
         }
         public float GetCooldown()
         {
-            return _cd;
+            return this.GetLastCd() - Game.RawGameTime + this.GetLastTime() + 1;
         }
         public DotaTexture GetTexture()
         {
