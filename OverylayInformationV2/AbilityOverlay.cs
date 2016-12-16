@@ -128,6 +128,12 @@ namespace OverlayInformation
                                 new Vector2(textSize.Y, 0),
                                 Color.White,
                                 FontFlags.AntiAlias | FontFlags.StrikeOut);
+                            if (ability.IsInAbilityPhase)
+                            {
+                                Drawing.DrawRect(itemPos,
+                                    size,
+                                    new Color(255, 255, 50, 50));
+                            }
                         }
                         else
                         {

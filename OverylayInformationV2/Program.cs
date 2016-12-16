@@ -461,7 +461,6 @@ namespace OverlayInformation
                 {
                     Printer.Print("Members.Menu.AddToMainMenu();");
                 }
-
             };
             Events.OnClose += (sender, args) =>
             {

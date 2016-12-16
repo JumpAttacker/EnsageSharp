@@ -232,8 +232,8 @@ namespace OverlayInformation
             }
         }
 
-        private static readonly Dictionary<string,Ability> Ultimate=new Dictionary<string, Ability>();
-
+        private static readonly Dictionary<string, Ability> Ultimate = new Dictionary<string, Ability>();
+        private static readonly Dictionary<uint, float> LastTimeDictionary = new Dictionary<uint, float>();
         private static void DrawTopPanel(int type)
         {
             List<Hero> selectedHeroes = null;
@@ -298,6 +298,22 @@ namespace OverlayInformation
                         continue;
                     }
                     if (ultimate == null || !ultimate.IsValid || ultimate.Level <= 0) continue;
+                    float lastTime;
+                    if (v.IsVisible)
+                    {
+                        if (!LastTimeDictionary.TryGetValue(v.Handle, out lastTime))
+                        {
+                            LastTimeDictionary.Add(v.Handle, Game.RawGameTime);
+                        }
+                        else
+                        {
+                            LastTimeDictionary[v.Handle] = Game.RawGameTime;
+                        }
+                    }
+                    else
+                    {
+                        LastTimeDictionary.TryGetValue(v.Handle, out lastTime);
+                    }
                     var pos = Helper.GetTopPanelPosition(v) +
                               new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
                                   Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
@@ -320,6 +336,7 @@ namespace OverlayInformation
                     }
                     if (Members.Menu.Item("ultimate.Icon.Enable").GetValue<bool>())
                         Drawing.DrawRect(ultPos, new Vector2(14, 14), Drawing.GetTexture(path));
+                    var cooldown = v.IsVisible ? ultimate.Cooldown : ultimate.Cooldown - Game.RawGameTime + lastTime;
                     if (Members.Menu.Item("ultimate.Type").GetValue<StringList>().SelectedIndex == 0 && Members.Menu.Item("ultimate.Info").GetValue<bool>() &&
                         (Members.Menu.Item("ultimate.InfoAlways").GetValue<bool>() && (
                             ultimate.AbilityState == AbilityState.OnCooldown ||
@@ -336,11 +353,12 @@ namespace OverlayInformation
                         string ultimateCd;
                         Vector2 textSize;
                         Vector2 textPos;
+                        
                         switch (ultimate.AbilityState)
                         {
                             case AbilityState.OnCooldown:
                                 ultimateCd =
-                                    ((int) Math.Min(ultimate.Cooldown, 999)).ToString(CultureInfo.InvariantCulture);
+                                    ((int) Math.Min(cooldown, 999)).ToString(CultureInfo.InvariantCulture);
                                 textSize = Drawing.MeasureText(ultimateCd, "Arial",
                                     new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
                                 //Print(v.Name + " cd: " + ultimateCd);
@@ -402,7 +420,7 @@ namespace OverlayInformation
                     {
                         pos = Helper.GetTopPanelPosition(v);
                         var startPos = pos + new Vector2(0, 7 * 4 + size.Y);
-                        var cd = ultimate.Cooldown;
+                        var cd = cooldown;
                         var manaDelta = new Vector2(cd * size.X / ultimate.CooldownLength, 0);
                         //size = new Vector2(manaDelta.X, 7);
                         DrawUltimatePanel(startPos, size, manaDelta, (int)cd, Members.Menu.Item("ultimate.Line.Size").GetValue<Slider>().Value);
