@@ -58,6 +58,7 @@ namespace Legion_Annihilation
             try
             {
                 _tks.Cancel();
+                _globalTarget = null;
             }
             catch (Exception)
             {
