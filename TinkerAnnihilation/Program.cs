@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -8,7 +9,9 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Common.Threading;
+using log4net;
 using SharpDX;
+using PlaySharp.Toolkit.Logging;
 
 namespace TinkerAnnihilation
 {
@@ -16,6 +19,7 @@ namespace TinkerAnnihilation
     {
         private static bool _loaded;
         private static Sleeper _updater;
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static void Main()
         {
@@ -29,6 +33,7 @@ namespace TinkerAnnihilation
                 new MenuItem("RearmBlink.Enable", "Rearm + blink").SetValue(new KeyBind('F', KeyBindType.Press))).ValueChanged+=ReamBlink.OnValueChanged;
             settings.AddItem(
                 new MenuItem("RearmBlink.ExtraDelay", "Extra Delay for ream+blink").SetValue(new Slider(30, 0, 50)));
+            settings.AddItem(new MenuItem("Block.rearm", "Rearm blocker").SetValue(true)).SetTooltip("It does not allow double-cast rearm");
             var drawing = new Menu("Drawing", "Drawing");
             drawing.AddItem(
                 new MenuItem("Drawing.EnableDamage", "Draw damage: ").SetValue(
@@ -75,6 +80,7 @@ namespace TinkerAnnihilation
                     return;
                 Load();
                 _loaded = true;
+
             };
             if (!_loaded && ObjectManager.LocalHero != null &&
                 ObjectManager.LocalHero.ClassID == ClassID.CDOTA_Unit_Hero_Tinker && Game.IsInGame)
@@ -94,6 +100,7 @@ namespace TinkerAnnihilation
                 Unit.OnModifierAdded -= TeleportRangeHelper.Unit_OnModifierAdded;
                 Unit.OnModifierRemoved -= TeleportRangeHelper.UnitOnOnModifierRemoved;
                 GameDispatcher.OnUpdate -= ReamBlink.OnUpdate;
+                Player.OnExecuteOrder -= StopDummyRearming.OnExecuteOrder;
                 _loaded = false;
             };
         }
@@ -119,6 +126,7 @@ namespace TinkerAnnihilation
             Unit.OnModifierAdded += TeleportRangeHelper.Unit_OnModifierAdded;
             Unit.OnModifierRemoved += TeleportRangeHelper.UnitOnOnModifierRemoved;
             GameDispatcher.OnUpdate += ReamBlink.OnUpdate;
+            Player.OnExecuteOrder += StopDummyRearming.OnExecuteOrder;
         }
 
         private static void UpdateItems(EventArgs args)
