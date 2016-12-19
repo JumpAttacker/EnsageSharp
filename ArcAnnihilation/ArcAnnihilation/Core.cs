@@ -718,7 +718,7 @@ namespace ArcAnnihilation
                         itemCount++;
                     }
                 }
-                var kek = SpellBaseList.Where(x => x.GetCooldown() <= 0).ToList();
+                var kek = SpellBaseList.Where(x => x.GetCooldown() <= 0 && x.GetCooldown() >= -5).ToList();
                 foreach (var item in kek)
                 {
                     SpellBaseList.Remove(item);
