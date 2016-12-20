@@ -20,6 +20,10 @@ namespace Legion_Annihilation
                 new MenuItem("Combo.Enable", "Combo key").SetValue(new KeyBind('D', KeyBindType.Press))).ValueChanged +=
                 Core.OnValueChanged;
             var draw = new Menu("Drawing", "Drawing");
+            draw.AddItem(new MenuItem("Drawing.DrawBkbStatus", "Draw bkb status").SetValue(true));
+            draw.AddItem(new MenuItem("Drawing.DrawBkbStatus.X", "[Bkb] posX").SetValue(new Slider(0,0,1800)));
+            draw.AddItem(new MenuItem("Drawing.DrawBkbStatus.Y", "[Bkb] posY").SetValue(new Slider(0,0,1800)));
+            draw.AddItem(new MenuItem("Drawing.DrawBkbStatus.Size", "[Bkb] size").SetValue(new Slider(20,1,200)));
             draw.AddItem(new MenuItem("Range.Blink.Enable", "Draw range for Blink").SetValue(true)).ValueChanged +=
                 (sender, args) =>
                 {
@@ -48,6 +52,9 @@ namespace Legion_Annihilation
             items.AddItem(
                 new MenuItem("itemEnableLinken", "Linken breaker:").SetValue(
                     new AbilityToggler(new Dictionary<string, bool>())));
+            items.AddItem(
+                new MenuItem("Bkb.Toggle", "BKB toggle").SetValue(new KeyBind('0', KeyBindType.Toggle))).ValueChanged +=
+                Core.BkbToggler;
             invisibility.AddItem(new MenuItem("UseHealBeforeInvis.Enable", "Use heal before invis").SetValue(true));
             invisibility.AddItem(
                 new MenuItem("InvisRange.value", "Nin distance for cast invis/heal/items").SetValue(

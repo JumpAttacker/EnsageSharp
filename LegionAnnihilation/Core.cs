@@ -27,8 +27,18 @@ namespace Legion_Annihilation
         private static bool OrbFollow => Members.Menu.Item("Orbwalking.FollowTarget").GetValue<bool>();
         private static bool OrbInStun => Members.Menu.Item("Orbwalking.WhileTargetInStun").GetValue<bool>();
         private static bool UseHealBeforeInvis => Members.Menu.Item("UseHealBeforeInvis.Enable").GetValue<bool>();
+        private static bool DrawBKb => Members.Menu.Item("Drawing.DrawBkbStatus").GetValue<bool>();
         private static float InvisRange => Members.Menu.Item("InvisRange.value").GetValue<Slider>().Value;
         private static bool ComboKey => Members.Menu.Item("Combo.Enable").GetValue<KeyBind>().Active;
+
+        private static Vector2 BkbStatusPosition
+            =>
+                new Vector2(Members.Menu.Item("Drawing.DrawBkbStatus.X").GetValue<Slider>().Value,
+                    Members.Menu.Item("Drawing.DrawBkbStatus.Y").GetValue<Slider>().Value);
+
+        private static int BkbStatusSize => Members.Menu.Item("Drawing.DrawBkbStatus.Size").GetValue<Slider>().Value;
+
+        private static bool _useBkb;
 
         #endregion
 
@@ -37,19 +47,23 @@ namespace Legion_Annihilation
         public Core()
         {
             MenuManager.Init();
+            _useBkb = Members.Menu.Item("Bkb.Toggle").GetValue<KeyBind>().Active;
             Members.MyHero = ObjectManager.LocalHero;
             Members.MyTeam = ObjectManager.LocalHero.Team;
             GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate;
             Game.OnUpdate += UpdateItems;
+            Drawing.OnDraw += Drawing_OnDraw;
             Members.Updater = new Sleeper();
             Printer.Print($"{Members.Menu.DisplayName} loaded! v.[{Assembly.GetExecutingAssembly().GetName().Version}]",
                 true, MessageType.LogMessage);
         }
 
+
+
         #endregion
 
         #region MainMethod
-
+        
         public static void OnValueChanged(object sender, OnValueChangeEventArgs args)
         {
             var oldOne = args.GetOldValue<KeyBind>().Active;
@@ -231,8 +245,30 @@ namespace Legion_Annihilation
 
         #endregion
 
-        #region Helpers
+        #region Drawing
+        private static void Drawing_OnDraw(EventArgs args)
+        {
+            if (!DrawBKb)
+                return;
+            var pos = BkbStatusPosition;
+            var size = BkbStatusSize;
+            Drawing.DrawRect(pos, new Vector2(size, size/2f), Textures.GetItemTexture("item_black_king_bar"));
+            var clr = _useBkb ? new Color(0, 255, 0, 50) : new Color(255, 0, 0, 50);
+            Drawing.DrawRect(pos, new Vector2(size* 70/100f, size/2f), clr);
+            Drawing.DrawRect(pos, new Vector2(size * 70 / 100f, size / 2f), Color.White, true);
+        }
+        #endregion
 
+
+        #region Helpers
+        public static void BkbToggler(object sender, OnValueChangeEventArgs args)
+        {
+            var oldOne = args.GetOldValue<KeyBind>().Active;
+            var newOne = args.GetNewValue<KeyBind>().Active;
+            if (oldOne == newOne) return;
+            _useBkb = newOne;
+
+        }
         private static async Task UseHeal(CancellationToken cancellationToken)
         {
             var heal = Members.MyHero.FindSpell(Members.AbilityList[1]);
@@ -261,6 +297,8 @@ namespace Legion_Annihilation
             }
             else if (ability.IsAbilityBehavior(AbilityBehavior.NoTarget))
             {
+                if (ability.StoredName() == "item_black_king_bar" && !_useBkb)
+                    return;
                 ability.UseAbility();
             }
             else if (ability.IsAbilityBehavior(AbilityBehavior.UnitTarget))
@@ -319,6 +357,11 @@ namespace Legion_Annihilation
                 return;
             Members.Updater.Sleep(500);
             var inventory = Members.MyHero.Inventory.Items;
+            /*Printer.Print("Count: "+ inventory.Count());
+            foreach (var item in inventory)
+            {
+                Printer.Print($" - {item.Name}");
+            }*/
             var enumerable = inventory as IList<Item> ?? inventory.ToList();
             var neededItems = enumerable.Where(item => !Members.BlackList.Contains(item.StoredName()) && !Members.Items.Contains(item.StoredName()) &&
                                                        (item.IsDisable() || item.IsNuke() || item.IsPurge()
@@ -362,5 +405,7 @@ namespace Legion_Annihilation
         }
 
         #endregion
+
+        
     }
 }
