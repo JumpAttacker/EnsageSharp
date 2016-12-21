@@ -22,18 +22,18 @@ namespace OverlayInformation
             {RuneType.Regeneration, "materials/ensage_ui/minirunes/regen.vmat"}
         };
 
-        private static Sleeper Sleeper;
+        private static Sleeper _sleeper;
 
         public static void Flush()
         {
-            Sleeper = new Sleeper();
+            _sleeper = new Sleeper();
         }
 
         public static void Draw(EventArgs args)
         {
             if (!Checker.IsActive()) return;
             if (!Members.Menu.Item("runevision.DrawOnMinimap.Enable").GetValue<bool>()) return;
-            foreach (var rune in InSystem.Where(rune => rune != null && rune.IsValid))
+            foreach (var rune in InSystem.Where(rune => rune != null && rune.IsValid && rune.RuneType!=RuneType.Bounty))
             {
                 var v = rune;
                 var size3 = new Vector2(10, 25) + new Vector2(13, -6);
@@ -46,11 +46,11 @@ namespace OverlayInformation
 
         public static void Action()
         {
-            if (Sleeper.Sleeping)return;
-            Sleeper.Sleep(10);
+            if (_sleeper.Sleeping)return;
+            _sleeper.Sleep(10);
             var runes =
                 ObjectManager.GetEntities<Rune>()
-                    .Where(x => x.RuneType != RuneType.None && !InSystem.Contains(x))
+                    .Where(x => x.RuneType != RuneType.None && x.RuneType != RuneType.Bounty && !InSystem.Contains(x))
                     .ToList();
             foreach (var rune in runes)
             {
@@ -59,8 +59,7 @@ namespace OverlayInformation
                     Game.PrintMessage(
                         "<font size='20'> Rune: " + "<font face='Comic Sans MS, cursive'><font color='#00aaff'>"
                         + rune.RuneType + " on <font color='#FF0000'>" + (rune.Position.X < 0 ? "TOP" : "BOT") +
-                        " </font>",
-                        MessageType.LogMessage);
+                        " </font>");
             }
         }
     }
