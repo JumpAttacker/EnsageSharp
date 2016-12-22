@@ -40,6 +40,8 @@ namespace Legion_Annihilation
 
         private static bool _useBkb;
 
+        private static ParticleEffect _targetEffect;
+
         #endregion
 
         #region Constructor
@@ -55,7 +57,7 @@ namespace Legion_Annihilation
             Drawing.OnDraw += Drawing_OnDraw;
             Members.Updater = new Sleeper();
             Printer.Print($"{Members.Menu.DisplayName} loaded! v.[{Assembly.GetExecutingAssembly().GetName().Version}]",
-                true, MessageType.LogMessage);
+                true);
         }
 
 
@@ -73,6 +75,8 @@ namespace Legion_Annihilation
             {
                 _tks.Cancel();
                 _globalTarget = null;
+                _targetEffect?.Dispose();
+                _targetEffect = null;
             }
             catch (Exception)
             {
@@ -87,6 +91,15 @@ namespace Legion_Annihilation
             {
                 _globalTarget = TargetSelector.ClosestToMouse(Members.MyHero);
                 return;
+            }
+            if (_targetEffect == null || !_targetEffect.IsValid)
+            {
+                _targetEffect = new ParticleEffect("materials/ensage_ui/particles/target.vpcf", Members.MyHero);
+                _targetEffect.SetControlPoint(2, Members.MyHero.Position);
+                _targetEffect.SetControlPoint(5, new Vector3(0,155,255));
+                _targetEffect.SetControlPoint(6, new Vector3(255));
+                _targetEffect.SetControlPoint(7, _globalTarget.Position);
+
             }
             var target = _globalTarget;
             if (!Members.MyHero.IsInvisible() &&
@@ -334,14 +347,16 @@ namespace Legion_Annihilation
                 try
                 {
                     await _testCombo;
-                    _testCombo = null;
                 }
                 catch (OperationCanceledException)
                 {
                     _globalTarget = null;
                     _testCombo = null;
+                    _targetEffect?.Dispose();
+                    _targetEffect = null;
                     Printer.Print("cancel");
                 }
+                
             }
             /*if (_myLittleCombo != null)
             {
@@ -353,6 +368,17 @@ namespace Legion_Annihilation
         {
             if (!IsEnable)
                 return;
+            if (ComboKey)
+            {
+                if (_globalTarget != null)
+                {
+                    if (_targetEffect != null && _targetEffect.IsValid)
+                    {
+                        _targetEffect.SetControlPoint(2, Members.MyHero.Position);
+                        _targetEffect.SetControlPoint(7, _globalTarget.Position);
+                    }
+                }
+            }
             if (Members.Updater.Sleeping)
                 return;
             Members.Updater.Sleep(500);
