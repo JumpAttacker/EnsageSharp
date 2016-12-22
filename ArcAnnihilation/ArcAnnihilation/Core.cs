@@ -91,6 +91,7 @@ namespace ArcAnnihilation
             ,"item_silver_edge"
         }; 
         private static int CloseRange => Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value;
+        private static int OrbwalkerType => Menu.Item("OrbWalking.Type").GetValue<StringList>().SelectedIndex;
         private static int MinDistance => Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value;
         private static int ExtraDistance => Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value;
         private static int OrbMinDist => Menu.Item("OrbWalking.minDistance").GetValue<Slider>().Value;
@@ -310,6 +311,9 @@ namespace ArcAnnihilation
                 var orbwalnking = new Menu("OrbWalking", "ow");
                 orbwalnking.AddItem(
                     new MenuItem("OrbWalking.Enable", "Enable OrbWalking").SetValue(true));
+                orbwalnking.AddItem(
+                    new MenuItem("OrbWalking.Type", "Type").SetValue(
+                        new StringList(new[] {"follow mouse", "follow target"}, 1)));
                 orbwalnking.AddItem(
                     new MenuItem("OrbWalking.minDistance", "Min distance").SetValue(new Slider(100, 0, 600)));
 
@@ -2031,7 +2035,7 @@ namespace ArcAnnihilation
                 OrbDict.Add(me.Handle, new Orbwalker(me));
                 return;
             }
-            orb.OrbwalkOn(target, followTarget: true);
+            orb.OrbwalkOn(target, followTarget: OrbwalkerType==1);
         }
 
         private static Hero ClosestToMouse(Hero source, float range = 600)
