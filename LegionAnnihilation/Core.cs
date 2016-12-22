@@ -102,6 +102,7 @@ namespace Legion_Annihilation
 
             }
             var target = _globalTarget;
+            Ability ult;
             if (!Members.MyHero.IsInvisible() &&
                 !Members.MyHero.HasModifiers(new[]
                 {"modifier_item_invisibility_edge_windwalk", "modifier_item_silver_edge_windwalk"}) && 
@@ -140,28 +141,30 @@ namespace Legion_Annihilation
                     await UseItem(item, target, cancellationToken);
                 }
 
-                var ult = Members.MyHero.FindSpell(Members.AbilityList[2]);
+                ult = Members.MyHero.FindSpell(Members.AbilityList[2]);
                 if (ult.CanBeCasted() && !target.IsLinkensProtected())
                 {
-                    if (ult.CanHit(target))
+                    if (true)//(ult.CanHit(target))
                     {
                         ult.UseAbility(target);
-                        await Task.Delay(300, cancellationToken);
+                        await Task.Delay(350, cancellationToken);
                     }
                 }
             }
-            if (OrbEnable && (!target.IsStunned() || !OrbInStun))
-            {
-                Orbwalking.Orbwalk(target, followTarget: OrbFollow);
-            }
-            else if (Utils.SleepCheck("attack_rate"))
-            {
-                if (!Members.MyHero.IsAttacking())
+            ult = Members.MyHero.FindSpell(Members.AbilityList[2]);
+            if (!ult.CanBeCasted())
+                if (OrbEnable && (!target.IsStunned() || !OrbInStun))
                 {
-                    Members.MyHero.Attack(target);
-                    Utils.Sleep(125, "attack_rate");
+                    Orbwalking.Orbwalk(target, followTarget: OrbFollow);
                 }
-            }
+                else if (Utils.SleepCheck("attack_rate"))
+                {
+                    if (!Members.MyHero.IsAttacking())
+                    {
+                        Members.MyHero.Attack(target);
+                        Utils.Sleep(125, "attack_rate");
+                    }
+                }
         }
 
         private static async Task UseInvis(Hero target, CancellationToken cancellationToken)
