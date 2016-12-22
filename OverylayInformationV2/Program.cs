@@ -440,12 +440,11 @@ namespace OverlayInformation
                 Game.OnWndProc += Game_OnWndProc;
                 AppDomain.CurrentDomain.DomainUnload += DrawHelper.Render.CurrentDomainDomainUnload;
                 Game.OnFireEvent += FireEvent.Game_OnGameEvent;
-                
+
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Members.Menu.DisplayName +
                     " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
-                    MessageType.LogMessage);
+                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
                 Printer.PrintSuccess("> " + Members.Menu.DisplayName + " loaded v" +
                                      Assembly.GetExecutingAssembly().GetName().Version);
 

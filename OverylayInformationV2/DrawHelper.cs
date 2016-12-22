@@ -337,14 +337,18 @@ namespace OverlayInformation
                     if (Members.Menu.Item("ultimate.Icon.Enable").GetValue<bool>())
                         Drawing.DrawRect(ultPos, new Vector2(14, 14), Drawing.GetTexture(path));
                     var cooldown = v.IsVisible ? ultimate.Cooldown : ultimate.Cooldown - Game.RawGameTime + lastTime;
-                    if (Members.Menu.Item("ultimate.Type").GetValue<StringList>().SelectedIndex == 0 && Members.Menu.Item("ultimate.Info").GetValue<bool>() &&
+                    cooldown = Math.Max(0, cooldown);
+                    if (Members.Menu.Item("ultimate.Type").GetValue<StringList>().SelectedIndex == 0 &&
+                        Members.Menu.Item("ultimate.Info").GetValue<bool>() &&
                         (Members.Menu.Item("ultimate.InfoAlways").GetValue<bool>() && (
                             ultimate.AbilityState == AbilityState.OnCooldown ||
                             ultimate.AbilityState == AbilityState.NotEnoughMana) ||
                          Utils.IsUnderRectangle(Game.MouseScreenPosition, ultPos.X, ultPos.Y, 15, 15)))
                     {
                         var texturename = $"materials/ensage_ui/spellicons/{ultimate.StoredName()}.vmat";
-                        pos = Helper.GetTopPanelPosition(v);
+                        pos = Helper.GetTopPanelPosition(v) +
+                              new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
+                                  Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
                         var startPos = pos + new Vector2(0, 7*4 + size.Y);
                         size = new Vector2(size.X, size.Y + 15);
                         Drawing.DrawRect(startPos,
@@ -353,7 +357,7 @@ namespace OverlayInformation
                         string ultimateCd;
                         Vector2 textSize;
                         Vector2 textPos;
-                        
+
                         switch (ultimate.AbilityState)
                         {
                             case AbilityState.OnCooldown:
@@ -372,13 +376,14 @@ namespace OverlayInformation
                                     new Vector2(textSize.Y, 0),
                                     Color.White,
                                     FontFlags.AntiAlias | FontFlags.StrikeOut);
-                                if (Members.Menu.Item("ultimate.Icon.Extra.Enable").GetValue<bool>() && ultimate.ManaCost > v.Mana)
+                                if (Members.Menu.Item("ultimate.Icon.Extra.Enable").GetValue<bool>() &&
+                                    ultimate.ManaCost > v.Mana)
                                 {
                                     ultimateCd =
-                                    ((int)Math.Min(Math.Abs(v.Mana - ultimate.ManaCost), 999)).ToString(
-                                        CultureInfo.InvariantCulture);
+                                        ((int) Math.Min(Math.Abs(v.Mana - ultimate.ManaCost), 999)).ToString(
+                                            CultureInfo.InvariantCulture);
                                     textSize = Drawing.MeasureText(ultimateCd, "Arial",
-                                        new Vector2((float)(size.Y * .50), size.Y / 2), FontFlags.AntiAlias);
+                                        new Vector2((float) (size.Y*.50), size.Y/2), FontFlags.AntiAlias);
                                     textPos = startPos + new Vector2(size.X - textSize.X, 0);
                                     Drawing.DrawRect(textPos - new Vector2(0, 0),
                                         new Vector2(textSize.X, textSize.Y),
@@ -416,14 +421,17 @@ namespace OverlayInformation
                                 break;
                         }
                     }
-                    else if (ultimate.AbilityState==AbilityState.OnCooldown)
+                    else if (ultimate.AbilityState == AbilityState.OnCooldown)
                     {
-                        pos = Helper.GetTopPanelPosition(v);
-                        var startPos = pos + new Vector2(0, 7 * 4 + size.Y);
+                        pos = Helper.GetTopPanelPosition(v) +
+                              new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
+                                  Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
+                        var startPos = pos + new Vector2(0, 7*4 + size.Y);
                         var cd = cooldown;
-                        var manaDelta = new Vector2(cd * size.X / ultimate.CooldownLength, 0);
+                        var manaDelta = new Vector2(cd*size.X/ultimate.CooldownLength, 0);
                         //size = new Vector2(manaDelta.X, 7);
-                        DrawUltimatePanel(startPos, size, manaDelta, (int)cd, Members.Menu.Item("ultimate.Line.Size").GetValue<Slider>().Value);
+                        DrawUltimatePanel(startPos, size, manaDelta, (int) cd,
+                            Members.Menu.Item("ultimate.Line.Size").GetValue<Slider>().Value);
                         /*Drawing.DrawRect(startPos,
                             size, Color.Yellow);*/
                     }
