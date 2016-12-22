@@ -718,7 +718,7 @@ namespace ArcAnnihilation
                         itemCount++;
                     }
                 }
-                var kek = SpellBaseList.Where(x => x.GetCooldown() <= 0 && x.GetCooldown() >= -5).ToList();
+                var kek = SpellBaseList.Where(x => x.GetCooldown() <= 0 && x.GetCooldown()>=-5).ToList();
                 foreach (var item in kek)
                 {
                     SpellBaseList.Remove(item);
@@ -886,13 +886,15 @@ namespace ArcAnnihilation
                     var spell = SpellBaseList.Find(x => x.Name == item.StoredName());
                     if (spell==null)
                     {
-                        SpellBaseList.Add(new Spell(item));
+                        var newSpell = new Spell(item);
+                        SpellBaseList.Add(newSpell);
+                        newSpell.Update(item);
                         //Print("Init new item: "+item.StoredName());
                     }
                     else
                     {
                         //spell.SetCooldown(item.Cooldown);
-                        spell.Update(item);
+                        //spell.Update(item);
                     }
                 }
             }

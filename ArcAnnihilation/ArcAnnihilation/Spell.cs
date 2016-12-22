@@ -45,6 +45,7 @@ namespace ArcAnnihilation
         }
         public float GetCooldown()
         {
+            //Console.WriteLine($"{Name}: cd: {this.GetLastCd() - Game.RawGameTime + this.GetLastTime() + 1}");
             return this.GetLastCd() - Game.RawGameTime + this.GetLastTime() + 1;
         }
         public DotaTexture GetTexture()
