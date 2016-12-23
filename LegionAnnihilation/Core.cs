@@ -52,10 +52,10 @@ namespace Legion_Annihilation
             _useBkb = Members.Menu.Item("Bkb.Toggle").GetValue<KeyBind>().Active;
             Members.MyHero = ObjectManager.LocalHero;
             Members.MyTeam = ObjectManager.LocalHero.Team;
+            Members.Updater = new Sleeper();
             GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate;
             Game.OnUpdate += UpdateItems;
             Drawing.OnDraw += Drawing_OnDraw;
-            Members.Updater = new Sleeper();
             Printer.Print($"{Members.Menu.DisplayName} loaded! v.[{Assembly.GetExecutingAssembly().GetName().Version}]",
                 true);
         }
