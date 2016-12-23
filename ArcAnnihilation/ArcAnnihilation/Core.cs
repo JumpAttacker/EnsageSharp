@@ -20,7 +20,7 @@ namespace ArcAnnihilation
     public class Core
     {
         #region Variables
-        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Hero _mainHero;
         private static Vector3 _pushLaneTop = new Vector3(-5895, 5402, 384);
         private static Vector3 _pushLaneBot = new Vector3(5827, -5229, 384);
