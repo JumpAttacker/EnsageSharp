@@ -397,11 +397,10 @@ namespace ArcAnnihilation
 
         private static void InitOtherStuff()
         {
-            Log.Info($"[{Menu.DisplayName}] Loaded - > ClassID ({_mainHero.ClassID})");
+            //Log.Info($"[{Menu.DisplayName}] Loaded - > ClassID ({_mainHero.ClassID})");
             Game.PrintMessage(
                 "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
-                " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
-                MessageType.LogMessage);
+                " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
             _ethereal = new Sleeper();
             _myHull = _mainHero.HullRadius;
             _drawType = Menu.Item("Draw.Order.Type").GetValue<bool>();

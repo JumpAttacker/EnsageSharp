@@ -56,7 +56,7 @@ namespace Legion_Annihilation
             GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate;
             Game.OnUpdate += UpdateItems;
             Drawing.OnDraw += Drawing_OnDraw;
-            Printer.Print($"{Members.Menu.DisplayName} loaded! v.[{Assembly.GetExecutingAssembly().GetName().Version}]",
+            Printer.Print($"{Members.Menu.DisplayName} loaded! v{Assembly.GetExecutingAssembly().GetName().Version}",
                 true);
         }
 
