@@ -49,7 +49,7 @@
       <HintPath>C:\Program Files (x86)\6LmEQsuox\Core\log4net.dll</HintPath>
     </Reference>
     <Reference Include="PlaySharp.Toolkit">
-      <HintPath>C:\Program Files (x86)\6LmEQsuox\Core\PlaySharp.Toolkit.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\6LmEQsuox\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
       <HintPath>C:\Program Files (x86)\6LmEQsuox\References\SharpDX.dll</HintPath>

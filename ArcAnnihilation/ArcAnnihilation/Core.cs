@@ -10,8 +10,6 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
-using log4net;
-using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace ArcAnnihilation

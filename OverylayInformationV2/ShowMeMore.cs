@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -132,6 +133,7 @@ namespace OverlayInformation
             }
         }
     }
+
     internal static class ShowMeMore
     {
         private static Sleeper _sleeper;
@@ -365,7 +367,7 @@ namespace OverlayInformation
             if (_arrowUnit == null)
             {
                 _arrowUnit =
-                    Base.Find(x => x.DayVision == 650 && x.Team == Members.MyHero.GetEnemyTeam());
+                    Base.Find(x => x.DayVision == 500 && x.Team == Members.MyHero.GetEnemyTeam());
             }
             if (_arrowUnit != null)
             {
@@ -378,7 +380,7 @@ namespace OverlayInformation
                     _letsDraw = true;
                     _arrowUnit =
                         Manager.BaseManager.GetBaseList()
-                            .Find(x => x.DayVision == 650 && x.Team == Members.MyHero.GetEnemyTeam());
+                            .Find(x => x.DayVision == 500 && x.Team == Members.MyHero.GetEnemyTeam());
                     return;
                 }
                 if (!InSys.Contains(_arrowUnit))
@@ -713,9 +715,28 @@ namespace OverlayInformation
         {
             if (!Checker.IsActive())
                 return;
+            var name = args.Name;
+            if (true)//(Members.Invoker != null && Members.Invoker.IsValid)
+            {
+                if (name.Contains("particles/units/heroes/hero_invoker/invoker_emp.vpcf"))
+                {
+                    DelayAction.Add(10, async () =>
+                    {
+                        var effect = args.ParticleEffect;
+                        var a = effect.GetControlPoint(0);
+                        var rangeEffect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf",a);
+                        var range = 675;
+                        rangeEffect.SetControlPoint(1, new Vector3(range, 255, 0));
+                        rangeEffect.SetControlPoint(2, new Vector3(139, 0, 255));
+                        //EmpRanger.Add(effect, rangeEffect);
+                        await Task.Delay(2900);
+                        rangeEffect.Dispose();
+                    });
+                }
+            }
             if (!IsEnableTpCather)
                 return;
-            var name = args.Name;
+            
             if (name.Contains("teleport_start") || name.Contains("teleport_end"))
             {
                 DelayAction.Add(10, () =>

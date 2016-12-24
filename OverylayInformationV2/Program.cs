@@ -21,14 +21,16 @@ namespace OverlayInformation
 
     internal static class Program
     {
-        private static void Main()
+        private static void TestShit()
         {
-            /*Entity.OnParticleEffectAdded += (entity, eventArgs) =>
+            ObjectManager.OnAddEntity += args =>
+            {
+                Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
+            };
+            Entity.OnParticleEffectAdded += (entity, eventArgs) =>
             {
                 var partName = eventArgs.Name;
                 var name = entity.Name;
-                if (partName.Contains("generic_hit_blood"))
-                    Printer.Print("hit! to "+ name);
                 if (partName.Contains("generic_hit_blood"))
                     return;
                 if (partName.Contains("ui_mouse"))
@@ -41,10 +43,19 @@ namespace OverlayInformation
                     var pos = effect.Position;
                     var a = effect.GetControlPoint(0);
                     var senderpos = entity.NetworkPosition;
-                    Printer.Print(name + ": " + partName + $"a: ({pos.PrintVector()}) b: ({a.PrintVector()}) c: ({senderpos.PrintVector()})");
+                    Printer.Print($"{name}/{partName}/{pos.PrintVector()}/{a.PrintVector()}/{senderpos.PrintVector()}");
+                    Printer.PrintInfo(name + ": " + partName);
                 });
-                
-            };*/
+
+            };
+            Unit.OnModifierAdded += (sender, args) =>
+            {
+                Printer.Print($"modifier: {sender.Name}/{args.Modifier.Name}");
+            };
+        }
+        private static void Main()
+        {
+            //TestShit();
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var topPanel = new Menu("Top Panel", "toppanel");
             var spellPanel = new Menu("Spell Panel", "spellPanel");
