@@ -384,6 +384,8 @@ namespace Legion_Annihilation
             }
             if (Members.Updater.Sleeping)
                 return;
+            if (Members.MyHero==null || !Members.MyHero.IsValid)
+                return;
             Members.Updater.Sleep(500);
             var inventory = Members.MyHero.Inventory.Items;
             /*Printer.Print("Count: "+ inventory.Count());
