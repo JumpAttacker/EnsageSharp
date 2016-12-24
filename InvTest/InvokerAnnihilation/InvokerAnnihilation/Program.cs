@@ -691,13 +691,22 @@ namespace InvokerAnnihilation
                             }
                         }
                         legal++;
-                        var tempStage = _stage<2?0:_stage-2;
-                        if (Equals(comboStruct.GetComboAbilities()[j], Combos[_combo].GetComboAbilities()[tempStage]) && selected && _stage>0)
+                        var tempStage = _stage < 2 ? 0 : _stage - 2;
+                        try
                         {
-                            Drawing.DrawRect(
-                                itemStartPos,
-                                new Vector2(_size.X - 3, _size.Y),
-                                Color.Red, true);
+                            if (
+                                Equals(comboStruct.GetComboAbilities()[j], Combos[_combo].GetComboAbilities()[tempStage]) &&
+                                selected && _stage > 0)
+                            {
+                                Drawing.DrawRect(
+                                    itemStartPos,
+                                    new Vector2(_size.X - 3, _size.Y),
+                                    Color.Red, true);
+                            }
+                        }
+                        catch
+                        {
+                            
                         }
                         if (comboStruct.IsCustom())
                         {

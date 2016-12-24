@@ -38,3 +38,17 @@ C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\InvTest\InvokerAnnihila
 C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\Ensage.dll
 C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\SharpDX.Direct3D9.dll
 C:\Users\Jumpering\Documents\Visual Studio 2015\Projects\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\SharpDX.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\InvokerAnnihilation.exe.config
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\obj\Debug\InvokerAnnihilation.exe
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\obj\Debug\InvokerAnnihilation.pdb
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\InvokerAnnihilation.exe
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\InvokerAnnihilation.pdb
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\Ensage.Common.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\Ensage.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\SharpDX.Direct3D9.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\SharpDX.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\Newtonsoft.Json.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\EnsageSharp.Sandbox.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\Ensage.Common.pdb
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Release\EnsageSharp.Sandbox.pdb
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\obj\Debug\InvokerAnnihilation.csprojResolveAssemblyReference.cache
