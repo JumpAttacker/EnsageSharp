@@ -36,10 +36,10 @@ namespace OverlayInformation
             Console.ForegroundColor = clr;
         }
 
-        public static void Print(string str, bool print = false, MessageType type = MessageType.ChatMessage)
+        public static void Print(string str, bool print = false)
         {
             if (print || Members.Menu.Item("Dev.Text.enable").GetValue<bool>())
-                Game.PrintMessage(str, type);
+                Game.PrintMessage(str);
         }
         #endregion
     }

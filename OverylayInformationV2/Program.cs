@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
-using Ensage.Common.Objects;
-using Ensage.Common.Objects.UtilityObjects;
-using Ensage.Common.Threading;
 using SharpDX;
 using SharpDX.Direct3D9;
 using Color = SharpDX.Color;
@@ -18,7 +13,6 @@ using MenuItem = Ensage.Common.Menu.MenuItem;
 
 namespace OverlayInformation
 {
-
     internal static class Program
     {
         private static void TestShit()
@@ -43,7 +37,8 @@ namespace OverlayInformation
                     var pos = effect.Position;
                     var a = effect.GetControlPoint(0);
                     var senderpos = entity.NetworkPosition;
-                    Printer.Print($"{name}/{partName}/{pos.PrintVector()}/{a.PrintVector()}/{senderpos.PrintVector()}");
+                    Printer.Print($"{name}/{partName}");
+                    //Printer.Print($"{name}/{partName}/{pos.PrintVector()}/{a.PrintVector()}/{senderpos.PrintVector()}");
                     Printer.PrintInfo(name + ": " + partName);
                 });
 
@@ -76,16 +71,17 @@ namespace OverlayInformation
             var page1 = new Menu("Page 1", "Page 1");
             var page2 = new Menu("Page 2", "Page 2");
             //===========================
-            itemPanel.AddItem(new MenuItem("itempanel.Enable", "Enable").SetValue(true));
+            itemPanel.AddItem(new MenuItem("itempanel.Enable", "Enable old version").SetValue(false));
+            itemPanel.AddItem(new MenuItem("itempanel.new.Enable", "Enable new version").SetValue(true));
             itemPanel.AddItem(new MenuItem("itempanel.Stash.Enable", "Draw Stash Items").SetValue(true));
             itemPanel.AddItem(new MenuItem("itempanel.Button.Enable", "Draw Button for toggle").SetValue(true));
             itemPanel.AddItem(new MenuItem("itempanel.X", "Panel Position X").SetValue(new Slider(100, 0, 2000)));
             itemPanel.AddItem(new MenuItem("itempanel.Y", "Panel Position Y").SetValue(new Slider(200, 0, 2000)));
             itemPanel.AddItem(new MenuItem("itempanel.SizeX", "SizeX").SetValue(new Slider(255, 1, 255)));
             itemPanel.AddItem(new MenuItem("itempanel.SizeY", "SizeY").SetValue(new Slider(174, 1, 255)));
-            itemPanel.AddItem(new MenuItem("itempanel.Red", "Red").SetValue(new Slider(141, 0, 255)).SetFontColor(Color.Red));
-            itemPanel.AddItem(new MenuItem("itempanel.Green", "Green").SetValue(new Slider(182, 0, 255)).SetFontColor(Color.Green));
-            itemPanel.AddItem(new MenuItem("itempanel.Blue", "Blue").SetValue(new Slider(98, 0, 255)).SetFontColor(Color.Blue));
+            itemPanel.AddItem(new MenuItem("itempanel.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
+            itemPanel.AddItem(new MenuItem("itempanel.Green", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
+            itemPanel.AddItem(new MenuItem("itempanel.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
             //===========================
             topPanel.AddItem(new MenuItem("toppanel.Enable", "Enable").SetValue(true));
             topPanel.AddItem(
@@ -432,6 +428,7 @@ namespace OverlayInformation
                 Drawing.OnDraw += DrawHelper.Overlay;
 
                 Drawing.OnDraw += ItemPanel.Draw;
+                Drawing.OnDraw += NewItemPanel.OnDraw;
                 ShowMeMore.Flush();
                 Drawing.OnDraw += ShowMeMore.Draw;
 
