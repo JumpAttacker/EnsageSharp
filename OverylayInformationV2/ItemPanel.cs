@@ -380,7 +380,7 @@ namespace OverlayInformation
                         }
                         catch
                         {
-                            Printer.PrintError($"[ItemPanel]: {v.Name}/ count: {j}/ {item?.Name}");
+                            //Printer.PrintError($"[ItemPanel]: {v.Name}/ count: {j}/ {item?.Name}");
                         }
                     }
                     var curPos = heroIconPos + new Vector2(stageSize.X + 2, 0) + new Vector2(j*stageSize.X*70/100f, 0);
