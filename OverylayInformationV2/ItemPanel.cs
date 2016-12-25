@@ -436,6 +436,8 @@ namespace OverlayInformation
         }
         private static void DrawState(Item item, Hero v, Vector2 itemPos, Vector2 size)
         {
+            if (!item.IsValid)
+                return;
             if (item.AbilityState == AbilityState.OnCooldown)
             {
                 var ultimateCd =
