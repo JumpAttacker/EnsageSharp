@@ -50,7 +50,7 @@ namespace ArcAnnihilation
         private static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
         {
             {"item_hurricane_pike",1 },
-            {"item_mask_of_madness", 1},
+            {"item_mask_of_madness", 7},
             {"item_ancient_janggo", 1},
             {"item_dagon", 2},
             {"item_dagon_2", 2},
@@ -1629,11 +1629,18 @@ namespace ArcAnnihilation
             }
             var inventory =
                 enumerable.Where(
-                    x =>
-                        (IsItemEnable(x.StoredName(), byIllusion) || CloneOnlyComboItems.Contains(x.StoredName()) ||
-                         x.StoredName() == "item_dust" || x.StoredName() == "item_black_king_bar") && x.CanBeCasted() &&
-                        (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name) == null)
-                            /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/ && CheckForPike(me,target,distance,x) ).ToList();
+                    x => 
+                         (IsItemEnable(x.StoredName(), byIllusion) || CloneOnlyComboItems.Contains(x.StoredName()) ||
+                          x.StoredName() == "item_dust" || x.StoredName() == "item_black_king_bar") && x.CanBeCasted() &&
+                         (!byIllusion || SpellBaseList.Find(z => z.Name == x.Name) == null)
+                             /* && Menu.Item("Items").GetValue<AbilityToggler>().IsEnabled(x.Name)*/&&
+                         CheckForPike(me, target, distance, x)).ToList();
+            var mom = inventory.FirstOrDefault(x => x.StoredName() == "item_mask_of_madness");
+            if (mom != null)
+            {
+                if (me.Spellbook.Spells.Any(x => x.CanBeCasted()))
+                    inventory.Remove(mom);
+            }
             var items =
                 inventory.Where(
                     x =>
