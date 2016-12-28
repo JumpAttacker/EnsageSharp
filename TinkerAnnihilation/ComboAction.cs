@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -35,6 +37,8 @@ namespace TinkerAnnihilation
         private static Sleeper _ethereal;
         private static Sleeper _dmageSleeper;
         private static MultiSleeper _spellSleeper;
+        private static Ability _laser;
+        private static Ability _rockets;
         public static void Drawing_OnDraw(EventArgs args)
         {
             if (!IsEnable)
@@ -67,6 +71,258 @@ namespace TinkerAnnihilation
             }
             
         }
+        private static CancellationTokenSource _tks;
+        private static Task _testCombo;
+        private static readonly int[] RearmTime = { 3000, 1500, 750 };
+        private static int GetRearmTime(Ability s) => RearmTime[s.Level - 1];
+        public static async void OnUpdate(EventArgs args)
+        {
+            if (!IsEnable)
+                return;
+            if (!Members.MyHero.IsAlive)
+                return;
+            if (_attacker == null)
+                _attacker = new Sleeper();
+            if (_spellSleeper == null)
+                _spellSleeper = new MultiSleeper();
+            if (_ethereal == null)
+                _ethereal = new Sleeper();
+            if (_laser == null)
+                _laser = Abilities.FindAbility("tinker_laser");
+            if (_rockets == null)
+                _rockets = Abilities.FindAbility("tinker_heat_seeking_missile");
+            if (_spellSleeper.Sleeping(Abilities.FindAbility("tinker_rearm")))
+                return;
+            if (_testCombo != null && !_testCombo.IsCompleted)
+            {
+                return;
+            }
+            _tks = new CancellationTokenSource();
+            _testCombo = Action(_tks.Token);
+            try
+            {
+                await _testCombo;
+                _testCombo = null;
+            }
+            catch (OperationCanceledException)
+            {
+                _testCombo = null;
+            }
+            if (IsEnableKillSteal && !IsComboHero)
+            {
+                foreach (var x in Heroes.GetByTeam(Members.MyHero.GetEnemyTeam())
+                    .Where(x => x.IsAlive && x.IsVisible && !x.IsIllusion() && !x.IsMagicImmune())
+                    .Where(x => Helper.CalculateMyCurrentDamage(x, true) < 0))
+                {
+                    await DoTrash(x, CancellationToken.None, true);
+                }
+            }
+        }
+
+        private static async Task Action(CancellationToken cancellationToken)
+        {
+            if (IsComboHero)
+            {
+                if (!IsComboHero)
+                {
+                    if (_globalTarget != null)
+                        Helper.UnHandleEffect(_globalTarget);
+                    _globalTarget = null;
+                    return;
+                }
+                if (_globalTarget == null || !_globalTarget.IsValid)
+                {
+                    _globalTarget = Helper.ClosestToMouse(Members.MyHero);
+                    return;
+                }
+                Helper.HandleEffect(_globalTarget);
+                if (Members.MyHero.IsChanneling())
+                {
+                    return;
+                }
+                
+                await DoTrash(_globalTarget, cancellationToken);
+                await Task.Delay(50, cancellationToken);
+                Printer.Print("rdy for rearm!");
+                var rearm = Abilities.FindAbility("tinker_rearm");
+                if (rearm.CanBeCasted())
+                {
+                    Printer.Print("rearm!");
+                    rearm?.UseAbility();
+                    var time = (int)(GetRearmTime(rearm) + Game.Ping + rearm.FindCastPoint() * 1000);
+                    await Task.Delay(time, cancellationToken);
+                    return;
+                }
+                if (AutoAttack)
+                    if (UseOrbWalkker)
+                    {
+                        Orbwalking.Orbwalk(_globalTarget, followTarget: true);
+                    }
+                    else if (!Members.MyHero.IsAttacking() && !_attacker.Sleeping && !_globalTarget.IsAttackImmune())
+                    {
+                        Members.MyHero.Attack(_globalTarget);
+                        _attacker.Sleep(250);
+                    }
+            }
+            else
+            {
+                if (_globalTarget != null)
+                    Helper.UnHandleEffect(_globalTarget);
+                _globalTarget = null;
+            }
+
+            
+            await Task.Delay(100, cancellationToken);
+        }
+
+        private static async Task DoTrash(Hero killStealTarget, CancellationToken cancellationToken, bool isKillSteal = false)
+        {
+            var target = killStealTarget;
+            var myInventory = new List<Ability>(Members.MyHero.Inventory.Items) {_laser, _rockets};
+            var allItems = myInventory.Where(x =>
+                Helper.IsItemEnableNew(x.StoredName())).ToList();
+            var distance =(int) (Members.MyHero.Distance2D(target)-target.HullRadius*2);
+            var daggerCastRange = 1150 + (myInventory.Any(x => x.StoredName() == "item_aether_lens") ? 220 : 0);
+            if (!Members.ExtraRange)
+            {
+                Members.ExtraRange =
+                    Members.MyHero.Spellbook()
+                        .Spells.Any(x => x.StoredName() == "special_bonus_cast_range_75" && x.Level > 0);
+            }
+            if (Members.ExtraRange)
+                daggerCastRange += 75;
+            daggerCastRange = Math.Min(distance, daggerCastRange);
+            var inventory =
+                allItems.Where(
+                    x =>
+                        ((x.StoredName() == "item_blink" /*&& distance <= daggerCastRange + CloseRange*/) ||
+                         (x.GetCastRange() > 0 && x.CanHit(target) /* && distance <= x.GetCastRange() + 150*/) ||
+                         (x.GetCastRange() <= 0)) && Utils.SleepCheck($"{x.Handle}+item_usages"))
+                    .OrderBy(Helper.PriorityHelper)
+                    .ToList();
+            var slarkMod = target.HasModifiers(new[] { "modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses" }, false);
+            if (inventory.Any(x => x.StoredName() == "item_ethereal_blade" && x.CanBeCasted() && x.CanHit(target)))
+            {
+                _ethereal.Sleep(1000);
+            }
+            foreach (var v in inventory)
+            {
+                if (v.CanBeCasted() && (v.TargetTeamType==TargetTeamType.None || (v.CanHit(target) && !v.Equals(_rockets)) ||(v.Equals(_rockets) && Helper.CanRockedHit(target))))
+                {
+                    var name = v.StoredName();
+                    
+                    if (v.DamageType == DamageType.Magical || v.StoredName().Contains("dagon"))
+                        if (_ethereal.Sleeping && !target.HasModifier("modifier_item_ethereal_blade_ethereal"))
+                        {
+                            continue;
+                        }
+                    if (v.IsAbilityBehavior(AbilityBehavior.NoTarget))
+                    {
+                        await UseAbility(v);
+                    }
+                    else if (v.IsAbilityBehavior(AbilityBehavior.UnitTarget))
+                        if (v.TargetTeamType == TargetTeamType.Enemy || v.TargetTeamType == TargetTeamType.All ||
+                            v.TargetTeamType == TargetTeamType.Custom)
+                        {
+                            if (v.IsDisable())
+                            {
+                                if (!slarkMod && !target.IsLinkensProtected())
+                                    await UseAbility(v, target);
+                            }
+                            else if (v.IsSilence())
+                            {
+                                if (!slarkMod)
+                                    if (!target.IsSilenced())
+                                    {
+                                        await UseAbility(v, target);
+                                    }
+                            }
+                            else if ((v.DamageType == DamageType.Magical || v.StoredName() == "item_ethereal_blade") &&
+                                     target.HasModifiers(
+                                         new[]
+                                         {
+                                             /*"modifier_templar_assassin_refraction_absorb",
+                                         "modifier_templar_assassin_refraction_absorb_stacks",*/
+                                             "modifier_oracle_fates_edict",
+                                             "modifier_abaddon_borrowed_time"
+                                         }, false))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                await UseAbility(v, target);
+                            }
+                        }
+                        else
+                        {
+                            await UseAbility(v, Members.MyHero);
+                        }
+                    else
+                    {
+                        if (name == "item_blink")
+                        {
+                            if (isKillSteal)
+                                continue;
+                            var angle = Members.MyHero.FindAngleBetween(target.Position, true);
+                            var point = new Vector3(
+                                (float)
+                                    (Members.MyHero.Position.X +
+                                     daggerCastRange *
+                                     Math.Cos(angle)),
+                                (float)
+                                    (Members.MyHero.Position.Y +
+                                     daggerCastRange *
+                                     Math.Sin(angle)),
+                                Members.MyHero.Position.Z);
+                            await UseAbility(v, point: point);
+                            continue;
+                        }
+                        
+                        await UseAbility(v, point: target.NetworkPosition);
+                    }
+                }
+            }
+            if (!isKillSteal &&
+                inventory.Any(
+                    v =>
+                        v.CanBeCasted() &&
+                        ((v.CanHit(target) && !v.Equals(_rockets)) ||
+                         (v.Equals(_rockets) && Helper.CanRockedHit(target)))))
+            {
+                var count = inventory.Count(
+                    v =>
+                        v.CanBeCasted() &&
+                        ((v.CanHit(target) && !v.Equals(_rockets)) ||
+                         (v.Equals(_rockets) && Helper.CanRockedHit(target))));
+                Printer.Print("do it again! " + count);
+                await Task.Delay(20, cancellationToken);
+                await DoTrash(killStealTarget, cancellationToken);
+            }
+
+            
+        }
+
+        private static async Task UseAbility(Ability v,Hero target=null, Vector3 point=new Vector3())
+        {
+            if (!v.CanBeCasted())
+                return;
+            var castTime = (int)(v.FindCastPoint() * 1000);
+            if (v.StoredName() == "item_blink")
+                castTime += 60;
+            if (target != null)
+            {
+                v.UseAbility(target);
+            }
+            if (!point.IsZero)
+            {
+                v.UseAbility(point);
+            }
+            else
+                v.UseAbility();
+            //Printer.Print($"Global waiter: {v.Name}/{castTime}");
+            await Task.Delay(castTime, _tks.Token);
+        }
 
         public static void Game_OnUpdate(EventArgs args)
         {
@@ -85,6 +341,14 @@ namespace TinkerAnnihilation
             var rockets = Abilities.FindAbility("tinker_heat_seeking_missile");
             if (_spellSleeper.Sleeping(Abilities.FindAbility("tinker_rearm")))
                 return;
+            /*var data = _laser.AbilitySpecialData;
+            var dmg = _laser.GetAbilityData("laser_damage", 1);
+            Console.WriteLine($"dmg: {dmg}");
+            foreach (var abilitySpecialData in data.Where(x=>x.IsSpellDamageValue))
+            {
+                Console.WriteLine($"{abilitySpecialData.Name}: {abilitySpecialData.GetValue(_laser.Level-1)}");
+            }
+            Console.WriteLine($"Laser: {_laser.GetDamage(0)}/{_laser.GetDamage(1)}/{_laser.GetDamage(2)}/{_laser.GetDamage(3)}");*/
             if (IsEnableKillSteal && !IsComboHero)
             {
                 foreach (var x in Heroes.GetByTeam(Members.MyHero.GetEnemyTeam())
@@ -331,8 +595,8 @@ namespace TinkerAnnihilation
                 }
                 else
                 {
-                    rockets.UseAbility();
-                    _spellSleeper.Sleep(500, rockets);
+                    _rockets.UseAbility();
+                    _spellSleeper.Sleep(500, _rockets);
                 }*/
             }
             if (singleCombo)
@@ -368,5 +632,21 @@ namespace TinkerAnnihilation
             _myCurrentDamage = Helper.CalculateMyCurrentDamage(_globalTarget);
             _myMaxDamage = Helper.CalculateMyDamage(_globalTarget);
         }*/
+
+        public static void OnValueChanged(object sender, OnValueChangeEventArgs args)
+        {
+            var oldOne = args.GetOldValue<KeyBind>().Active;
+            var newOne = args.GetNewValue<KeyBind>().Active;
+            if (oldOne == newOne) return;
+            if (newOne) return;
+            try
+            {
+                _tks.Cancel();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
     }
 }

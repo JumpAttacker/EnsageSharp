@@ -13,12 +13,18 @@ namespace TinkerAnnihilation
         public static Team MyTeam;
 
         public static List<string> Items;
-        public static List<string> AbilityList=new List<string>()
+        public static List<string> AbilityList = new List<string>()
         {
             "tinker_laser",
             "tinker_heat_seeking_missile",
             /*"tinker_march_of_the_machines",*/
             "tinker_rearm"
+        };
+        public static List<string> UsagesList = new List<string>()
+        {
+            "tinker_laser",
+            "tinker_heat_seeking_missile",
+            /*"tinker_march_of_the_machines",*/
         };
 
         public static List<string> WhiteList=new List<string>
@@ -32,5 +38,7 @@ namespace TinkerAnnihilation
         public static int TargetR => Menu.Item("Target.Red").GetValue<Slider>().Value;
         public static int TargetG => Menu.Item("Target.Green").GetValue<Slider>().Value;
         public static int TargetB => Menu.Item("Target.Blue").GetValue<Slider>().Value;
+
+        public static bool ExtraRange = false;
     }
 }

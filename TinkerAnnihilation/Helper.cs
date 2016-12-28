@@ -4,6 +4,7 @@ using System.Linq;
 using Ensage;
 using Ensage.Common.AbilityInfo;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.Damage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using SharpDX;
@@ -40,12 +41,20 @@ namespace TinkerAnnihilation
         {
             return Members.Menu.Item("itemEnable").GetValue<PriorityChanger>().AbilityToggler.IsEnabled(name);
         }
+        public static bool IsItemEnableNew(string name)
+        {
+            return Members.Menu.Item("itemEnable").GetValue<PriorityChanger>().AbilityToggler.IsEnabled(name);
+        }
         public static bool IsAbilityEnable(string name)
         {
             return Members.Menu.Item("abilityEnable").GetValue<AbilityToggler>().IsEnabled(name);
         }
 
         public static uint PriorityHelper(Item item)
+        {
+            return Members.Menu.Item("itemEnable").GetValue<PriorityChanger>().GetPriority(item.StoredName());
+        }
+        public static uint PriorityHelper(Ability item)
         {
             return Members.Menu.Item("itemEnable").GetValue<PriorityChanger>().GetPriority(item.StoredName());
         }
@@ -68,15 +77,15 @@ namespace TinkerAnnihilation
             var rocked = Abilities.FindAbility("tinker_heat_seeking_missile");
             var allItems = new List<Ability>();
             var allItems2 = new List<Ability>(Members.MyHero.Inventory.Items.Where(x =>
-                IsItemEnable(x.StoredName()) && (x.ManaCost > 0 || x.StoredName() == "item_soul_ring"))
-                .OrderByDescending(PriorityHelper)
+                IsItemEnableNew(x.StoredName()) && (x.ManaCost > 0 || x.StoredName() == "item_soul_ring"))
+                .OrderBy(PriorityHelper)
                 .ToList());
             
             allItems.AddRange(allItems2);
             
-            if (rocked.Level > 0 && IsAbilityEnable(rocked.StoredName()))
+            if (rocked.Level > 0 && IsItemEnableNew(rocked.StoredName()))
                 allItems.Add(rocked);
-            if (laser.Level > 0 && IsAbilityEnable(laser.StoredName()))
+            if (laser.Level > 0 && IsItemEnableNew(laser.StoredName()))
                 allItems.Add(laser);
             if (rearm.Level > 0)
                 allItems.Add(rearm);
@@ -101,6 +110,7 @@ namespace TinkerAnnihilation
             var stacks = templarStacks?.StackCount ?? 0;
             var hasRainDrop = globalTarget.FindItem("item_infused_raindrop", true)?.Cooldown <= 0;
             var wasNama = mana;
+            var linkDef = globalTarget.IsLinkensProtected();
             while (mana>5 && allItems.Count(x=>mana>x.ManaCost)>0 && wasRearmed && wasNama>=mana)
             {
                 wasRearmed = false;
@@ -122,7 +132,11 @@ namespace TinkerAnnihilation
 
                         var dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
                             minusMagicResistancePerc: extraDamage);
-
+                        if (x.IsAbilityBehavior(AbilityBehavior.UnitTarget) && linkDef && !x.IsDisable())
+                        {
+                            dmgFromSpell = 0;
+                            linkDef = false;
+                        }
                         if (stacks > 0)
                         {
                             stacks--;
@@ -130,10 +144,10 @@ namespace TinkerAnnihilation
                         }
                         else
                         {
-                            if (AbilityDamage.GetDamageType(x) == DamageType.Magical && hasRainDrop && dmgFromSpell > 120)
+                            if (AbilityDamage.GetDamageType(x) == DamageType.Magical && hasRainDrop && dmgFromSpell > 50)
                             {
                                 hasRainDrop = false;
-                                dmgFromSpell = -120;
+                                dmgFromSpell -= Math.Min(120, dmgFromSpell);
                                 dmgFromSpell = Math.Max(dmgFromSpell, 0);
                             }
                             myDmg += dmgFromSpell;
@@ -157,7 +171,9 @@ namespace TinkerAnnihilation
                 mana -= rearm.ManaCost;*/
             }
             var healthAfterShit = (int) (globalTarget.Health - myDmg);
+            
             return healthAfterShit;
+            
         }
         public static float CalculateMyCurrentDamage(Hero globalTarget,bool checkForRange=false)
         {
@@ -166,16 +182,16 @@ namespace TinkerAnnihilation
             var rocked = Abilities.FindAbility("tinker_heat_seeking_missile");
             var allItems = new List<Ability>();
             var allItems2 = new List<Ability>(Members.MyHero.Inventory.Items.Where(x =>
-                IsItemEnable(x.StoredName()) && (x.ManaCost > 0 || x.StoredName() == "item_soul_ring"))
-                .OrderByDescending(PriorityHelper)
+                IsItemEnableNew(x.StoredName()) && (x.ManaCost > 0 || x.StoredName() == "item_soul_ring"))
+                .OrderBy(PriorityHelper)
                 .ToList());
 
             allItems.AddRange(allItems2);
 
-            if (laser.Level > 0 && IsAbilityEnable(laser.StoredName()))
+            if (laser.Level > 0 && IsItemEnableNew(laser.StoredName()))
                 allItems.Add(laser);
 
-            if (rocked.Level > 0 && IsAbilityEnable(rocked.StoredName()))
+            if (rocked.Level > 0 && IsItemEnableNew(rocked.StoredName()))
                 allItems.Add(rocked);
             
             var haveEb =
@@ -192,6 +208,7 @@ namespace TinkerAnnihilation
             var extraDamage = haveEb && !globalTarget.HasModifier("modifier_item_ethereal_blade_ethereal") ? 40 : 0;
             extraDamage += haveVeil && !globalTarget.HasModifier("modifier_item_veil_of_discord_debuff") ? 25 : 0;
             var ignoreList=new List<Ability>();
+            var linkDef = globalTarget.IsLinkensProtected();
             foreach (
                 var x in
                     allItems.Where(x => x.CanBeCasted() && !ignoreList.Contains(x))
@@ -215,6 +232,11 @@ namespace TinkerAnnihilation
                     mana -= mCost;
                     var dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
                         minusMagicResistancePerc: extraDamage);
+                    if (x.IsAbilityBehavior(AbilityBehavior.UnitTarget) && linkDef && !x.IsDisable())
+                    {
+                        dmgFromSpell = 0;
+                        linkDef = false;
+                    }
                     myDmg += dmgFromSpell;
                 }
             }

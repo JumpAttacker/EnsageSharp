@@ -9,9 +9,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Common.Threading;
-using log4net;
 using SharpDX;
-using PlaySharp.Toolkit.Logging;
 
 namespace TinkerAnnihilation
 {
@@ -19,7 +17,6 @@ namespace TinkerAnnihilation
     {
         private static bool _loaded;
         private static Sleeper _updater;
-        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static void Main()
         {
@@ -28,7 +25,7 @@ namespace TinkerAnnihilation
             
             settings.AddItem(new MenuItem("KillSteal.Enable", "Enable KillSteal").SetValue(true));
             settings.AddItem(
-                new MenuItem("Combo.Enable", "Do Combo Fore Selected Enemy").SetValue(new KeyBind('D', KeyBindType.Press)));
+                new MenuItem("Combo.Enable", "Do Combo Fore Selected Enemy").SetValue(new KeyBind('D', KeyBindType.Press))).ValueChanged += ComboAction.OnValueChanged;
             settings.AddItem(
                 new MenuItem("RearmBlink.Enable", "Rearm + blink").SetValue(new KeyBind('F', KeyBindType.Press))).ValueChanged+=ReamBlink.OnValueChanged;
             settings.AddItem(
@@ -49,12 +46,18 @@ namespace TinkerAnnihilation
             /*items.AddItem(
                 new MenuItem("itemEnable", "Items in combo:").SetValue(
                     new AbilityToggler(new List<string> {"item_blink"}.ToDictionary(item => item, item => true))));*/
-            items.AddItem(
+            /*items.AddItem(
                 new MenuItem("abilityEnable", "Abilities in combo:").SetValue(
-                    new AbilityToggler(Members.AbilityList.ToDictionary(item => item, item => true))));
+                    new AbilityToggler(Members.AbilityList.ToDictionary(item => item, item => true))));*/
+            /*items.AddItem(
+                new MenuItem("itemEnable", "Usages:").SetValue(
+                    new AbilityToggler(Members.UsagesList.ToDictionary(item => item, item => true))));*/
             items.AddItem(
+                new MenuItem("itemEnable", "Usages:").SetValue(
+                    new PriorityChanger(Members.UsagesList, useAbilityToggler: true)));
+            /*items.AddItem(
                 new MenuItem("itemEnable", "Items in combo:").SetValue(
-                    new PriorityChanger(new List<string>() /*{ "item_blink" }*/, useAbilityToggler: true)));
+                    new PriorityChanger(new List<string>(), useAbilityToggler: true)));*/
             var daggerSelection = new Menu("Dagger", "dagger",textureName:"item_blink");
             daggerSelection.AddItem(
                 new MenuItem("Dagger.CloseRange", "Extra Distance for blink").SetValue(
@@ -100,6 +103,7 @@ namespace TinkerAnnihilation
                 Unit.OnModifierAdded -= TeleportRangeHelper.Unit_OnModifierAdded;
                 Unit.OnModifierRemoved -= TeleportRangeHelper.UnitOnOnModifierRemoved;
                 GameDispatcher.OnUpdate -= ReamBlink.OnUpdate;
+                GameDispatcher.OnUpdate -= ComboAction.OnUpdate;
                 Player.OnExecuteOrder -= StopDummyRearming.OnExecuteOrder;
                 _loaded = false;
             };
@@ -120,12 +124,13 @@ namespace TinkerAnnihilation
             Orbwalking.Load();
             Members.Items = new List<string>();
             Members.Menu.AddToMainMenu();
-            Game.OnUpdate += ComboAction.Game_OnUpdate;
+            //Game.OnUpdate += ComboAction.Game_OnUpdate;
             Game.OnUpdate += UpdateItems;
             Drawing.OnDraw += ComboAction.Drawing_OnDraw;
             Unit.OnModifierAdded += TeleportRangeHelper.Unit_OnModifierAdded;
             Unit.OnModifierRemoved += TeleportRangeHelper.UnitOnOnModifierRemoved;
             GameDispatcher.OnUpdate += ReamBlink.OnUpdate;
+            GameDispatcher.OnUpdate += ComboAction.OnUpdate;
             Player.OnExecuteOrder += StopDummyRearming.OnExecuteOrder;
         }
 
