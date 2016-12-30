@@ -14,6 +14,7 @@ namespace ModifierVision
             var settings = new Menu("Settings", "Settings");
             settings.AddItem(new MenuItem("Enable.Heroes", "Enable for heroes").SetValue(true));
             settings.AddItem(new MenuItem("Enable.Creeps", "Enable for creeps").SetValue(false));
+            settings.AddItem(new MenuItem("Enable.Color", "Change color on low values").SetValue(false));
             /*settings.AddItem(
                 new MenuItem("abilityToggle.!", "modifiers").SetValue(new AbilityToggler(Members.ModiferDictinary)));*/
             settings.AddItem(new MenuItem("Counter.Hero", "Max modifiers for each Hero").SetValue(new Slider(4, 1, 5)));

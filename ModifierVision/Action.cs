@@ -11,6 +11,7 @@ namespace ModifierVision
     internal class Action
     {
         private static bool Checker => Members.Menu.Item("Enable").GetValue<bool>();
+        private static bool ChangeColor => Members.Menu.Item("Enable.Color").GetValue<bool>();
 
         public static void OnDraw(EventArgs args)
         {
@@ -61,8 +62,8 @@ namespace ModifierVision
                         Textures.GetTexture($"materials/ensage_ui/modifier_textures/{modifier.TextureName}.vmat"));
                     Drawing.DrawRect(itemPos, size,
                         Color.Black,true);
-                    var cooldown = Math.Min(remTime+0.1, 99).ToString("0.0");
-                    var textSize = Drawing.MeasureText(cooldown, "Arial",
+                    var timer = Math.Min(remTime+0.1, 99).ToString("0.0");
+                    var textSize = Drawing.MeasureText(timer, "Arial",
                         new Vector2(
                             (float) (size.Y*Members.Menu.Item("Settings.TextSize").GetValue<Slider>().Value/100),
                             size.Y/2), FontFlags.AntiAlias);
@@ -70,11 +71,12 @@ namespace ModifierVision
                     Drawing.DrawRect(textPos - new Vector2(0, 0),
                         new Vector2(textSize.X, textSize.Y),
                         new Color(0, 0, 0, 200));
+                    var clr = remTime >= 1 ? Color.White : ChangeColor ? Color.Red : Color.White;
                     Drawing.DrawText(
-                        cooldown,
+                        timer,
                         textPos,
                         new Vector2(textSize.Y, 0),
-                        Color.White,
+                        clr,
                         FontFlags.AntiAlias | FontFlags.StrikeOut);
                     counter++;
                 }
@@ -114,7 +116,7 @@ namespace ModifierVision
             var modifier = args.Modifier;
             if (Members.BlackList.Contains(modifier.Name))
                 return;
-            if (modifier.RemainingTime<=1)
+            if (modifier.RemainingTime<=0.01)
                 return;
             /*var name = modifier.Name.Substring(9);
             if (Members.Menu.Item("abilityToggle.!").GetValue<AbilityToggler>().Dictionary.ContainsKey(name))
