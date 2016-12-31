@@ -41,7 +41,7 @@ namespace BadGuy
         }
         private enum Orders
         {
-            BlockOnBace = 0, GoToEnemyFountain = 1, Stashing = 2, MoveToHero = 3
+            BlockOnBase = 0, GoToEnemyFountain = 1, Stashing = 2, MoveToHero = 3
         }
         [PermissionSet(SecurityAction.Assert, Unrestricted = true)]
         private static void Main()
@@ -180,7 +180,7 @@ namespace BadGuy
                         .FirstOrDefault(x => x.Team != _myHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
                 }
                 var index = Menu.Item("Courier.Order").GetValue<StringList>().SelectedIndex;
-                var needFountain = index == (int) Orders.BlockOnBace
+                var needFountain = index == (int) Orders.BlockOnBase
                     ? _fountain
                     : _fountain2;
                 if ((index == 0 || index==1) && needFountain!=null)
