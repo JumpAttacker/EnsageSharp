@@ -238,6 +238,7 @@ namespace OverlayInformation
                 .SetTooltip("true=icon; false=rectangle");
             tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(20,5,30)));
             tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(50,5,50)));
+            tpCatcher.AddItem(new MenuItem("TpCather.DrawLines", "Draw lines").SetValue(true));
             /*var hitCather = new Menu("Hit Catcher", "HitCatcher");
             hitCather.AddItem(new MenuItem("HitCatcher.Enable", "Enable").SetValue(true));
             hitCather.AddItem(new MenuItem("HitCatcher.Map", "Draw on Map").SetValue(true));

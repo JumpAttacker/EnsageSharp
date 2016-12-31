@@ -116,7 +116,7 @@ namespace ModifierVision
             var modifier = args.Modifier;
             if (Members.BlackList.Contains(modifier.Name))
                 return;
-            if (modifier.RemainingTime<=0.01)
+            if (modifier.RemainingTime<=0.1)
                 return;
             /*var name = modifier.Name.Substring(9);
             if (Members.Menu.Item("abilityToggle.!").GetValue<AbilityToggler>().Dictionary.ContainsKey(name))
@@ -139,7 +139,7 @@ namespace ModifierVision
                 if (Members.Menu.Item("Enable.Heroes").GetValue<bool>())
                 {
                     var a = AddToSystem(sender, modifier);
-                    Printer.Print($"[Add]Hero: {sender.Name}" + a + $" -->{modifier.Name}");
+                    Printer.Print($"[Add]Hero: {sender.Name} [{a}] --> {modifier.Name}");
                 }
             }
             else if (Members.Menu.Item("Enable.Creeps").GetValue<bool>())

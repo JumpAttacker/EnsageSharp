@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
@@ -14,11 +15,12 @@ namespace OverlayInformation
 {
     internal class TeleportEffect
     {
-        public TeleportEffect(ParticleEffect effect, Vector3 position, Vector3 color)
+        public TeleportEffect(ParticleEffect effect, Vector3 position, Vector3 color, bool isAlly)
         {
             GetEffect = effect;
             GetPosition = position;
             GetColor = color;
+            IsAlly = isAlly;
         }
 
         public Vector3 GetColor { get; }
@@ -26,6 +28,8 @@ namespace OverlayInformation
         public Vector3 GetPosition { get; }
 
         public ParticleEffect GetEffect { get; }
+
+        public bool IsAlly { get; }
     }
     internal class TeleportCatcher
     {
@@ -54,13 +58,13 @@ namespace OverlayInformation
         tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(25,1,30)));
          * */
         private static bool DrawOnMap => Members.Menu.Item("TpCather.Map").GetValue<bool>();
+        private static bool DrawLines => Members.Menu.Item("TpCather.DrawLines").GetValue<bool>();
         private static bool DrawOnMiniMap => Members.Menu.Item("TpCather.MiniMap").GetValue<bool>();
         private static bool MinimapType => Members.Menu.Item("TpCather.MiniMap.Type").GetValue<bool>();
         private static int MapSize => Members.Menu.Item("TpCather.Map.Size").GetValue<Slider>().Value;
         private static int MiniMapSize => Members.Menu.Item("TpCather.MiniMap.Size").GetValue<Slider>().Value;
         public TeleportCatcher()
         {
-            
             _effectList = new List<TeleportEffect>();
             Drawing.OnDraw += args =>
             {
@@ -96,7 +100,7 @@ namespace OverlayInformation
                                 Drawing.DrawRect(pos - size/2, size, Color.Black, true);
                             }
                         }
-                        pos = DrawOnMap?Drawing.WorldToScreen(position):new Vector2();
+                        pos = DrawOnMap ? Drawing.WorldToScreen(position) : new Vector2();
                         if (!pos.IsZero)
                         {
                             var size = new Vector2(MapSize);
@@ -105,6 +109,11 @@ namespace OverlayInformation
                                     particleEffect.GetColor.Z));*/
 
                             //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
+                            var pos2X = new Vector2(position.X, position.Y);
+                            if (DrawLines && particleEffect.IsAlly && pos2X.Distance(Game.MousePosition)>=1000)
+                            {
+                                Drawing.DrawLine(Game.MouseScreenPosition, pos, Color.White);
+                            }
                             Drawing.DrawRect(pos - size / 2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
                             //Drawing.DrawRect(pos - size, size, Color.Black,true);
                         }
@@ -121,13 +130,13 @@ namespace OverlayInformation
             var player = ObjectManager.GetPlayerByID(id);
             if (player == null || !player.IsValid)
             {
-                Printer.Print("error #" + id);
+                Printer.Print("error #" + id + " (cant find player!)");
                 return;
             }
             if ((player.Team == Members.MyPlayer.Team && ForAlly) || (player.Team != Members.MyPlayer.Team && ForEnemy))
             {
-                
-                _effectList.Add(new TeleportEffect(effect, position, color));
+
+                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team));
                 //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
             }
