@@ -53,3 +53,6 @@ Temporary Items
 /ArcAnnihilation/ArcAnnihilation/obj/x64/Debug
 /ModifierVision/obj/x64/Debug
 /ModifierVision/bin/Debug
+/BadGuy/obj
+/BadGuy/bin/Release
+/BadGuy/bin/Debug
