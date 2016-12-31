@@ -552,7 +552,7 @@ namespace OverlayInformation
 
         private static void Game_OnWndProc(WndEventArgs args)
         {
-            if (!Members.Menu.Item("itempanel.Button.Enable").GetValue<bool>() /*|| args.WParam != 1*/ || Game.IsChatOpen)
+            if (/*!Members.Menu.Item("itempanel.Button.Enable").GetValue<bool>() *//*|| args.WParam != 1*/ Game.IsChatOpen)
             {
                 return;
             }

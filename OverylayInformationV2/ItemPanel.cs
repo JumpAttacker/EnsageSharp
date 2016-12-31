@@ -315,7 +315,7 @@ namespace OverlayInformation
                     }
                 }
             }
-            else
+            else if (Members.Menu.Item("itempanel.Button.Enable").GetValue<bool>())
             {
                 var togglePos=new Vector2(startPos.X + size.X,startPos.Y);
                 var toggleSize=new Vector2(10, size.Y);
@@ -401,7 +401,6 @@ namespace OverlayInformation
                             continue;
                         }
                         itemTexture = Textures.GetTexture("materials/ensage_ui/items/emptyitembg.vmat");
-                        item = null;
                         var k = j + 7;
                         if (j < stashItems.Count)
                         {
