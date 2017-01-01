@@ -15,12 +15,13 @@ namespace OverlayInformation
 {
     internal class TeleportEffect
     {
-        public TeleportEffect(ParticleEffect effect, Vector3 position, Vector3 color, bool isAlly)
+        public TeleportEffect(ParticleEffect effect, Vector3 position, Vector3 color, bool isAlly, bool isStartPart)
         {
             GetEffect = effect;
             GetPosition = position;
             GetColor = color;
             IsAlly = isAlly;
+            IsStart = isStartPart;
         }
 
         public Vector3 GetColor { get; }
@@ -30,6 +31,7 @@ namespace OverlayInformation
         public ParticleEffect GetEffect { get; }
 
         public bool IsAlly { get; }
+        public bool IsStart { get; }
     }
     internal class TeleportCatcher
     {
@@ -110,7 +112,7 @@ namespace OverlayInformation
 
                             //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
                             var pos2X = new Vector2(position.X, position.Y);
-                            if (DrawLines && particleEffect.IsAlly && pos2X.Distance(Game.MousePosition)>=1000)
+                            if (DrawLines && !particleEffect.IsAlly && pos2X.Distance(Game.MousePosition)>=1000 && !particleEffect.IsStart)
                             {
                                 Drawing.DrawLine(Game.MouseScreenPosition, pos, Color.White);
                             }
@@ -124,7 +126,7 @@ namespace OverlayInformation
         }
         private static bool ForAlly => Members.Menu.Item("TpCather.Ally").GetValue<bool>();
         private static bool ForEnemy => Members.Menu.Item("TpCather.Enemy").GetValue<bool>();
-        public void Add(ParticleEffect effect,Vector3 position, Vector3 color)
+        public void Add(ParticleEffect effect, Vector3 position, Vector3 color, bool isStart)
         {
             var id = (uint) ColorList.FindIndex(x => x == color);
             var player = ObjectManager.GetPlayerByID(id);
@@ -136,7 +138,7 @@ namespace OverlayInformation
             if ((player.Team == Members.MyPlayer.Team && ForAlly) || (player.Team != Members.MyPlayer.Team && ForEnemy))
             {
 
-                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team));
+                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team, isStart));
                 //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
             }
@@ -750,11 +752,12 @@ namespace OverlayInformation
             {
                 DelayAction.Add(10, () =>
                 {
+                    var isStart = name.Contains("teleport_start");
                     var effect = args.ParticleEffect;
                     var a = effect.GetControlPoint(0);
                     var b = effect.GetControlPoint(2);
                     Printer.Print($"{(name.Contains("start")?"start":"end")}=>A:{a.PrintVector()} B:{b.PrintVector()}");
-                    TeleportCatcher.Add(effect, a, b);
+                    TeleportCatcher.Add(effect, a, b, isStart);
                 });
             }
         }
