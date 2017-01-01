@@ -20,6 +20,11 @@ namespace ModifierVision
             "modifier_shredder_reactive_armor_stack"
         };
 
+        public static List<string> WhiteList = new List<string>
+        {
+            "modifier_nevermore_presence"
+        };
+
         public static Dictionary<string, bool> ModiferDictinary = new Dictionary<string, bool>();
     }
 }

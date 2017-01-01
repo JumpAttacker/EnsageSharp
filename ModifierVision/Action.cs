@@ -116,7 +116,7 @@ namespace ModifierVision
             var modifier = args.Modifier;
             if (Members.BlackList.Contains(modifier.Name))
                 return;
-            if (modifier.RemainingTime<=0.1)
+            if (modifier.RemainingTime<=1 && !Members.WhiteList.Contains(modifier.Name)) 
                 return;
             /*var name = modifier.Name.Substring(9);
             if (Members.Menu.Item("abilityToggle.!").GetValue<AbilityToggler>().Dictionary.ContainsKey(name))
