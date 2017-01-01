@@ -118,10 +118,10 @@ namespace Legion_Annihilation
                 var inventory =
                     Members.MyHero.Inventory.Items.Where(
                         x =>
-                            x.CanBeCasted() &&
+                            /*x.CanBeCasted() &&*/
                             !(x.TargetTeamType == TargetTeamType.Enemy || x.TargetTeamType == TargetTeamType.All ||
                               x.TargetTeamType == TargetTeamType.Custom) ||
-                            x.CanHit(target));
+                            x.CanHit(target)).Where(x=>x.CanBeCasted());
                 var enumerable = inventory as Item[] ?? inventory.ToArray();
 
                 var linkerBreakers =
@@ -155,7 +155,14 @@ namespace Legion_Annihilation
             if (!ult.CanBeCasted())
                 if (OrbEnable && (!target.IsStunned() || !OrbInStun))
                 {
-                    Orbwalking.Orbwalk(target, followTarget: OrbFollow);
+                    try
+                    {
+                        Orbwalking.Orbwalk(target, followTarget: OrbFollow);
+                    }
+                    catch
+                    {
+                        
+                    }
                 }
                 else if (Utils.SleepCheck("attack_rate"))
                 {

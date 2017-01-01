@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ensage.Common.Menu;
@@ -68,11 +69,19 @@ namespace Legion_Annihilation
             settings.AddSubMenu(draw);
             Members.Menu.AddSubMenu(devolper);
             Members.Menu.AddToMainMenu();
-            if (Members.Menu.Item("Range.Blink.Enable").GetValue<bool>())
+            try
             {
-                Members.Menu.Item("Range.Blink.Enable").SetValue(false);
-                Members.Menu.Item("Range.Blink.Enable").SetValue(true);
+                if (Members.Menu.Item("Range.Blink.Enable").GetValue<bool>())
+                {
+                    Members.Menu.Item("Range.Blink.Enable").SetValue(false);
+                    Members.Menu.Item("Range.Blink.Enable").SetValue(true);
+                }
             }
+            catch (Exception)
+            {
+                
+            }
+            
         }
     }
 }
