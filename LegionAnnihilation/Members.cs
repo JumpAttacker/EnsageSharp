@@ -27,6 +27,7 @@ namespace Legion_Annihilation
         public static List<string> WhiteList = new List<string>
         {
             "item_urn_of_shadows",
+            "item_heavens_halberd",
             "item_armlet"
         };
 
