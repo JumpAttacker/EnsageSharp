@@ -238,7 +238,9 @@ namespace OverlayInformation
                 .SetTooltip("true=icon; false=rectangle");
             tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(20,5,30)));
             tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(50,5,50)));
-            tpCatcher.AddItem(new MenuItem("TpCather.DrawLines", "Draw white lines").SetValue(false));
+            tpCatcher.AddItem(new MenuItem("TpCather.DrawLines", "Draw lines").SetValue(false));
+            tpCatcher.AddItem(new MenuItem("TpCather.SmartColor", "Use smart colors for lines").SetValue(false)).SetTooltip("default color is White");
+            tpCatcher.AddItem(new MenuItem("TpCather.EnableSideMessage", "Enable side notifications").SetValue(true)).SetTooltip("only for enemy");
             /*var hitCather = new Menu("Hit Catcher", "HitCatcher");
             hitCather.AddItem(new MenuItem("HitCatcher.Enable", "Enable").SetValue(true));
             hitCather.AddItem(new MenuItem("HitCatcher.Map", "Draw on Map").SetValue(true));
@@ -318,6 +320,21 @@ namespace OverlayInformation
             killableCol.AddItem(new MenuItem("killableCol.Green", "Green").SetValue(new Slider(100, 0, 255)).SetFontColor(Color.Green));
             killableCol.AddItem(new MenuItem("killableCol.Blue", "Blue").SetValue(new Slider(100, 0, 255)).SetFontColor(Color.Blue));
             //===========================
+            var shrineHelper = new Menu("Shrine Helper", "shrineHelper");
+            shrineHelper.AddItem(new MenuItem("shrineHelper.Range", "Draw range").SetValue(true))
+                .SetTooltip("if dist <=700 and shrine can heal");
+            shrineHelper.AddItem(
+                new MenuItem("shrineHelper.Red", "Red").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Red))
+                .ValueChanged += ShrineHelper.OnChange;
+            shrineHelper.AddItem(
+                new MenuItem("shrineHelper.Green", "Green").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.Green))
+                .ValueChanged += ShrineHelper.OnChange;
+            shrineHelper.AddItem(
+                new MenuItem("shrineHelper.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue))
+                .ValueChanged += ShrineHelper.OnChange;
+            shrineHelper.AddItem(new MenuItem("shrineHelper.Alpha", "Alpha").SetValue(new Slider(255, 0, 255)))
+                .ValueChanged += ShrineHelper.OnChange;
+            //===========================
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Hax.enable", "Hax in lobby").SetValue(false));
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
@@ -368,6 +385,7 @@ namespace OverlayInformation
             page2.AddSubMenu(netWorth);
             page2.AddSubMenu(dmgCalc);
             page2.AddSubMenu(tpCatcher);
+            page2.AddSubMenu(shrineHelper);
             dmgCalc.AddSubMenu(defCol);
             dmgCalc.AddSubMenu(killableCol);
 
@@ -395,7 +413,8 @@ namespace OverlayInformation
                 Members.MyHero = ObjectManager.LocalHero;
                 Members.MyClass = Members.MyHero.ClassID;
                 Members.MyPlayer = ObjectManager.LocalPlayer;
-                
+
+                ShrineHelper.Init();
                 Members.AbilityDictionary = new Dictionary<uint, List<Ability>>();
                 Members.ItemDictionary = new Dictionary<uint, List<Item>>();
                 Members.StashItemDictionary = new Dictionary<uint, List<Item>>();

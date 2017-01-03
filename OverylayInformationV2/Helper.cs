@@ -91,7 +91,22 @@ namespace OverlayInformation
             {
                 Printer.Print($"[SideMessage]: {hero} -> {spellName}");
             }
-            
+
+        }
+        public static void GenerateTpCatcherSideMessage(string hero, string itemName)
+        {
+            try
+            {
+                var msg = new SideMessage(hero, new Vector2(170, 59));
+                msg.AddElement(new Vector2(9, 9), new Vector2(73, 41), Textures.GetHeroTexture(hero));
+                msg.AddElement(new Vector2(110, 9), new Vector2(73, 41), Textures.GetItemTexture(itemName));
+                msg.CreateMessage();
+            }
+            catch (Exception)
+            {
+                Printer.Print($"[TpCatcher.SideMessage]: {hero} -> {itemName}");
+            }
+
         }
         public static Vector3 FindVector(Vector3 first, double ret, float distance)
         {
@@ -174,8 +189,10 @@ namespace OverlayInformation
                 {
                     return pos;
                 }
-                Members.TopPanelPostiion.Add(v.StoredName(), HUDInfo.GetTopPanelPosition(v));
-                return HUDInfo.GetTopPanelPosition(v);
+                Members.TopPanelPostiion.Add(v.StoredName(), HudInfoNew.GetTopPanelPosition(v));
+                //Members.TopPanelPostiion.Add(v.StoredName(), HUDInfo.GetTopPanelPosition(v));
+                return HudInfoNew.GetTopPanelPosition(v);
+                //return HUDInfo.GetTopPanelPosition(v);
             }
             catch (Exception e)
             {

@@ -63,6 +63,7 @@ namespace OverlayInformation
         private static bool DrawLines => Members.Menu.Item("TpCather.DrawLines").GetValue<bool>();
         private static bool DrawOnMiniMap => Members.Menu.Item("TpCather.MiniMap").GetValue<bool>();
         private static bool MinimapType => Members.Menu.Item("TpCather.MiniMap.Type").GetValue<bool>();
+        private static bool SmartClr => Members.Menu.Item("TpCather.SmartColor").GetValue<bool>();
         private static int MapSize => Members.Menu.Item("TpCather.Map.Size").GetValue<Slider>().Value;
         private static int MiniMapSize => Members.Menu.Item("TpCather.MiniMap.Size").GetValue<Slider>().Value;
         public TeleportCatcher()
@@ -112,9 +113,12 @@ namespace OverlayInformation
 
                             //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
                             var pos2X = new Vector2(position.X, position.Y);
-                            if (DrawLines && !particleEffect.IsAlly && pos2X.Distance(Game.MousePosition)>=1000 && !particleEffect.IsStart)
+                            //Printer.Print($"dist: {pos2X.Distance(Game.MousePosition)}");
+                            if (DrawLines && !particleEffect.IsAlly && pos2X.Distance(Game.MousePosition) >= 1000 &&
+                                pos2X.Distance(Game.MousePosition) <= 3400 && !particleEffect.IsStart)
                             {
-                                Drawing.DrawLine(Game.MouseScreenPosition, pos, Color.White);
+                                var clr = SmartClr ? (Color) particleEffect.GetColor : Color.White;
+                                Drawing.DrawLine(Game.MouseScreenPosition, pos, clr);
                             }
                             Drawing.DrawRect(pos - size / 2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
                             //Drawing.DrawRect(pos - size, size, Color.Black,true);
@@ -126,6 +130,7 @@ namespace OverlayInformation
         }
         private static bool ForAlly => Members.Menu.Item("TpCather.Ally").GetValue<bool>();
         private static bool ForEnemy => Members.Menu.Item("TpCather.Enemy").GetValue<bool>();
+        private static bool EnableSideMessage => Members.Menu.Item("TpCather.EnableSideMessage").GetValue<bool>();
         public void Add(ParticleEffect effect, Vector3 position, Vector3 color, bool isStart)
         {
             var id = (uint) ColorList.FindIndex(x => x == color);
@@ -137,7 +142,19 @@ namespace OverlayInformation
             }
             if ((player.Team == Members.MyPlayer.Team && ForAlly) || (player.Team != Members.MyPlayer.Team && ForEnemy))
             {
-
+                if (EnableSideMessage && isStart /*&& player.Team != Members.MyHero.Team*/)
+                {
+                    try
+                    {
+                        var hero = player.Hero;
+                        Helper.GenerateTpCatcherSideMessage(hero?.StoredName(), "item_tpscroll");
+                    }
+                    catch (Exception)
+                    {
+                        Printer.Print("cant get player.hero");
+                    }
+                    
+                }
                 _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team, isStart));
                 //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
@@ -756,7 +773,7 @@ namespace OverlayInformation
                     var effect = args.ParticleEffect;
                     var a = effect.GetControlPoint(0);
                     var b = effect.GetControlPoint(2);
-                    Printer.Print($"{(name.Contains("start")?"start":"end")}=>A:{a.PrintVector()} B:{b.PrintVector()}");
+                    Printer.Print($"{(isStart ? "start" : "end")} => pos: {a.PrintVector()} color: {b.PrintVector()}");
                     TeleportCatcher.Add(effect, a, b, isStart);
                 });
             }

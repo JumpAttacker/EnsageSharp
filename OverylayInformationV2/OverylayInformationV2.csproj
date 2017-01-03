@@ -68,6 +68,7 @@
     <Compile Include="FireEvent.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="HeroesList.cs" />
+    <Compile Include="HUDInfoNew.cs" />
     <Compile Include="ItemPanel.cs" />
     <Compile Include="ItemOverlay.cs" />
     <Compile Include="AbilityOverlay.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="RoshanAction.cs" />
     <Compile Include="Runes.cs" />
     <Compile Include="ShowMeMore.cs" />
+    <Compile Include="ShrineHelper.cs" />
     <Compile Include="Updater.cs" />
   </ItemGroup>
   <ItemGroup>

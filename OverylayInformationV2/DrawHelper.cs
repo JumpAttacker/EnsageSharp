@@ -22,6 +22,7 @@ namespace OverlayInformation
         public static void Overlay(EventArgs args)
         {
             if (!Checker.IsActive()) return;
+            //Printer.Print($"x: {HudInfoNew.ScreenSizeX()}");
             if (Members.Menu.Item("spellpanel.Enable").GetValue<bool>() && Members.Menu.Item("spellpanel.OldMethod.Enable").GetValue<bool>())
                 DrawSpellPanel(Members.Menu.Item("spellpanel.Targets").GetValue<StringList>().SelectedIndex);
             if (Members.Menu.Item("toppanel.Enable").GetValue<bool>())
@@ -261,7 +262,8 @@ namespace OverlayInformation
                         var pos = Helper.GetTopPanelPosition(v) +
                                   new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
                                       Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
-                        var temp = HUDInfo.GetTopPanelSize(v);
+                        var temp = HudInfoNew.GetTopPanelSize(v);
+                        //var temp = HUDInfo.GetTopPanelSize(v);
                         var size = new Vector2((float)temp[0], (float)temp[1]);
                         var healthDelta = new Vector2(v.Health * size.X / v.MaximumHealth, 0);
                         var manaDelta = new Vector2(v.Mana * size.X / v.MaximumMana, 0);
@@ -317,7 +319,8 @@ namespace OverlayInformation
                     var pos = Helper.GetTopPanelPosition(v) +
                               new Vector2(Members.Menu.Item("extraPos.X").GetValue<Slider>().Value,
                                   Members.Menu.Item("extraPos.Y").GetValue<Slider>().Value);
-                    var tempS = HUDInfo.GetTopPanelSize(v);
+                    var tempS = HudInfoNew.GetTopPanelSize(v);
+                    //var tempS = HUDInfo.GetTopPanelSize(v);
                     var size = new Vector2((float) tempS[0], (float) tempS[1]);
                     var ultPos = pos + new Vector2(size[0]/2 - 5, size[1] + 1);
                     string path;
