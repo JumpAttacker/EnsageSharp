@@ -94,6 +94,7 @@ namespace ArcAnnihilation
         private static int ExtraDistance => Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value;
         private static int OrbMinDist => Menu.Item("OrbWalking.minDistance").GetValue<Slider>().Value;
         private static Sleeper _ethereal;
+        private static MultiSleeper blinkSleeper;
 
         private static readonly List<string> AutoPushItems = new List<string>
         {
@@ -214,7 +215,7 @@ namespace ArcAnnihilation
 
         private static void InitMenu()
         {
-            if (firstTime)
+            if (_firstTime)
             {
                 var dict = AbilityList.ToDictionary(item => item, item => true);
                 var dict2 = AbilityList.ToDictionary(item => item, item => true);
@@ -371,7 +372,7 @@ namespace ArcAnnihilation
                 Menu.AddSubMenu(orbwalnking);
                 Menu.AddSubMenu(autoPush);
                 autoPush.AddSubMenu(antiFeed);
-                firstTime = false;
+                _firstTime = false;
             }
             try
             {
@@ -384,7 +385,7 @@ namespace ArcAnnihilation
             
         }
 
-        private static bool firstTime = true;
+        private static bool _firstTime = true;
         public Core()
         {
             _mainHero = ObjectManager.LocalHero;
@@ -400,6 +401,7 @@ namespace ArcAnnihilation
                 "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
                 " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
             _ethereal = new Sleeper();
+            blinkSleeper = new MultiSleeper();
             _myHull = _mainHero.HullRadius;
             _drawType = Menu.Item("Draw.Order.Type").GetValue<bool>();
         }
@@ -1557,12 +1559,12 @@ namespace ArcAnnihilation
         private static bool SparkUsage => Menu.Item("SparkUsage").GetValue<bool>();
         private static void SpellsUsage(Hero me, Hero target, double distance, bool daggerIsReady, bool tempest)
         {
-
+            if (blinkSleeper.Sleeping(me))
+                return;
             var spellbook = me.Spellbook;
             var q = spellbook.SpellQ;
             var w = spellbook.SpellW;
             var e = spellbook.SpellE;
-
 
             if (q != null && IsAbilityEnable(q.StoredName(), tempest) && q.CanBeCasted() && q.CanHit(target) &&
                 Utils.SleepCheck(me.Handle + q.Name))
@@ -1571,7 +1573,7 @@ namespace ArcAnnihilation
                 Utils.Sleep(500, me.Handle + q.Name);
             }
             if (w != null && IsAbilityEnable(w.StoredName(), tempest) && w.CanBeCasted() && Utils.SleepCheck(w.Name) &&
-                !me.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 && !daggerIsReady)
+                !me.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 && !daggerIsReady && target.IsVisible)
             {
                 if (!Menu.Item("MagneticField").GetValue<bool>() && target.IsMelee)
                 {
@@ -1742,6 +1744,7 @@ namespace ArcAnnihilation
                             if (dist >= MinDistance && dist <= 1150)
                             {
                                 item.UseAbility(point);
+                                blinkSleeper.Sleep(250,me);
                                 Print($"[Using]: {item.Name} (5)", print: false);
                             }
                         }
@@ -1759,6 +1762,7 @@ namespace ArcAnnihilation
                                      Math.Sin(angle)),
                                 target.Position.Z);
                             item.UseAbility(point);
+                            blinkSleeper.Sleep(250, me);
                             Print($"[Using]: {item.Name} (6)", print: false);
                         }
                     }
@@ -2180,10 +2184,10 @@ namespace ArcAnnihilation
             Console.ForegroundColor = clr;
         }
 
-        private static void Print(string toString, MessageType type = MessageType.ChatMessage,bool print=true)
+        private static void Print(string toString,bool print=true)
         {
             if (print)
-                Game.PrintMessage(toString, type);
+                Game.PrintMessage(toString);
         }
         #endregion
     }
