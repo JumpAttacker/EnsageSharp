@@ -13,6 +13,12 @@ namespace ModifierVision
         private static bool Checker => Members.Menu.Item("Enable").GetValue<bool>();
         private static bool ChangeColor => Members.Menu.Item("Enable.Color").GetValue<bool>();
 
+        private static bool DrawRoundIcon
+            => Members.Menu.Item("Enable.IconType").GetValue<StringList>().SelectedIndex == 0;
+
+        private static bool DrawVerticallyIcon
+            => Members.Menu.Item("Enable.IconPosition").GetValue<StringList>().SelectedIndex == 0;
+
         public static void OnDraw(EventArgs args)
         {
             if (!Checker)
@@ -57,11 +63,29 @@ namespace ModifierVision
                     var remTime = modifier.RemainingTime;
                     /*if (remTime<=1)
                         continue;*/
-                    var itemPos = startPos + new Vector2(-2 + size.X*counter, 2);
-                    Drawing.DrawRect(itemPos, size,
-                        Textures.GetTexture($"materials/ensage_ui/modifier_textures/{modifier.TextureName}.vmat"));
-                    Drawing.DrawRect(itemPos, size,
-                        Color.Black,true);
+                    var itemPos = startPos;
+                    if (DrawVerticallyIcon)
+                    {
+                        itemPos += new Vector2(2, -2 + size.X * counter);
+                    }
+                    else
+                    {
+                        itemPos += new Vector2(-2 + size.X * counter, 2);
+                    }
+                    if (DrawRoundIcon)
+                    {
+                        Drawing.DrawRect(itemPos, size,
+                            Textures.GetTexture(
+                                $"materials/ensage_ui/modifier_textures/Round/{modifier.TextureName}.vmat"));
+                    }
+                    else
+                    {
+                        Drawing.DrawRect(itemPos, size,
+                            Textures.GetTexture(
+                                $"materials/ensage_ui/modifier_textures/{modifier.TextureName}.vmat"));
+                        Drawing.DrawRect(itemPos, size,
+                            Color.Black, true);
+                    }
                     var timer = Math.Min(remTime+0.1, 99).ToString("0.0");
                     var textSize = Drawing.MeasureText(timer, "Arial",
                         new Vector2(

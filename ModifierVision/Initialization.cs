@@ -14,6 +14,11 @@ namespace ModifierVision
             var settings = new Menu("Settings", "Settings");
             settings.AddItem(new MenuItem("Enable.Heroes", "Enable for heroes").SetValue(true));
             settings.AddItem(new MenuItem("Enable.Creeps", "Enable for creeps").SetValue(false));
+            settings.AddItem(
+                new MenuItem("Enable.IconType", "Icon Type").SetValue(new StringList(new[] { "round", "square" })));
+            settings.AddItem(
+                new MenuItem("Enable.IconPosition", "Icon Orientation").SetValue(
+                    new StringList(new[] {"vertically", "horizontally"})));
             settings.AddItem(new MenuItem("Enable.Color", "Change color on low values").SetValue(false));
             /*settings.AddItem(
                 new MenuItem("abilityToggle.!", "modifiers").SetValue(new AbilityToggler(Members.ModiferDictinary)));*/
