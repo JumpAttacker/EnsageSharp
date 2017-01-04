@@ -1678,12 +1678,22 @@ namespace ArcAnnihilation
                         if (item.IsDisable())
                         {
                             if (!slarkMod && !target.IsLinkensProtected())
-                                if (item.CastStun(target))
+                            {
+                                var duration = Utils.DisableDuration(target);
+                                if ( duration <= 0.2)
+                                {
+                                    item.UseAbility(target);
+                                    Print($"[Using]: {item.Name} (9)", print: false);
+                                    /*Utils.Sleep(350, $"{item.Name + me.Handle}");
+                                    continue;*/
+                                }
+                            }
+                            /*if (item.CastStun(target))
                                 {
                                     Print($"[Using]: {item.Name} (9)", print: false);
                                     Utils.Sleep(350, $"{item.Name + me.Handle}");
                                     continue;
-                                }
+                                }*/
                         }
                         else if (item.IsSilence())
                         {
@@ -1691,7 +1701,7 @@ namespace ArcAnnihilation
                                 if (!target.IsSilenced())
                                 {
                                     item.UseAbility(target);
-                                    Print($"[Using]: {item.Name} (8)", print: false);
+                                    Print($"[Using]!: {item.Name} (8)", print: false);
                                 }
                         }
                         else if ((item.StoredName().Contains("dagon") || item.StoredName() == "item_ethereal_blade") &&
