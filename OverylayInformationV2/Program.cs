@@ -241,6 +241,10 @@ namespace OverlayInformation
             tpCatcher.AddItem(new MenuItem("TpCather.DrawLines", "Draw lines").SetValue(false));
             tpCatcher.AddItem(new MenuItem("TpCather.SmartColor", "Use smart colors for lines").SetValue(false)).SetTooltip("default color is White");
             tpCatcher.AddItem(new MenuItem("TpCather.EnableSideMessage", "Enable side notifications").SetValue(true)).SetTooltip("only for enemy");
+            tpCatcher.AddItem(new MenuItem("TpCather.ExtraTimeForDrawing", "Draw icon extra few seconds after tp").SetValue(true));
+            var tpCatcherTimer = new Menu("TP Timer", "TpCatherTimer");
+            tpCatcherTimer.AddItem(new MenuItem("TpCather.Timer", "Enable timer").SetValue(true));
+            tpCatcherTimer.AddItem(new MenuItem("TpCather.Timer.Size", "Text Size").SetValue(new Slider(17, 5, 25)));
             /*var hitCather = new Menu("Hit Catcher", "HitCatcher");
             hitCather.AddItem(new MenuItem("HitCatcher.Enable", "Enable").SetValue(true));
             hitCather.AddItem(new MenuItem("HitCatcher.Map", "Draw on Map").SetValue(true));
@@ -388,6 +392,7 @@ namespace OverlayInformation
             page2.AddSubMenu(shrineHelper);
             dmgCalc.AddSubMenu(defCol);
             dmgCalc.AddSubMenu(killableCol);
+            tpCatcher.AddSubMenu(tpCatcherTimer);
 
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);

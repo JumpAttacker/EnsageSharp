@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
@@ -15,14 +16,24 @@ namespace OverlayInformation
 {
     internal class TeleportEffect
     {
-        public TeleportEffect(ParticleEffect effect, Vector3 position, Vector3 color, bool isAlly, bool isStartPart)
+        public TeleportEffect(ParticleEffect effect, Vector3 position, Vector3 color, bool isAlly, bool isStartPart, double timeCalc=0)
         {
             GetEffect = effect;
             GetPosition = position;
             GetColor = color;
             IsAlly = isAlly;
             IsStart = isStartPart;
+
+            GetStartTime = Game.RawGameTime;
+            GetTimer = timeCalc;
         }
+
+        // timeCalc-(Game.RawGameTime-GetStartTime)
+
+
+        public double GetTimer { get; set; }
+
+        public float GetStartTime { get; set; }
 
         public Vector3 GetColor { get; }
 
@@ -31,13 +42,14 @@ namespace OverlayInformation
         public ParticleEffect GetEffect { get; }
 
         public bool IsAlly { get; }
+
         public bool IsStart { get; }
     }
     internal class TeleportCatcher
     {
         private static List<TeleportEffect> _effectList;
 
-        private static readonly List<Vector3> ColorList = new List<Vector3>()
+        public static readonly List<Vector3> ColorList = new List<Vector3>()
         {
             new Vector3(0.2f, 0.4588235f, 1),
             new Vector3(0.4f, 1, 0.7490196f),
@@ -66,15 +78,28 @@ namespace OverlayInformation
         private static bool SmartClr => Members.Menu.Item("TpCather.SmartColor").GetValue<bool>();
         private static int MapSize => Members.Menu.Item("TpCather.Map.Size").GetValue<Slider>().Value;
         private static int MiniMapSize => Members.Menu.Item("TpCather.MiniMap.Size").GetValue<Slider>().Value;
+
+        private static int TimerSize => Members.Menu.Item("TpCather.Timer.Size").GetValue<Slider>().Value;
+        private static bool TimerEanble => Members.Menu.Item("TpCather.Timer").GetValue<bool>();
+        private static bool CheckForTheTime => !Members.Menu.Item("TpCather.ExtraTimeForDrawing").GetValue<bool>();
+
         public TeleportCatcher()
         {
             _effectList = new List<TeleportEffect>();
             Drawing.OnDraw += args =>
             {
                 var safeList = new List<TeleportEffect>();
+                //Printer.Print("count: "+ _effectList.Count);
                 foreach (var particleEffect in _effectList)
                 {
                     var effect = particleEffect.GetEffect;
+                    if (CheckForTheTime)
+                    {
+                        if (particleEffect.GetTimer - (Game.RawGameTime - particleEffect.GetStartTime)<=0)
+                        {
+                            continue;
+                        }
+                    }
                     if (effect!=null && effect.IsValid && !effect.IsDestroyed)
                     {
                         var position = particleEffect.GetPosition;
@@ -121,6 +146,16 @@ namespace OverlayInformation
                                 Drawing.DrawLine(Game.MouseScreenPosition, pos, clr);
                             }
                             Drawing.DrawRect(pos - size / 2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
+                            // ReSharper disable once CompareOfFloatsByEqualityOperator
+                            if (TimerEanble && particleEffect.GetTimer != 0)
+                            {
+                                var time = particleEffect.GetTimer - (Game.RawGameTime - particleEffect.GetStartTime);
+                                if (time > 0)
+                                    Drawing.DrawText(
+                                        $"{time.ToString("0.0")}",
+                                        pos + new Vector2(0, size.Y), new Vector2(TimerSize), Color.White,
+                                        FontFlags.None);
+                            }
                             //Drawing.DrawRect(pos - size, size, Color.Black,true);
                         }
                     }
@@ -131,6 +166,7 @@ namespace OverlayInformation
         private static bool ForAlly => Members.Menu.Item("TpCather.Ally").GetValue<bool>();
         private static bool ForEnemy => Members.Menu.Item("TpCather.Enemy").GetValue<bool>();
         private static bool EnableSideMessage => Members.Menu.Item("TpCather.EnableSideMessage").GetValue<bool>();
+        private static readonly Dictionary<Building, int> TpCounter = new Dictionary<Building, int>();
         public void Add(ParticleEffect effect, Vector3 position, Vector3 color, bool isStart)
         {
             var id = (uint) ColorList.FindIndex(x => x == color);
@@ -142,12 +178,15 @@ namespace OverlayInformation
             }
             if ((player.Team == Members.MyPlayer.Team && ForAlly) || (player.Team != Members.MyPlayer.Team && ForEnemy))
             {
+                var hasTravelBoots = (player.Hero?.GetItemById(ItemId.item_travel_boots) ??
+                                      player.Hero?.GetItemById(ItemId.item_travel_boots_2)) != null;
                 if (EnableSideMessage && isStart /*&& player.Team != Members.MyHero.Team*/)
                 {
                     try
                     {
                         var hero = player.Hero;
-                        Helper.GenerateTpCatcherSideMessage(hero?.StoredName(), "item_tpscroll");
+                        Helper.GenerateTpCatcherSideMessage(hero?.StoredName(),
+                            hasTravelBoots ? "item_travel_boots" : "item_tpscroll");
                     }
                     catch (Exception)
                     {
@@ -155,7 +194,31 @@ namespace OverlayInformation
                     }
                     
                 }
-                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team, isStart));
+                var closestTower =
+                    ObjectManager.GetEntities<Building>()
+                        .Where(x => x.IsAlive && x.Team == Members.MyPlayer.Team && x.Distance2D(position) <= 1150)
+                        .OrderBy(x => x.Distance2D(position))
+                        .FirstOrDefault();
+                double timeCalc = 3;
+                if (closestTower != null && !isStart && !hasTravelBoots)
+                {
+                    int counter;
+                    if (!TpCounter.TryGetValue(closestTower, out counter))
+                    {
+                        TpCounter.Add(closestTower, 0);
+                    }
+                    TpCounter[closestTower]++;
+                    var countCalc = TpCounter[closestTower];
+                    timeCalc = countCalc == 1 ? 3 : 4 + 0.5 * countCalc;
+                    Printer.Print($"[TpCatcher]: count: {countCalc} time: {timeCalc}");
+                    DelayAction.Add(25000, () =>
+                    {
+                        TpCounter[closestTower]--;
+                        countCalc = TpCounter[closestTower];
+                        Printer.Print($"[TpCatcher]: flush. {countCalc}");
+                    });
+                }
+                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team, isStart, timeCalc));
                 //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
             }
@@ -739,6 +802,8 @@ namespace OverlayInformation
         tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(25,1,30)));
          * */
         private static bool IsEnableTpCather => Members.Menu.Item("TpCather.Enable").GetValue<bool>();
+        
+
         public static void Entity_OnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
         {
             if (!Checker.IsActive())

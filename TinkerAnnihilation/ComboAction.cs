@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -35,7 +36,6 @@ namespace TinkerAnnihilation
         private static Hero _globalTarget;
         private static Sleeper _attacker;
         private static Sleeper _ethereal;
-        private static Sleeper _dmageSleeper;
         private static MultiSleeper _spellSleeper;
         private static Ability _laser;
         private static Ability _rockets;
@@ -97,6 +97,7 @@ namespace TinkerAnnihilation
             {
                 return;
             }
+            
             _tks = new CancellationTokenSource();
             _testCombo = Action(_tks.Token);
             try
@@ -310,6 +311,7 @@ namespace TinkerAnnihilation
             var castTime = (int)(v.FindCastPoint() * 1000);
             if (v.StoredName() == "item_blink")
                 castTime += 60;
+            castTime += castTime == 0 ? 50 : 0;
             if (target != null)
             {
                 v.UseAbility(target);
@@ -320,7 +322,7 @@ namespace TinkerAnnihilation
             }
             else
                 v.UseAbility();
-            //Printer.Print($"Global waiter: {v.Name}/{castTime}");
+            Printer.Print($"Global waiter: {v.Name}/{castTime}");
             await Task.Delay(castTime, _tks.Token);
         }
 

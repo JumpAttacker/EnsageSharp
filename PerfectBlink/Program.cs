@@ -14,8 +14,6 @@ namespace PerfectBlink
         private static bool EnableAfterTp => Menu.Item("PB.AfterTp").GetValue<bool>();
         private static void Main()
         {
-            Player.OnExecuteOrder += Player_OnExecuteAction;
-            Game.OnUpdate += Game_OnUpdate;
             PrintSuccess(string.Format("> {1} Loaded v{0}", Assembly.GetExecutingAssembly().GetName().Version, Menu.DisplayName));
             Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
@@ -26,6 +24,9 @@ namespace PerfectBlink
                 .SetValue(false)
                 .SetTooltip("May cause a slight delay. If you're playing on tinker, better disable this function");
             Menu.AddToMainMenu();
+			
+			Player.OnExecuteOrder += Player_OnExecuteAction;
+            Game.OnUpdate += Game_OnUpdate;
         }
 
         private static void Game_OnUpdate(EventArgs args)

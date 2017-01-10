@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -1364,6 +1365,7 @@ namespace ArcAnnihilation
                 var inv = hero.Inventory.Items;
                 var enumerable = inv as Item[] ?? inv.ToArray();
 
+
                 // use dagger if available
                 var dagger =
                     enumerable.Any(
@@ -1387,6 +1389,7 @@ namespace ArcAnnihilation
                     {
                         invis.UseAbility();
                         Utils.Sleep(250, "invis" + invis.Handle);
+                        return;
                     }
                 }
                 // do orbwalking if enabled
