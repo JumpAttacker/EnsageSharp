@@ -161,7 +161,7 @@ namespace Legion_Annihilation
                     }
                     catch
                     {
-                        
+                        // ignored
                     }
                 }
                 else if (Utils.SleepCheck("attack_rate"))
@@ -327,11 +327,11 @@ namespace Legion_Annihilation
             else if (ability.IsAbilityBehavior(AbilityBehavior.UnitTarget))
             {
                 if (ability.TargetTeamType == TargetTeamType.Enemy || ability.TargetTeamType == TargetTeamType.All ||
-                    ability.TargetTeamType == TargetTeamType.Custom)
+                    ability.TargetTeamType == TargetTeamType.Custom || ability.TargetTeamType == (TargetTeamType) 7)
                 {
                     ability.UseAbility(target);
                 }
-                else
+                else 
                 {
                     ability.UseAbility(Members.MyHero);
                 }
@@ -401,22 +401,24 @@ namespace Legion_Annihilation
                 Printer.Print($" - {item.Name}");
             }*/
             var enumerable = inventory as IList<Item> ?? inventory.ToList();
-            var neededItems = enumerable.Where(item => !Members.BlackList.Contains(item.StoredName()) && !Members.Items.Contains(item.StoredName()) &&
-                                                       (item.IsDisable() || item.IsNuke() || item.IsPurge()
-                                                        || item.IsSilence() || item.IsShield() ||
-                                                        item.IsSlow() || item.IsSkillShot() ||
-                                                        Members.WhiteList.Contains(item.StoredName())));
+            var neededItems =
+                enumerable.Where(
+                    item =>
+                        !Members.BlackList.Contains(item.GetItemId()) && !Members.Items.Contains(item.StoredName()) &&
+                        (item.IsDisable() || item.IsNuke() || item.IsPurge()
+                         || item.IsSilence() || item.IsShield() ||
+                         item.IsSlow() || item.IsSkillShot() ||
+                         Members.WhiteList.Contains(item.GetItemId())));
             foreach (var item in neededItems)
             {
                 Members.Items.Add(item.StoredName());
                 Members.Menu.Item("itemEnable")
                     .GetValue<AbilityToggler>().Add(item.StoredName());
                 if (item.TargetTeamType == TargetTeamType.Enemy || item.TargetTeamType == TargetTeamType.All ||
-                    item.TargetTeamType == TargetTeamType.Custom)
+                    item.TargetTeamType == TargetTeamType.Custom || item.TargetTeamType==(TargetTeamType) 7)
                     Members.Menu.Item("itemEnableLinken")
                         .GetValue<AbilityToggler>().Add(item.StoredName());
                 Printer.Print($"[NewItem]: {item.StoredName()} || {item.TargetTeamType}");
-
             }
             var tempList = enumerable.Select(neededItem => neededItem.StoredName()).ToList();
             var removeList = new List<string>();

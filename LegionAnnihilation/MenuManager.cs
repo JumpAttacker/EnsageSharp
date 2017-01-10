@@ -79,9 +79,8 @@ namespace Legion_Annihilation
             }
             catch (Exception)
             {
-                
+                // ignored
             }
-            
         }
     }
 }

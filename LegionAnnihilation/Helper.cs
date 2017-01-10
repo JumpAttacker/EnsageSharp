@@ -1,9 +1,6 @@
-﻿using System.Linq;
-using Ensage;
-using Ensage.Common.Extensions;
+﻿using Ensage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
-using SharpDX;
 
 namespace Legion_Annihilation
 {

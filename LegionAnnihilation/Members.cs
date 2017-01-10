@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Ensage;
+using Ensage.Common.Enums;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects.UtilityObjects;
-using SharpDX;
 
 namespace Legion_Annihilation
 {
@@ -24,17 +24,19 @@ namespace Legion_Annihilation
             "legion_commander_duel"
         };
 
-        public static List<string> WhiteList = new List<string>
+        public static List<ItemId> WhiteList = new List<ItemId>
         {
-            "item_urn_of_shadows",
-            "item_heavens_halberd",
-            "item_armlet"
+            ItemId.item_urn_of_shadows,
+            ItemId.item_heavens_halberd,
+            ItemId.item_armlet,
+            ItemId.item_satanic,
+            ItemId.item_force_staff
         };
 
         public static Sleeper Updater;
-        public static List<string> BlackList = new List<string>
+        public static List<ItemId> BlackList = new List<ItemId>
         {
-            "item_blink"
+            ItemId.item_blink
         };
         public static ParticleEffect BlinkRange { get; set; }
     }
