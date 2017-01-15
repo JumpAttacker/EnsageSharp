@@ -171,15 +171,29 @@ namespace OverlayInformation
         {
             var id = (uint) ColorList.FindIndex(x => x == color);
             var player = ObjectManager.GetPlayerByID(id);
+            var dontTryToFindBoots = false;
             if (player == null || !player.IsValid)
             {
                 Printer.Print("error #" + id + " (cant find player!)");
                 return;
             }
+            if (player.Hero == null || !player.Hero.IsValid)
+            {
+                dontTryToFindBoots = true;
+            }
             if ((player.Team == Members.MyPlayer.Team && ForAlly) || (player.Team != Members.MyPlayer.Team && ForEnemy))
             {
-                var hasTravelBoots = (player.Hero?.GetItemById(ItemId.item_travel_boots) ??
-                                      player.Hero?.GetItemById(ItemId.item_travel_boots_2)) != null;
+                var hasTravelBoots = false;
+                try
+                {
+                    hasTravelBoots = !dontTryToFindBoots && (player.Hero?.GetItemById(ItemId.item_travel_boots) ??
+                                                             player.Hero?.GetItemById(ItemId.item_travel_boots_2)) !=
+                                     null;
+                }
+                catch
+                {
+                    Printer.Print($"error in travels: player: {player.Name} || hero: {player?.Hero?.Name}",print: true);   
+                }
                 if (EnableSideMessage && isStart /*&& player.Team != Members.MyHero.Team*/)
                 {
                     try

@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using SharpDX;
@@ -60,6 +62,7 @@ namespace OverlayInformation
             #endregion
 
         }
+
         private static int AutoItemsStickHealth => Members.Menu.Item("autoItems.Percent").GetValue<Slider>().Value;
         private static int AutoItemsStickMana => Members.Menu.Item("autoItems.Percent2").GetValue<Slider>().Value;
         /// <summary>
@@ -76,7 +79,16 @@ namespace OverlayInformation
             //Printer.Print($"H[{health}]MH[{maxHealth}]Min%[{MinPercHealthForRelocate}]Final%[{percent}]");
             return percent <= (checkForHealth ? AutoItemsStickHealth : AutoItemsStickMana);
         }
-
+        /// <summary>
+        /// Returns an item by using its internal ID.
+        /// </summary>
+        /// <param name="owner">Owner unit.</param>
+        /// <param name="itemId">The item ID of the wanted item.</param>
+        /// <returns></returns>
+        public static Ability GetItemById(this Unit owner, ItemId itemId)
+        {
+            return owner.Inventory.Items.FirstOrDefault(x => x!=null && x.IsValid && x.AbilityData2.ID == (uint)itemId);
+        }
         public static void GenerateSideMessage(string hero, string spellName)
         {
             try
