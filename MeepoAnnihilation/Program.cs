@@ -98,6 +98,8 @@ namespace MeepoAnnihilation
         public static readonly Dictionary<uint, Ability> SpellQ = new Dictionary<uint, Ability>();
         public static readonly Dictionary<uint, Ability> SpellW = new Dictionary<uint, Ability>();
         public static List<CampExtension> CampsExtensions = new List<CampExtension>();
+        private static bool ThrowingNet => Menu.Item("hotkey.ThrowNet").GetValue<KeyBind>().Active;
+        private static bool isNetEnable = false;
         #endregion
 
         #region Main
@@ -112,16 +114,29 @@ namespace MeepoAnnihilation
             Menu.AddItem(
                 new MenuItem("hotkey.Escape", "Escape for selected Meepo(s)").SetValue(new KeyBind('V',
                     KeyBindType.Press)));
+            Menu.AddItem(
+                new MenuItem("hotkey.ThrowNet", "Throw net").SetValue(new KeyBind('D',
+                    KeyBindType.Press))).ValueChanged += (sender, args) =>
+                    {
+                        var newValue = args.GetNewValue<KeyBind>().Active;
+                        var oldValue = args.GetOldValue<KeyBind>().Active;
+                        if (oldValue != newValue)
+                            isNetEnable = newValue;
+                    };
             Menu.AddItem(new MenuItem("Escape.MinRange", "Min health for autoheal").SetValue(new Slider(300, 0, 4000)));
             Menu.AddItem(
                 new MenuItem("Escape.MinRangePercent", "Min health for autoheal (%)").SetValue(new Slider(15, 0, 100)));
-            Menu.AddItem(new MenuItem("Drawing.PoffSystem", "Poofer").SetValue(true).SetTooltip("All selected meepos will use W spell on target position when first meepo use W spell"));
+            Menu.AddItem(
+                new MenuItem("Drawing.PoffSystem", "Poofer").SetValue(true)
+                    .SetTooltip("All selected meepos will use W spell on target position when first meepo use W spell"));
             var drawingMenu = new Menu("Drawing", "Drawing");
             
             drawingMenu.AddItem(new MenuItem("Drawing.DamageFromPoof", "Draw Poof count on enemy").SetValue(true));
             drawingMenu.AddItem(new MenuItem("Drawing.NumOfMeepo", "Draw Number for each meepo").SetValue(true));
-            drawingMenu.AddItem(new MenuItem("Drawing.NumOfMeepoOnMinimap", "Draw Number for each meepo on minimap").SetValue(true));
-            drawingMenu.AddItem(new MenuItem("Drawing.NumOfMeepoInMenu", "Draw Number for each meepo in OverlayMenu").SetValue(true));
+            drawingMenu.AddItem(
+                new MenuItem("Drawing.NumOfMeepoOnMinimap", "Draw Number for each meepo on minimap").SetValue(true));
+            drawingMenu.AddItem(
+                new MenuItem("Drawing.NumOfMeepoInMenu", "Draw Number for each meepo in OverlayMenu").SetValue(true));
             drawingMenu.AddItem(
                 new MenuItem("Drawing.posX", "OverlayMenu pos X").SetValue(new Slider(120, 0,
                     500)));
@@ -182,8 +197,7 @@ namespace MeepoAnnihilation
                 if (MyHero.ClassID!=ClassID.CDOTA_Unit_Hero_Meepo) return;
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
-                    MessageType.LogMessage);
+                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
                 Game.OnUpdate += Game_OnUpdate;
                 Game.OnUpdate += Camp_update;
                 Drawing.OnDraw += Drawing_OnDraw;
@@ -597,6 +611,7 @@ namespace MeepoAnnihilation
                 }
                 Utils.Sleep(250, "button_cd");
             }
+
             if (Menu.Item("hotkey.PoofAll").GetValue<KeyBind>().Active)
             {
                 foreach (
@@ -614,6 +629,32 @@ namespace MeepoAnnihilation
                         Utils.Sleep(250, "all_poof" + handle);
                     }
 
+                }
+            }
+
+            if (ThrowingNet && isNetEnable)
+            {
+                //var target = TargetSelector.ClosestToMouse(MyHero);
+                var target = Game.MousePosition;
+                if (true)
+                {
+                    foreach (
+                        var me in
+                            MeepoSet.Where(
+                                x =>
+                                    x.Hero.IsAlive && x.CurrentOrderState != OrderState.Escape && x.Hero.Distance2D(target)<=x.SpellQ.GetCastRange())
+                                .OrderBy(y => y.Hero.Distance2D(target)))
+                    {
+                        var spell = me.SpellQ;
+                        var handle = me.Handle;
+                        if (spell != null && spell.CanBeCasted() && Utils.SleepCheck("throwNet"+handle))
+                        {
+                            spell.UseAbility(target);
+                            isNetEnable = false;
+                            Utils.Sleep(1000, "throwNet"+handle);
+                            return;
+                        }
+                    }
                 }
             }
             if (!Menu.Item("hotkey").GetValue<KeyBind>().Active || (_globalTarget != null && !_globalTarget.IsAlive))
@@ -1331,7 +1372,7 @@ namespace MeepoAnnihilation
         private static void Print(string s,bool print=false)
         {
             if (print)
-                Game.PrintMessage(s, MessageType.ChatMessage);
+                Game.PrintMessage(s);
         }
 
         private static float GetRealCastRange(this Ability ability)
