@@ -147,7 +147,7 @@ namespace OverlayInformation
                             }
                             Drawing.DrawRect(pos - size / 2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
                             // ReSharper disable once CompareOfFloatsByEqualityOperator
-                            if (TimerEanble && particleEffect.GetTimer != 0)
+                            if (TimerEanble && particleEffect.GetTimer != 0 && !particleEffect.IsStart)
                             {
                                 var time = particleEffect.GetTimer - (Game.RawGameTime - particleEffect.GetStartTime);
                                 if (time > 0)
@@ -194,20 +194,7 @@ namespace OverlayInformation
                 {
                     Printer.Print($"error in travels: player: {player.Name} || hero: {player?.Hero?.Name}",print: true);   
                 }
-                if (EnableSideMessage && isStart /*&& player.Team != Members.MyHero.Team*/)
-                {
-                    try
-                    {
-                        var hero = player.Hero;
-                        Helper.GenerateTpCatcherSideMessage(hero?.StoredName(),
-                            hasTravelBoots ? "item_travel_boots" : "item_tpscroll");
-                    }
-                    catch (Exception)
-                    {
-                        Printer.Print("cant get player.hero");
-                    }
-                    
-                }
+                
                 var closestTower =
                     ObjectManager.GetEntities<Building>()
                         .Where(x => x.IsAlive && x.Team == Members.MyPlayer.Team && x.Distance2D(position) <= 1150)
@@ -231,6 +218,20 @@ namespace OverlayInformation
                         countCalc = TpCounter[closestTower];
                         Printer.Print($"[TpCatcher]: flush. {countCalc}");
                     });
+                }
+                if (EnableSideMessage && !isStart /*&& player.Team != Members.MyHero.Team*/)
+                {
+                    try
+                    {
+                        var hero = player.Hero;
+                        Helper.GenerateTpCatcherSideMessage(hero?.StoredName(),
+                            hasTravelBoots ? "item_travel_boots" : "item_tpscroll", (int) (timeCalc*1000));
+                    }
+                    catch (Exception)
+                    {
+                        Printer.Print("cant get player.hero");
+                    }
+
                 }
                 _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team, isStart, timeCalc));
                 //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
