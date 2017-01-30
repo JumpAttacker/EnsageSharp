@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common.Enums;
@@ -111,6 +112,18 @@ namespace Auto_Disable
         {
             Game.OnUpdate -= Core.Updater;
             Game.OnUpdate -= Core.UpdateLogic;
+            for (var i = 0; i < 10; i++)
+            {
+                try
+                {
+                    if (Menus[i] != null)
+                        Menus[i].RemoveSubMenu("_heroes");
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
             Menu.RemoveFromMainMenu();
         }
 

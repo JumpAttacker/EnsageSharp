@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 
 namespace OverlayInformation
 {
     public class HeroesList
     {
         #region Static Fields
-
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         /// <summary>
         ///     The all.
         /// </summary>
@@ -130,27 +134,37 @@ namespace OverlayInformation
             //Printer.Print("update#3");
             foreach (var hero in tempList)
             {
-                if (!(hero != null && hero.IsValid))
+                if (!(hero != null && hero.IsValid) /*|| (hero.ClassID==ClassID.CDOTA_Unit_Hero_MonkeyKing && hero.HasModifier("modifier_monkey_king_fur_army_soldier_hidden"))*/)
                 {
                     continue;
                 }
-
+                if (hero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
+                {
+                    var mod = hero.Modifiers.Any(x=>x.Name== "modifier_monkey_king_fur_army_soldier_hidden");
+                    if (mod)
+                        continue;
+                }
                 if (!All.Contains(hero))
                 {
                     herolist.Add(hero);
-                    //Printer.Print($"herolist.Add(hero): {hero.Name}");
+                    /*Log.Debug($"herolist: {hero.Name} [{hero.IsIllusion}] [{hero.ClassID}]");
+                    foreach (var modifier in hero.Modifiers)
+                    {
+                        Log.Debug($"mod: {modifier.Name}");
+                    }*/
+                    //Printer.Print($"herolist.Add(All): {hero.Name} IsIllusion: {hero.IsIllusion}");
                 }
 
                 if (!Radiant.Contains(hero) && hero.Team == Team.Radiant)
                 {
                     herolistRadiant.Add(hero);
-                    //Printer.Print($"herolist.Add(hero): {hero.Name}");
+                    //Printer.Print($"herolist.Add(Radiant): {hero.Name} IsIllusion: {hero.IsIllusion}");
                 }
 
                 if (!Dire.Contains(hero) && hero.Team == Team.Dire)
                 {
                     herolistDire.Add(hero);
-                    //Printer.Print($"herolist.Add(hero): {hero.Name}");
+                    //Printer.Print($"herolist.Add(Dire): {hero.Name} IsIllusion: {hero.IsIllusion}");
                 }
             }
             //Printer.Print("update#4");
@@ -184,7 +198,7 @@ namespace OverlayInformation
 
             tempList = Players.All.Where(x => x.Hero != null && x.Hero.IsValid).Select(x => x.Hero).ToList();
             foreach (
-                var hero in ObjectManager.GetEntities<Hero>().Where(hero => tempList.All(x => x.Handle != hero.Handle)))
+                var hero in ObjectManager.GetEntities<Hero>().Where(hero => !hero.IsIllusion && tempList.All(x => x.Handle != hero.Handle)))
             {
                 //Printer.Print($"tempList.Add(hero): {hero.Name}");
                 tempList.Add(hero);
@@ -210,14 +224,20 @@ namespace OverlayInformation
                 () =>
                 {
                     var hero = args.Entity as Hero;
-                    if (hero == null)
+                    if (hero == null || !hero.IsValid || hero.IsIllusion /*|| hero.HasModifier("modifier_monkey_king_fur_army_soldier_hidden")*/)
                     {
                         return;
                     }
-
+                    if (hero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
+                    {
+                        var mod = hero.Modifiers.Any(x => x.Name == "modifier_monkey_king_fur_army_soldier_hidden");
+                        if (mod)
+                            return;
+                    }
                     tempList.Add(hero);
                     if (!All.Contains(hero))
                     {
+                        //Log.Debug($"All.Add(hero): {hero.Name} [{hero.IsIllusion}]");
                         //Printer.Print($"All.Add(hero): {hero.Name}");
                         All.Add(hero);
                     }

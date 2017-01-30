@@ -128,7 +128,7 @@ namespace OverlayInformation
             var haveVeil =
                 InSys.Any(
                     x => IsAbilityEnable(x.StoredName()) && x.StoredName() == "item_veil_of_discord" && x.CanBeCasted());
-            var myPhysDmg = 0;
+            var myPhysDmg = 0f;
             if (Members.MyHero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
             {
                 var extraMkAbility = Members.MyHero.FindSpell("special_bonus_unique_monkey_king", true)?.Level == 1;
@@ -137,8 +137,9 @@ namespace OverlayInformation
                                 (Members.MyHero.HasModifier("modifier_monkey_king_quadruple_tap_bonuses")
                                     ? passiveDmg
                                     : 0);
-
-                myPhysDmg *= extraMkAbility ? 3 : 2;
+                var boundless = Members.MyHero.FindSpell("monkey_king_boundless_strike", true).Level;
+                var coef = 1.2f + 0.20f*boundless;
+                myPhysDmg *= extraMkAbility ? 3f : coef;
             }
             foreach (var v in Manager.HeroManager.GetEnemyViableHeroes())
             {

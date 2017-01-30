@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using Ensage;
 using Ensage.Abilities;
@@ -8,6 +9,8 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Heroes;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 
 namespace OverlayInformation
 {
@@ -15,6 +18,7 @@ namespace OverlayInformation
     {
         public abstract class HeroList
         {
+            private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
             private static Sleeper _abilityUpdate = new Sleeper();
             //private static readonly Sleeper ItemUpdate = new Sleeper();
             private static Sleeper _heroUpdate = new Sleeper();

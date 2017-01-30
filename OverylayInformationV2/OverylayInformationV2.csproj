@@ -42,6 +42,9 @@
     <Reference Include="Ensage.Common">
       <HintPath>C:\Program Files (x86)\6LmEQsuox\References\Ensage.Common.dll</HintPath>
     </Reference>
+    <Reference Include="PlaySharp.Toolkit">
+      <HintPath>C:\Program Files (x86)\6LmEQsuox\References\PlaySharp.Toolkit.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX">
       <HintPath>C:\Program Files (x86)\6LmEQsuox\References\SharpDX.dll</HintPath>
     </Reference>

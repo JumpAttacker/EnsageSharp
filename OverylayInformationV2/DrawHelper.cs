@@ -701,6 +701,12 @@ namespace OverlayInformation
                 DrawShadowText(Members.RoshIsAlive ? "Roshan alive" : Members.DeathTime == 0 ? "Roshan death" : text, 217, 10,
                     Members.RoshIsAlive ? Color.Green : Color.Red, Members.RoshanFont);
 
+                if (Members.AegisEvent)
+                {
+                    text = $"Aegis Timer: {4 - Members.AegisMinutes}:{59 - Members.AegisSeconds:0.}";
+                    DrawShadowText(text, 217, 27,Color.GreenYellow, Members.RoshanFont);
+                }
+
                 #endregion
             }
 

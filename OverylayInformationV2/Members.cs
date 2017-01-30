@@ -30,6 +30,7 @@ namespace OverlayInformation
         public static Hero Meepo { get; set; }
         public static DividedWeStand MeepoDivided { get; set; }
         public static ClassID MyClass { get; set; }
+        
 
         public static List<Hero> Heroes=new List<Hero>();
         public static List<Hero> AllyHeroes=new List<Hero>();
@@ -50,6 +51,12 @@ namespace OverlayInformation
         public static bool RoshIsAlive;
         public static double RoshanMinutes;
         public static double RoshanSeconds;
+        public static float AegisTime { get; set; }
+        public static double AegisMinutes { get; set; }
+        public static double AegisSeconds { get; set; }
+        public static bool AegisEvent { get; set; }
+        public static Item Aegis { get; set; }
+        public static bool AegisWasFound { get; set; }
 
         public static readonly Dictionary<Unit, ParticleEffect> Effects2 = new Dictionary<Unit, ParticleEffect>();
         public static readonly Dictionary<Unit, ParticleEffect> Effects1 = new Dictionary<Unit, ParticleEffect>();
