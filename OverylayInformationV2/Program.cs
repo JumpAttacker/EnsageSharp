@@ -236,7 +236,7 @@ namespace OverlayInformation
             tpCatcher.AddItem(
                 new MenuItem("TpCather.MiniMap.Type", "Draw on MiniMap Hero Icon or Rectangle").SetValue(true))
                 .SetTooltip("true=icon; false=rectangle");
-            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(20,5,30)));
+            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(20,5,30))).ValueChanged+= TeleportCatcher.OnValueChanged;
             tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(50,5,50)));
             tpCatcher.AddItem(new MenuItem("TpCather.DrawLines", "Draw lines").SetValue(false));
             tpCatcher.AddItem(new MenuItem("TpCather.SmartColor", "Use smart colors for lines").SetValue(false)).SetTooltip("default color is White");
@@ -532,6 +532,8 @@ namespace OverlayInformation
                 
             };
         }
+
+        
 
         private static List<Vector3> Points=new List<Vector3>();
         private static void Drawing_OnDraw(EventArgs args)

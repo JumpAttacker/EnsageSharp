@@ -5,6 +5,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
+using SharpDX.Direct3D9;
 
 namespace OverlayInformation
 {
@@ -232,8 +233,8 @@ namespace OverlayInformation
                         5,
                         12),
                     new Vector2(
-                        272,
-                        261))
+                        240,
+                        265))
             },
             {
                 new Vector2(
@@ -373,7 +374,6 @@ namespace OverlayInformation
                 Console.WriteLine("Ensage couldnt determine your resolution, try to launch in window mode");
                 return;
             }
-
             currentMinimap =
                 minimaps.FirstOrDefault(
                     x => Math.Abs(x.Key.X - ScreenSize.X) < 10 && Math.Abs(x.Key.Y - ScreenSize.Y) < 10).Value;
@@ -501,8 +501,49 @@ namespace OverlayInformation
             //    currentMinimap.Size.Y, 
             //    new ColorBGRA(100, 100, 100, 50));
             //minimap.Add();
-        }
+            /*_line = new Line(Drawing.Direct3DDevice9);
 
+            Drawing.OnEndScene += args =>
+            {
+                if (Drawing.Direct3DDevice9 == null)
+                {
+                    return;
+                }
+                var pos = currentMinimap.Position+new Vector2(0,800);
+                var size = currentMinimap.Size;
+                DrawLine(
+                    pos.X, 
+                    pos.Y,
+                    pos.X + size.X, 
+                    pos.Y + size.Y,
+                    2, Color.YellowGreen);
+
+
+            };
+            Drawing.OnPostReset += args =>
+            {
+                _line.OnResetDevice();
+            };
+            Drawing.OnPreReset += args =>
+            {
+                _line.OnLostDevice();
+            };*/
+        }
+        /*public static void DrawLine(float x1, float y1, float x2, float y2, float w, Color color)
+        {
+            var vLine = new[] { new Vector2(x1, y1), new Vector2(x2, y2) };
+
+            _line.GLLines = true;
+            _line.Antialias = false;
+            _line.Width = w;
+
+            _line.Begin();
+            _line.Draw(vLine, color);
+            _line.End();
+
+        }*/
+
+        //private static Line _line;
         #endregion
 
         #region Public Properties

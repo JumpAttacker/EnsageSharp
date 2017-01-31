@@ -11,6 +11,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
+using SharpDX.Direct3D9;
 
 namespace OverlayInformation
 {
@@ -82,12 +83,86 @@ namespace OverlayInformation
         private static int TimerSize => Members.Menu.Item("TpCather.Timer.Size").GetValue<Slider>().Value;
         private static bool TimerEanble => Members.Menu.Item("TpCather.Timer").GetValue<bool>();
         private static bool CheckForTheTime => !Members.Menu.Item("TpCather.ExtraTimeForDrawing").GetValue<bool>();
+        private static Font _textFont;
 
+        public static void OnValueChanged(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
+        {
+            _textFont = new Font(
+                Drawing.Direct3DDevice9,
+                new FontDescription
+                {
+                    FaceName = "Tahoma",
+                    Height = MiniMapSize,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Default
+                });
+        }
+        
         public TeleportCatcher()
         {
             _effectList = new List<TeleportEffect>();
+            _textFont = new Font(
+                Drawing.Direct3DDevice9,
+                new FontDescription
+                {
+                    FaceName = "Tahoma",
+                    Height = MiniMapSize,
+                    OutputPrecision = FontPrecision.Raster,
+                    Quality = FontQuality.ClearTypeNatural,
+                    CharacterSet = FontCharacterSet.Hangul,
+                    MipLevels = 3,
+                    PitchAndFamily = FontPitchAndFamily.Modern,
+                    Weight = FontWeight.Heavy,
+                });
+            Drawing.OnEndScene += args =>
+            {
+                if (!Checker.IsActive())
+                    return;
+                if (Drawing.Direct3DDevice9 == null)
+                {
+                    return;
+                }
+
+                //DrawLine(5, 12, 272, 261, 2, Color.YellowGreen);
+                foreach (var particleEffect in _effectList)
+                {
+                    var effect = particleEffect.GetEffect;
+                    if (effect != null && effect.IsValid && !effect.IsDestroyed)
+                    {
+                        var position = particleEffect.GetPosition;
+                        var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
+                        var player =
+                                ObjectManager.GetPlayerByID(
+                                    (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
+                        if (player == null || !player.IsValid)
+                            continue;
+
+                        if (!pos.IsZero)
+                        {
+                            Printer.PrintSuccess("123");
+                            _textFont.DrawText(
+                                null,
+                                "TP",
+                                (int)pos.X-10,
+                                (int)pos.Y,
+                                Color.YellowGreen);
+                        }
+                    }
+                }
+                
+            };
+            Drawing.OnPostReset += args =>
+            {
+                _textFont.OnResetDevice();
+            };
+            Drawing.OnPreReset += args =>
+            {
+                _textFont.OnLostDevice();
+            };
             Drawing.OnDraw += args =>
             {
+                if (!Checker.IsActive())
+                    return;
                 var safeList = new List<TeleportEffect>();
                 //Printer.Print("count: "+ _effectList.Count);
                 foreach (var particleEffect in _effectList)
@@ -167,6 +242,8 @@ namespace OverlayInformation
         private static bool ForEnemy => Members.Menu.Item("TpCather.Enemy").GetValue<bool>();
         private static bool EnableSideMessage => Members.Menu.Item("TpCather.EnableSideMessage").GetValue<bool>();
         private static readonly Dictionary<Building, int> TpCounter = new Dictionary<Building, int>();
+        
+
         public void Add(ParticleEffect effect, Vector3 position, Vector3 color, bool isStart)
         {
             var id = (uint) ColorList.FindIndex(x => x == color);
