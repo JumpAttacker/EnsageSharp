@@ -239,7 +239,7 @@ namespace OverlayInformation
             tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(20,5,30))).ValueChanged+= TeleportCatcher.OnValueChanged;
             tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(50,5,50)));
             tpCatcher.AddItem(new MenuItem("TpCather.DrawLines", "Draw lines").SetValue(false));
-            tpCatcher.AddItem(new MenuItem("TpCather.SmartColor", "Use smart colors for lines").SetValue(false)).SetTooltip("default color is White");
+            tpCatcher.AddItem(new MenuItem("TpCather.SmartColor", "Use smart colors for drawing").SetValue(false));
             tpCatcher.AddItem(new MenuItem("TpCather.EnableSideMessage", "Enable side notifications").SetValue(true)).SetTooltip("only for enemy");
             tpCatcher.AddItem(new MenuItem("TpCather.ExtraTimeForDrawing", "Draw icon extra few seconds after tp").SetValue(true));
             var tpCatcherTimer = new Menu("TP Timer", "TpCatherTimer");

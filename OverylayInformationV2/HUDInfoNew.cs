@@ -234,7 +234,7 @@ namespace OverlayInformation
                         12),
                     new Vector2(
                         240,
-                        265))
+                        +265))
             },
             {
                 new Vector2(

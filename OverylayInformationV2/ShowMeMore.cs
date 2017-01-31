@@ -139,13 +139,17 @@ namespace OverlayInformation
 
                         if (!pos.IsZero)
                         {
-                            Printer.PrintSuccess("123");
-                            _textFont.DrawText(
+                            DrawShadowText(_textFont, "TP", 
+                                (int) pos.X - 10,
+                                (int) pos.Y, 
+                                SmartClr ? 
+                                (Color) particleEffect.GetColor : Color.YellowGreen);
+                            /*_textFont.DrawText(
                                 null,
                                 "TP",
-                                (int)pos.X-10,
-                                (int)pos.Y,
-                                Color.YellowGreen);
+                                (int) pos.X - 10,
+                                (int) pos.Y,
+                                SmartClr ? (Color) particleEffect.GetColor : Color.YellowGreen);*/
                         }
                     }
                 }
@@ -242,7 +246,11 @@ namespace OverlayInformation
         private static bool ForEnemy => Members.Menu.Item("TpCather.Enemy").GetValue<bool>();
         private static bool EnableSideMessage => Members.Menu.Item("TpCather.EnableSideMessage").GetValue<bool>();
         private static readonly Dictionary<Building, int> TpCounter = new Dictionary<Building, int>();
-        
+        private static void DrawShadowText(Font f,string stext, int x, int y, Color color)
+        {
+            f.DrawText(null, stext, x + 1, y + 1, Color.Black);
+            f.DrawText(null, stext, x, y, color);
+        }
 
         public void Add(ParticleEffect effect, Vector3 position, Vector3 color, bool isStart)
         {
