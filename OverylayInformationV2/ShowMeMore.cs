@@ -76,7 +76,7 @@ namespace OverlayInformation
         private static bool DrawLines => Members.Menu.Item("TpCather.DrawLines").GetValue<bool>();
         private static bool DrawOnMiniMap => Members.Menu.Item("TpCather.MiniMap").GetValue<bool>();
         private static bool MinimapType => Members.Menu.Item("TpCather.MiniMap.Type").GetValue<bool>();
-        private static bool SmartClr => Members.Menu.Item("TpCather.SmartColor").GetValue<bool>();
+        private static bool SmartClr => Members.Menu.Item("TpCather.SmartDrawingColors").GetValue<bool>();
         private static int MapSize => Members.Menu.Item("TpCather.Map.Size").GetValue<Slider>().Value;
         private static int MiniMapSize => Members.Menu.Item("TpCather.MiniMap.Size").GetValue<Slider>().Value;
 
