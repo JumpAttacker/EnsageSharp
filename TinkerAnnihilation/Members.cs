@@ -39,6 +39,7 @@ namespace TinkerAnnihilation
         public static int TargetG => Menu.Item("Target.Green").GetValue<Slider>().Value;
         public static int TargetB => Menu.Item("Target.Blue").GetValue<Slider>().Value;
 
-        public static bool ExtraRange = false;
+
+        public static bool LaserBuff;
     }
 }

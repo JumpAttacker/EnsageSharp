@@ -139,6 +139,11 @@ namespace TinkerAnnihilation
             if (_updater.Sleeping)
                 return;
             _updater.Sleep(500);
+            if (!Members.LaserBuff)
+            {
+                var laserDmg = Members.MyHero.FindSpell("special_bonus_unique_tinker")?.Level > 0;
+                Members.LaserBuff = laserDmg;
+            }
             var inventory = Members.MyHero.Inventory.Items;
             foreach (var item in inventory.Where(item => !Members.Items.Contains(item.StoredName()) &&
                                                          (item.IsDisable() || item.IsNuke() || item.IsPurge() ||

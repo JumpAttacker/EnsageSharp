@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace TinkerAnnihilation
@@ -26,7 +27,7 @@ namespace TinkerAnnihilation
         private static int MinDistance => Members.Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value;
         private static int ExtraDistance => Members.Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value;
         private static int DamageIndex => Members.Menu.Item("Drawing.EnableDamage").GetValue<StringList>().SelectedIndex;
-
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private enum DamageDrawing
         {
             OnlyForGlobalTarget,
@@ -148,9 +149,11 @@ namespace TinkerAnnihilation
                 var rearm = Abilities.FindAbility("tinker_rearm");
                 if (rearm.CanBeCasted())
                 {
-                    Printer.Print("rearm!");
+                    
                     rearm?.UseAbility();
                     var time = (int)(GetRearmTime(rearm) + Game.Ping + rearm.FindCastPoint() * 1000);
+                    Printer.Print("rearm!");
+                    Log.Debug("Rearm: "+time);
                     await Task.Delay(time, cancellationToken);
                     return;
                 }
@@ -182,22 +185,12 @@ namespace TinkerAnnihilation
             var myInventory = new List<Ability>(Members.MyHero.Inventory.Items) {_laser, _rockets};
             var allItems = myInventory.Where(x =>
                 Helper.IsItemEnableNew(x.StoredName())).ToList();
-            var distance =(int) (Members.MyHero.Distance2D(target)-target.HullRadius*2);
-            var daggerCastRange = 1150 + (myInventory.Any(x => x.StoredName() == "item_aether_lens") ? 220 : 0);
-            if (!Members.ExtraRange)
-            {
-                Members.ExtraRange =
-                    Members.MyHero.Spellbook()
-                        .Spells.Any(x => x.StoredName() == "special_bonus_cast_range_75" && x.Level > 0);
-            }
-            if (Members.ExtraRange)
-                daggerCastRange += 75;
-            daggerCastRange = Math.Min(distance, daggerCastRange);
+            var blinkPos = new Vector3();
             var inventory =
                 allItems.Where(
                     x =>
-                        ((x.StoredName() == "item_blink" /*&& distance <= daggerCastRange + CloseRange*/) ||
-                         (x.GetCastRange() > 0 && x.CanHit(target) /* && distance <= x.GetCastRange() + 150*/) ||
+                        ((x.StoredName() == "item_blink" && x.CheckDaggerForUsable(target.Position,out blinkPos)/*&& distance <= daggerCastRange + CloseRange*/) ||
+                         (x.GetCastRange() > 0 && x.CanHit(target) /* && distance <= x.GetCastRange() + 150*/ && x.StoredName()!="item_blink") ||
                          (x.GetCastRange() <= 0)) && Utils.SleepCheck($"{x.Handle}+item_usages"))
                     .OrderBy(Helper.PriorityHelper)
                     .ToList();
@@ -265,18 +258,8 @@ namespace TinkerAnnihilation
                         {
                             if (isKillSteal)
                                 continue;
-                            var angle = Members.MyHero.FindAngleBetween(target.Position, true);
-                            var point = new Vector3(
-                                (float)
-                                    (Members.MyHero.Position.X +
-                                     daggerCastRange *
-                                     Math.Cos(angle)),
-                                (float)
-                                    (Members.MyHero.Position.Y +
-                                     daggerCastRange *
-                                     Math.Sin(angle)),
-                                Members.MyHero.Position.Z);
-                            await UseAbility(v, point: point);
+                            Printer.Print("blink!");
+                            await UseAbility(v, point: blinkPos);
                             continue;
                         }
                         
@@ -300,18 +283,17 @@ namespace TinkerAnnihilation
                 await Task.Delay(20, cancellationToken);
                 await DoTrash(killStealTarget, cancellationToken);
             }
-
-            
         }
 
         private static async Task UseAbility(Ability v,Hero target=null, Vector3 point=new Vector3())
         {
             if (!v.CanBeCasted())
                 return;
-            var castTime = (int)(v.FindCastPoint() * 1000);
+            var castTime = target != null ? Helper.GetAbilityDelay(target, v) : Helper.GetAbilityDelay(point, v);
             if (v.StoredName() == "item_blink")
-                castTime += 60;
-            castTime += castTime == 0 ? 50 : 0;
+            {
+                castTime += 80;
+            }
             if (target != null)
             {
                 v.UseAbility(target);
@@ -322,9 +304,12 @@ namespace TinkerAnnihilation
             }
             else
                 v.UseAbility();
-            Printer.Print($"Global waiter: {v.Name}/{castTime}");
+            Log.Debug($"Use: {v.Name} -> {castTime}ms");
+            //Printer.Print($"Global waiter: {v.Name}/{castTime}");
             await Task.Delay(castTime, _tks.Token);
         }
+
+
 
         public static void Game_OnUpdate(EventArgs args)
         {
@@ -640,9 +625,14 @@ namespace TinkerAnnihilation
             var oldOne = args.GetOldValue<KeyBind>().Active;
             var newOne = args.GetNewValue<KeyBind>().Active;
             if (oldOne == newOne) return;
-            if (newOne) return;
+            if (newOne)
+            {
+                Log.Debug("Start Combo");
+                return;
+            }
             try
             {
+                Log.Debug("End Combo");
                 _tks.Cancel();
             }
             catch (Exception)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common.AbilityInfo;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.Damage;
 using Ensage.Common.Menu;
@@ -13,7 +14,15 @@ namespace TinkerAnnihilation
 {
     public static class Helper
     {
+        public static int GetAbilityDelay(Unit target, Ability ability)
+        {
+            return (int)((ability.FindCastPoint() + Members.MyHero.GetTurnTime(target)) * 1000.0 + Game.Ping);
+        }
 
+        public static int GetAbilityDelay(Vector3 targetPosition, Ability ability)
+        {
+            return (int)((ability.FindCastPoint() + (targetPosition.IsZero?0:Members.MyHero.GetTurnTime(targetPosition))) * 1000.0 + Game.Ping);
+        }
         public static Hero ClosestToMouse(Hero source, float range = 600)
         {
             var mousePosition = Game.MousePosition;
@@ -25,6 +34,54 @@ namespace TinkerAnnihilation
                 .OrderBy(x => x.Distance2D(mousePosition));
             return enemyHeroes.FirstOrDefault();
         }
+        private static int CloseRange => Members.Menu.Item("Dagger.CloseRange").GetValue<Slider>().Value;
+        private static int MinDistance => Members.Menu.Item("Dagger.MinDistance").GetValue<Slider>().Value;
+        private static int ExtraDistance => Members.Menu.Item("Dagger.ExtraDistance").GetValue<Slider>().Value;
+        public static bool CheckDaggerForUsable(this Ability blink,Vector3 targetPos, out Vector3 pos)
+        {
+            var distance = Members.MyHero.Distance2D(targetPos);
+            var daggerCastRange = blink.GetCastRange();
+            if (distance > daggerCastRange + CloseRange)
+            {
+                var angle = Members.MyHero.FindAngleBetween(targetPos, true);
+                var point = new Vector3(
+                    (float)
+                        (targetPos.X -
+                         daggerCastRange *
+                         Math.Cos(angle)),
+                    (float)
+                        (targetPos.Y -
+                         daggerCastRange *
+                         Math.Sin(angle)),
+                    targetPos.Z);
+                var dist = Members.MyHero.Distance2D(point);
+                if (dist >= MinDistance && dist <= daggerCastRange)
+                {
+                    pos = point;
+                    return true;
+                }
+            }
+            else if (distance > MinDistance)
+            {
+                var angle = Members.MyHero.FindAngleBetween(targetPos, true);
+                var point = new Vector3(
+                    (float)
+                        (targetPos.X -
+                         ExtraDistance *
+                         Math.Cos(angle)),
+                    (float)
+                        (targetPos.Y -
+                         ExtraDistance *
+                         Math.Sin(angle)),
+                    targetPos.Z);
+                pos = point;
+                blink.UseAbility(point);
+                return true;
+            }
+            pos = Vector3.Zero;
+            return false;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -132,6 +189,11 @@ namespace TinkerAnnihilation
 
                         var dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
                             minusMagicResistancePerc: extraDamage);
+                        if (x.GetAbilityId() == AbilityId.tinker_laser)
+                        {
+                            if (Members.LaserBuff)
+                                dmgFromSpell += 100;
+                        }
                         if (x.IsAbilityBehavior(AbilityBehavior.UnitTarget) && linkDef && !x.IsDisable())
                         {
                             dmgFromSpell = 0;
@@ -232,6 +294,11 @@ namespace TinkerAnnihilation
                     mana -= mCost;
                     var dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
                         minusMagicResistancePerc: extraDamage);
+                    if (x.GetAbilityId() == AbilityId.tinker_laser)
+                    {
+                        if (Members.LaserBuff)
+                            dmgFromSpell += 100;
+                    }
                     if (x.IsAbilityBehavior(AbilityBehavior.UnitTarget) && linkDef && !x.IsDisable())
                     {
                         dmgFromSpell = 0;
