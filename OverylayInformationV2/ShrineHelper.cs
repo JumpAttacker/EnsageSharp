@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ensage;
+using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -15,6 +17,10 @@ namespace OverlayInformation
     public static class ShrineHelper
     {
         private static bool Enable => Members.Menu.Item("shrineHelper.Range").GetValue<bool>();
+        private static bool IsNumsEnable => Members.Menu.Item("shrineHelper.Nums.Enable").GetValue<bool>();
+        private static float DigSize => (float)Members.Menu.Item("shrineHelper.Nums.Size").GetValue<Slider>().Value / 100;
+        private static float BarSize => (float)Members.Menu.Item("shrineHelper.Size").GetValue<Slider>().Value;
+        private static bool Draw => Members.Menu.Item("shrineHelper.DrawStatus").GetValue<bool>();
         private static int R => Members.Menu.Item("shrineHelper.Red").GetValue<Slider>().Value;
         private static int G => Members.Menu.Item("shrineHelper.Green").GetValue<Slider>().Value;
         private static int B => Members.Menu.Item("shrineHelper.Blue").GetValue<Slider>().Value;
@@ -24,11 +30,35 @@ namespace OverlayInformation
         private static List<Unit> _shrineList=new List<Unit>();
         private static readonly Dictionary<Unit, ParticleEffect> Effects = new Dictionary<Unit, ParticleEffect>();
         private static Sleeper _sleeper = new Sleeper();
+        private static Dictionary<uint, Ability> _abilityDictinart;
+
+        private static bool CheckForAbility(this Unit v)
+        {
+            Ability s;
+            var handle = v.Handle;
+            if (_abilityDictinart.TryGetValue(handle, out s))
+                return s?.AbilityState == AbilityState.Ready || s?.Cooldown >= 295;
+            s = v.Spellbook.Spells.FirstOrDefault(x => x.GetAbilityId() == AbilityId.filler_ability);
+            if (s!=null)
+                _abilityDictinart.Add(handle,s);
+            return s != null && (s.AbilityState == AbilityState.Ready || s.Cooldown >= 295);
+        }
+
+        private static Ability GetFiller(this Unit v)
+        {
+            Ability s;
+            var handle = v.Handle;
+            if (_abilityDictinart.TryGetValue(handle, out s)) return s;
+            s = v.Spellbook.Spells.FirstOrDefault(x => x.GetAbilityId() == AbilityId.filler_ability);
+            _abilityDictinart.Add(handle, s);
+            return s;
+        }
         public static void Init()
         {
             Effects.Clear();
             _shrineList.Clear();
-            _sleeper=new Sleeper();
+            _sleeper = new Sleeper();
+            _abilityDictinart = new Dictionary<uint, Ability>();
             if (_firstTime)
             {
                 _firstTime = false;
@@ -46,11 +76,7 @@ namespace OverlayInformation
                         foreach (var v in _shrineList)
                         {
                             var dist = v.Distance2D(Members.MyHero);
-                            if (dist <= 700 &&
-                                v.Spellbook.Spells.Any(
-                                    x =>
-                                        x.StoredName() == "filler_ability" &&
-                                        (x.AbilityState == AbilityState.Ready || x.Cooldown >= 295)))
+                            if (dist <= 700 && v.CheckForAbility())
                             {
                                 HandleEffect(v);
                             }
@@ -67,6 +93,47 @@ namespace OverlayInformation
                             Effects.ToDictionary(x => x.Key, y => y.Value).ForEach(x => UnHandleEffect(x.Key));
                         }
                     }
+                };
+                Drawing.OnDraw += args =>
+                {
+                    if (Draw || IsNumsEnable)
+                        foreach (var v in _shrineList)
+                        {
+                            var pos = HUDInfo.GetHPbarPosition(v);
+                            if (pos.IsZero)
+                                continue;
+                            var filler = v.GetFiller();
+                            if (filler == null || filler.AbilityState == AbilityState.Ready)
+                                continue;
+                            var cd = filler.Cooldown;
+                            var cdLength = filler.CooldownLength;
+                            var hpBarSize = HUDInfo.GetHPBarSizeX();
+                            var size = new Vector2(hpBarSize*2, BarSize);
+                            var cdDelta = cd*size.X/cdLength;
+                            pos += new Vector2(-hpBarSize/2, hpBarSize*1.5f);
+                            if (Draw)
+                            {
+                                Drawing.DrawRect(pos, new Vector2(size.X, size.Y), Color.Black);
+                                Drawing.DrawRect(pos, new Vector2(size.X - cdDelta, size.Y), Color.YellowGreen);
+                                Drawing.DrawRect(pos, new Vector2(size.X, size.Y), Color.Black, true);
+                            }
+                            if (IsNumsEnable)
+                            {
+                                var text = $"{(int) (100 - cd/cdLength*100)}%";
+                                var textSize = Drawing.MeasureText(text, "Arial",
+                                    new Vector2((float) (size.Y*DigSize), size.Y/2), FontFlags.AntiAlias);
+                                var textPos = pos + new Vector2(size.X/2 - textSize.X/2, size.Y - textSize.Y);
+                                /*Drawing.DrawRect(textPos - new Vector2(0, 0),
+                                new Vector2(textSize.X, textSize.Y),
+                                new Color(0, 0, 0, 200));*/
+                                Drawing.DrawText(
+                                    text,
+                                    textPos,
+                                    new Vector2(textSize.Y, 0),
+                                    Color.White,
+                                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+                            }
+                        }
                 };
                 ObjectManager.OnRemoveEntity += args =>
                 {

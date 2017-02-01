@@ -325,6 +325,10 @@ namespace OverlayInformation
             killableCol.AddItem(new MenuItem("killableCol.Blue", "Blue").SetValue(new Slider(100, 0, 255)).SetFontColor(Color.Blue));
             //===========================
             var shrineHelper = new Menu("Shrine Helper", "shrineHelper");
+            shrineHelper.AddItem(new MenuItem("shrineHelper.DrawStatus", "Draw Status").SetValue(true));
+            shrineHelper.AddItem(new MenuItem("shrineHelper.Size", "Status Size").SetValue(new Slider(15, 1, 150)));
+            shrineHelper.AddItem(new MenuItem("shrineHelper.Nums.Enable", "Draw Numbers").SetValue(true));
+            shrineHelper.AddItem(new MenuItem("shrineHelper.Nums.Size", "Dig Size").SetValue(new Slider(100, 1, 150)));
             shrineHelper.AddItem(new MenuItem("shrineHelper.Range", "Draw range").SetValue(true))
                 .SetTooltip("if dist <=700 and shrine can heal");
             shrineHelper.AddItem(
