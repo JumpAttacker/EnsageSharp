@@ -75,7 +75,6 @@ namespace TinkerAnnihilation
                          Math.Sin(angle)),
                     targetPos.Z);
                 pos = point;
-                blink.UseAbility(point);
                 return true;
             }
             pos = Vector3.Zero;

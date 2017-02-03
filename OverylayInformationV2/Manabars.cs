@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Globalization;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace OverlayInformation
@@ -18,7 +21,7 @@ namespace OverlayInformation
         private static int R => Members.Menu.Item("manaBars.Red").GetValue<Slider>().Value;
         private static int G => Members.Menu.Item("manaBars.Green").GetValue<Slider>().Value;
         private static int B => Members.Menu.Item("manaBars.Blue").GetValue<Slider>().Value;
-
+        
         public Manabars()
         {
             _loaded = false;

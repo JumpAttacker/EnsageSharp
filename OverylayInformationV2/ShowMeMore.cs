@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
@@ -10,6 +11,8 @@ using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using SharpDX.Direct3D9;
 
@@ -84,7 +87,7 @@ namespace OverlayInformation
         private static bool TimerEanble => Members.Menu.Item("TpCather.Timer").GetValue<bool>();
         private static bool CheckForTheTime => !Members.Menu.Item("TpCather.ExtraTimeForDrawing").GetValue<bool>();
         private static Font _textFont;
-
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static void OnValueChanged(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
         {
             _textFont = new Font(
@@ -127,31 +130,39 @@ namespace OverlayInformation
                 foreach (var particleEffect in _effectList)
                 {
                     var effect = particleEffect.GetEffect;
-                    if (effect != null && effect.IsValid && !effect.IsDestroyed)
+                    try
                     {
-                        var position = particleEffect.GetPosition;
-                        var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
-                        var player =
-                                ObjectManager.GetPlayerByID(
-                                    (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
-                        if (player == null || !player.IsValid)
-                            continue;
-
-                        if (!pos.IsZero)
+                        if (effect != null && effect.IsValid && !effect.IsDestroyed)
                         {
-                            DrawShadowText(_textFont, "TP", 
-                                (int) pos.X - 10,
-                                (int) pos.Y, 
-                                SmartClr ? 
-                                (Color) particleEffect.GetColor : Color.YellowGreen);
-                            /*_textFont.DrawText(
-                                null,
-                                "TP",
-                                (int) pos.X - 10,
-                                (int) pos.Y,
-                                SmartClr ? (Color) particleEffect.GetColor : Color.YellowGreen);*/
+                            var position = particleEffect.GetPosition;
+                            var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
+                            var player =
+                                    ObjectManager.GetPlayerByID(
+                                        (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
+                            if (player == null || !player.IsValid)
+                                continue;
+
+                            if (!pos.IsZero)
+                            {
+                                DrawShadowText(_textFont, "TP",
+                                    (int)pos.X - 10,
+                                    (int)pos.Y,
+                                    SmartClr ?
+                                    (Color)particleEffect.GetColor : Color.YellowGreen);
+                                /*_textFont.DrawText(
+                                    null,
+                                    "TP",
+                                    (int) pos.X - 10,
+                                    (int) pos.Y,
+                                    SmartClr ? (Color) particleEffect.GetColor : Color.YellowGreen);*/
+                            }
                         }
                     }
+                    catch (Exception)
+                    {
+                        Log.Debug($"[TP]");
+                    }
+                    
                 }
                 
             };

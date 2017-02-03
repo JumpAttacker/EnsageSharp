@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -44,6 +45,8 @@ namespace TinkerAnnihilation
         {
             if (!IsEnable)
                 return;
+            if (_globalTarget!=null && _globalTarget.IsValid)
+                Helper.HandleEffect(_globalTarget);
             var closeToMouse = Helper.ClosestToMouse(Members.MyHero);
             if (DamageIndex == (int)DamageDrawing.OnlyForGlobalTarget && (closeToMouse == null || !closeToMouse.IsValid))
             {
@@ -137,7 +140,7 @@ namespace TinkerAnnihilation
                     _globalTarget = Helper.ClosestToMouse(Members.MyHero);
                     return;
                 }
-                Helper.HandleEffect(_globalTarget);
+                
                 if (Members.MyHero.IsChanneling())
                 {
                     return;
@@ -199,6 +202,7 @@ namespace TinkerAnnihilation
             {
                 _ethereal.Sleep(1000);
             }
+            if (!inventory.Any(x=>x.IsInAbilityPhase))
             foreach (var v in inventory)
             {
                 if (v.CanBeCasted() && (v.TargetTeamType==TargetTeamType.None || (v.CanHit(target) && !v.Equals(_rockets)) ||(v.Equals(_rockets) && Helper.CanRockedHit(target))))
@@ -258,7 +262,6 @@ namespace TinkerAnnihilation
                         {
                             if (isKillSteal)
                                 continue;
-                            Printer.Print("blink!");
                             await UseAbility(v, point: blinkPos);
                             continue;
                         }
@@ -279,7 +282,6 @@ namespace TinkerAnnihilation
                         v.CanBeCasted() &&
                         ((v.CanHit(target) && !v.Equals(_rockets)) ||
                          (v.Equals(_rockets) && Helper.CanRockedHit(target))));
-                Printer.Print("do it again! " + count);
                 await Task.Delay(20, cancellationToken);
                 await DoTrash(killStealTarget, cancellationToken);
             }
@@ -293,6 +295,10 @@ namespace TinkerAnnihilation
             if (v.StoredName() == "item_blink")
             {
                 castTime += 80;
+            }
+            if (v.GetAbilityId() == AbilityId.tinker_laser)
+            {
+                castTime += 50;
             }
             if (target != null)
             {
