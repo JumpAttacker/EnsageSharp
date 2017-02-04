@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
@@ -31,21 +32,24 @@ namespace OverlayInformation
                     return;
                 if (name.Contains("portrait"))
                     return;
-                DelayAction.Add(5, () =>
+                DelayAction.Add(200, () =>
                 {
                     var effect = eventArgs.ParticleEffect;
                     var pos = effect.Position;
                     var a = effect.GetControlPoint(0);
                     var senderpos = entity.NetworkPosition;
-                    Printer.Print($"{name}/{partName}");
+                    
+                    var hero = Manager.HeroManager.GetHeroes().FirstOrDefault(x => x.Name.Equals(name));
+                    Printer.Print($"{name} || {partName} || {pos.Equals(hero?.Position)}");
+                    Printer.PrintInfo($"{name} || {partName} || {pos.Equals(hero?.Position)}");
                     //Printer.Print($"{name}/{partName}/{pos.PrintVector()}/{a.PrintVector()}/{senderpos.PrintVector()}");
-                    Printer.PrintInfo(name + ": " + partName);
                 });
 
             };
             Unit.OnModifierAdded += (sender, args) =>
             {
                 Printer.Print($"modifier: {sender.Name}/{args.Modifier.Name}");
+                Printer.PrintInfo($"modifier: {sender.Name}/{args.Modifier.Name}");
             };
         }
         private static void Main()

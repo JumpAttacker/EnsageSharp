@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
-using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
 
@@ -109,17 +105,22 @@ namespace OverlayInformation
                             var cdLength = filler.CooldownLength;
                             var hpBarSize = HUDInfo.GetHPBarSizeX();
                             var size = new Vector2(hpBarSize*2, BarSize);
-                            var cdDelta = cd*size.X/cdLength;
+                            var buff = v.FindModifier("modifier_filler_heal_aura");
+                            var isBuff = buff != null;
+                            var remTine = buff?.RemainingTime;
+                            var cdDelta = isBuff ? buff.RemainingTime*size.X/5 : cd*size.X/cdLength;
+
                             pos += new Vector2(-hpBarSize/2, hpBarSize*1.5f);
                             if (Draw)
                             {
                                 Drawing.DrawRect(pos, new Vector2(size.X, size.Y), Color.Black);
-                                Drawing.DrawRect(pos, new Vector2(size.X - cdDelta, size.Y), Color.YellowGreen);
+                                Drawing.DrawRect(pos, new Vector2(isBuff ? cdDelta : size.X - cdDelta, size.Y),
+                                    isBuff ? Color.Orange : Color.YellowGreen);
                                 Drawing.DrawRect(pos, new Vector2(size.X, size.Y), Color.Black, true);
                             }
                             if (IsNumsEnable)
                             {
-                                var text = $"{(int) (100 - cd/cdLength*100)}%";
+                                var text = isBuff ? $"{(int) (remTine/5*100)}%" : $"{(int) (100 - cd/cdLength*100)}%";
                                 var textSize = Drawing.MeasureText(text, "Arial",
                                     new Vector2((float) (size.Y*DigSize), size.Y/2), FontFlags.AntiAlias);
                                 var textPos = pos + new Vector2(size.X/2 - textSize.X/2, size.Y - textSize.Y);

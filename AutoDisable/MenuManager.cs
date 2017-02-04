@@ -202,6 +202,11 @@ namespace Auto_Disable
         }
         public static void UpdateItem(string storedName)
         {
+            if (storedName == null)
+            {
+                Printer.PrintError("[AutoDisable] UpdateItem");
+                return;
+            }
             foreach (var hero in HeroesInSystem)
             {
                 foreach (var ability in hero.Spellbook.Spells.Where(x => x.IsShield() || x.IsDisable()))

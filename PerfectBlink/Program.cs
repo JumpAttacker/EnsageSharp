@@ -17,8 +17,7 @@ namespace PerfectBlink
             PrintSuccess(string.Format("> {1} Loaded v{0}", Assembly.GetExecutingAssembly().GetName().Version, Menu.DisplayName));
             Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
-                    MessageType.LogMessage);
+                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
             Menu.AddItem(new MenuItem("PB.Enable", "Enable")).SetValue(true);
             Menu.AddItem(new MenuItem("PB.AfterTp", "Enable after tp"))
                 .SetValue(false)
@@ -36,7 +35,7 @@ namespace PerfectBlink
             var mod = _me.HasModifier("modifier_teleporting");
             if (mod) return;
             _shouldCheckForModifier = false;
-            var safeRange = _me.FindItem("item_aether_lens") == null ? 1200 : 1400;
+            var safeRange = _me.FindItem("item_blink").GetCastRange();
             var tpos = _me.Position;
             var a = tpos.ToVector2().FindAngleBetween(_mySelectedPos, true);
             safeRange -= (int)_me.HullRadius;
@@ -66,7 +65,7 @@ namespace PerfectBlink
             if (args.Ability.Name != "item_blink") return;
             _me = args.Entities.FirstOrDefault() as Hero;//ObjectMgr.LocalHero);
             if (_me==null) return;
-            var safeRange = _me.FindItem("item_aether_lens") == null ? 1200 : 1400;
+            var safeRange = _me.FindItem("item_blink").GetCastRange();
             if (!(_me.Distance2D(args.TargetPosition) > safeRange))
                 return;
             var tpos = _me.Position;
