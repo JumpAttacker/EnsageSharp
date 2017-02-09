@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
@@ -15,7 +16,8 @@ namespace OverlayInformation
     {
         private static readonly Dictionary<Player, RectangleStruct> RectDictionary = new Dictionary<Player, RectangleStruct>();
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private struct RectangleStruct
+
+        public struct RectangleStruct
         {
             public readonly Rectangle Rect;
             public readonly DrawingEndScene Draw;
@@ -26,12 +28,22 @@ namespace OverlayInformation
                 Draw = draw;
             }
         }
+
+        public static void Flush()
+        {
+            foreach (var q in RectDictionary.Where(x => x.Value.Rect.IsInitialized))
+            {
+                q.Value.Rect.Dispose();
+                Drawing.OnEndScene -= q.Value.Draw;
+            }
+        }
+
         public static void OnChange(Entity sender, Int32PropertyChangeEventArgs args)
         {
             var hero = sender as Hero;
             if (hero == null)
                 return;
-            if (hero.Team != Members.MyHero.Team)
+            if (hero.Team != Members.MyHero.Team || hero.IsIllusion())
                 return;
             if (args.PropertyName != "m_iTaggedAsVisibleByTeam")
                 return;
@@ -48,7 +60,7 @@ namespace OverlayInformation
                             Clr) {Position = HudInfoNew.GetTopPanelPosition(hero)};
                     st = new RectangleStruct(newRect, eventArgs => newRect.Render());
                     RectDictionary.Add(player, st);
-                    Log.Info($"Init new player {player.Name}({hero.GetRealName()})");
+                    //Log.Info($"Init new player {player.Name}({hero.GetRealName()})");
                 }
                 var rect = st.Rect;
                 var draw = st.Draw;

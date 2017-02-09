@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using SharpDX;
 using SharpDX.Direct3D9;
@@ -145,8 +144,13 @@ namespace OverlayInformation
             mana.AddItem(new MenuItem("toppanel.Mana.Enable", "Enable").SetValue(true));
             //===========================
             status.AddItem(new MenuItem("toppanel.Status.Enable", "Enable").SetValue(true));
-            visionOnAllyHeroes.AddItem(new MenuItem("toppanel.AllyVision.Enable", "Vision on Ally Heroes").SetValue(true));
-            MenuItem[] items = new MenuItem[5];
+            visionOnAllyHeroes.AddItem(new MenuItem("toppanel.AllyVision.Enable", "Vision on Ally Heroes").SetValue(true)).ValueChanged+=
+                (sender, args) =>
+                {
+                    if (!args.GetNewValue<bool>())
+                        VisionHelper.Flush();
+                };
+            var items = new MenuItem[5];
             visionOnAllyHeroes.AddItem(
                 new MenuItem("toppanel.AllyVision.Type", "Type:").SetValue(new StringList(new[] {"rectangle", "text"}))).ValueChanged+=
                 (sender, args) =>
@@ -167,6 +171,7 @@ namespace OverlayInformation
                             menuItem.SetFontColor(Color.Gray);
                         }
                         items[4].SetFontColor(Color.Red);
+                        VisionHelper.Flush();
                     }
                 };
             items[4] = visionOnAllyHeroes.AddItem(new MenuItem("text1", "Settings for rectangle:"));
@@ -560,6 +565,7 @@ namespace OverlayInformation
                 Members.EnemyHeroes.Clear();
                 Members.AllyHeroes.Clear();
                 Printer.PrintInfo("> " + Members.Menu.DisplayName + " unloaded");
+                VisionHelper.Flush();
                 try
                 {
                     Members.Menu.RemoveFromMainMenu();
