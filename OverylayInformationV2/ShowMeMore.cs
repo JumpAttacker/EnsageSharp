@@ -126,7 +126,6 @@ namespace OverlayInformation
                     return;
                 }
 
-                //DrawLine(5, 12, 272, 261, 2, Color.YellowGreen);
                 foreach (var particleEffect in _effectList)
                 {
                     var effect = particleEffect.GetEffect;

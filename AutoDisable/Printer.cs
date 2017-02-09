@@ -6,6 +6,7 @@ namespace Auto_Disable
     internal static class Printer
     {
         #region Helpers
+        
         public static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments); ;
@@ -33,13 +34,6 @@ namespace Auto_Disable
         {
             if (MenuManager.IsEnableDebugger)
                 Game.PrintMessage(str);
-        }
-        public static bool PrintTest(string str)
-        {
-            PrintError("322");
-            if (MenuManager.IsEnableDebugger)
-                Game.PrintMessage(str);
-            return true;
         }
         #endregion
     }

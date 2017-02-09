@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.AbilityInfo;
@@ -9,6 +10,8 @@ using Ensage.Common.Extensions.Damage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace OverlayInformation
@@ -20,7 +23,7 @@ namespace OverlayInformation
         private static int R(string b) => Members.Menu.Item($"{b}.Red").GetValue<Slider>().Value;
         private static int G(string b) => Members.Menu.Item($"{b}.Green").GetValue<Slider>().Value;
         private static int B(string b) => Members.Menu.Item($"{b}.Blue").GetValue<Slider>().Value;
-
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Sleeper _sleeper;
         public static List<Ability> InSys;
         public DamageCalculation()
@@ -84,11 +87,12 @@ namespace OverlayInformation
                 var spell in
                     Members.MyHero.Spellbook.Spells.Where(
                         x =>
-                            !x.IsAbilityBehavior(AbilityBehavior.Passive) && !InSys.Contains(x) && x.Level > 0 &&
-                            (AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0 || WhiteList.Contains(x.Name))))
+                            !x.IsAbilityBehavior(AbilityBehavior.Passive) && !InSys.Contains(x) && 
+                            (x.GetDamage(0) > 0 || WhiteList.Contains(x.Name))))
             {
                 InSys.Add(spell);
                 AddToCalcMenu(spell.StoredName());
+                Log.Debug($"dmgCalc.ability.new [{spell.Name}] [{spell.GetDamage(0)}]");
             }
             try
             {
@@ -102,6 +106,7 @@ namespace OverlayInformation
                 {
                     InSys.Add(spell);
                     AddToCalcMenu(spell.StoredName());
+                    Log.Debug($"dmgCalc.item.new [{spell.Name}]");
                 }
             }
             catch (Exception)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using SharpDX;
 using SharpDX.Direct3D9;
@@ -62,6 +63,7 @@ namespace OverlayInformation
             var health = new Menu("Health Panel", "health");
             var mana = new Menu("Mana Panel", "mana");
             var status = new Menu("Status panel", "status");
+            var visionOnAllyHeroes = new Menu("Vision on Ally Heroes", "Vision on Ally Heroes");
             var extraPos = new Menu("Extra Position", "extraPos");
             var itemPanel = new Menu("Item panel", "itempanel");
 
@@ -143,7 +145,35 @@ namespace OverlayInformation
             mana.AddItem(new MenuItem("toppanel.Mana.Enable", "Enable").SetValue(true));
             //===========================
             status.AddItem(new MenuItem("toppanel.Status.Enable", "Enable").SetValue(true));
-            status.AddItem(new MenuItem("toppanel.AllyVision.Enable", "Vision on Ally Heroes").SetValue(true));
+            visionOnAllyHeroes.AddItem(new MenuItem("toppanel.AllyVision.Enable", "Vision on Ally Heroes").SetValue(true));
+            MenuItem[] items = new MenuItem[5];
+            visionOnAllyHeroes.AddItem(
+                new MenuItem("toppanel.AllyVision.Type", "Type:").SetValue(new StringList(new[] {"rectangle", "text"}))).ValueChanged+=
+                (sender, args) =>
+                {
+                    var index = args.GetNewValue<StringList>().SelectedIndex;
+                    if (index == 0)
+                    {
+                        items[0].SetFontColor(Color.Red);
+                        items[1].SetFontColor(Color.Green);
+                        items[2].SetFontColor(Color.Blue);
+                        items[3].SetFontColor(Color.WhiteSmoke);
+                        items[4].SetFontColor(Color.GreenYellow);
+                    }
+                    else
+                    {
+                        foreach (var menuItem in items)
+                        {
+                            menuItem.SetFontColor(Color.Gray);
+                        }
+                        items[4].SetFontColor(Color.Red);
+                    }
+                };
+            items[4] = visionOnAllyHeroes.AddItem(new MenuItem("text1", "Settings for rectangle:"));
+            items[0] = visionOnAllyHeroes.AddItem(new MenuItem("AllyVision.Red", "Red").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Red));
+            items[1] = visionOnAllyHeroes.AddItem(new MenuItem("AllyVision.Green", "Green").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.Green));
+            items[2] = visionOnAllyHeroes.AddItem(new MenuItem("AllyVision.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
+            items[3] = visionOnAllyHeroes.AddItem(new MenuItem("AllyVision.Alpha", "Alpha").SetValue(new Slider(40, 0, 255)).SetFontColor(Color.WhiteSmoke));
             status.AddItem(new MenuItem("toppanel.EnemiesStatus.Enable", "Enemies status").SetValue(true));
             //===========================
             extraPos.AddItem(
@@ -401,6 +431,7 @@ namespace OverlayInformation
             dmgCalc.AddSubMenu(defCol);
             dmgCalc.AddSubMenu(killableCol);
             tpCatcher.AddSubMenu(tpCatcherTimer);
+            status.AddSubMenu(visionOnAllyHeroes);
 
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
@@ -480,8 +511,8 @@ namespace OverlayInformation
                 Drawing.OnEndScene += DrawHelper.Render.Drawing_OnEndScene;
                 Game.OnWndProc += Game_OnWndProc;
                 AppDomain.CurrentDomain.DomainUnload += DrawHelper.Render.CurrentDomainDomainUnload;
-                Game.OnFireEvent += FireEvent.Game_OnGameEvent;
-
+                Game.OnFireEvent += RoshanAction.Game_OnGameEvent;
+                Entity.OnInt32PropertyChange += VisionHelper.OnChange;
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Members.Menu.DisplayName +
                     " By Jumpering" +
@@ -510,7 +541,7 @@ namespace OverlayInformation
                 Game.OnUpdate -= Devolp.ConsoleCommands;
                 Game.OnUpdate -= RoshanAction.Roshan;
                 Game.OnUpdate -= Game_OnUpdate;
-
+                Entity.OnInt32PropertyChange -= VisionHelper.OnChange;
                 Drawing.OnDraw -= DrawHelper.Overlay;
                 Drawing.OnDraw -= ItemPanel.Draw;
                 Drawing.OnDraw -= ShowMeMore.Draw;
@@ -523,7 +554,7 @@ namespace OverlayInformation
                 Drawing.OnEndScene -= DrawHelper.Render.Drawing_OnEndScene;
                 Game.OnWndProc -= Game_OnWndProc;
                 AppDomain.CurrentDomain.DomainUnload -= DrawHelper.Render.CurrentDomainDomainUnload;
-                Game.OnFireEvent -= FireEvent.Game_OnGameEvent;
+                Game.OnFireEvent -= RoshanAction.Game_OnGameEvent;
                 Members.TopPanelPostiion.Clear();
                 Members.Heroes.Clear();
                 Members.EnemyHeroes.Clear();

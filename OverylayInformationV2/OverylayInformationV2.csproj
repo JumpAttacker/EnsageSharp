@@ -68,7 +68,6 @@
     <Compile Include="DamageCalculation.cs" />
     <Compile Include="Devolp.cs" />
     <Compile Include="DrawHelper.cs" />
-    <Compile Include="FireEvent.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="HeroesList.cs" />
     <Compile Include="HUDInfoNew.cs" />
@@ -86,6 +85,7 @@
     <Compile Include="ShowMeMore.cs" />
     <Compile Include="ShrineHelper.cs" />
     <Compile Include="Updater.cs" />
+    <Compile Include="VisionHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

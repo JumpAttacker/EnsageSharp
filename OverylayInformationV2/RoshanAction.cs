@@ -2,16 +2,35 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Ensage;
+using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 
 namespace OverlayInformation
 {
+    
     internal static class RoshanAction
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Sleeper _sleeper;
+        public static void Game_OnGameEvent(FireEventEventArgs args)
+        {
+            if (!Checker.IsActive()) return;
+
+            if (args.GameEvent.Name == "dota_roshan_kill")
+            {
+                Members.DeathTime = Game.GameTime;
+                Members.RoshIsAlive = false;
+            }
+            if (args.GameEvent.Name == "aegis_event")
+            {
+                Members.AegisTime = Game.GameTime;
+                Members.AegisEvent = true;
+                Log.Info($"Event: {args.GameEvent.Name}");
+            }
+        }
+
         public static void Roshan(EventArgs args)
         {
             if (!Checker.IsActive()) return;
@@ -33,15 +52,18 @@ namespace OverlayInformation
                 Members.AegisMinutes = Math.Floor(tickDelta/60);
                 Members.AegisSeconds = tickDelta%60;
                 //Log.Debug($"Timer {Members.AegisMinutes}:{Members.AegisSeconds}");
-                Members.Aegis = ObjectManager.GetEntities<Item>().FirstOrDefault(x => x.Name == "item_aegis");
+                if (!Members.AegisWasFound)
+                    Members.Aegis = ObjectManager.GetEntities<Item>().FirstOrDefault(x => x.Name == "item_aegis");
                 if (Members.Aegis != null && !Members.AegisWasFound)
                 {
+                    Log.Debug($"Aegis found! {Members.Aegis.Owner.StoredName()}");
                     Members.AegisWasFound = true;
                 }
                 if (4 - Members.AegisMinutes < 0 || (Members.AegisWasFound && (Members.Aegis==null || !Members.Aegis.IsValid)))
                 {
                     Members.AegisEvent = false;
-                    //Log.Debug("Flush Aegis Timer");
+                    Members.AegisWasFound = false;
+                    Log.Debug("Flush Aegis Timer");
                 }
             }
         }

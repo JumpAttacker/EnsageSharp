@@ -143,6 +143,8 @@ namespace Auto_Disable
 
         private static bool TryToDisable(Hero hero, IEnumerable<Item> myItems, IEnumerable<Ability> myAbilities)
         {
+            if (MenuManager.IsNinjaMode && !Me.IsVisibleToEnemies)
+                return false;
             myAbilities = myAbilities.Where(x => !Members.EscapeAbilityList.Contains(x.GetAbilityId()) &&  !x.IsShield() && !x.IsShield());
             myItems = myItems.Where(x => !Members.EscapeItemList.Contains(x.GetItemId()) && !x.IsShield() && !x.IsShield());
             if (myItems.Any())
@@ -222,7 +224,6 @@ namespace Auto_Disable
                 else if ((item.AbilityBehavior & AbilityBehavior.UnitTarget) != 0)
                 {
                     item.UseAbility(Me);
-
                 }
                 else
                 {
@@ -278,7 +279,7 @@ namespace Auto_Disable
                     .FirstOrDefault(x => x.Team == Me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
                 if (_fountain != null)
                 {
-                    Log.Info("[Init] _fountain");
+                    Log.Info($"[Init] fountain {_fountain.Team}");
                 }
             }
             Members.Updater.Sleep(500);
@@ -302,7 +303,7 @@ namespace Auto_Disable
                     .GetValue<AbilityToggler>().Add(spell.StoredName());
                 MenuManager.UpdateAbility(spell.StoredName());
                 Printer.Print($"[NewAbility]: {spell.StoredName()} shi: {spell.IsShield()} dis: {spell.IsDisable()}");
-
+                Log.Debug($"[NewAbility]: {spell.StoredName()} shield: {spell.IsShield()} disable: {spell.IsDisable()}");
             }
             foreach (var item in neededItems)
             {
@@ -310,6 +311,7 @@ namespace Auto_Disable
                 MenuManager.Menu.Item("itemEnable")
                     .GetValue<AbilityToggler>().Add(item.StoredName());
                 Printer.Print($"[NewItem]: {item.StoredName()}");
+                Log.Debug($"[NewItem]: {item.StoredName()}");
                 MenuManager.UpdateItem(item.StoredName());
             }
             var tempList = enumerable.Select(neededItem => neededItem.StoredName()).ToList();

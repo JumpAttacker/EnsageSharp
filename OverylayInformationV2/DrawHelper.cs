@@ -484,6 +484,8 @@ namespace OverlayInformation
             }
 
         }
+        public static bool IsEnable
+            => Members.Menu.Item("toppanel.AllyVision.Type").GetValue<StringList>().SelectedIndex == 1;
         private static void DrawStatus(Vector2 pos, Hero hero, Vector2 size, int height = 7)
         {
             if (!Members.Menu.Item("toppanel.Status.Enable").GetValue<bool>()) return;
@@ -495,7 +497,7 @@ namespace OverlayInformation
             }
             if (info.Ally)
             {
-                if (!hero.IsVisibleToEnemies || !Members.Menu.Item("toppanel.AllyVision.Enable").GetValue<bool>()) return;
+                if (!hero.IsVisibleToEnemies || !Members.Menu.Item("toppanel.AllyVision.Enable").GetValue<bool>() || !IsEnable) return;
                 var newpos = pos + new Vector2(0, size.Y + height*2);
                 Drawing.DrawRect(newpos, new Vector2(size.X, height*2), new Color(0, 0, 0, 100));
                 Drawing.DrawRect(newpos, new Vector2(size.X, height*2), Color.Black, true);
