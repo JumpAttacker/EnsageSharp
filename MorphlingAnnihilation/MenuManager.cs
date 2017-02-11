@@ -22,6 +22,7 @@ namespace MorphlingAnnihilation
         public static bool LockTarget => Menu.Item("LockTarget").GetValue<bool>();
         public static bool AutoBalance => Menu.Item("AutoBalance").GetValue<bool>();
         public static int MorphGetMinHealth => Menu.Item("minHp").GetValue<Slider>().Value;
+        public static int MorphGetMinHealthPercent => Menu.Item("minHpPerc").GetValue<Slider>().Value;
         public static int MorphGetMinMana => Menu.Item("minMp").GetValue<Slider>().Value;
         public static bool AllComboKey => Menu.Item("all.hotkey").GetValue<KeyBind>().Active;
         public static bool HeroComboKey => Menu.Item("hero.hotkey").GetValue<KeyBind>().Active;
@@ -29,11 +30,13 @@ namespace MorphlingAnnihilation
         public static bool HybridComboKey => Menu.Item("hybrid.hotkey").GetValue<KeyBind>().Active;
         public static int GetComboBehavior => Menu.Item("ComboBehavior").GetValue<StringList>().SelectedIndex;
 
-        public static bool IsItemEnable(Hero hero, string item)
+        public static bool IsItemEnable(string item)
             =>
-                Menu.Item("itemEnable").GetValue<AbilityToggler>().IsEnabled(item);
+                Menu.Item("itemEnable")
+                    .GetValue<AbilityToggler>()
+                    .IsEnabled(item.Contains("dagon") ? "item_dagon" : item);
 
-        public static bool IsAbilityEnable(Hero hero, string item)
+        public static bool IsAbilityEnable(string item)
             =>
                 Menu.Item("abilityEnable").GetValue<AbilityToggler>().IsEnabled(item);
 
@@ -71,12 +74,13 @@ namespace MorphlingAnnihilation
                 {"item_dagon",true},
                 {"morphling_waveform",true}
             };
-            settings.AddItem(new MenuItem("Use", "List of Use").SetValue(new AbilityToggler(dick)));
+            usage.AddItem(new MenuItem("itemEnable", "Abilities in combo:").SetValue(new AbilityToggler(dick)));
 
             var autoBalance = new Menu("Auto balance", "Auto balance", false, "morphling_morph_agi", true);
             autoBalance.AddItem(new MenuItem("AutoBalance", "Auto balance").SetValue(true));
-            autoBalance.AddItem(new MenuItem("minHp", "Minimum HP").SetValue(new Slider(100, 100, 5000)));
-            autoBalance.AddItem(new MenuItem("minMp", "Minimum MP percent").SetValue(new Slider(0)));
+            autoBalance.AddItem(new MenuItem("minHp", "Minimum Health").SetValue(new Slider(100, 100, 5000)));
+            autoBalance.AddItem(new MenuItem("minHpPerc", "Minimum Health percent").SetValue(new Slider(0)));
+            autoBalance.AddItem(new MenuItem("minMp", "Minimum Mana percent").SetValue(new Slider(0)));
             
 
             var safetp = new Menu("Safe Tp", "Safetpout", false, "morphling_morph_replicate", true);
@@ -85,6 +89,8 @@ namespace MorphlingAnnihilation
 
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
+
+
 
             settings.AddSubMenu(usage);
             settings.AddSubMenu(combo);

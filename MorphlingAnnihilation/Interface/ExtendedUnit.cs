@@ -70,8 +70,9 @@ namespace MorphlingAnnihilation.Interface
                 {
                     ability.UseAbility();
                 }
-                Log.Debug($"Ability: {ability.StoredName()}");
-                _abilitySleeper.Sleep(Me.GetAbilityDelay(target, ability), ability);
+                var delay = Me.GetAbilityDelay(target, ability);
+                Log.Debug($"Ability: {ability.StoredName()} -> {delay}ms");
+                _abilitySleeper.Sleep(delay, ability);
             }
         }
         public virtual void DoCombo(Hero target=null)
