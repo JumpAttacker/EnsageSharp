@@ -120,9 +120,9 @@ namespace MorphlingAnnihilation
             {
                 if (name == "all.hotkey")
                     _globalTarget = null;
-                if (name == "replicate.hotkey")
+                else if (name == "replicate.hotkey")
                     Replicate?.FlushGlobalHero();
-                if (name == "hybrid.hotkey")
+                else if (name == "hybrid.hotkey")
                     Hybrid?.FlushGlobalHero();
             }
         }
