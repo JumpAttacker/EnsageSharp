@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ensage.Common;
 using Ensage.Common.Menu;
 using SharpDX;
 
@@ -69,18 +70,21 @@ namespace Legion_Annihilation
             settings.AddSubMenu(draw);
             Members.Menu.AddSubMenu(devolper);
             Members.Menu.AddToMainMenu();
-            try
+            DelayAction.Add(1000, () =>
             {
-                if (Members.Menu.Item("Range.Blink.Enable").GetValue<bool>())
+                try
                 {
-                    Members.Menu.Item("Range.Blink.Enable").SetValue(false);
-                    Members.Menu.Item("Range.Blink.Enable").SetValue(true);
+                    if (Members.Menu.Item("Range.Blink.Enable").GetValue<bool>())
+                    {
+                        Members.Menu.Item("Range.Blink.Enable").SetValue(false);
+                        Members.Menu.Item("Range.Blink.Enable").SetValue(true);
+                    }
                 }
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            });
         }
     }
 }

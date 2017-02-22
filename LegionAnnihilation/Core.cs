@@ -121,7 +121,8 @@ namespace Legion_Annihilation
                             /*x.CanBeCasted() &&*/
                             !(x.TargetTeamType == TargetTeamType.Enemy || x.TargetTeamType == TargetTeamType.All ||
                               x.TargetTeamType == TargetTeamType.Custom) ||
-                            x.CanHit(target)).Where(x=>x.CanBeCasted());
+                            x.CanHit(target) || x.IsAbilityBehavior(AbilityBehavior.UnitTarget))
+                        .Where(x => x.CanBeCasted());
                 var enumerable = inventory as Item[] ?? inventory.ToArray();
 
                 var linkerBreakers =
@@ -307,6 +308,7 @@ namespace Legion_Annihilation
             if (ComboSleeper.Sleeping("invisAction"))
                 return;
             ComboSleeper.Sleep(150, ability);
+            var castTime = Helper.GetAbilityDelay(target, ability);
             if (ability.StoredName() == "item_armlet")
             {
                 if (!Members.MyHero.HasModifier("modifier_item_armlet_unholy_strength"))
@@ -317,6 +319,11 @@ namespace Legion_Annihilation
                 {
                     return;
                 }
+            }
+            else if (ability.StoredName() == "item_abyssal_blade")
+            {
+                castTime= Helper.GetAbilityDelay(target, ability);
+                ability.UseAbility(target);
             }
             else if (ability.IsAbilityBehavior(AbilityBehavior.NoTarget))
             {
@@ -336,8 +343,8 @@ namespace Legion_Annihilation
                     ability.UseAbility(Members.MyHero);
                 }
             }
-            Printer.Print($"[{(int) Game.RawGameTime}] [Item] {ability.Name}: {50}");
-            await Task.Delay(5, cancellationToken);
+            Printer.Print($"[{(int) Game.RawGameTime}] [Item] {ability.Name}: {castTime}");
+            await Task.Delay(castTime, cancellationToken);
         }
 
         #endregion
