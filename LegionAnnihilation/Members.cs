@@ -30,7 +30,8 @@ namespace Legion_Annihilation
             ItemId.item_heavens_halberd,
             ItemId.item_armlet,
             ItemId.item_satanic,
-            ItemId.item_force_staff
+            ItemId.item_force_staff,
+            ItemId.item_hurricane_pike
         };
 
         public static Sleeper Updater;
