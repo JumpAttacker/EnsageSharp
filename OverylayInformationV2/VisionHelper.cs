@@ -51,6 +51,8 @@ namespace OverlayInformation
             {
                 var visible = args.NewValue == 0x1E;
                 var player = hero.Player;
+                if (player==null)
+                    return;
                 RectangleStruct st;
                 if (!RectDictionary.TryGetValue(player, out st))
                 {
