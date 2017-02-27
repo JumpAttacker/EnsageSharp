@@ -53,8 +53,15 @@ namespace TinkerAnnihilation
                 new MenuItem("itemEnable", "Usages:").SetValue(
                     new AbilityToggler(Members.UsagesList.ToDictionary(item => item, item => true))));*/
             items.AddItem(
-                new MenuItem("itemEnable", "Usages:").SetValue(
-                    new PriorityChanger(Members.UsagesList, useAbilityToggler: true)));
+                new MenuItem("text1", "Order List")).SetFontColor(Color.OrangeRed);
+            items.AddItem(
+                new MenuItem("itemEnable", "").SetValue(
+                    new PriorityChanger(Members.UsagesList)));
+            items.AddItem(
+                new MenuItem("text2", "Items in Combo")).SetFontColor(Color.OrangeRed);
+            items.AddItem(
+                new MenuItem("itemEnable2", "").SetValue(
+                    new AbilityToggler(Members.UsagesList.ToDictionary(item => item, item => true))));
             /*items.AddItem(
                 new MenuItem("itemEnable", "Items in combo:").SetValue(
                     new PriorityChanger(new List<string>(), useAbilityToggler: true)));*/
@@ -97,7 +104,6 @@ namespace TinkerAnnihilation
                 if (!_loaded)
                     return;
                 Members.Menu.RemoveFromMainMenu();
-                Game.OnUpdate -= ComboAction.Game_OnUpdate;
                 Game.OnUpdate-= UpdateItems;
                 Drawing.OnDraw -= ComboAction.Drawing_OnDraw;
                 Unit.OnModifierAdded -= TeleportRangeHelper.Unit_OnModifierAdded;
@@ -160,11 +166,15 @@ namespace TinkerAnnihilation
                         Members.Items.Remove(oldDagon);
                         Members.Menu.Item("itemEnable")
                             .GetValue<PriorityChanger>().Remove(oldDagon);
+                        Members.Menu.Item("itemEnable2")
+                            .GetValue<AbilityToggler>().Remove(oldDagon);
                     }
                 }
                 Members.Items.Add(item.StoredName());
                 Members.Menu.Item("itemEnable")
                     .GetValue<PriorityChanger>().Add(item.StoredName());
+                Members.Menu.Item("itemEnable2")
+                    .GetValue<AbilityToggler>().Add(item.StoredName());
                 Printer.Print($"[NewItem]: {item.StoredName()}");
             }
         }

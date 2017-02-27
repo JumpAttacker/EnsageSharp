@@ -99,11 +99,8 @@ namespace TinkerAnnihilation
         }
         public static bool IsItemEnableNew(string name)
         {
-            return Members.Menu.Item("itemEnable").GetValue<PriorityChanger>().AbilityToggler.IsEnabled(name);
-        }
-        public static bool IsAbilityEnable(string name)
-        {
-            return Members.Menu.Item("abilityEnable").GetValue<AbilityToggler>().IsEnabled(name);
+            return Members.Menu.Item("itemEnable2").GetValue<AbilityToggler>().IsEnabled(name);
+            //return Members.Menu.Item("itemEnable").GetValue<PriorityChanger>().AbilityToggler.IsEnabled(name);
         }
 
         public static uint PriorityHelper(Item item)
