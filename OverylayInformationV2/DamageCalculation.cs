@@ -80,7 +80,7 @@ namespace OverlayInformation
                 return;
             _sleeper.Sleep(500);
             InSys = InSys.Where(x => x != null && x.IsValid).ToList();
-            var randomEnemy = Manager.HeroManager.GetEnemyViableHeroes().FirstOrDefault();
+            var randomEnemy = Manager.HeroManager.GetEnemyViableHeroes().FirstOrDefault(x => !x.IsMagicImmune());
             if (randomEnemy==null || !randomEnemy.IsValid)
                 return;
             foreach (
@@ -88,7 +88,7 @@ namespace OverlayInformation
                     Members.MyHero.Spellbook.Spells.Where(
                         x =>
                             !x.IsAbilityBehavior(AbilityBehavior.Passive) && !InSys.Contains(x) && 
-                            (x.GetDamage(0) > 0 || WhiteList.Contains(x.Name))))
+                            (x.GetDamage(0) > 0 || WhiteList.Contains(x.Name) || AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0)))
             {
                 InSys.Add(spell);
                 AddToCalcMenu(spell.StoredName());
