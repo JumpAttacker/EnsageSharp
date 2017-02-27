@@ -219,8 +219,6 @@ namespace Legion_Annihilation
             }
         }
 
-
-
         private static async Task UseBlink(Unit target, CancellationToken cancellationToken)
         {
             while (true)

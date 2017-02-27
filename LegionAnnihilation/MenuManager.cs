@@ -59,7 +59,7 @@ namespace Legion_Annihilation
                 Core.BkbToggler;
             invisibility.AddItem(new MenuItem("UseHealBeforeInvis.Enable", "Use heal before invis").SetValue(true));
             invisibility.AddItem(
-                new MenuItem("InvisRange.value", "Nin distance for cast invis/heal/items").SetValue(
+                new MenuItem("InvisRange.value", "Min distance for cast invis->heal->items").SetValue(
                     new Slider(1500, 500, 3500)));
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
