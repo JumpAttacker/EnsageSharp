@@ -17,6 +17,7 @@ namespace Auto_Disable
         public static bool IsEnable => Menu.Item("Menu.Enable").GetValue<bool>();
         public static bool IsDisableChannelGuys => Menu.Item("Menu.DisableChannel").GetValue<bool>();
         public static bool IsAntiInitiators => Menu.Item("Menu.AntiInitiators").GetValue<bool>();
+        public static bool HelpAllyHeroes => Menu.Item("Menu.HelpAllyHeroes").GetValue<bool>();
         public static bool IsUseOnlyOne => Menu.Item("Menu.OneEventOneAbility").GetValue<bool>();
         public static bool IsNinjaMode => Menu.Item("Menu.NinjaMode").GetValue<bool>();
         public static bool IsEnableDebugger => Menu.Item("Dev.Text.enable").GetValue<bool>();
@@ -46,6 +47,7 @@ namespace Auto_Disable
             _heroes = new Menu("Heroes", "_heroes");
             Menu.AddItem(new MenuItem("Menu.Enable", "Enable").SetValue(true));
             settings.AddItem(new MenuItem("Menu.DisableChannel", "Anti Channeling").SetValue(true));
+            settings.AddItem(new MenuItem("Menu.HelpAllyHeroes", "Help Ally Heroes").SetValue(true));
             settings.AddItem(new MenuItem("Menu.NinjaMode", "Ninja mode").SetValue(true))
                 .SetTooltip(
                     "Do not use any disable if ur not visible for enemy. but still hero will use items for escaping");

@@ -100,7 +100,7 @@ namespace OverlayInformation
                 items =
                     items.Where(
                         x =>
-                            !InSys.Contains(x) && AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0)
+                            !InSys.Contains(x) && AbilityDamage.CalculateDamage(x, Members.MyHero, randomEnemy) > 0 || x.GetDamage(0)>0)
                         .ToList();
                 foreach (var spell in items)
                 {

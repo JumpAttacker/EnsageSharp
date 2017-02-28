@@ -105,11 +105,15 @@ namespace Auto_Disable
                             continue;
                     }
                 }*/
+                if (MenuManager.HelpAllyHeroes && TryToHelpAllyHeroes(v, myItems, myAbilities))
+                    continue;
                 if ((angle != 0 && !v.Spellbook.Spells.Any(
                     x =>
                         x.IsInAbilityPhase && (x.AbilityBehavior & AbilityBehavior.NoTarget) != 0 && x.IsDisable() &&
                         x.CanHit(Me) && x.CanBeCasted(Me))) || distance >= 1000)
+                {
                     continue;
+                }
                 var anyDangAbility =
                     v.Spellbook.Spells.FirstOrDefault(
                         x =>
@@ -139,6 +143,28 @@ namespace Auto_Disable
                     }
                 }
             }
+        }
+
+        private static bool TryToHelpAllyHeroes(Hero v, IEnumerable<Item> myItems, IEnumerable<Ability> myAbilities)
+        {
+            var allyHeroes =
+                Heroes.GetByTeam(Members.MyTeam)
+                    .Where(x => x != null && x.IsValid && !x.Equals(Me) && x.IsAlive && x.Distance2D(v) <= 1000 && (float)
+                Math.Max(Math.Abs(v.RotationRad - Utils.DegreeToRadian(v.FindAngleBetween(x.Position))) - 0.20, 0) == 0);
+            foreach (var allyHero in allyHeroes)
+            {
+                var any = v.Spellbook.Spells.Any(
+                    x =>
+                        x.IsInAbilityPhase && x.IsDisable() &&
+                        x.CanHit(allyHero) && x.CanBeCasted(allyHero));
+                if (any)
+                {
+                    Log.Debug($"Help {allyHero.GetRealName()} from {v.GetRealName()}");
+                    TryToDisable(v, myItems, myAbilities);
+                }
+            }
+            
+            return false;
         }
 
         private static bool TryToDisable(Hero hero, IEnumerable<Item> myItems, IEnumerable<Ability> myAbilities)
@@ -189,7 +215,7 @@ namespace Auto_Disable
                     ability.UseAbility();
                 }
                 ComboSleeper.Sleep(Helper.GetAbilityDelay(hero,ability), ability.StoredName() + hero.StoredName());
-                Log.Debug($"ability: {ability.StoredName()}");
+                Log.Debug($"ability: {ability.StoredName()} --> {hero.GetRealName()}");
                 if (MenuManager.IsUseOnlyOne)
                     ComboSleeper.Sleep(350, hero.StoredName());
                 return MenuManager.IsUseOnlyOne;
@@ -213,11 +239,12 @@ namespace Auto_Disable
                 {
                     var castRange = item.GetCastRange() - 10;
                     var position = Me.Position;
+                    var angle = _fountain.FindAngleBetween(position, true);
                     var point = new Vector3(
                         (float)
-                            (position.X - castRange*Math.Cos(Me.FindAngleBetween(position, true))),
+                            (position.X - castRange*Math.Cos(angle)),
                         (float)
-                            (position.Y - castRange*Math.Sin(Me.FindAngleBetween(position, true))),
+                            (position.Y - castRange*Math.Sin(angle)),
                         0);
                     item.UseAbility(point);
                 }
@@ -229,7 +256,7 @@ namespace Auto_Disable
                 {
                     item.UseAbility();
                 }
-                Log.Debug($"item: {item.StoredName()}");
+                Log.Debug($"item: {item.StoredName()} --> from {hero.GetRealName()}");
                 ComboSleeper.Sleep(Helper.GetAbilityDelay(hero, item), item.StoredName() + hero.StoredName());
                 if (MenuManager.IsUseOnlyOne)
                     ComboSleeper.Sleep(350, hero.StoredName());
@@ -258,7 +285,7 @@ namespace Auto_Disable
                 {
                     ability.UseAbility();
                 }
-                Log.Debug($"ability: {ability.StoredName()}");
+                Log.Debug($"ability: {ability.StoredName()} --> from {hero.GetRealName()}");
                 ComboSleeper.Sleep(350, ability.StoredName() + hero.StoredName());
                 if (MenuManager.IsUseOnlyOne)
                     ComboSleeper.Sleep(350, hero.StoredName());

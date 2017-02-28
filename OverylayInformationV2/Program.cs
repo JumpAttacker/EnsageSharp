@@ -51,6 +51,15 @@ namespace OverlayInformation
                 Printer.Print($"modifier: {sender.Name}/{args.Modifier.Name}");
                 Printer.PrintInfo($"modifier: {sender.Name}/{args.Modifier.Name}");
             };
+
+            Game.OnFireEvent += args =>
+            {
+                Printer.Print($"OnFireEvent: {args.GameEvent.Name}");
+            };
+            Game.OnUIStateChanged += args =>
+            {
+                Printer.Print($"UI: {args.UIState}");
+            };
         }
         private static void Main()
         {
