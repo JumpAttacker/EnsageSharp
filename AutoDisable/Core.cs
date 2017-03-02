@@ -151,19 +151,14 @@ namespace Auto_Disable
                 Heroes.GetByTeam(Members.MyTeam)
                     .Where(x => x != null && x.IsValid && !x.Equals(Me) && x.IsAlive && x.Distance2D(v) <= 1000 && (float)
                 Math.Max(Math.Abs(v.RotationRad - Utils.DegreeToRadian(v.FindAngleBetween(x.Position))) - 0.20, 0) == 0);
-            foreach (var allyHero in allyHeroes)
+            foreach (var allyHero in from allyHero in allyHeroes let any = v.Spellbook.Spells.Any(
+                x =>
+                    x.IsInAbilityPhase && x.IsDisable() &&
+                    x.CanHit(allyHero) && x.CanBeCasted(allyHero)) where any select allyHero)
             {
-                var any = v.Spellbook.Spells.Any(
-                    x =>
-                        x.IsInAbilityPhase && x.IsDisable() &&
-                        x.CanHit(allyHero) && x.CanBeCasted(allyHero));
-                if (any)
-                {
-                    Log.Debug($"Help {allyHero.GetRealName()} from {v.GetRealName()}");
-                    TryToDisable(v, myItems, myAbilities);
-                }
+                Log.Debug($"Help {allyHero.GetRealName()} from {v.GetRealName()}");
+                TryToDisable(v, myItems, myAbilities);
             }
-            
             return false;
         }
 

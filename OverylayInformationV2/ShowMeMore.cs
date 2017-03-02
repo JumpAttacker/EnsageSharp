@@ -125,8 +125,7 @@ namespace OverlayInformation
                 {
                     return;
                 }
-
-                foreach (var particleEffect in _effectList)
+                foreach (var particleEffect in _effectList.ToList())
                 {
                     var effect = particleEffect.GetEffect;
                     try
@@ -328,7 +327,8 @@ namespace OverlayInformation
                     }
 
                 }
-                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team, isStart, timeCalc));
+                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team,
+                    isStart, CheckForTheTime ? timeCalc : 5));
                 //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
             }
