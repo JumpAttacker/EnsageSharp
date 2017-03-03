@@ -98,7 +98,7 @@ namespace Wisp_Annihilation
                 Game.OnUpdate -= Game_OnUpdate;
                 Game.OnUpdate -= AutoSaver;
                 Game.OnUpdate -= AutoTeaser;
-                Game.OnUpdate -= RelocateTpAbuseAction;
+                Game.OnIngameUpdate -= RelocateTpAbuseAction;
                 Drawing.OnDraw -= Drawing_OnDraw;
                 Entity.OnParticleEffectAdded -= EntityOnOnParticleEffectAdded;
                 Unit.OnModifierRemoved -= HeroOnOnModifierRemoved;
@@ -124,7 +124,7 @@ namespace Wisp_Annihilation
             Game.OnUpdate += Game_OnUpdate;
             Game.OnUpdate += AutoSaver;
             Game.OnUpdate += AutoTeaser;
-            Game.OnUpdate += RelocateTpAbuseAction;
+            Game.OnIngameUpdate += RelocateTpAbuseAction;
             Drawing.OnDraw += Drawing_OnDraw;
             Entity.OnParticleEffectAdded += EntityOnOnParticleEffectAdded;
             Unit.OnModifierRemoved += HeroOnOnModifierRemoved;
@@ -192,7 +192,7 @@ namespace Wisp_Annihilation
                 if (time >= 9 - Game.Ping / 1000 + GetDelayValue && time <= 10)
                 {
                     Printer.Print($"{time} >= {9 - Game.Ping / 1000 + GetDelayValue}");
-                    tp.UseAbility(tp.Position);
+                    tp.UseAbility(_fountain.Position);
                     _gotcha = false;
                 }
             }
