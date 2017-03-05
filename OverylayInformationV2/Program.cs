@@ -20,7 +20,7 @@ namespace OverlayInformation
         {
             ObjectManager.OnAddEntity += args =>
             {
-                Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
+                //Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
             };
             Entity.OnParticleEffectAdded += (entity, eventArgs) =>
             {
@@ -48,17 +48,22 @@ namespace OverlayInformation
             };
             Unit.OnModifierAdded += (sender, args) =>
             {
-                Printer.Print($"modifier: {sender.Name}/{args.Modifier.Name}");
-                Printer.PrintInfo($"modifier: {sender.Name}/{args.Modifier.Name}");
+                Printer.Print($"[Add] modifier: {sender.Name}/{args.Modifier.Name}");
+                Printer.PrintInfo($"[Add] modifier: {sender.Name}/{args.Modifier.Name}");
+            };
+            Unit.OnModifierRemoved += (sender, args) =>
+            {
+                Printer.Print($"[Remove] modifier: {sender.Name}/{args.Modifier.Name}");
+                Printer.PrintInfo($"[Remove] modifier: {sender.Name}/{args.Modifier.Name}");
             };
 
             Game.OnFireEvent += args =>
             {
-                Printer.Print($"OnFireEvent: {args.GameEvent.Name}");
+                //Printer.Print($"OnFireEvent: {args.GameEvent.Name}");
             };
             Game.OnUIStateChanged += args =>
             {
-                Printer.Print($"UI: {args.UIState}");
+                //Printer.Print($"UI: {args.UIState}");
             };
         }
         private static void Main()
@@ -251,6 +256,9 @@ namespace OverlayInformation
             scan.AddItem(new MenuItem("scan.Enable", "Enable").SetValue(true));
             var courEsp = new Menu("Courier on Minimap", "Cour");
             courEsp.AddItem(new MenuItem("Cour.Enable", "Enable").SetValue(true));
+            var linkenEsp = new Menu("linken Esp", "linkenEsp", textureName: "item_sphere", showTextWithTexture: true);
+            linkenEsp.AddItem(new MenuItem("linkenEsp.Enable", "Enable").SetValue(true))
+                .SetTooltip("will create a linken effect on hero");
             //var cour = new Menu("Courier", "Courier");
             //cour.AddItem(new MenuItem("Courier.Enable", "Enable").SetValue(true)).SetTooltip("draw courier position on minimap");
             //===========================
@@ -428,6 +436,7 @@ namespace OverlayInformation
             showMeMore.AddSubMenu(arc);
             showMeMore.AddSubMenu(scan);
             showMeMore.AddSubMenu(courEsp);
+            showMeMore.AddSubMenu(linkenEsp);
             page1.AddSubMenu(showIllusion);
             page1.AddSubMenu(runevision);
             //settings.AddSubMenu(dangItem);
@@ -440,11 +449,11 @@ namespace OverlayInformation
             page2.AddSubMenu(lastPosition);
             page2.AddSubMenu(netWorth);
             page2.AddSubMenu(dmgCalc);
-            page2.AddSubMenu(tpCatcher);
+            //page2.AddSubMenu(tpCatcher);
             page2.AddSubMenu(shrineHelper);
             dmgCalc.AddSubMenu(defCol);
             dmgCalc.AddSubMenu(killableCol);
-            tpCatcher.AddSubMenu(tpCatcherTimer);
+            //tpCatcher.AddSubMenu(tpCatcherTimer);
             status.AddSubMenu(visionOnAllyHeroes);
 
             Members.Menu.AddSubMenu(settings);
