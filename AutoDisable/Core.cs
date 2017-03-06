@@ -45,7 +45,7 @@ namespace Auto_Disable
                 if (!myItems.Any() && !myAbilities.Any())
                     continue;
                 var isInvul = v.IsInvul();
-                var magicImmnune = v.IsMagicImmune();
+                //var magicImmnune = v.IsMagicImmune();
                 var linkProt = v.IsLinkensProtected();
                 var isStun = v.IsStunned();
                 var isHex = v.IsHexed();
@@ -60,6 +60,17 @@ namespace Auto_Disable
                 var distance = Me.Distance2D(v);
                 IEnumerable<Item> myItems2 = myItems.ToList();
                 IEnumerable<Ability> myAbilities2 = myAbilities.ToList();
+                if (MenuManager.IsAngryDisabler)
+                {
+                    if (!dpActivated && !linkProt && !isInvul &&
+                        MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "Angry Disabler"))
+                    {
+                        if (TryToDisable(v, myItems2, myAbilities2))
+                            continue;
+                    }
+                }
+                myItems2 = myItems.ToList();
+                myAbilities2 = myAbilities.ToList();
                 if (distance <= 500 &&
                     ((v.HasModifier("modifier_item_forcestaff_active") &&
                       MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "item_force_staff")) ||
@@ -67,7 +78,7 @@ namespace Auto_Disable
                       MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "item_blink"))) &&
                     v.HasDangAbility())
                 {
-                    if (dpActivated || magicImmnune || linkProt || isInvul)
+                    if (dpActivated /*|| magicImmnune*/ || linkProt || isInvul)
                     {
                         if (TryToEscape(v, myItems2, myAbilities2))
                             continue;
@@ -120,7 +131,7 @@ namespace Auto_Disable
                             x.IsInAbilityPhase && ((x.IsDisable() && x.CanHit(Me)) || x.IsShield()) && x.CanBeCasted(Me));
                 if (anyDangAbility!=null)
                 {
-                    if (dpActivated || magicImmnune || linkProt || isInvul)
+                    if (dpActivated /*|| magicImmnune */|| linkProt || isInvul)
                     {
                         if (TryToEscape(v,
                             myItems.Where(x => MenuManager.IsItemEnable(v, x.StoredName(), anyDangAbility.StoredName())),
