@@ -371,6 +371,24 @@ namespace OverlayInformation
             netWorth.AddItem(new MenuItem("netWorth.Green", "Green").SetValue(new Slider(182, 0, 255)).SetFontColor(Color.Green));
             netWorth.AddItem(new MenuItem("netWorth.Blue", "Blue").SetValue(new Slider(98, 0, 255)).SetFontColor(Color.Blue));
             //===========================
+            var netWorthBar = new Menu("NetWorth Bar", "netWorthBar");
+            netWorthBar.AddItem(new MenuItem("netWorthBar.Enable", "Enable").SetValue(true)).SetTooltip("draw networth bar based on item cost");
+            netWorthBar.AddItem(new MenuItem("netWorthBar.Percents.Enable", "Draw percent").SetValue(true));
+            netWorthBar.AddItem(new MenuItem("netWorthBar.TeamWorth.Enable", "Draw Team Networth").SetValue(true));
+            netWorthBar.AddItem(new MenuItem("netWorthBar.Size", "Size").SetValue(new Slider(20, 1, 255)));
+            netWorthBar.AddItem(new MenuItem("netWorthBar.coef", "Team Netwoth Text Size").SetValue(new Slider(15, 1, 25)));
+            var netWorthBarColors = new Menu("Colors", "netWorthBar.colors");
+            var radiantColor = new Menu("Radiant", "netWorthBar.colors.radiant");
+            radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Red", "Red").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Red));
+            radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Green", "Green").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.Green));
+            radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Blue));
+            radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Alpha", "Blue").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.LightGray));
+            var direColor = new Menu("Dire", "netWorthBar.colors.dire");
+            direColor.AddItem(new MenuItem("netWorthBar.Dire.Red", "Red").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.Red));
+            direColor.AddItem(new MenuItem("netWorthBar.Dire.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Green));
+            direColor.AddItem(new MenuItem("netWorthBar.Dire.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Blue));
+            direColor.AddItem(new MenuItem("netWorthBar.Dire.Alpha", "Blue").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.LightGray));
+            //===========================
             var dmgCalc = new Menu("Damage Calculation", "dmgCalc");
             dmgCalc.AddItem(new MenuItem("dmgCalc.Enable", "Enable").SetValue(true)).SetTooltip("showing dmg from ur abilities");
             dmgCalc.AddItem(new MenuItem("dmgCalc.Abilities", "Abilities: ").SetValue(new AbilityToggler(new Dictionary<string, bool>())));
@@ -451,6 +469,10 @@ namespace OverlayInformation
             page2.AddSubMenu(autoItems);
             page2.AddSubMenu(lastPosition);
             page2.AddSubMenu(netWorth);
+            page2.AddSubMenu(netWorthBar);
+            netWorthBar.AddSubMenu(netWorthBarColors);
+            netWorthBarColors.AddSubMenu(radiantColor);
+            netWorthBarColors.AddSubMenu(direColor);
             page2.AddSubMenu(dmgCalc);
             page2.AddSubMenu(tpCatcher);
             page2.AddSubMenu(shrineHelper);

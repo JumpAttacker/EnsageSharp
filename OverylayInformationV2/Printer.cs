@@ -12,6 +12,10 @@ namespace OverlayInformation
         {
             return $"({vec.X};{vec.Y};{vec.Z})";
         }
+        public static string PrintVector(this Vector2 vec)
+        {
+            return $"({vec.X};{vec.Y})";
+        }
 
         public static void PrintInfo(string text, params object[] arguments)
         {

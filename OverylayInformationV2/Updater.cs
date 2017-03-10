@@ -263,9 +263,9 @@ namespace OverlayInformation
                             }
                             if ((Members.Menu.Item("itempanel.Stash.Enable").GetValue<bool>() || Members.Menu.Item("netWorth.Enable").GetValue<bool>()) &&
                                 !Members.StashItemDictionary.ContainsValue(
-                                    hero.Inventory.StashItems.Where(x => x.IsValid).ToList()))
+                                    hero.Inventory.Stash.Where(x => x.IsValid).ToList()))
                             {
-                                var items = hero.Inventory.StashItems.ToList();
+                                var items = hero.Inventory.Stash.ToList();
                                 Members.StashItemDictionary.Remove(hero.Handle);
                                 Members.StashItemDictionary.Add(hero.Handle,
                                     items.Where(x => x.IsValid).ToList());

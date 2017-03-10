@@ -33,6 +33,112 @@ namespace OverlayInformation
                 DrawLastPosition();
             if (Members.Menu.Item("netWorth.Enable").GetValue<bool>())
                 DrawNetWorth();
+            if (Members.Menu.Item("netWorthBar.Enable").GetValue<bool>())
+                DrawNetWorthBar();
+        }
+
+        private static void DrawNetWorthBar()
+        {
+            var startPos = HudInfoNew.GetFakeTopPanelPosition(0, Team.Radiant) +
+                           new Vector2((float)HudInfoNew.GetTopPanelSizeX() * 5, (float)HudInfoNew.GetTopPanelSizeY());
+            var endPos = HudInfoNew.GetFakeTopPanelPosition(5, Team.Dire);
+            var size = new Vector2(endPos.X - startPos.X,
+                Members.Menu.Item("netWorthBar.Size").GetValue<Slider>().Value*Percent);
+            DrawNetWorthBarStageOne(startPos,size);
+            
+        }
+
+        private static bool IsDrawPercents => Members.Menu.Item("netWorthBar.Percents.Enable").GetValue<bool>();
+        private static bool IsDrawTeamWorth => Members.Menu.Item("netWorthBar.TeamWorth.Enable").GetValue<bool>();
+        private static float GetNetworthBarCoef => Members.Menu.Item("netWorthBar.coef").GetValue<Slider>().Value;
+
+        private static Color GetNetworthBarColorForRadiant
+            =>
+                new Color(
+                    Members.Menu.Item("netWorthBar.Radiant.Red").GetValue<Slider>().Value,
+                    Members.Menu.Item("netWorthBar.Radiant.Green").GetValue<Slider>().Value,
+                    Members.Menu.Item("netWorthBar.Radiant.Blue").GetValue<Slider>().Value,
+                    Members.Menu.Item("netWorthBar.Radiant.Alpha").GetValue<Slider>().Value);
+        private static Color GetNetworthBarColorForDire
+            =>
+                new Color(
+                    Members.Menu.Item("netWorthBar.Dire.Red").GetValue<Slider>().Value,
+                    Members.Menu.Item("netWorthBar.Dire.Green").GetValue<Slider>().Value,
+                    Members.Menu.Item("netWorthBar.Dire.Blue").GetValue<Slider>().Value,
+                    Members.Menu.Item("netWorthBar.Dire.Alpha").GetValue<Slider>().Value);
+
+        private static void DrawNetWorthBarStageOne(Vector2 startPos, Vector2 size)
+        {
+            if (Members.ItemDictionary.Count == 0)
+            {
+                return;
+            }
+            long radiantNetworh = 0, direNetwoth = 0;
+            foreach (var v in Members.Heroes)
+            {
+                try
+                {
+                    long worth;
+                    if (!Members.NetWorthDictionary.TryGetValue(v.StoredName(), out worth))
+                    {
+                        continue;
+                    }
+                    /*var dividedWeStand = v.FindSpell("meepo_divided_we_stand") as DividedWeStand;
+                    if (dividedWeStand != null && (v.ClassID == ClassID.CDOTA_Unit_Hero_Meepo) && dividedWeStand.UnitIndex > 0)
+                    {
+                        continue;
+                    }*/
+                    if (Members.MeepoIgnoreList.Contains(v))
+                        continue;
+                    if (v.Team == Team.Radiant)
+                        radiantNetworh += worth;
+                    else
+                        direNetwoth += worth;
+                }
+                catch (Exception)
+                {
+                    Printer.Print("[NetWorthBar][findMaxNetWorth]: " + v.StoredName());
+                    continue;
+                }
+            }
+
+            var percent = 100 * radiantNetworh / Math.Max(1, radiantNetworh+direNetwoth);
+            var currentSize = size.X / 100 * percent;
+            var lineSize = new Vector2(currentSize, size.Y);
+            var endOfGreen = startPos + new Vector2(lineSize.X, 0);
+            //var color2 = worth == maxWorth ? Color.Yellow : Color.Black;
+            Drawing.DrawRect(startPos, lineSize, GetNetworthBarColorForRadiant);
+            Drawing.DrawRect(endOfGreen, new Vector2(size.X - lineSize.X,lineSize.Y), GetNetworthBarColorForDire);
+            Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
+            var text = $"{percent}%";
+            var textSize = Drawing.MeasureText(text, "Arial",
+                new Vector2((float)(size.Y * .95), size.Y / 2), FontFlags.AntiAlias);
+            var textPos = endOfGreen - new Vector2(textSize.X/2, /*lineSize.Y / 2 - textSize.Y / 2*/0);
+            var coef = GetNetworthBarCoef/10;
+            if (IsDrawPercents)
+                Drawing.DrawText(
+                    text,
+                    textPos,
+                    new Vector2(textSize.Y, 0),
+                    Color.White,
+                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+            if (IsDrawTeamWorth)
+            {
+                text = $"{radiantNetworh}";
+                Drawing.DrawText(
+                    text,
+                    startPos + new Vector2(0, size.Y),
+                    new Vector2(textSize.Y/coef, 0),
+                    Color.White,
+                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+                text = $"{direNetwoth}";
+                Drawing.DrawText(
+                    text,
+                    startPos + new Vector2(size.X - textSize.X/coef, size.Y),
+                    new Vector2(textSize.Y/coef, 0),
+                    Color.White,
+                    FontFlags.AntiAlias | FontFlags.StrikeOut);
+            }
         }
 
         private static void DrawNetWorth()
@@ -46,10 +152,10 @@ namespace OverlayInformation
             var g = Members.Menu.Item("netWorth.Green").GetValue<Slider>().Value;
             var b = Members.Menu.Item("netWorth.Blue").GetValue<Slider>().Value;
             Drawing.DrawRect(startPos, size + new Vector2(0, 34), new Color(r, g, b, 255), true);
-            DrawPlayer(startPos + new Vector2(2, 2), size, r, g, b);
+            DrawPlayer(startPos + new Vector2(2, 2), size);
 
         }
-        private static void DrawPlayer(Vector2 pos, Vector2 size, int r, int g, int b)
+        private static void DrawPlayer(Vector2 pos, Vector2 size)
         {
             var i = 0;
             if (Members.ItemDictionary.Count == 0)
