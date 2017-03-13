@@ -107,8 +107,20 @@ namespace OverlayInformation
             var lineSize = new Vector2(currentSize, size.Y);
             var endOfGreen = startPos + new Vector2(lineSize.X, 0);
             //var color2 = worth == maxWorth ? Color.Yellow : Color.Black;
-            Drawing.DrawRect(startPos, lineSize, GetNetworthBarColorForRadiant);
-            Drawing.DrawRect(endOfGreen, new Vector2(size.X - lineSize.X,lineSize.Y), GetNetworthBarColorForDire);
+            Color leftClr, rightClr;
+            if (Members.MyPlayer.Team != Team.Radiant)
+            {
+                rightClr = GetNetworthBarColorForRadiant;
+                leftClr = GetNetworthBarColorForDire;
+                percent = 100 - percent;
+            }
+            else
+            {
+                leftClr = GetNetworthBarColorForRadiant;
+                rightClr = GetNetworthBarColorForDire;
+            }
+            Drawing.DrawRect(startPos, lineSize, leftClr);
+            Drawing.DrawRect(endOfGreen, new Vector2(size.X - lineSize.X,lineSize.Y), rightClr);
             Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
             var text = $"{percent}%";
             var textSize = Drawing.MeasureText(text, "Arial",

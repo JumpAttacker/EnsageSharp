@@ -14,61 +14,14 @@ using MenuItem = Ensage.Common.Menu.MenuItem;
 
 namespace OverlayInformation
 {
-    internal static class Program
+    public static class MenuManager
     {
-        private static void TestShit()
+        private static bool _loaded;
+        public static void Init()
         {
-            ObjectManager.OnAddEntity += args =>
-            {
-                //Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
-            };
-            Entity.OnParticleEffectAdded += (entity, eventArgs) =>
-            {
-                var partName = eventArgs.Name;
-                var name = entity.Name;
-                if (partName.Contains("generic_hit_blood"))
-                    return;
-                if (partName.Contains("ui_mouse"))
-                    return;
-                if (name.Contains("portrait"))
-                    return;
-                DelayAction.Add(200, () =>
-                {
-                    var effect = eventArgs.ParticleEffect;
-                    var pos = effect.Position;
-                    var a = effect.GetControlPoint(0);
-                    var senderpos = entity.NetworkPosition;
-                    
-                    var hero = Manager.HeroManager.GetHeroes().FirstOrDefault(x => x.Name.Equals(name));
-                    Printer.Print($"{name} || {partName} || {pos.Equals(hero?.Position)}");
-                    Printer.PrintInfo($"{name} || {partName} || {pos.Equals(hero?.Position)}");
-                    //Printer.Print($"{name}/{partName}/{pos.PrintVector()}/{a.PrintVector()}/{senderpos.PrintVector()}");
-                });
-
-            };
-            Unit.OnModifierAdded += (sender, args) =>
-            {
-                Printer.Print($"[Add] modifier: {sender.Name}/{args.Modifier.Name}");
-                Printer.PrintInfo($"[Add] modifier: {sender.Name}/{args.Modifier.Name}");
-            };
-            Unit.OnModifierRemoved += (sender, args) =>
-            {
-                Printer.Print($"[Remove] modifier: {sender.Name}/{args.Modifier.Name}");
-                Printer.PrintInfo($"[Remove] modifier: {sender.Name}/{args.Modifier.Name}");
-            };
-
-            Game.OnFireEvent += args =>
-            {
-                //Printer.Print($"OnFireEvent: {args.GameEvent.Name}");
-            };
-            Game.OnUIStateChanged += args =>
-            {
-                //Printer.Print($"UI: {args.UIState}");
-            };
-        }
-        private static void Main()
-        {
-            //TestShit();
+            if (_loaded)
+                return;
+            _loaded = true;
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var topPanel = new Menu("Top Panel", "toppanel");
             var spellPanel = new Menu("Spell Panel", "spellPanel");
@@ -158,7 +111,7 @@ namespace OverlayInformation
             mana.AddItem(new MenuItem("toppanel.Mana.Enable", "Enable").SetValue(true));
             //===========================
             status.AddItem(new MenuItem("toppanel.Status.Enable", "Enable").SetValue(true));
-            visionOnAllyHeroes.AddItem(new MenuItem("toppanel.AllyVision.Enable", "Vision on Ally Heroes").SetValue(true)).ValueChanged+=
+            visionOnAllyHeroes.AddItem(new MenuItem("toppanel.AllyVision.Enable", "Vision on Ally Heroes").SetValue(true)).ValueChanged +=
                 (sender, args) =>
                 {
                     if (!args.GetNewValue<bool>())
@@ -166,7 +119,7 @@ namespace OverlayInformation
                 };
             var items = new MenuItem[5];
             visionOnAllyHeroes.AddItem(
-                new MenuItem("toppanel.AllyVision.Type", "Type:").SetValue(new StringList(new[] {"rectangle", "text"}))).ValueChanged+=
+                new MenuItem("toppanel.AllyVision.Type", "Type:").SetValue(new StringList(new[] { "rectangle", "text" }))).ValueChanged +=
                 (sender, args) =>
                 {
                     var index = args.GetNewValue<StringList>().SelectedIndex;
@@ -208,9 +161,9 @@ namespace OverlayInformation
             charge.AddItem(new MenuItem("charge.Enable", "Enable").SetValue(true));
             charge.AddItem(new MenuItem("charge.Rect.Enable", "Draw red box").SetValue(false));
             charge.AddItem(new MenuItem("charge.Red", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
-            charge.AddItem(new MenuItem("charge.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontColor( Color.Green));
+            charge.AddItem(new MenuItem("charge.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Green));
             charge.AddItem(new MenuItem("charge.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Blue));
-            charge.AddItem(new MenuItem("charge.Alpha", "Alpha").SetValue(new Slider(4, 0, 255)).SetFontColor( Color.WhiteSmoke));
+            charge.AddItem(new MenuItem("charge.Alpha", "Alpha").SetValue(new Slider(4, 0, 255)).SetFontColor(Color.WhiteSmoke));
             //===========================
             var blur = new Menu("", "blur", false, "phantom_assassin_blur", true);
             blur.AddItem(new MenuItem("blur.Enable", "Show PA on minimap").SetValue(true));
@@ -250,7 +203,7 @@ namespace OverlayInformation
             lifestealer.AddItem(new MenuItem("lifestealer.Enable", "Enable").SetValue(true));
             lifestealer.AddItem(new MenuItem("lifestealer.Icon.Enable", "Draw icon near hero").SetValue(false));
             lifestealer.AddItem(new MenuItem("lifestealer.creeps.Enable", "Draw icon near creep").SetValue(false));
-            var arc = new Menu("", "arc",textureName: "arc_warden_spark_wraith",showTextWithTexture:true);
+            var arc = new Menu("", "arc", textureName: "arc_warden_spark_wraith", showTextWithTexture: true);
             arc.AddItem(new MenuItem("arc.Enable", "Enable").SetValue(true));
             var scan = new Menu("Enemy Scanning Ability", "Scan");
             scan.AddItem(new MenuItem("scan.Enable", "Enable").SetValue(true));
@@ -264,12 +217,12 @@ namespace OverlayInformation
             //===========================
             showIllusion.AddItem(new MenuItem("showillusion.Enable", "Enable").SetValue(true));
             showIllusion.AddItem(
-                new MenuItem("showillusion.Type", "Type").SetValue(new StringList(new[] {"Smoke", "new 1" , "new 2" , "balloons" }, 2)));
+                new MenuItem("showillusion.Type", "Type").SetValue(new StringList(new[] { "Smoke", "new 1", "new 2", "balloons" }, 2)));
             showIllusion.AddItem(new MenuItem("showillusion.X", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
             showIllusion.AddItem(new MenuItem("showillusion.Y", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
             showIllusion.AddItem(new MenuItem("showillusion.Z", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
-            showIllusion.AddItem(new MenuItem("showillusion.Alpha", "Alpha").SetValue(new Slider(40,0,255)));
-            showIllusion.AddItem(new MenuItem("showillusion.Size", "Size").SetValue(new Slider(120,1,250)));
+            showIllusion.AddItem(new MenuItem("showillusion.Alpha", "Alpha").SetValue(new Slider(40, 0, 255)));
+            showIllusion.AddItem(new MenuItem("showillusion.Size", "Size").SetValue(new Slider(120, 1, 250)));
             //===========================
             runevision.AddItem(new MenuItem("runevision.Enable", "Enable").SetValue(true));
             runevision.AddItem(new MenuItem("runevision.PrintText.Enable", "Print text on rune-spawning").SetValue(true));
@@ -278,7 +231,7 @@ namespace OverlayInformation
             var itemOverlay = new Menu("Item overlay", "itemOverlay");
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enable", "Enable").SetValue(false)).SetTooltip("will show all items on heroes");
             itemOverlay.AddItem(new MenuItem("itemOverlay.DrawCharges", "Draw Charges").SetValue(true));
-            itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(100,1,200)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(100, 1, 200)));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Extra", "Extra").SetValue(new Slider(26, 1, 100)));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Ally", "Enable for ally").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enemy", "Enable for enemy").SetValue(true));
@@ -292,7 +245,7 @@ namespace OverlayInformation
             /*tpCatcher.AddItem(
                 new MenuItem("TpCather.MiniMap.Type", "Draw on MiniMap Hero Icon or Rectangle").SetValue(true))
                 .SetTooltip("true=icon; false=rectangle");*/
-            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "Size").SetValue(new Slider(20,5,30))).ValueChanged+= TeleportCatcher.OnValueChanged;
+            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "Size").SetValue(new Slider(20, 5, 30))).ValueChanged += TeleportCatcher.OnValueChanged;
             tpCatcher.AddItem(new MenuItem("TpCather.X", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
             tpCatcher.AddItem(new MenuItem("TpCather.Y", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
             tpCatcher.AddItem(new MenuItem("TpCather.Z", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
@@ -314,7 +267,7 @@ namespace OverlayInformation
             manaBars.AddItem(new MenuItem("manaBars.Nums.Enable", "Enable digital values").SetValue(true));
             manaBars.AddItem(new MenuItem("manaBars.Nums.Size", "Dig Size").SetValue(new Slider(75, 1, 150)));
             manaBars.AddItem(new MenuItem("manaBars.Size", "Size").SetValue(new Slider(75, 1, 150)));
-            
+
             manaBars.AddItem(new MenuItem("manaBars.Red", "Red").SetValue(new Slider(65, 0, 255)).SetFontColor(Color.Red));
             manaBars.AddItem(new MenuItem("manaBars.Green", "Green").SetValue(new Slider(105, 0, 255)).SetFontColor(Color.Green));
             manaBars.AddItem(new MenuItem("manaBars.Blue", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
@@ -322,7 +275,7 @@ namespace OverlayInformation
             //var dangItem = new Menu("Dangerous items", "dangitems");
             itemOverlay.AddItem(new MenuItem("itemOverlay.DangItems", "Draw only dangerous items").SetValue(false)).SetTooltip("show if enemy has Dangerous items. Working only for enemy heroes");
             itemOverlay.AddItem(new MenuItem("itemOverlay.OldMethod", "Use old method for drawing dangItems").SetValue(false));
-            
+
             var dict = new Dictionary<string, bool>
             {
                 {"item_gem", true},
@@ -353,7 +306,7 @@ namespace OverlayInformation
             lastPosition.AddItem(new MenuItem("lastPosition.Enable", "Enable").SetValue(true)).SetTooltip("show last positions of enemies");
             lastPosition.AddItem(new MenuItem("lastPosition.Enable.Prediction", "Enable Prediction").SetValue(true));
             lastPosition.AddItem(new MenuItem("lastPosition.Enable.Map", "on Map").SetValue(false));
-            lastPosition.AddItem(new MenuItem("lastPosition.Map.X", "icon size").SetValue(new Slider(50,10,150)));
+            lastPosition.AddItem(new MenuItem("lastPosition.Map.X", "icon size").SetValue(new Slider(50, 10, 150)));
             lastPosition.AddItem(new MenuItem("lastPosition.Enable.Minimap", "on Minimap").SetValue(true));
             lastPosition.AddItem(new MenuItem("lastPosition.Minimap.X", "icon size").SetValue(new Slider(20, 10, 150)));
 
@@ -378,16 +331,16 @@ namespace OverlayInformation
             netWorthBar.AddItem(new MenuItem("netWorthBar.Size", "Size").SetValue(new Slider(20, 1, 255)));
             netWorthBar.AddItem(new MenuItem("netWorthBar.coef", "Team Netwoth Text Size").SetValue(new Slider(15, 1, 25)));
             var netWorthBarColors = new Menu("Colors", "netWorthBar.colors");
-            var radiantColor = new Menu("Radiant", "netWorthBar.colors.radiant");
+            var radiantColor = new Menu("Ally Color", "netWorthBar.colors.radiant");
             radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Red", "Red").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Red));
             radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Green", "Green").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.Green));
             radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Blue));
-            radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Alpha", "Blue").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.LightGray));
-            var direColor = new Menu("Dire", "netWorthBar.colors.dire");
+            radiantColor.AddItem(new MenuItem("netWorthBar.Radiant.Alpha", "Alpha").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.LightGray));
+            var direColor = new Menu("Enemy Color", "netWorthBar.colors.dire");
             direColor.AddItem(new MenuItem("netWorthBar.Dire.Red", "Red").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.Red));
             direColor.AddItem(new MenuItem("netWorthBar.Dire.Green", "Green").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Green));
             direColor.AddItem(new MenuItem("netWorthBar.Dire.Blue", "Blue").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Blue));
-            direColor.AddItem(new MenuItem("netWorthBar.Dire.Alpha", "Blue").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.LightGray));
+            direColor.AddItem(new MenuItem("netWorthBar.Dire.Alpha", "Alpha").SetValue(new Slider(155, 0, 255)).SetFontColor(Color.LightGray));
             //===========================
             var dmgCalc = new Menu("Damage Calculation", "dmgCalc");
             dmgCalc.AddItem(new MenuItem("dmgCalc.Enable", "Enable").SetValue(true)).SetTooltip("showing dmg from ur abilities");
@@ -500,8 +453,68 @@ namespace OverlayInformation
                         OutputPrecision = FontPrecision.Default,
                         Quality = FontQuality.Default
                     });
+            Members.Menu.AddToMainMenu();
+        }
+    }
+    internal static class Program
+    {
+        private static void TestShit()
+        {
+            ObjectManager.OnAddEntity += args =>
+            {
+                //Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
+            };
+            Entity.OnParticleEffectAdded += (entity, eventArgs) =>
+            {
+                var partName = eventArgs.Name;
+                var name = entity.Name;
+                if (partName.Contains("generic_hit_blood"))
+                    return;
+                if (partName.Contains("ui_mouse"))
+                    return;
+                if (name.Contains("portrait"))
+                    return;
+                DelayAction.Add(200, () =>
+                {
+                    var effect = eventArgs.ParticleEffect;
+                    var pos = effect.Position;
+                    var a = effect.GetControlPoint(0);
+                    var senderpos = entity.NetworkPosition;
+                    
+                    var hero = Manager.HeroManager.GetHeroes().FirstOrDefault(x => x.Name.Equals(name));
+                    Printer.Print($"{name} || {partName} || {pos.Equals(hero?.Position)}");
+                    Printer.PrintInfo($"{name} || {partName} || {pos.Equals(hero?.Position)}");
+                    //Printer.Print($"{name}/{partName}/{pos.PrintVector()}/{a.PrintVector()}/{senderpos.PrintVector()}");
+                });
+
+            };
+            Unit.OnModifierAdded += (sender, args) =>
+            {
+                Printer.Print($"[Add] modifier: {sender.Name}/{args.Modifier.Name}");
+                Printer.PrintInfo($"[Add] modifier: {sender.Name}/{args.Modifier.Name}");
+            };
+            Unit.OnModifierRemoved += (sender, args) =>
+            {
+                Printer.Print($"[Remove] modifier: {sender.Name}/{args.Modifier.Name}");
+                Printer.PrintInfo($"[Remove] modifier: {sender.Name}/{args.Modifier.Name}");
+            };
+
+            Game.OnFireEvent += args =>
+            {
+                //Printer.Print($"OnFireEvent: {args.GameEvent.Name}");
+            };
+            Game.OnUIStateChanged += args =>
+            {
+                //Printer.Print($"UI: {args.UIState}");
+            };
+        }
+        private static void Main()
+        {
+            //TestShit();
             Events.OnLoad += (sender, args) =>
             {
+                MenuManager.Init();
+
                 Members.MyHero = ObjectManager.LocalHero;
                 Members.MyClass = Members.MyHero.ClassID;
                 Members.MyPlayer = ObjectManager.LocalPlayer;
@@ -570,16 +583,19 @@ namespace OverlayInformation
 
                 /*Entity.OnParticleEffectAdded += Entity_OnParticleEffectAdded;
                 Drawing.OnDraw += Drawing_OnDraw;*/
-                try
+                DelayAction.Add(100, () =>
                 {
-                    Members.Menu.AddToMainMenu();
-                    if (Members.Menu.Item("Dev.CreepsDisabler.enable").GetValue<bool>())
-                        Game.ExecuteCommand("dota_creeps_no_spawning_enable");
-                }
-                catch (Exception)
-                {
-                    Printer.Print("Members.Menu.AddToMainMenu();");
-                }
+                    try
+                    {
+                        
+                        if (Members.Menu.Item("Dev.CreepsDisabler.enable").GetValue<bool>())
+                            Game.ExecuteCommand("dota_creeps_no_spawning_enable");
+                    }
+                    catch (Exception)
+                    {
+                        Printer.Print("Members.Menu.AddToMainMenu();");
+                    }
+                });
             };
             Events.OnClose += (sender, args) =>
             {
@@ -609,19 +625,8 @@ namespace OverlayInformation
                 Members.AllyHeroes.Clear();
                 Printer.PrintInfo("> " + Members.Menu.DisplayName + " unloaded");
                 VisionHelper.Flush();
-                try
-                {
-                    Members.Menu.RemoveFromMainMenu();
-                }
-                catch (Exception)
-                {
-                    Printer.PrintError("Members.Menu.RemoveFromMainMenu();");
-                }
-                
             };
         }
-
-        
 
         private static List<Vector3> Points=new List<Vector3>();
         private static void Drawing_OnDraw(EventArgs args)
