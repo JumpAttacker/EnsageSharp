@@ -377,7 +377,7 @@ namespace OverlayInformation
         private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect =
             new Dictionary<Unit, ParticleEffect>();
 
-        private static readonly TeleportCatcher TeleportCatcher = new TeleportCatcher();
+        private static TeleportCatcher _teleportCatcher;
 
         public static void ShowIllustion()
         {
@@ -969,7 +969,8 @@ namespace OverlayInformation
 
         public static void Flush()
         {
-            _sleeper=new Sleeper();
+            _teleportCatcher = new TeleportCatcher();
+            _sleeper =new Sleeper();
         }
         /*
          tpCatcher.AddItem(new MenuItem("TpCather.Enable", "Enable").SetValue(true));
@@ -1020,8 +1021,8 @@ namespace OverlayInformation
                     var a = effect.GetControlPoint(0);
                     var b = effect.GetControlPoint(2);
                     Printer.Print($"{(isStart ? "start" : "end")} => pos: {a.PrintVector()} color: {b.PrintVector()}");
-                    //TeleportCatcher.Add(effect, a, b, isStart);
-                    TeleportCatcher.Add(effect, a);
+                    //_teleportCatcher.Add(effect, a, b, isStart);
+                    _teleportCatcher.Add(effect, a);
                 });
             }
         }
