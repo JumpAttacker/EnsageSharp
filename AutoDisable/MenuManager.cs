@@ -8,6 +8,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Auto_Disable
 {

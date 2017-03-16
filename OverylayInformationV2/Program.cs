@@ -501,6 +501,7 @@ namespace OverlayInformation
 
             Game.OnFireEvent += args =>
             {
+
                 //Printer.Print($"OnFireEvent: {args.GameEvent.Name}");
             };
             Game.OnUIStateChanged += args =>
