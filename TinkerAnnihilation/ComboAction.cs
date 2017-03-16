@@ -14,6 +14,7 @@ using Ensage.Common.Objects.UtilityObjects;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace TinkerAnnihilation
 {
