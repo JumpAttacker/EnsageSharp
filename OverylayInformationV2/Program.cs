@@ -373,6 +373,10 @@ namespace OverlayInformation
             shrineHelper.AddItem(new MenuItem("shrineHelper.Alpha", "Alpha").SetValue(new Slider(255, 0, 255)))
                 .ValueChanged += ShrineHelper.OnChange;
             //===========================
+            var openDota = new Menu("OpenDota info", "OpenDota");
+            openDota.AddItem(new MenuItem("OpenDota.Enable", "Enable").SetValue(true))
+                .SetTooltip("will show wr, solo/part mmr & last 5 ranked games for each players on hero picking stage");
+            //===========================
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Hax.enable", "Hax in lobby").SetValue(false));
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
@@ -429,6 +433,7 @@ namespace OverlayInformation
             page2.AddSubMenu(dmgCalc);
             page2.AddSubMenu(tpCatcher);
             page2.AddSubMenu(shrineHelper);
+            page2.AddSubMenu(openDota);
             dmgCalc.AddSubMenu(defCol);
             dmgCalc.AddSubMenu(killableCol);
             //tpCatcher.AddSubMenu(tpCatcherTimer);
@@ -462,7 +467,7 @@ namespace OverlayInformation
         {
             ObjectManager.OnAddEntity += args =>
             {
-                //Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
+                Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
             };
             Entity.OnParticleEffectAdded += (entity, eventArgs) =>
             {
@@ -509,9 +514,12 @@ namespace OverlayInformation
                 //Printer.Print($"UI: {args.UIState}");
             };
         }
+
+        private static OpenDota _openDota;
         private static void Main()
         {
             //TestShit();
+            _openDota = new OpenDota();
             Events.OnLoad += (sender, args) =>
             {
                 MenuManager.Init();
@@ -543,7 +551,7 @@ namespace OverlayInformation
                 Updater.BaseList.Flush();
                 Updater.PlayerList.Flush();
                 Game.OnUpdate += Updater.HeroList.Update;
-                //Game.OnUpdate += Updater.PlayerList.Update;
+                Game.OnUpdate += Updater.PlayerList.Update;
                 Game.OnUpdate += Updater.BaseList.Update;
                 Game.OnUpdate += Devolp.ConsoleCommands;
                 RoshanAction.Flush();

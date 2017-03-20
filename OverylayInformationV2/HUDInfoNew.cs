@@ -378,7 +378,7 @@ namespace OverlayInformation
         /// <returns>
         ///     The <see cref="double[]" />.
         /// </returns>
-        public static Vector2 GetTopPanelSize(Hero hero)
+        public static Vector2 GetTopPanelSize(Hero hero=null)
         {
             var size = new Vector2((float) GetTopPanelSizeX(hero), (float) GetTopPanelSizeY(hero));
             return size;

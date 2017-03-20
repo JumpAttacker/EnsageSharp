@@ -48,6 +48,10 @@
     <Reference Include="SharpDX">
       <HintPath>C:\Program Files (x86)\6LmEQsuox\References\SharpDX.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX.Direct2D1, Version=2.6.3.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\6LmEQsuox\References\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX.Direct3D9">
       <HintPath>C:\Program Files (x86)\6LmEQsuox\References\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
@@ -77,6 +81,7 @@
     <Compile Include="Manabars.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Members.cs" />
+    <Compile Include="OpenDota.cs" />
     <Compile Include="Printer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
