@@ -82,3 +82,6 @@ Temporary Items
 /AutoDeward/obj
 /AutoDeward/AutoDeward.sln
 /AutoDeward/.vs/AutoDeward/v14
+/StormAnnihilation/bin
+/StormAnnihilation/obj
+*.sln
