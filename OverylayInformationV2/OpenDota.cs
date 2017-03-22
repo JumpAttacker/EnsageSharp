@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
@@ -27,7 +26,6 @@ namespace OverlayInformation
             float rightCoef;
             float leftCoef;
             ScreenSize = new Vector2(Drawing.Width, Drawing.Height);
-            var centerOfScreen = ScreenSize.X/2;
             var ratio = Math.Floor((decimal)(ScreenSize.X / ScreenSize.Y * 100));
             switch ((int)ratio)
             {
@@ -316,13 +314,6 @@ namespace OverlayInformation
                 foreach (var playerInfo in newlist)
                 {
                     var id = playerInfo.Id;
-                    //var position = HudInfoNew.GetFakeTopPanelPosition(id, Team.Radiant);
-                    var left = id < 5;
-                    var width = Drawing.Width / 2;
-                    var step = 150;
-                    /*var startPos = left ? width - step - 120 * 5 : width + step;
-                    var extra = 120 * (left ? id : id - 5);
-                    var position = new Vector2(startPos + extra, 35);*/
                     var position = new Vector2(HeroPickStageScreenHelper.GetPlayerPosition(id), 35);
                     var size = HudInfoNew.GetTopPanelSizeY();
                     position += new Vector2(0, (float)size * 1.8f);
