@@ -15,6 +15,67 @@ using SharpDX.Direct3D9;
 
 namespace OverlayInformation
 {
+    public static class HeroPickStageScreenHelper
+    {
+        private static readonly float FirstLeftHeroPos;
+        private static readonly float FirstRightHeroPos;
+        private static readonly float IconSize;
+        public static Vector2 ScreenSize { get; set; }
+        static HeroPickStageScreenHelper()
+        {
+            float size;
+            float rightCoef;
+            float leftCoef;
+            ScreenSize = new Vector2(Drawing.Width, Drawing.Height);
+            var centerOfScreen = ScreenSize.X/2;
+            var ratio = Math.Floor((decimal)(ScreenSize.X / ScreenSize.Y * 100));
+            switch ((int)ratio)
+            {
+                case 160: //16:10
+                    leftCoef = 2.45f;
+                    rightCoef = 1.68f;
+                    size =14f;
+                    break;
+                case 125: //4:3
+                    leftCoef = 2.46f;
+                    rightCoef = 1.68f;
+                    size =14.3f;
+                    break;
+                case 177: //16:9
+                    leftCoef = 2.47f;
+                    rightCoef = 1.68f;
+                    size = 15.6f;
+                    break;
+                default:
+                    Printer.PrintError(
+                        @"Your screen resolution is not supported and drawings might have wrong size/position, (" +
+                        ratio + ")");
+                    leftCoef = 2.47f;
+                    rightCoef = 1.68f;
+                    size = 15.6f;
+                    break;
+            }
+            FirstLeftHeroPos = ScreenSize.X / leftCoef;
+            FirstRightHeroPos = ScreenSize.X / rightCoef;
+            IconSize = ScreenSize.X/size;
+            //Console.WriteLine($"Rate: {ratio} Left: {FirstLeftHeroPos} Right: {FirstRightHeroPos} size: {IconSize} Center: {centerOfScreen}");
+        }
+
+        public static float GetPlayerPosition(int id)
+        {
+            float pos;
+            if (id > 4)
+            {
+                //var extra = id > 4 ? IconSize*(id - 4) : 0;
+                var extra = IconSize*(id - 5);
+                pos = FirstRightHeroPos + extra;
+            }
+            else
+                pos = FirstLeftHeroPos - IconSize*(5-id);
+            
+            return pos;
+        }
+    }
     public class PlayerInfo
     {
         public string Matches { get; set; }
@@ -43,7 +104,7 @@ namespace OverlayInformation
     {
         private static readonly Font Text;
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly List<PlayerInfo> PlayerInfoList; 
+        private static readonly List<PlayerInfo> PlayerInfoList;
         private static bool _loaded;
         private static readonly bool Init;
         private static bool Check => Game.GameState == GameState.HeroSelection;
@@ -52,6 +113,8 @@ namespace OverlayInformation
             if (Init)
                 return;
             Init = true;
+            /*Console.WriteLine(
+                $"Screen Size: {HeroPickStageScreenHelper.ScreenSize.X}/{HeroPickStageScreenHelper.ScreenSize.Y}");*/
             //SingleFake();
             Game.OnUpdate += GameOnOnUpdate;
             PlayerInfoList = new List<PlayerInfo>();
@@ -70,7 +133,7 @@ namespace OverlayInformation
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
-            
+
             Events.OnLoad += (sender, args) =>
             {
                 //DelayAction.Add(5000, SingleFake);
@@ -98,7 +161,7 @@ namespace OverlayInformation
                 for (uint i = 0; i < Game.MaximumClients; i++)
                 {
                     var player = ObjectManager.GetPlayerByID(i);
-                    if (player==null || !player.IsValid || player.IsFakeClient)
+                    if (player == null || !player.IsValid || player.IsFakeClient)
                         continue;
                     try
                     {
@@ -111,7 +174,7 @@ namespace OverlayInformation
                             continue;
                         }
                         var test = await FindWinRateAsync(steamId);
-                        if (test < 0 || test>100)
+                        if (test < 0 || test > 100)
                         {
                             Log.Error("Cant load this player!");
                             continue;
@@ -123,8 +186,8 @@ namespace OverlayInformation
                         int stdDev = 0;
                         int solo = 0;
                         int party = 0;
-                        string country="";
-                        string possibleMmr="";
+                        string country = "";
+                        string possibleMmr = "";
                         string matches = "";
                         /*int estimate = Convert.ToInt32(GetValue("estimate\":", playerReq));
                         int stdDev = Convert.ToInt32(GetValue("stdDev\":", playerReq));
@@ -195,7 +258,7 @@ namespace OverlayInformation
                             //Log.Error("7");
                         }
                         //Log.Debug("test: "+ matches);
-                        PlayerInfoList.Add(new PlayerInfo((int) i, solo, party, country, possibleMmr, wr, matches,player.Name));
+                        PlayerInfoList.Add(new PlayerInfo((int)i, solo, party, country, possibleMmr, wr, matches, player.Name));
                         Log.Debug(
                             $"[WinRate: {wr}] [solo: {solo}] [party {party}] [estimate mmr: {possibleMmr}] [{country}] history: {matches}");
                         //var success = await TryToFindPlayerAsync(player.Name);
@@ -226,7 +289,7 @@ namespace OverlayInformation
                     {
                         Log.Debug($"error with player: {player.Name} ({i}) -> {e}");
                     }
-                    
+
                 }
             }
         }
@@ -255,13 +318,14 @@ namespace OverlayInformation
                     var id = playerInfo.Id;
                     //var position = HudInfoNew.GetFakeTopPanelPosition(id, Team.Radiant);
                     var left = id < 5;
-                    var width = Drawing.Width/2;
+                    var width = Drawing.Width / 2;
                     var step = 150;
-                    var startPos = left ? width - step - 120*5: width + step;
-                    var extra = 120*(left ? id : id - 5);
-                    var position = new Vector2(startPos+extra, 35);
+                    /*var startPos = left ? width - step - 120 * 5 : width + step;
+                    var extra = 120 * (left ? id : id - 5);
+                    var position = new Vector2(startPos + extra, 35);*/
+                    var position = new Vector2(HeroPickStageScreenHelper.GetPlayerPosition(id), 35);
                     var size = HudInfoNew.GetTopPanelSizeY();
-                    position += new Vector2(0,(float) size*1.8f);
+                    position += new Vector2(0, (float)size * 1.8f);
                     var defClr = Color.White;
                     DrawShadowText(playerInfo.Name, (int)position.X, (int)position.Y, defClr);
                     position.Y += 15;
@@ -269,11 +333,11 @@ namespace OverlayInformation
                     position.Y += 15;
                     DrawShadowText(
                         playerInfo.Solo == 0 ? $"Rank ~ {playerInfo.PossibleMmr}" : $"Solo: {playerInfo.Solo}",
-                        (int) position.X, (int) position.Y, defClr);
+                        (int)position.X, (int)position.Y, defClr);
                     if (playerInfo.Party > 0)
                     {
                         position.Y += 15;
-                        DrawShadowText($"Party: {playerInfo.Party}", (int) position.X, (int) position.Y, defClr);
+                        DrawShadowText($"Party: {playerInfo.Party}", (int)position.X, (int)position.Y, defClr);
                     }
                     var gameHistorySize = playerInfo.Matches.Length - 2;
                     if (gameHistorySize >= 1)
@@ -285,7 +349,7 @@ namespace OverlayInformation
                             var clr = isTrue ? Color.Green : Color.Red;
                             position.X += 10;
                             var text = '⬤';//●
-                            DrawShadowText($"{text}", (int) position.X, (int) position.Y, clr);
+                            DrawShadowText($"{text}", (int)position.X, (int)position.Y, clr);
                         }
                     }
                     if (playerInfo.Country.Length > 0)
@@ -293,8 +357,8 @@ namespace OverlayInformation
                         try
                         {
                             var n = Convert.ToInt32(playerInfo.Country);
-                            if (n==0)
-                            continue;
+                            if (n == 0)
+                                continue;
                         }
                         catch (Exception)
                         {
@@ -302,9 +366,9 @@ namespace OverlayInformation
                         }
 
                         position.Y += 15;
-                        DrawShadowText($"[{playerInfo.Country}]", (int) position.X, (int) position.Y, defClr);
+                        DrawShadowText($"[{playerInfo.Country}]", (int)position.X, (int)position.Y, defClr);
                     }
-                    
+
                 }
             }
         }
@@ -413,8 +477,8 @@ namespace OverlayInformation
                             //Log.Error("7");
                         }
                         //Log.Debug("test: "+ matches);
-                        PlayerInfoList.Add(new PlayerInfo((int) i, solo, party, country, possibleMmr, wr, matches,
-                            "FAKE"));
+                        PlayerInfoList.Add(new PlayerInfo((int)i, solo, party, country, possibleMmr, wr, matches,
+                            "FAKE "+i));
                         Log.Debug(
                             $"[WinRate: {wr}] [solo: {solo}] [party {party}] [estimate mmr: {possibleMmr}] [{country}] history: {matches}");
                         //var success = await TryToFindPlayerAsync(player.Name);
@@ -470,19 +534,19 @@ namespace OverlayInformation
 
         private static void CurrentDomainDomainUnload(object sender, EventArgs e)
         {
-            if (!Checker.IsActive()) return;
+            try { if (!Checker.IsActive()) return; } catch { }
             Text?.Dispose();
         }
 
         private static void Drawing_OnPostReset(EventArgs args)
         {
-            if (!Checker.IsActive()) return;
+            try { if (!Checker.IsActive()) return; } catch { }
             Text?.OnLostDevice();
         }
 
         private static void Drawing_OnPreReset(EventArgs args)
         {
-            if (!Checker.IsActive()) return;
+            try { if (!Checker.IsActive()) return; } catch { }
             Text?.OnLostDevice();
         }
 
@@ -507,7 +571,7 @@ namespace OverlayInformation
         {
             var request = WebRequest.Create($"https://api.opendota.com/api/search?q={name}&similarity=1");
             string strContent;
-            using (var response = (HttpWebResponse) await Task.Factory
+            using (var response = (HttpWebResponse)await Task.Factory
                 .FromAsync(request.BeginGetResponse,
                     request.EndGetResponse,
                     null))
