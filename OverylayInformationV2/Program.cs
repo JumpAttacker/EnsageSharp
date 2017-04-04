@@ -238,25 +238,22 @@ namespace OverlayInformation
             itemOverlay.AddItem(new MenuItem("itemOverlay.Cour", "Enable for couriers").SetValue(true)).SetTooltip("only for enemy");
             var tpCatcher = new Menu("TP Catcher", "TpCather");
             tpCatcher.AddItem(new MenuItem("TpCather.Enable", "Enable").SetValue(true));
-            //tpCatcher.AddItem(new MenuItem("TpCather.Ally", "For Ally").SetValue(true));
-            //tpCatcher.AddItem(new MenuItem("TpCather.Enemy", "For Enemy").SetValue(true));
-            //tpCatcher.AddItem(new MenuItem("TpCather.Map", "Draw on Map").SetValue(true));
-            //tpCatcher.AddItem(new MenuItem("TpCather.MiniMap", "Draw on MiniMap").SetValue(true));
-            /*tpCatcher.AddItem(
+            tpCatcher.AddItem(new MenuItem("TpCather.Ally", "For Ally").SetValue(true));
+            tpCatcher.AddItem(new MenuItem("TpCather.Enemy", "For Enemy").SetValue(true));
+            tpCatcher.AddItem(new MenuItem("TpCather.Map", "Draw on Map").SetValue(true));
+            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap", "Draw on MiniMap").SetValue(true));
+            tpCatcher.AddItem(
                 new MenuItem("TpCather.MiniMap.Type", "Draw on MiniMap Hero Icon or Rectangle").SetValue(true))
-                .SetTooltip("true=icon; false=rectangle");*/
-            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "Size").SetValue(new Slider(20, 5, 30))).ValueChanged += TeleportCatcher.OnValueChanged;
-            tpCatcher.AddItem(new MenuItem("TpCather.X", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red));
-            tpCatcher.AddItem(new MenuItem("TpCather.Y", "Green").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Green));
-            tpCatcher.AddItem(new MenuItem("TpCather.Z", "Blue").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Blue));
-            //tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(50,5,50)));
-            //tpCatcher.AddItem(new MenuItem("TpCather.DrawLines", "Draw lines").SetValue(false));
-            //tpCatcher.AddItem(new MenuItem("TpCather.SmartDrawingColors", "Use smart colors for drawing").SetValue(true));
-            //tpCatcher.AddItem(new MenuItem("TpCather.EnableSideMessage", "Enable side notifications").SetValue(true)).SetTooltip("only for enemy");
-            //tpCatcher.AddItem(new MenuItem("TpCather.ExtraTimeForDrawing", "Draw icon extra few seconds after tp").SetValue(true));
-            //var tpCatcherTimer = new Menu("TP Timer", "TpCatherTimer");
-            //tpCatcherTimer.AddItem(new MenuItem("TpCather.Timer", "Enable timer").SetValue(true));
-            //tpCatcherTimer.AddItem(new MenuItem("TpCather.Timer.Size", "Text Size").SetValue(new Slider(17, 5, 25)));
+                .SetTooltip("true=icon; false=rectangle");
+            tpCatcher.AddItem(new MenuItem("TpCather.MiniMap.Size", "MiniMap Size").SetValue(new Slider(20, 5, 30))).ValueChanged += TeleportCatcher.OnValueChanged;
+            tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(50, 5, 50)));
+            tpCatcher.AddItem(new MenuItem("TpCather.DrawLines", "Draw lines").SetValue(false));
+            tpCatcher.AddItem(new MenuItem("TpCather.SmartDrawingColors", "Use smart colors for drawing").SetValue(true));
+            tpCatcher.AddItem(new MenuItem("TpCather.EnableSideMessage", "Enable side notifications").SetValue(true)).SetTooltip("only for enemy");
+            tpCatcher.AddItem(new MenuItem("TpCather.ExtraTimeForDrawing", "Draw icon extra few seconds after tp").SetValue(true));
+            var tpCatcherTimer = new Menu("TP Timer", "TpCatherTimer");
+            tpCatcherTimer.AddItem(new MenuItem("TpCather.Timer", "Enable timer").SetValue(true));
+            tpCatcherTimer.AddItem(new MenuItem("TpCather.Timer.Size", "Text Size").SetValue(new Slider(17, 5, 25)));
             /*var hitCather = new Menu("Hit Catcher", "HitCatcher");
             hitCather.AddItem(new MenuItem("HitCatcher.Enable", "Enable").SetValue(true));
             hitCather.AddItem(new MenuItem("HitCatcher.Map", "Draw on Map").SetValue(true));
@@ -436,7 +433,7 @@ namespace OverlayInformation
             page2.AddSubMenu(openDota);
             dmgCalc.AddSubMenu(defCol);
             dmgCalc.AddSubMenu(killableCol);
-            //tpCatcher.AddSubMenu(tpCatcherTimer);
+            tpCatcher.AddSubMenu(tpCatcherTimer);
             status.AddSubMenu(visionOnAllyHeroes);
 
             Members.Menu.AddSubMenu(settings);
