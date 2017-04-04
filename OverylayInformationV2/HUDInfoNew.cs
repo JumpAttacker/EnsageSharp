@@ -378,7 +378,7 @@ namespace OverlayInformation
         /// <returns>
         ///     The <see cref="double[]" />.
         /// </returns>
-        public static Vector2 GetTopPanelSize(Hero hero)
+        public static Vector2 GetTopPanelSize(Hero hero=null)
         {
             var size = new Vector2((float) GetTopPanelSizeX(hero), (float) GetTopPanelSizeY(hero));
             return size;
@@ -393,7 +393,7 @@ namespace OverlayInformation
         /// <returns>
         ///     The <see cref="double" />.
         /// </returns>
-        public static double GetTopPanelSizeX(Hero hero)
+        public static double GetTopPanelSizeX(Hero hero=null)
         {
             return X;
         }
@@ -407,7 +407,7 @@ namespace OverlayInformation
         /// <returns>
         ///     The <see cref="double" />.
         /// </returns>
-        public static double GetTopPanelSizeY(Hero hero)
+        public static double GetTopPanelSizeY(Hero hero=null)
         {
             return 35 * Rate;
         }
@@ -452,7 +452,6 @@ namespace OverlayInformation
         private static void Drawing_OnDraw(EventArgs args)
         {
             Drawing.DrawRect(GetTopPanelPosition(Members.MyHero), GetTopPanelSize(Members.MyHero), Color.White);
-            return;
             var v = ObjectManager.LocalHero;
             /*for (int i = 0; i < 5; i++)
             {

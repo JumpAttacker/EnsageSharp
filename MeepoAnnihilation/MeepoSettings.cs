@@ -41,7 +41,7 @@ namespace MeepoAnnihilation
                 return;
             }
             Id = dividedWeStand.UnitIndex;
-            Game.PrintMessage($"Init new Meepo: (Id: {Id})",MessageType.ChatMessage);
+            Game.PrintMessage($"Init new Meepo: (Id: {Id})");
             PoofStartTime = float.MaxValue;
         }
     }

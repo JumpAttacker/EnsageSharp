@@ -5,6 +5,7 @@ using Ensage.Common;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using SharpDX;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Auto_Disable
 {

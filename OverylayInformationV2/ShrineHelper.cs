@@ -7,6 +7,7 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace OverlayInformation
 {
@@ -49,6 +50,7 @@ namespace OverlayInformation
             _abilityDictinart.Add(handle, s);
             return s;
         }
+
         public static void Init()
         {
             Effects.Clear();
@@ -72,6 +74,7 @@ namespace OverlayInformation
                         foreach (var v in _shrineList)
                         {
                             var dist = v.Distance2D(Members.MyHero);
+
                             if (dist <= 700 && v.CheckForAbility())
                             {
                                 HandleEffect(v);
@@ -109,7 +112,6 @@ namespace OverlayInformation
                             var isBuff = buff != null;
                             var remTine = buff?.RemainingTime;
                             var cdDelta = isBuff ? buff.RemainingTime*size.X/5 : cd*size.X/cdLength;
-
                             pos += new Vector2(-hpBarSize/2, hpBarSize*1.5f);
                             if (Draw)
                             {
@@ -162,7 +164,7 @@ namespace OverlayInformation
             {
                 //effect=unit.AddParticleEffect("materials/ensage_ui/particles/drag_selected_ring_mod.vpcf");
                 effect=unit.AddParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf");
-                effect.SetControlPoint(1, new Vector3(596, Alpha, 0));
+                effect.SetControlPoint(1, new Vector3(500, Alpha, 0));
                 effect.SetControlPoint(2, new Vector3(R, G, B));
                 /*effect.SetControlPoint(1, new Vector3(0, 155, 255));
                 effect.SetControlPoint(2, new Vector3(500, 255, 255));

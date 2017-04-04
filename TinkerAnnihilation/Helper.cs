@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common.AbilityInfo;
-using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
-using Ensage.Common.Extensions.Damage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using SharpDX;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace TinkerAnnihilation
 {
@@ -99,11 +98,8 @@ namespace TinkerAnnihilation
         }
         public static bool IsItemEnableNew(string name)
         {
-            return Members.Menu.Item("itemEnable").GetValue<PriorityChanger>().AbilityToggler.IsEnabled(name);
-        }
-        public static bool IsAbilityEnable(string name)
-        {
-            return Members.Menu.Item("abilityEnable").GetValue<AbilityToggler>().IsEnabled(name);
+            return Members.Menu.Item("itemEnable2").GetValue<AbilityToggler>().IsEnabled(name);
+            //return Members.Menu.Item("itemEnable").GetValue<PriorityChanger>().AbilityToggler.IsEnabled(name);
         }
 
         public static uint PriorityHelper(Item item)

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Objects.UtilityObjects;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Auto_Disable
 {

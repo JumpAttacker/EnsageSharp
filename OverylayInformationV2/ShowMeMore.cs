@@ -32,6 +32,14 @@ namespace OverlayInformation
             GetTimer = timeCalc;
         }
 
+        public TeleportEffect(ParticleEffect effect, Vector3 position, float time)
+        {
+            GetEffect = effect;
+            GetPosition = position;
+            GetStartTime = Game.RawGameTime;
+            GetTimer = time;
+        }
+
         // timeCalc-(Game.RawGameTime-GetStartTime)
 
 
@@ -88,6 +96,12 @@ namespace OverlayInformation
         private static bool CheckForTheTime => !Members.Menu.Item("TpCather.ExtraTimeForDrawing").GetValue<bool>();
         private static Font _textFont;
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static Vector3 TpCatcherColor
+            =>
+                new Vector3(
+                    Members.Menu.Item("TpCather.X").GetValue<Slider>().Value,
+                    Members.Menu.Item("TpCather.Y").GetValue<Slider>().Value,
+                    Members.Menu.Item("TpCather.Z").GetValue<Slider>().Value);
         public static void OnValueChanged(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
         {
             _textFont = new Font(
@@ -125,29 +139,34 @@ namespace OverlayInformation
                 {
                     return;
                 }
-
-                foreach (var particleEffect in _effectList)
+                var safeList = new List<TeleportEffect>();
+                foreach (var particleEffect in _effectList.ToList())
                 {
                     var effect = particleEffect.GetEffect;
                     try
                     {
+                        if (particleEffect.GetTimer - (Game.RawGameTime - particleEffect.GetStartTime) <= 0)
+                        {
+                            continue;
+                        }
                         if (effect != null && effect.IsValid && !effect.IsDestroyed)
                         {
+                            safeList.Add(particleEffect);
                             var position = particleEffect.GetPosition;
-                            var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
-                            var player =
+                            var pos = Helper.WorldToMinimap(position);
+                            /*var player =
                                     ObjectManager.GetPlayerByID(
                                         (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
                             if (player == null || !player.IsValid)
-                                continue;
+                                continue;*/
 
                             if (!pos.IsZero)
                             {
                                 DrawShadowText(_textFont, "TP",
-                                    (int)pos.X - 10,
-                                    (int)pos.Y,
-                                    SmartClr ?
-                                    (Color)particleEffect.GetColor : Color.YellowGreen);
+                                    (int) pos.X - 10,
+                                    (int) pos.Y- MiniMapSize,
+                                    /*SmartClr ?
+                                    (Color)particleEffect.GetColor : */new Color(TpCatcherColor));
                                 /*_textFont.DrawText(
                                     null,
                                     "TP",
@@ -161,9 +180,11 @@ namespace OverlayInformation
                     {
                         Log.Debug($"[TP]");
                     }
+
                     
                 }
-                
+                _effectList = safeList;
+
             };
             Drawing.OnPostReset += args =>
             {
@@ -175,6 +196,7 @@ namespace OverlayInformation
             };
             Drawing.OnDraw += args =>
             {
+                return;
                 if (!Checker.IsActive())
                     return;
                 var safeList = new List<TeleportEffect>();
@@ -292,7 +314,7 @@ namespace OverlayInformation
                 
                 var closestTower =
                     ObjectManager.GetEntities<Building>()
-                        .Where(x => x.IsAlive && x.Team == Members.MyPlayer.Team && x.Distance2D(position) <= 1150)
+                        .Where(x => x.IsAlive /*&& x.Team == Members.MyPlayer.Team*/ && x.Distance2D(position) <= 1150)
                         .OrderBy(x => x.Distance2D(position))
                         .FirstOrDefault();
                 double timeCalc = 3;
@@ -328,10 +350,16 @@ namespace OverlayInformation
                     }
 
                 }
-                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team, isStart, timeCalc));
+                _effectList.Add(new TeleportEffect(effect, position, color, player.Team == Members.MyPlayer.Team,
+                    isStart, CheckForTheTime ? timeCalc : 5));
                 //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
             }
+        }
+
+        public void Add(ParticleEffect effect, Vector3 position)
+        {
+            _effectList.Add(new TeleportEffect(effect, position, 5f));
         }
     }
 
@@ -349,7 +377,7 @@ namespace OverlayInformation
         private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect =
             new Dictionary<Unit, ParticleEffect>();
 
-        private static readonly TeleportCatcher TeleportCatcher=new TeleportCatcher();
+        private static TeleportCatcher _teleportCatcher;
 
         public static void ShowIllustion()
         {
@@ -361,7 +389,9 @@ namespace OverlayInformation
             foreach (var s in illusions)
                 Helper.HandleEffect(s);
         }
-        
+
+        private static readonly Dictionary<Hero, ParticleEffect> LinkenDictinart = new Dictionary<Hero, ParticleEffect>();
+        private static readonly Sleeper LinkenSleeper = new Sleeper();
         public static void ShowMeMoreSpells()
         {
             if (!Members.Menu.Item("showmemore.Enable").GetValue<bool>()) return;
@@ -376,7 +406,46 @@ namespace OverlayInformation
                     Printer.Print(modifier.Name);
                 }
             }*/
-            
+            if (Members.Menu.Item("linkenEsp.Enable").GetValue<bool>())
+            {
+                foreach (var hero in Manager.HeroManager.GetEnemyViableHeroes())
+                {
+                    var items = Manager.HeroManager.GetItemList(hero);
+                    if (items==null || items.Count==0)
+                        continue;
+                    ParticleEffect effect;
+                    var sphere = items.FirstOrDefault(x => x!=null && x.IsValid && x.GetItemId() == ItemId.item_sphere);
+                    if (sphere == null)
+                    {
+                        if (!LinkenSleeper.Sleeping && LinkenDictinart.TryGetValue(hero, out effect))
+                        {
+                            effect?.Dispose();
+                            LinkenDictinart.Remove(hero);
+                            LinkenSleeper.Sleep(10000);
+                        }
+                        continue;
+                    }
+                    if (LinkenDictinart.TryGetValue(hero, out effect))
+                    {
+                        if (!sphere.CanBeCasted())
+                        {
+                            effect.Dispose();
+                            LinkenDictinart.Remove(hero);
+                        }
+                    }
+                    else
+                    {
+                        if (sphere.CanBeCasted())
+                        {
+                            effect = new ParticleEffect("particles/items_fx/immunity_sphere_buff.vpcf", hero,
+                                ParticleAttachment.RootboneFollow);
+                            LinkenDictinart.Add(hero, effect);
+                        }
+                    }
+
+                }
+                //particles/items_fx/immunity_sphere_buff.vpcf
+            }
             if (Members.Menu.Item("scan.Enable").GetValue<bool>())
             {
                 if (Members.ScanEnemy == null || !Members.ScanEnemy.IsValid)
@@ -900,7 +969,8 @@ namespace OverlayInformation
 
         public static void Flush()
         {
-            _sleeper=new Sleeper();
+            _teleportCatcher = new TeleportCatcher();
+            _sleeper =new Sleeper();
         }
         /*
          tpCatcher.AddItem(new MenuItem("TpCather.Enable", "Enable").SetValue(true));
@@ -912,6 +982,7 @@ namespace OverlayInformation
         tpCatcher.AddItem(new MenuItem("TpCather.Map.Size", "Map Size").SetValue(new Slider(25,1,30)));
          * */
         private static bool IsEnableTpCather => Members.Menu.Item("TpCather.Enable").GetValue<bool>();
+
         
 
         public static void Entity_OnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
@@ -937,6 +1008,7 @@ namespace OverlayInformation
                     });
                 }
             }
+            
             if (!IsEnableTpCather)
                 return;
             
@@ -949,7 +1021,8 @@ namespace OverlayInformation
                     var a = effect.GetControlPoint(0);
                     var b = effect.GetControlPoint(2);
                     Printer.Print($"{(isStart ? "start" : "end")} => pos: {a.PrintVector()} color: {b.PrintVector()}");
-                    TeleportCatcher.Add(effect, a, b, isStart);
+                    //_teleportCatcher.Add(effect, a, b, isStart);
+                    _teleportCatcher.Add(effect, a);
                 });
             }
         }
@@ -998,6 +1071,7 @@ namespace OverlayInformation
                     }
                 }
             }
+
         }
 
         public static void OnModifierRemoved(Unit sender, ModifierChangedEventArgs args)

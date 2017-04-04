@@ -1,120 +1,102 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Ensage;
-using SharpDX;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
+using Ensage.Common.Objects.UtilityObjects;
 
 namespace AutoDeward
 {
-    class Program
+    public static class MenuManager
     {
+        private static readonly Menu Menu = new Menu("Auto Deward", "Auto Deward", true);
+        public static bool IsEnable => Menu.Item("Enable").GetValue<bool>();
 
-        #region Members
-
+        public static bool IsItemEnable(ItemId item)
+            => Menu.Item("item_dict").GetValue<AbilityToggler>().IsEnabled(item.ToString());
         private static bool _loaded;
+        public static void Init()
+        {
+            if (_loaded)
+                return;
+            _loaded = true;
+            var dict = new Dictionary<string, bool>()
+            {
+                {ItemId.item_bfury.ToString(),true},
+                {ItemId.item_quelling_blade.ToString(),true},
+                {ItemId.item_iron_talon.ToString(),true},
+                {ItemId.item_tango.ToString(),true},
+                {ItemId.item_tango_single.ToString(),true},
+            };
+            Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
+            Menu.AddItem(new MenuItem("item_dict", "Items:").SetValue(new AbilityToggler(dict)));
+            Menu.AddToMainMenu();
+        }
+    }
+
+    public static class Core
+    {
         private static Hero _me;
-        private static Player _player;
-        private const int TangoRange=450;
-        private const int QbladeRange = 350;
+        private static Sleeper _sleeper;
+        private static void GameOnOnUpdate(EventArgs args)
+        {
+            if (_sleeper.Sleeping || !MenuManager.IsEnable)
+                return;
+            _sleeper.Sleep(100);
+            var item = _me.GetItemById(ItemId.item_bfury) ??
+                       _me.GetItemById(ItemId.item_quelling_blade) ??
+                       _me.GetItemById(ItemId.item_iron_talon) ??
+                       _me.GetItemById(ItemId.item_tango) ?? 
+                       _me.GetItemById(ItemId.item_tango_single);
 
-        #endregion
+            if (item == null || !item.CanBeCasted()) return;
+            var target =
+                ObjectManager.GetEntitiesFast<Unit>()
+                    .FirstOrDefault(
+                        x =>
+                            (x.ClassID == ClassID.CDOTA_NPC_Observer_Ward ||
+                             x.ClassID == ClassID.CDOTA_NPC_Observer_Ward_TrueSight) && x.Team != _me.Team &&
+                            x.IsAlive && x.IsVisible && item.CanHit(x));
+            if (target==null)
+                return;
+            item.UseAbility(target);
+            _sleeper.Sleep(500);
+        }
 
-        #region Methods
+        public static Item GetItem(this Hero me,ItemId itemId)
+        {
+            return MenuManager.IsItemEnable(itemId) ? me.GetItemById(itemId) : null;
+        }
 
+        public static void Handle()
+        {
+            _me = ObjectManager.LocalHero;
+            _sleeper = new Sleeper();
+            Game.OnUpdate += GameOnOnUpdate;
+        }
+
+        public static void UnHandle()
+        {
+            Game.OnUpdate -= GameOnOnUpdate;
+        }
+    }
+
+    internal class Program
+    {
         private static void Main()
         {
-            Game.OnUpdate += Game_OnUpdate;
-            _loaded = false;
-        }
-
-        private static void Game_OnUpdate(EventArgs args)
-        {
-            if (!_loaded)
+            Events.OnLoad += (sender, args) =>
             {
-                _me = ObjectMgr.LocalHero;
-                _player = ObjectMgr.LocalPlayer;
-                if (!Game.IsInGame || _me == null)
-                {
-                    return;
-                }
-                _loaded = true;
-                PrintSuccess("> AutoDeward Loaded");
-            }
-
-            if (!Game.IsInGame || _me == null)
+                MenuManager.Init();
+                Core.Handle();
+            };
+            Events.OnClose += (sender, args) =>
             {
-                _loaded = false;
-                PrintInfo("> AutoDeward unLoaded");
-                return;
-            }
-
-            if (Game.IsPaused || !Utils.SleepCheck(_me.Handle.ToString()))
-            {
-                return;
-            }
-
-            if (_player == null || _player.Team == Team.Observer)
-                return;
-
-            if (!_me.IsAlive)
-               return;
-            var wards = ObjectMgr.GetEntities<Unit>()
-                .Where(
-                    x =>
-                        (x.ClassID == ClassID.CDOTA_NPC_Observer_Ward ||
-                         x.ClassID == ClassID.CDOTA_NPC_Observer_Ward_TrueSight)
-                        && x.Team != _player.Team && GetDistance2D(x.NetworkPosition, _me.NetworkPosition) < TangoRange &&
-                        x.IsVisible && x.IsAlive);
-            var enumerable = wards as Unit[] ?? wards.ToArray();
-            if (!enumerable.Any()) return;
-            var tango =
-                _me.Inventory.Items.FirstOrDefault(
-                    x => x.ClassID == ClassID.CDOTA_Item_Tango || x.ClassID == ClassID.CDOTA_Item_Tango_Single);
-            var qblade = _me.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_QuellingBlade);
-            if (qblade != null && qblade.CanBeCasted() &&
-                GetDistance2D(enumerable.First().NetworkPosition, _me.NetworkPosition) < QbladeRange)
-            {
-                qblade.UseAbility(enumerable.First());
-            }
-            else if (tango != null && tango.CanBeCasted())
-            {
-                tango.UseAbility(enumerable.First());
-            }
-            Utils.Sleep(250, _me.Handle.ToString());
+                Core.UnHandle();
+            };
         }
-
-        #endregion
-
-        #region Helpers
-        private static float GetDistance2D(Vector3 p1, Vector3 p2)
-        {
-            return (float)Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
-        }
-        public static void PrintInfo(string text, params object[] arguments)
-        {
-            PrintEncolored(text, ConsoleColor.White, arguments);
-        }
-
-        public static void PrintSuccess(string text, params object[] arguments)
-        {
-            PrintEncolored(text, ConsoleColor.Green, arguments);
-        }
-
-        public static void PrintError(string text, params object[] arguments)
-        {
-            PrintEncolored(text, ConsoleColor.Red, arguments);
-        }
-
-        public static void PrintEncolored(string text, ConsoleColor color, params object[] arguments)
-        {
-            var clr = Console.ForegroundColor;
-            Console.ForegroundColor = color;
-            Console.WriteLine(text, arguments);
-            Console.ForegroundColor = clr;
-        }
-
-        #endregion
-
     }
 }

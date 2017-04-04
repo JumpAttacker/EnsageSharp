@@ -11,36 +11,12 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Heroes;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace MeepoAnnihilation
 {
-    public class CampExtension
-    {
-        public JungleCamp OriginalCamp;
-        public Vector3 CampPosition;
-        public bool Ancients;
-        public uint Id;
-        public string Name;
-        public Vector3 StackPosition;
-        public double StackTime;
-        public Team Team;
-        public Vector3 WaitPosition;
-        public bool Clean;
-        public Hero Master;
-        public CampExtension(JungleCamp camp)
-        {
-            OriginalCamp = camp;
-            CampPosition = camp.CampPosition;
-            Ancients = camp.Ancients;
-            Id = camp.Id;
-            Name = camp.Name;
-            StackPosition = camp.StackPosition;
-            StackTime = camp.StackTime;
-            Team = camp.Team;
-            WaitPosition = camp.WaitPosition;
-        }
-    }
     internal static class Program
     {
         #region Members
@@ -65,7 +41,7 @@ namespace MeepoAnnihilation
             {new Vector3(-4400, -3900, 384), "middle"}
 
         };
-
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Hero MyHero { get; set; }
         private static Player MyPlayer { get; set; }
         private static Hero _globalTarget;
@@ -97,15 +73,65 @@ namespace MeepoAnnihilation
         private static List<Entity> _selectedMeepo = new List<Entity>();
         public static readonly Dictionary<uint, Ability> SpellQ = new Dictionary<uint, Ability>();
         public static readonly Dictionary<uint, Ability> SpellW = new Dictionary<uint, Ability>();
-        public static List<CampExtension> CampsExtensions = new List<CampExtension>();
         private static bool ThrowingNet => Menu.Item("hotkey.ThrowNet").GetValue<KeyBind>().Active;
         private static bool isNetEnable = false;
         #endregion
 
         #region Main
 
+        private static bool _firstTime = true;
         private static void Main()
         {
+            Events.OnLoad += (sender, args) =>
+            {
+                InitMenu();
+                MyHero = ObjectManager.LocalHero;
+                if (MyHero.ClassID!=ClassID.CDOTA_Unit_Hero_Meepo) return;
+                Game.PrintMessage(
+                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
+                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
+                Game.OnUpdate += Game_OnUpdate;
+                Game.OnUpdate += Camp_update;
+                Drawing.OnDraw += Drawing_OnDraw;
+                Game.OnWndProc += Game_OnWndProc;
+                Player.OnExecuteOrder += Player_OnExecuteAction;
+                Orbwalking.Load();
+                _meepoList.Clear();
+                _aghainim = null;
+                _blink = null;
+                _meka = null;
+                _ultimate = null;
+                JungleCamps.Init();
+                foreach (var camp in JungleCamps.GetCamps)
+                {
+                    camp.CanBeHere = true;
+                }
+                _selectedMeepo.Clear();
+                _meepoList.Clear();
+                MeepoSet.Clear();
+                ScaleX = Drawing.Width / 1920f;
+                ScaleY = Drawing.Height / 1080f;
+            };
+            Events.OnClose += (sender, args) =>
+            {
+                Game.OnUpdate -= Game_OnUpdate;
+                Game.OnUpdate -= Camp_update;
+                Drawing.OnDraw -= Drawing_OnDraw;
+                Game.OnWndProc -= Game_OnWndProc;
+                Player.OnExecuteOrder -= Player_OnExecuteAction;
+                MyHero = null;
+            };
+        }
+
+        public static float ScaleY { get; set; }
+
+        public static float ScaleX { get; set; }
+
+        public static void InitMenu()
+        {
+            if (!_firstTime)
+                return;
+            _firstTime = false;
             Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             Menu.AddItem(new MenuItem("hotkey", "Hotkey").SetValue(new KeyBind('G', KeyBindType.Press)));
             Menu.AddItem(
@@ -130,7 +156,7 @@ namespace MeepoAnnihilation
                 new MenuItem("Drawing.PoffSystem", "Poofer").SetValue(true)
                     .SetTooltip("All selected meepos will use W spell on target position when first meepo use W spell"));
             var drawingMenu = new Menu("Drawing", "Drawing");
-            
+
             drawingMenu.AddItem(new MenuItem("Drawing.DamageFromPoof", "Draw Poof count on enemy").SetValue(true));
             drawingMenu.AddItem(new MenuItem("Drawing.NumOfMeepo", "Draw Number for each meepo").SetValue(true));
             drawingMenu.AddItem(
@@ -190,56 +216,7 @@ namespace MeepoAnnihilation
             Menu.AddSubMenu(jungleStack);
             Menu.AddSubMenu(drawingMenu);
             Menu.AddToMainMenu();
-
-            Events.OnLoad += (sender, args) =>
-            {
-                MyHero = ObjectManager.LocalHero;
-                if (MyHero.ClassID!=ClassID.CDOTA_Unit_Hero_Meepo) return;
-                Game.PrintMessage(
-                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
-                Game.OnUpdate += Game_OnUpdate;
-                Game.OnUpdate += Camp_update;
-                Drawing.OnDraw += Drawing_OnDraw;
-                Game.OnWndProc += Game_OnWndProc;
-                Player.OnExecuteOrder += Player_OnExecuteAction;
-                Orbwalking.Load();
-                _meepoList.Clear();
-                _aghainim = null;
-                _blink = null;
-                _meka = null;
-                _ultimate = null;
-                foreach (var camp in JungleCamps.GetCamps)
-                {
-                    camp.CanBeHere = true;
-                }
-                _selectedMeepo.Clear();
-                _meepoList.Clear();
-                MeepoSet.Clear();
-                ScaleX = Drawing.Width / 1920f;
-                ScaleY = Drawing.Height / 1080f;
-
-                CampsExtensions.Clear();
-                foreach (var camp in JungleCamps.GetCamps)
-                {
-                    CampsExtensions.Add(new CampExtension(camp));
-                }
-
-            };
-            Events.OnClose += (sender, args) =>
-            {
-                Game.OnUpdate -= Game_OnUpdate;
-                Game.OnUpdate -= Camp_update;
-                Drawing.OnDraw -= Drawing_OnDraw;
-                Game.OnWndProc -= Game_OnWndProc;
-                Player.OnExecuteOrder -= Player_OnExecuteAction;
-                MyHero = null;
-            };
         }
-
-        public static float ScaleY { get; set; }
-
-        public static float ScaleX { get; set; }
 
         #endregion
 
@@ -479,7 +456,6 @@ namespace MeepoAnnihilation
         private static void Game_OnUpdate(EventArgs args)
         {
             if (!Menu.Item("Enable").GetValue<bool>()) return;
-
             if (MyHero == null || !MyHero.IsValid)
             {
                 MyHero = ObjectManager.LocalHero;
@@ -841,7 +817,7 @@ namespace MeepoAnnihilation
 
             if (s == null)
             {
-                s = JungleCamps.GetCamps.OrderBy(x => x.CampPosition.Distance2D(me)).FirstOrDefault();
+                s = JungleCamps.GetCamps.OrderBy(x => x.StackPosition.Distance2D(me)).FirstOrDefault();
                 if (s != null)
                 {
                     name = MeepoSet.Find(x => Equals(x.Hero, me)).Handle.ToString();
@@ -1168,6 +1144,7 @@ namespace MeepoAnnihilation
             var time = s.StackTime - timeForStart - sec;
             //Print("Current Time: [" + sec + "] Time For Travel: [" + timeForStart + "] TimeForStartMoving: [" + (time - sec) + "]");
             //Print(time.ToString());
+            var min = Math.Floor(Game.GameTime/60)%2 == 0;
             if (time >= 0.5)
             {
                 if (Utils.SleepCheck("move_cd2" + name))
@@ -1176,7 +1153,7 @@ namespace MeepoAnnihilation
                     Utils.Sleep(250, "move_cd2" + name);
                 }
             }
-            else if (Utils.SleepCheck("move_cd" + name))
+            else if (Utils.SleepCheck("move_cd" + name) && min)
             {
                 var pos = s.CampPosition;
                 var ang = me.FindAngleBetween(pos, true);
@@ -1185,6 +1162,8 @@ namespace MeepoAnnihilation
                 me.Move(p);
                 me.Move(s.StackPosition, true);
                 Utils.Sleep((60 - s.StackTime)*1000 + 8000, "move_cd" + name);
+                Log.Debug($"Meepo #[{MeepoSet.Find(settings => settings.Hero.Equals(me))?.Id}] trying to stack camp #[{s.Id}] ({s.Name})");
+                // TODO: camp 4 & 3 
             }
         }
 
@@ -1326,7 +1305,7 @@ namespace MeepoAnnihilation
             if (!Utils.SleepCheck("Camp.Update"))
                 return;
             Utils.Sleep(150, "Camp.Update");
-            var curSec = (61 - Game.GameTime%60)*1000;
+            //var refreshTime = (Game.GameTime + 60)%120 == 0;
             foreach (var camp in JungleCamps.GetCamps)
             {
                 foreach (
@@ -1343,15 +1322,15 @@ namespace MeepoAnnihilation
                                     !x.IsWaitingToSpawn))
                 {
                     camp.CanBeHere = enemy;
-
-                    //Print("[CampStatus]: "+enemy);
+                    
                     if (enemy || camp.Delayed) continue;
                     camp.Delayed = true;
-                    DelayAction.Add(curSec, () =>
+                    //Print("[CampStatus]: add delay" + (120 - (Game.GameTime + 60) % 120),true);
+                    DelayAction.Add((120 - (Game.GameTime + 60) % 120)*1000, () =>
                     {
                         camp.Delayed = false;
                         camp.CanBeHere = true;
-                        //Print("[CampStatus]: delayAction" + camp.CanBeHere);
+                        //Print("[CampStatus]: delayAction" + camp.CanBeHere,true);
                     });
                 }
             }

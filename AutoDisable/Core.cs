@@ -13,6 +13,7 @@ using Ensage.Common.Objects.UtilityObjects;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Auto_Disable
 {
@@ -45,7 +46,7 @@ namespace Auto_Disable
                 if (!myItems.Any() && !myAbilities.Any())
                     continue;
                 var isInvul = v.IsInvul();
-                var magicImmnune = v.IsMagicImmune();
+                //var magicImmnune = v.IsMagicImmune();
                 var linkProt = v.IsLinkensProtected();
                 var isStun = v.IsStunned();
                 var isHex = v.IsHexed();
@@ -60,6 +61,17 @@ namespace Auto_Disable
                 var distance = Me.Distance2D(v);
                 IEnumerable<Item> myItems2 = myItems.ToList();
                 IEnumerable<Ability> myAbilities2 = myAbilities.ToList();
+                if (MenuManager.IsAngryDisabler)
+                {
+                    if (!dpActivated && !linkProt && !isInvul &&
+                        MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "Angry Disabler"))
+                    {
+                        if (TryToDisable(v, myItems2, myAbilities2))
+                            continue;
+                    }
+                }
+                myItems2 = myItems.ToList();
+                myAbilities2 = myAbilities.ToList();
                 if (distance <= 500 &&
                     ((v.HasModifier("modifier_item_forcestaff_active") &&
                       MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "item_force_staff")) ||
@@ -67,7 +79,7 @@ namespace Auto_Disable
                       MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "item_blink"))) &&
                     v.HasDangAbility())
                 {
-                    if (dpActivated || magicImmnune || linkProt || isInvul)
+                    if (dpActivated /*|| magicImmnune*/ || linkProt || isInvul)
                     {
                         if (TryToEscape(v, myItems2, myAbilities2))
                             continue;
@@ -105,18 +117,22 @@ namespace Auto_Disable
                             continue;
                     }
                 }*/
+                if (MenuManager.HelpAllyHeroes && TryToHelpAllyHeroes(v, myItems, myAbilities))
+                    continue;
                 if ((angle != 0 && !v.Spellbook.Spells.Any(
                     x =>
                         x.IsInAbilityPhase && (x.AbilityBehavior & AbilityBehavior.NoTarget) != 0 && x.IsDisable() &&
                         x.CanHit(Me) && x.CanBeCasted(Me))) || distance >= 1000)
+                {
                     continue;
+                }
                 var anyDangAbility =
                     v.Spellbook.Spells.FirstOrDefault(
                         x =>
                             x.IsInAbilityPhase && ((x.IsDisable() && x.CanHit(Me)) || x.IsShield()) && x.CanBeCasted(Me));
                 if (anyDangAbility!=null)
                 {
-                    if (dpActivated || magicImmnune || linkProt || isInvul)
+                    if (dpActivated /*|| magicImmnune */|| linkProt || isInvul)
                     {
                         if (TryToEscape(v,
                             myItems.Where(x => MenuManager.IsItemEnable(v, x.StoredName(), anyDangAbility.StoredName())),
@@ -139,6 +155,23 @@ namespace Auto_Disable
                     }
                 }
             }
+        }
+
+        private static bool TryToHelpAllyHeroes(Hero v, IEnumerable<Item> myItems, IEnumerable<Ability> myAbilities)
+        {
+            var allyHeroes =
+                Heroes.GetByTeam(Members.MyTeam)
+                    .Where(x => x != null && x.IsValid && !x.Equals(Me) && x.IsAlive && x.Distance2D(v) <= 1000 && (float)
+                Math.Max(Math.Abs(v.RotationRad - Utils.DegreeToRadian(v.FindAngleBetween(x.Position))) - 0.20, 0) == 0);
+            foreach (var allyHero in from allyHero in allyHeroes let any = v.Spellbook.Spells.Any(
+                x =>
+                    x.IsInAbilityPhase && x.IsDisable() &&
+                    x.CanHit(allyHero) && x.CanBeCasted(allyHero)) where any select allyHero)
+            {
+                Log.Debug($"Help {allyHero.GetRealName()} from {v.GetRealName()}");
+                TryToDisable(v, myItems, myAbilities);
+            }
+            return false;
         }
 
         private static bool TryToDisable(Hero hero, IEnumerable<Item> myItems, IEnumerable<Ability> myAbilities)
@@ -189,7 +222,7 @@ namespace Auto_Disable
                     ability.UseAbility();
                 }
                 ComboSleeper.Sleep(Helper.GetAbilityDelay(hero,ability), ability.StoredName() + hero.StoredName());
-                Log.Debug($"ability: {ability.StoredName()}");
+                Log.Debug($"ability: {ability.StoredName()} --> {hero.GetRealName()}");
                 if (MenuManager.IsUseOnlyOne)
                     ComboSleeper.Sleep(350, hero.StoredName());
                 return MenuManager.IsUseOnlyOne;
@@ -213,11 +246,12 @@ namespace Auto_Disable
                 {
                     var castRange = item.GetCastRange() - 10;
                     var position = Me.Position;
+                    var angle = _fountain.FindAngleBetween(position, true);
                     var point = new Vector3(
                         (float)
-                            (position.X - castRange*Math.Cos(Me.FindAngleBetween(position, true))),
+                            (position.X - castRange*Math.Cos(angle)),
                         (float)
-                            (position.Y - castRange*Math.Sin(Me.FindAngleBetween(position, true))),
+                            (position.Y - castRange*Math.Sin(angle)),
                         0);
                     item.UseAbility(point);
                 }
@@ -229,7 +263,7 @@ namespace Auto_Disable
                 {
                     item.UseAbility();
                 }
-                Log.Debug($"item: {item.StoredName()}");
+                Log.Debug($"item: {item.StoredName()} --> from {hero.GetRealName()}");
                 ComboSleeper.Sleep(Helper.GetAbilityDelay(hero, item), item.StoredName() + hero.StoredName());
                 if (MenuManager.IsUseOnlyOne)
                     ComboSleeper.Sleep(350, hero.StoredName());
@@ -258,7 +292,7 @@ namespace Auto_Disable
                 {
                     ability.UseAbility();
                 }
-                Log.Debug($"ability: {ability.StoredName()}");
+                Log.Debug($"ability: {ability.StoredName()} --> from {hero.GetRealName()}");
                 ComboSleeper.Sleep(350, ability.StoredName() + hero.StoredName());
                 if (MenuManager.IsUseOnlyOne)
                     ComboSleeper.Sleep(350, hero.StoredName());

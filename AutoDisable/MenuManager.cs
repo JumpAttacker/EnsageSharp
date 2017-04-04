@@ -8,6 +8,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Auto_Disable
 {
@@ -17,9 +18,11 @@ namespace Auto_Disable
         public static bool IsEnable => Menu.Item("Menu.Enable").GetValue<bool>();
         public static bool IsDisableChannelGuys => Menu.Item("Menu.DisableChannel").GetValue<bool>();
         public static bool IsAntiInitiators => Menu.Item("Menu.AntiInitiators").GetValue<bool>();
+        public static bool HelpAllyHeroes => Menu.Item("Menu.HelpAllyHeroes").GetValue<bool>();
         public static bool IsUseOnlyOne => Menu.Item("Menu.OneEventOneAbility").GetValue<bool>();
         public static bool IsNinjaMode => Menu.Item("Menu.NinjaMode").GetValue<bool>();
         public static bool IsEnableDebugger => Menu.Item("Dev.Text.enable").GetValue<bool>();
+        public static bool IsAngryDisabler => Menu.Item("Menu.AngryDisabler").GetValue<bool>();
         public static bool ComboKey => Menu.Item("Key.Enable").GetValue<KeyBind>().Active;
 
         public static bool IsItemEnable(Hero hero, string item)
@@ -46,6 +49,9 @@ namespace Auto_Disable
             _heroes = new Menu("Heroes", "_heroes");
             Menu.AddItem(new MenuItem("Menu.Enable", "Enable").SetValue(true));
             settings.AddItem(new MenuItem("Menu.DisableChannel", "Anti Channeling").SetValue(true));
+            settings.AddItem(new MenuItem("Menu.AngryDisabler", "Angry Disabler").SetValue(false))
+                .SetTooltip("will disable any enemy hero");
+            settings.AddItem(new MenuItem("Menu.HelpAllyHeroes", "Help Ally Heroes").SetValue(true));
             settings.AddItem(new MenuItem("Menu.NinjaMode", "Ninja mode").SetValue(true))
                 .SetTooltip(
                     "Do not use any disable if ur not visible for enemy. but still hero will use items for escaping");
@@ -169,10 +175,34 @@ namespace Auto_Disable
             }
             InitAbility(hero,"item_force_staff");
             InitAbility(hero,"item_blink");
+            InitNewSubMenu(hero,"Angry Disabler");
         }
-        private static void InitAbility(Hero hero,string name)
+        private static void InitAbility(Hero hero, string name)
         {
             var item = new Menu("", hero.ClassID + name, false, name);
+            Menus[hero.Player.ID].AddSubMenu(item);
+            item.AddItem(
+                new MenuItem("text1" + hero.ClassID + name, "Abilities:")).SetFontColor(Color.GhostWhite);
+            item.AddItem(
+                new MenuItem("abilityEnable" + hero.ClassID + name, "").SetValue(
+                    new AbilityToggler(new Dictionary<string, bool>())));
+            foreach (var spell in Members.Spells)
+            {
+                item.Item("abilityEnable" + hero.ClassID + name).GetValue<AbilityToggler>().Add(spell);
+            }
+            item.AddItem(
+                    new MenuItem("text2" + hero.ClassID + name, "Items:")).SetFontColor(Color.GhostWhite);
+            item.AddItem(
+                new MenuItem("itemEnable" + hero.ClassID + name, "").SetValue(
+                    new AbilityToggler(new Dictionary<string, bool>())));
+            foreach (var spell in Members.Items)
+            {
+                item.Item("itemEnable" + hero.ClassID + name).GetValue<AbilityToggler>().Add(spell);
+            }
+        }
+        private static void InitNewSubMenu(Hero hero, string name)
+        {
+            var item = new Menu(name, hero.ClassID + name);
             Menus[hero.Player.ID].AddSubMenu(item);
             item.AddItem(
                 new MenuItem("text1" + hero.ClassID + name, "Abilities:")).SetFontColor(Color.GhostWhite);
@@ -213,7 +243,7 @@ namespace Auto_Disable
             }
             foreach (var hero in HeroesInSystem)
             {
-                foreach (var ability in hero.Spellbook.Spells.Where(x => x.IsShield() || x.IsDisable()))
+                foreach (var ability in hero.Inventory.Items.Where(x => x.IsShield() || x.IsDisable()))
                 {
                     Menu.Item("itemEnable" + hero.ClassID + ability.StoredName()).GetValue<AbilityToggler>().Add(storedName);
                 }
@@ -226,7 +256,7 @@ namespace Auto_Disable
         {
             foreach (var hero in HeroesInSystem)
             {
-                foreach (var ability in hero.Spellbook.Spells.Where(x => x.IsShield() || x.IsDisable()))
+                foreach (var ability in hero.Inventory.Items.Where(x => x.IsShield() || x.IsDisable()))
                 {
                     Menu.Item("itemEnable" + hero.ClassID + ability.StoredName()).GetValue<AbilityToggler>().Remove(storedName);
                 }

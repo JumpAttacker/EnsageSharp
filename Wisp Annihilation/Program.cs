@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Menu.MenuItems;
@@ -18,7 +18,8 @@ namespace Wisp_Annihilation
         private static bool _loaded;
         private static bool IsEnable => Members.Menu.Item("Enable").GetValue<bool>();
         private static bool TetherInCombo => Members.Menu.Item("Hero.Combo.AutoTether.Enable").GetValue<bool>();
-        
+        private static bool RelocateTpAbuse => Members.Menu.Item("relocateTpAbuse.Enable").GetValue<bool>();
+        private static float GetDelayValue => Members.Menu.Item("relocateTpAbuse.Slider").GetValue<Slider>().Value / 1000f;
         private static bool IsEnableAutoSaver => Members.Menu.Item("autoSaver.Enable").GetValue<bool>();
         private static bool IsEnableautoTether => Members.Menu.Item("autoTether.Enable").GetValue<bool>();
         private static bool UseOrbWalkker => Members.Menu.Item("OrbWalker.Enable").GetValue<bool>();
@@ -31,11 +32,11 @@ namespace Wisp_Annihilation
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var settings = new Menu("Settings", "Settings");
 
-            var autoSaver = new Menu("Auto Relocate", "Auto Relocate",false, "wisp_relocate",true);
+            var autoSaver = new Menu("Auto Relocate", "Auto Relocate", false, "wisp_relocate", true);
             autoSaver.AddItem(new MenuItem("autoSaver.Enable", "Enable").SetValue(false));
             autoSaver.AddItem(new AllyHeroesToggler("autoSaver.EnableFor", "For", new Dictionary<string, bool>()));
             autoSaver.AddItem(
-                new MenuItem("autoSaver.Percent", "Min Health For Auto Relocate (%)").SetValue(new Slider(15,0,100)));
+                new MenuItem("autoSaver.Percent", "Min Health For Auto Relocate (%)").SetValue(new Slider(15, 0, 100)));
 
 
             var autoTether = new Menu("Auto Tether", "Auto Tether", false, "wisp_tether", true);
@@ -49,7 +50,10 @@ namespace Wisp_Annihilation
                 };
             autoTether.AddItem(new AllyHeroesToggler("autoTether.EnableFor", "For", new Dictionary<string, bool>()));
 
-
+            var relocateTpAbuse = new Menu("Relocate Tp Abuse", "relocateTpAbuse");
+            relocateTpAbuse.AddItem(new MenuItem("relocateTpAbuse.Enable", "Enable").SetValue(false));
+            relocateTpAbuse.AddItem(
+                new MenuItem("relocateTpAbuse.Slider", "Extra Delay").SetValue(new Slider(-50, -100, 0)));
 
             settings.AddItem(new MenuItem("OrbWalker.Enable", "Enable Orbwalking").SetValue(true));
             settings.AddItem(
@@ -65,6 +69,7 @@ namespace Wisp_Annihilation
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
             settings.AddSubMenu(autoSaver);
             settings.AddSubMenu(autoTether);
+            settings.AddSubMenu(relocateTpAbuse);
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
             _loaded = false;
@@ -93,8 +98,10 @@ namespace Wisp_Annihilation
                 Game.OnUpdate -= Game_OnUpdate;
                 Game.OnUpdate -= AutoSaver;
                 Game.OnUpdate -= AutoTeaser;
+                Game.OnIngameUpdate -= RelocateTpAbuseAction;
                 Drawing.OnDraw -= Drawing_OnDraw;
                 Entity.OnParticleEffectAdded -= EntityOnOnParticleEffectAdded;
+                Unit.OnModifierRemoved -= HeroOnOnModifierRemoved;
                 _loaded = false;
             };
         }
@@ -117,18 +124,20 @@ namespace Wisp_Annihilation
             Game.OnUpdate += Game_OnUpdate;
             Game.OnUpdate += AutoSaver;
             Game.OnUpdate += AutoTeaser;
+            Game.OnIngameUpdate += RelocateTpAbuseAction;
             Drawing.OnDraw += Drawing_OnDraw;
             Entity.OnParticleEffectAdded += EntityOnOnParticleEffectAdded;
+            Unit.OnModifierRemoved += HeroOnOnModifierRemoved;
         }
-        private static List<Tracker>_trackList=new List<Tracker>(); 
+        private static List<Tracker> _trackList = new List<Tracker>();
         private static void EntityOnOnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
         {
-            if (sender.ClassID!=ClassID.CDOTA_Wisp_Spirit)
+            if (sender.ClassID != ClassID.CDOTA_Wisp_Spirit)
                 return;
-            if (sender.Team!=Members.MyTeam)
+            if (sender.Team != Members.MyTeam)
                 return;
             //Printer.Print($"{args.Name}/{args.ParticleEffect.Name}");
-            _trackList.Add(new Tracker(sender,args.ParticleEffect));
+            _trackList.Add(new Tracker(sender, args.ParticleEffect));
         }
 
         private static void AutoTeaser(EventArgs args)
@@ -138,27 +147,56 @@ namespace Wisp_Annihilation
             if (TetherInCombo)
                 return;
             var tether = Abilities.FindAbility("wisp_tether");
-            
             if (tether == null || tether.Level == 0 || !tether.CanBeCasted() || tether.IsHidden)
                 return;
-            
             var anyPossibleAlly =
                 Heroes.GetByTeam(Members.MyTeam)
                     .FirstOrDefault(
                         x =>
                             x != null && Helper.IsHeroEnableForTether(x.StoredName()) &&
-                            x.Distance2D(Members.MyHero) <= tether.CastRange);
+                            x.Distance2D(Members.MyHero) <= tether.GetCastRange());
             if (anyPossibleAlly == null)
                 return;
-            
+
             if (!_multiSleeper.Sleeping(tether))
             {
                 tether.UseAbility(anyPossibleAlly);
-                _multiSleeper.Sleep(500,tether);
+                _multiSleeper.Sleep(500, tether);
 
             }
         }
+        private static float _tpStartingTime = 0;
+        private static bool _gotcha = false;
+        private static void HeroOnOnModifierRemoved(Unit sender, ModifierChangedEventArgs args)
+        {
+            var mod = args.Modifier;
+            if (mod.Name == "modifier_teleporting" && mod.TextureName == "wisp_relocate")
+            {
+                _tpStartingTime = Game.RawGameTime;
+                _gotcha = true;
+            }
 
+        }
+        private static void RelocateTpAbuseAction(EventArgs args)
+        {
+            if (!RelocateTpAbuse)
+                return;
+            if (!_gotcha)
+                return;
+            var tp = Members.MyHero.GetItemById(ItemId.item_tpscroll) ??
+                     Members.MyHero.GetItemById(ItemId.item_recipe_travel_boots) ??
+                     Members.MyHero.GetItemById(ItemId.item_recipe_travel_boots_2);
+            if (tp != null && tp.CanBeCasted())
+            {
+                var time = Game.RawGameTime - _tpStartingTime;
+                if (time >= 9 - Game.Ping / 1000 + GetDelayValue && time <= 10)
+                {
+                    Printer.Print($"{time} >= {9 - Game.Ping / 1000 + GetDelayValue}");
+                    tp.UseAbility(_fountain.Position);
+                    _gotcha = false;
+                }
+            }
+        }
         private static Unit _fountain;
         private static void AutoSaver(EventArgs args)
         {
@@ -181,10 +219,10 @@ namespace Wisp_Annihilation
                 Heroes.GetByTeam(Members.MyTeam)
                     .FirstOrDefault(
                         x =>
-                            x!=null && x.IsValid && Helper.IsHeroEnableForRelocate(x.StoredName()) &&
+                            x != null && x.IsValid && Helper.IsHeroEnableForRelocate(x.StoredName()) &&
                             Helper.CheckForPercents(x) &&
                             x.Distance2D(Members.MyHero) <= tether.CastRange);
-            
+
             if (anyPossibleAlly == null)
                 return;
 
@@ -267,15 +305,22 @@ namespace Wisp_Annihilation
 
         private static void DoSpiritsAim()
         {
-            if (!IsComboAim)
+            if (_globalTarget != null && _globalTarget.IsValid && _globalTarget.IsAlive)
             {
-                _globalTarget2 = null;
-                return;
+                _globalTarget2 = _globalTarget;
             }
-            if (_globalTarget2 == null || !_globalTarget2.IsValid || !_globalTarget2.IsAlive)
+            else
             {
-                _globalTarget2 = Helper.ClosestToMouse(Members.MyHero);
-                return;
+                if (!IsComboAim)
+                {
+                    _globalTarget2 = null;
+                    return;
+                }
+                if (_globalTarget2 == null || !_globalTarget2.IsValid || !_globalTarget2.IsAlive)
+                {
+                    _globalTarget2 = Helper.ClosestToMouse(Members.MyHero);
+                    return;
+                }
             }
             _trackList = _trackList.Where(x => !x.Ef.IsDestroyed).ToList();
             var wispList = _trackList;//ObjectManager.GetEntities<Unit>().Where(x => x.ClassID == ClassID.CDOTA_Wisp_Spirit && x.Team==Members.MyHero.Team && x.IsAlive).ToList();
@@ -298,17 +343,17 @@ namespace Wisp_Annihilation
                 }
                 Printer.Print(str.ToString());
             }*/
-            
+
             var distanceWithWisp = firstWisp.V.Distance2D(Members.MyHero);
             var distanceWithTarget = Members.MyHero.Distance2D(_globalTarget2);
-            if (Math.Abs(distanceWithWisp- distanceWithTarget)<=50)
+            if (Math.Abs(distanceWithWisp - distanceWithTarget) <= 50)
                 if (!_multiSleeper.Sleeping("off") && (spellIn.IsToggled || spellOut.IsToggled))
                 {
                     if (spellIn.IsToggled)
                         spellIn.ToggleAbility();
                     else
                         spellOut.ToggleAbility();
-                    _multiSleeper.Sleep(250,"off");
+                    _multiSleeper.Sleep(250, "off");
                     _multiSleeper.Sleep(250, spellIn);
                     _multiSleeper.Sleep(250, spellOut);
                     return;
@@ -390,7 +435,7 @@ namespace Wisp_Annihilation
                     return;
                 var anyAllyHero =
                     Heroes.GetByTeam(Members.MyTeam)
-                        .Where(x => x.IsAlive && tether.CanHit(x))
+                        .Where(x => !x.Equals(Members.MyHero) && x.IsAlive && tether.CanHit(x))
                         .OrderBy(y => y.Distance2D(_globalTarget));
                 var anyAllyCreep =
                     ObjectManager.GetEntities<Unit>()
@@ -398,10 +443,10 @@ namespace Wisp_Annihilation
                         .OrderBy(y => y.Distance2D(_globalTarget));
 
                 var hero = anyAllyHero.FirstOrDefault();
-                
+
                 var creep = anyAllyCreep.FirstOrDefault();
 
-                float dist1=0, dist2=0;
+                float dist1 = 0, dist2 = 0;
                 if (hero != null)
                     dist1 = hero.Distance2D(_globalTarget);
                 if (creep != null)
@@ -452,3 +497,9 @@ namespace Wisp_Annihilation
         }
     }
 }
+
+
+
+
+
+

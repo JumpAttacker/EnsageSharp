@@ -2,13 +2,14 @@
 using System.Linq;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Objects;
 using SharpDX;
 
 namespace MeepoAnnihilation
 {
     /// <summary>
     /// </summary>
-    public class JungleCamp
+    /*public class JungleCamp
     {
         #region Constructors and Destructors
 
@@ -116,142 +117,56 @@ namespace MeepoAnnihilation
         public Hero Stacking { get; set; }
 
         #endregion
-    }
+    }*/
 
-    /// <summary>
-    /// </summary>
+    public class CustomJumgleCamp
+    {
+        public bool CanBeHere { get; set; }
+        public bool Delayed { get; set; }
+        public Hero Stacking { get; set; }
+        public bool Ancients { get; set; }
+        public Vector3 CampPosition { get; set; }
+        public uint Id { get; set; }
+        public string Name { get; set; }
+        public Vector3 StackPosition { get; set; }
+        public double StackTime { get; set; }
+        public Team Team { get; set; }
+        public Vector3 WaitPosition { get; set; }
+        public CustomJumgleCamp(JungleCamp camp)
+        {
+            CanBeHere = true;
+            Delayed = false;
+            Stacking = null;
+            Ancients = camp.Ancients;
+            CampPosition = camp.CampPosition;
+            Id = camp.Id;
+            Name = camp.Name;
+            StackPosition = camp.StackPosition;
+            StackTime = camp.StackTime;
+            Team = camp.Team;
+            WaitPosition = camp.WaitPosition;
+        }
+    }
+    
     public static class JungleCamps
     {
-        #region Static Fields
-
-        /// <summary>
-        ///     The camps.
-        /// </summary>
-        private static readonly List<JungleCamp> Camps = new List<JungleCamp>
-        {
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(-1655, -4329, 256), 
-                    StackPosition = new Vector3(-1833, -3062, 256), 
-                    WaitPosition = new Vector3(-1890, -3896, 256), 
-                    Id = 1, StackTime = 54.5, Team = Team.Radiant, 
-                    Ancients = false, Name = "Hard Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(-260, -3234, 256), 
-                    StackPosition = new Vector3(-554, -1925, 256), 
-                    WaitPosition = new Vector3(-337, -2652, 256), 
-                    Id = 2, StackTime = 55, Team = Team.Radiant, 
-                    Ancients = false, Name = "Medium Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(1606, -3433, 256), 
-                    StackPosition = new Vector3(1598, -5117, 256), 
-                    WaitPosition = new Vector3(1541, -4265, 256), 
-                    Id = 3, StackTime = 54.5, Team = Team.Radiant, 
-                    Ancients = false, Name = "Medium Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(4495, -3488, 384), 
-                    StackPosition = new Vector3(3002, -3936, 384), 
-                    WaitPosition = new Vector3(4356, -4089, 384), 
-                    Id = 4, StackTime = 53.1, Team = Team.Radiant, 
-                    Ancients = false, Name = "Hard Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(3031, -4480, 256), 
-                    StackPosition = new Vector3(1555, -5337, 384), 
-                    WaitPosition = new Vector3(3099, -5325, 384), 
-                    Id = 5, StackTime = 53, Team = Team.Radiant, 
-                    Ancients = false, Name = "Easy Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(-3097, 4, 384), 
-                    StackPosition = new Vector3(-3472, -1566, 384), 
-                    WaitPosition = new Vector3(-2471, -227, 384), 
-                    Id = 6, StackTime = 54, Team = Team.Radiant, 
-                    Ancients = true, Name = "ancients Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(-3593, 825, 384), 
-                    StackPosition = new Vector3(-3893, -737, 384), 
-                    WaitPosition = new Vector3(-4129, 600, 384), 
-                    Id = 7, StackTime = 53, Team = Team.Radiant, 
-                    Ancients = true, Name = "Secret Hard Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(1266, 3271, 384), 
-                    StackPosition = new Vector3(449, 4752, 384), 
-                    WaitPosition = new Vector3(979, 3671, 384), 
-                    Id = 8, StackTime = 54, Team = Team.Dire, 
-                    Ancients = false, Name = "Hard Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(-291, 3644, 384), 
-                    StackPosition = new Vector3(236, 5000, 256), 
-                    WaitPosition = new Vector3(-566, 4151, 384), 
-                    Id = 9, StackTime = 54.5, Team = Team.Dire, 
-                    Ancients = false, Name = "Medium Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(-1640, 2562, 256), 
-                    StackPosition = new Vector3(-1180, 4090, 384), 
-                    WaitPosition = new Vector3(-1380, 2979, 256), 
-                    Id = 10, StackTime = 53, Team = Team.Dire, 
-                    Ancients = false, Name = "Medium Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(-3084, 4492, 384), 
-                    StackPosition = new Vector3(-3533, 6295, 384), 
-                    WaitPosition = new Vector3(-3058, 4997, 384), 
-                    Id = 11, StackTime = 54, Team = Team.Dire, 
-                    Ancients = false, Name = "Easy Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(-4628, 3483, 384), 
-                    StackPosition = new Vector3(-2801, 3684, 245), 
-                    WaitPosition = new Vector3(-4200, 3850, 256), 
-                    Id = 12, StackTime = 53, Team = Team.Dire, 
-                    Ancients = false, Name = "Top Hard Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(4150, -678, 256), 
-                    StackPosition = new Vector3(2493, -1059, 256), 
-                    WaitPosition = new Vector3(3583, -736, 127), 
-                    Id = 13, StackTime = 54, Team = Team.Dire, 
-                    Ancients = true, Name = "ancients Camp"
-                }, 
-            new JungleCamp
-                {
-                    CampPosition = new Vector3(4280, 588, 384), 
-                    StackPosition = new Vector3(3537, 1713, 256), 
-                    WaitPosition = new Vector3(3710, 548, 384), 
-                    Id = 14, StackTime = 54, Team = Team.Dire, 
-                    Ancients = false, Name = "Secret Hard Camp"
-                }
-        };
-
-        #endregion
-
         #region Public Properties
 
         /// <summary>
         ///     Gets the get camps.
         /// </summary>
-        public static List<JungleCamp> GetCamps => Camps;
+        public static List<CustomJumgleCamp> GetCamps => _camps;
 
+        private static List<CustomJumgleCamp> _camps;
+        public static void Init()
+        {
+            _camps = new List<CustomJumgleCamp>();
+            var test = Ensage.Common.Objects.JungleCamps.GetCamps;
+            foreach (var jungleCamp in test)
+            {
+                _camps.Add(new CustomJumgleCamp(jungleCamp));
+            }
+        }
         #endregion
 
         #region Public Methods and Operators
@@ -265,24 +180,24 @@ namespace MeepoAnnihilation
         /// <returns>
         ///     The <see cref="JungleCamp" />.
         /// </returns>
-        public static JungleCamp FindClosestCampForStacking(Unit me, bool useTeamCheck, bool ancients = false)
+        public static CustomJumgleCamp FindClosestCampForStacking(Unit me, bool useTeamCheck, bool ancients = false)
         {
             var pos = me.Position;
             var bestResult =
                 (useTeamCheck
-                    ? Camps.Where(x => x.CanBeHere && (ancients || !x.Ancients) && Equals(x.Stacking, me))
+                    ? _camps.Where(x => x.CanBeHere && (ancients || !x.Ancients) && Equals(x.Stacking, me))
                         .OrderBy(x => pos.Distance2D(x.WaitPosition))
                         .DefaultIfEmpty(null)
                         .FirstOrDefault()
-                    : Camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients) && Equals(x.Stacking, me))
+                    : _camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients) && Equals(x.Stacking, me))
                         .OrderBy(x => pos.Distance2D(x.WaitPosition))
                         .DefaultIfEmpty(null)
                         .FirstOrDefault()) ?? (useTeamCheck
-                            ? Camps.Where(x => x.CanBeHere && (ancients || !x.Ancients) && x.Stacking==null)
+                            ? _camps.Where(x => x.CanBeHere && (ancients || !x.Ancients) && x.Stacking==null)
                                 .OrderBy(x => pos.Distance2D(x.WaitPosition))
                                 .DefaultIfEmpty(null)
                                 .FirstOrDefault()
-                            : Camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients) && x.Stacking == null)
+                            : _camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients) && x.Stacking == null)
                                 .OrderBy(x => pos.Distance2D(x.WaitPosition))
                                 .DefaultIfEmpty(null)
                                 .FirstOrDefault());
@@ -297,16 +212,16 @@ namespace MeepoAnnihilation
         /// <returns>
         ///     The <see cref="JungleCamp" />.
         /// </returns>
-        public static JungleCamp FindClosestCamp(Unit me, bool useTeamCheck, bool ancients = false)
+        public static CustomJumgleCamp FindClosestCamp(Unit me, bool useTeamCheck, bool ancients = false)
         {
             var pos = me.Position;
             var bestResult =
                 useTeamCheck
-                    ? Camps.Where(x => x.CanBeHere && (ancients || !x.Ancients))
+                    ? _camps.Where(x => x.CanBeHere && (ancients || !x.Ancients))
                         .OrderBy(x => pos.Distance2D(x.CampPosition))
                         .DefaultIfEmpty(null)
                         .FirstOrDefault()
-                    : Camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients))
+                    : _camps.Where(x => x.CanBeHere && x.Team == me.Team && (ancients || !x.Ancients))
                         .OrderBy(x => pos.Distance2D(x.CampPosition))
                         .DefaultIfEmpty(null)
                         .FirstOrDefault();

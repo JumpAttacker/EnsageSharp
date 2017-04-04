@@ -103,10 +103,11 @@ namespace Legion_Annihilation
             }
             var target = _globalTarget;
             Ability ult;
-            if (!Members.MyHero.IsInvisible() &&
-                !Members.MyHero.HasModifiers(new[]
-                {"modifier_item_invisibility_edge_windwalk", "modifier_item_silver_edge_windwalk"}) && 
-                !ComboSleeper.Sleeping("invisAction"))
+            var notInInvis = !Members.MyHero.IsInvisible() &&
+                           !Members.MyHero.HasModifiers(new[]
+                           {"modifier_item_invisibility_edge_windwalk", "modifier_item_silver_edge_windwalk"}) &&
+                           !ComboSleeper.Sleeping("invisAction");
+            if (notInInvis)
             {
                 if (Members.MyHero.FindItem("item_blink", true) != null)
                     await UseBlink(target, cancellationToken);
@@ -148,12 +149,13 @@ namespace Legion_Annihilation
                     if (true)//(ult.CanHit(target))
                     {
                         ult.UseAbility(target);
+
                         await Task.Delay(350, cancellationToken);
                     }
                 }
             }
             ult = Members.MyHero.FindSpell(Members.AbilityList[2]);
-            if (!ult.CanBeCasted())
+            if (!ult.CanBeCasted() || !notInInvis)
                 if (OrbEnable && (!target.IsStunned() || !OrbInStun))
                 {
                     try
@@ -216,8 +218,6 @@ namespace Legion_Annihilation
                 break;
             }
         }
-
-
 
         private static async Task UseBlink(Unit target, CancellationToken cancellationToken)
         {
