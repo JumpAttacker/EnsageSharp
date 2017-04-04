@@ -31,14 +31,7 @@ namespace OverlayInformation
             GetStartTime = Game.RawGameTime;
             GetTimer = timeCalc;
         }
-
-        public TeleportEffect(ParticleEffect effect, Vector3 position, float time)
-        {
-            GetEffect = effect;
-            GetPosition = position;
-            GetStartTime = Game.RawGameTime;
-            GetTimer = time;
-        }
+        
 
         // timeCalc-(Game.RawGameTime-GetStartTime)
 
@@ -63,7 +56,7 @@ namespace OverlayInformation
 
         public static readonly List<Vector3> ColorList = new List<Vector3>()
         {
-            new Vector3(0.2f, 0.4588235f, 1),
+            new Vector3(0.2f, 0.4588236f, 1),  
             new Vector3(0.4f, 1, 0.7490196f),
             new Vector3(0.7490196f, 0, 0.7490196f),
             new Vector3(0.9529412f, 0.9411765f, 0.04313726f),
@@ -95,13 +88,7 @@ namespace OverlayInformation
         private static bool TimerEanble => Members.Menu.Item("TpCather.Timer").GetValue<bool>();
         private static bool CheckForTheTime => !Members.Menu.Item("TpCather.ExtraTimeForDrawing").GetValue<bool>();
         private static Font _textFont;
-        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static Vector3 TpCatcherColor
-            =>
-                new Vector3(
-                    Members.Menu.Item("TpCather.X").GetValue<Slider>().Value,
-                    Members.Menu.Item("TpCather.Y").GetValue<Slider>().Value,
-                    Members.Menu.Item("TpCather.Z").GetValue<Slider>().Value);
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);        
         public static void OnValueChanged(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
         {
             _textFont = new Font(
@@ -139,34 +126,29 @@ namespace OverlayInformation
                 {
                     return;
                 }
-                var safeList = new List<TeleportEffect>();
                 foreach (var particleEffect in _effectList.ToList())
                 {
                     var effect = particleEffect.GetEffect;
                     try
-                    {
-                        if (particleEffect.GetTimer - (Game.RawGameTime - particleEffect.GetStartTime) <= 0)
-                        {
-                            continue;
-                        }
+                    {                        
                         if (effect != null && effect.IsValid && !effect.IsDestroyed)
                         {
-                            safeList.Add(particleEffect);
+
                             var position = particleEffect.GetPosition;
-                            var pos = Helper.WorldToMinimap(position);
-                            /*var player =
+                            var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
+                            var player =
                                     ObjectManager.GetPlayerByID(
                                         (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
                             if (player == null || !player.IsValid)
-                                continue;*/
+                                continue;
 
                             if (!pos.IsZero)
                             {
                                 DrawShadowText(_textFont, "TP",
                                     (int) pos.X - 10,
                                     (int) pos.Y- MiniMapSize,
-                                    /*SmartClr ?
-                                    (Color)particleEffect.GetColor : */new Color(TpCatcherColor));
+                                    SmartClr ?
+                                    (Color)particleEffect.GetColor : Color.YellowGreen);
                                 /*_textFont.DrawText(
                                     null,
                                     "TP",
@@ -183,7 +165,7 @@ namespace OverlayInformation
 
                     
                 }
-                _effectList = safeList;
+               
 
             };
             Drawing.OnPostReset += args =>
@@ -196,7 +178,7 @@ namespace OverlayInformation
             };
             Drawing.OnDraw += args =>
             {
-                return;
+                
                 if (!Checker.IsActive())
                     return;
                 var safeList = new List<TeleportEffect>();
@@ -355,12 +337,7 @@ namespace OverlayInformation
                 //Printer.Print($"Player: {player.Name} ({id}) | Hero: {player.Hero.GetRealName()} | Color: {color}");
                 //Console.WriteLine($"Color: {color.PrintVector()}");
             }
-        }
-
-        public void Add(ParticleEffect effect, Vector3 position)
-        {
-            _effectList.Add(new TeleportEffect(effect, position, 5f));
-        }
+        }       
     }
 
     internal static class ShowMeMore
@@ -377,7 +354,7 @@ namespace OverlayInformation
         private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect =
             new Dictionary<Unit, ParticleEffect>();
 
-        private static TeleportCatcher _teleportCatcher;
+        private static readonly TeleportCatcher TeleportCatcher = new TeleportCatcher();
 
         public static void ShowIllustion()
         {
@@ -969,7 +946,7 @@ namespace OverlayInformation
 
         public static void Flush()
         {
-            _teleportCatcher = new TeleportCatcher();
+            
             _sleeper =new Sleeper();
         }
         /*
@@ -1019,10 +996,9 @@ namespace OverlayInformation
                     var isStart = name.Contains("teleport_start");
                     var effect = args.ParticleEffect;
                     var a = effect.GetControlPoint(0);
-                    var b = effect.GetControlPoint(2);
+                    var b = effect.GetControlPoint(6);
                     Printer.Print($"{(isStart ? "start" : "end")} => pos: {a.PrintVector()} color: {b.PrintVector()}");
-                    //_teleportCatcher.Add(effect, a, b, isStart);
-                    _teleportCatcher.Add(effect, a);
+                    TeleportCatcher.Add(effect, a, b, isStart);
                 });
             }
         }
