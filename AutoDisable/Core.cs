@@ -54,7 +54,7 @@ namespace Auto_Disable
                 var angle = (float) Math.Max(
                     Math.Abs(v.RotationRad - Utils.DegreeToRadian(v.FindAngleBetween(Me.Position))) - 0.20, 0);
                 var dpActivated =
-                        v.HasModifiers(new[] { "modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses" });
+                    v.HasModifiers(new[] {"modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses"}, false);
                 var blink = v.FindItem322(ItemId.item_blink);
                 if (isHex || isSilence || isStun)
                     continue;
