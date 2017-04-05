@@ -205,7 +205,6 @@ namespace OverlayInformation
                                     (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
                         if (player == null || !player.IsValid)
                             continue;
-
                         var hero = player.Hero;
                         if (!pos.IsZero)
                         {
@@ -367,7 +366,7 @@ namespace OverlayInformation
         private static readonly Dictionary<Unit, ParticleEffect> ShowMeMoreEffect =
             new Dictionary<Unit, ParticleEffect>();
 
-        private static readonly TeleportCatcher TeleportCatcher = new TeleportCatcher();
+        private static TeleportCatcher _teleportCatcher;
 
         public static void ShowIllustion()
         {
@@ -959,7 +958,7 @@ namespace OverlayInformation
 
         public static void Flush()
         {
-            
+            _teleportCatcher = new TeleportCatcher();
             _sleeper =new Sleeper();
         }
         /*
@@ -1011,7 +1010,7 @@ namespace OverlayInformation
                     var a = effect.GetControlPoint(0);
                     var b = effect.GetControlPoint(6);
                     Printer.Print($"{(isStart ? "start" : "end")} => pos: {a.PrintVector()} color: {b.PrintVector()}");
-                    TeleportCatcher.Add(effect, a, b, isStart);
+                    _teleportCatcher.Add(effect, a, b, isStart);
                 });
             }
         }

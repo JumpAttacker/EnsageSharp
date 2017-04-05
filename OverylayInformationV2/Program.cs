@@ -14,7 +14,7 @@ using MenuItem = Ensage.Common.Menu.MenuItem;
 
 namespace OverlayInformation
 {
-    public static class MenuManager
+    internal static class MenuManager
     {
         private static bool _loaded;
         public static void Init()
@@ -520,87 +520,89 @@ namespace OverlayInformation
             Events.OnLoad += (sender, args) =>
             {
                 MenuManager.Init();
-
-                Members.MyHero = ObjectManager.LocalHero;
-                Members.MyClass = Members.MyHero.ClassID;
-                Members.MyPlayer = ObjectManager.LocalPlayer;
-
-                ShrineHelper.Init();
-                Members.AbilityDictionary = new Dictionary<uint, List<Ability>>();
-                Members.ItemDictionary = new Dictionary<uint, List<Item>>();
-                Members.StashItemDictionary = new Dictionary<uint, List<Item>>();
-                Members.NetWorthDictionary = new Dictionary<string, long>();
-
-                Members.Heroes = new List<Hero>();
-                Members.AllyHeroes = new List<Hero>();
-                Members.EnemyHeroes = new List<Hero>();
-                Members.Players = new List<Player>();
-                Members.AllyPlayers = new List<Player>();
-                Members.EnemyPlayers = new List<Player>();
-                Members.BaseList = new List<Unit>();
-
-                Members.PAisHere = null;
-                Members.BaraIsHere = false;
-                Members.Apparition = false;
-                Members.Mirana = null;
-                Members.Windrunner = null;
-                Updater.HeroList.Flush();
-                Updater.BaseList.Flush();
-                Updater.PlayerList.Flush();
-                Game.OnUpdate += Updater.HeroList.Update;
-                Game.OnUpdate += Updater.PlayerList.Update;
-                Game.OnUpdate += Updater.BaseList.Update;
-                Game.OnUpdate += Devolp.ConsoleCommands;
-                RoshanAction.Flush();
-                AutoItems.Flush();
-                Game.OnUpdate += RoshanAction.Roshan;
-                Game.OnUpdate += Game_OnUpdate;
-
-                Drawing.OnDraw += DrawHelper.Overlay;
-
-                Drawing.OnDraw += ItemPanel.Draw;
-                Drawing.OnDraw += NewItemPanel.OnDraw;
-                ShowMeMore.Flush();
-                Drawing.OnDraw += ShowMeMore.Draw;
-
-
-                Entity.OnParticleEffectAdded += ShowMeMore.Entity_OnParticleEffectAdded;
-
-
-                Unit.OnModifierAdded += ShowMeMore.OnModifierAdded;
-                Unit.OnModifierRemoved += ShowMeMore.OnModifierRemoved;
-                Runes.Flush();
-                Drawing.OnDraw += Runes.Draw;
-                
-
-                Drawing.OnPreReset += DrawHelper.Render.Drawing_OnPreReset;
-                Drawing.OnPostReset += DrawHelper.Render.Drawing_OnPostReset;
-                Drawing.OnEndScene += DrawHelper.Render.Drawing_OnEndScene;
-                Game.OnWndProc += Game_OnWndProc;
-                AppDomain.CurrentDomain.DomainUnload += DrawHelper.Render.CurrentDomainDomainUnload;
-                Game.OnFireEvent += RoshanAction.Game_OnGameEvent;
-                Entity.OnInt32PropertyChange += VisionHelper.OnChange;
-                Game.PrintMessage(
-                    "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Members.Menu.DisplayName +
-                    " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
-                Printer.PrintSuccess("> " + Members.Menu.DisplayName + " loaded v" +
-                                     Assembly.GetExecutingAssembly().GetName().Version);
-
-                /*Entity.OnParticleEffectAdded += Entity_OnParticleEffectAdded;
-                Drawing.OnDraw += Drawing_OnDraw;*/
-                DelayAction.Add(100, () =>
+                DelayAction.Add(500, () =>
                 {
-                    try
+                    Members.MyHero = ObjectManager.LocalHero;
+                    Members.MyClass = Members.MyHero.ClassID;
+                    Members.MyPlayer = ObjectManager.LocalPlayer;
+
+                    ShrineHelper.Init();
+                    Members.AbilityDictionary = new Dictionary<uint, List<Ability>>();
+                    Members.ItemDictionary = new Dictionary<uint, List<Item>>();
+                    Members.StashItemDictionary = new Dictionary<uint, List<Item>>();
+                    Members.NetWorthDictionary = new Dictionary<string, long>();
+
+                    Members.Heroes = new List<Hero>();
+                    Members.AllyHeroes = new List<Hero>();
+                    Members.EnemyHeroes = new List<Hero>();
+                    Members.Players = new List<Player>();
+                    Members.AllyPlayers = new List<Player>();
+                    Members.EnemyPlayers = new List<Player>();
+                    Members.BaseList = new List<Unit>();
+
+                    Members.PAisHere = null;
+                    Members.BaraIsHere = false;
+                    Members.Apparition = false;
+                    Members.Mirana = null;
+                    Members.Windrunner = null;
+                    Updater.HeroList.Flush();
+                    Updater.BaseList.Flush();
+                    Updater.PlayerList.Flush();
+                    Game.OnUpdate += Updater.HeroList.Update;
+                    Game.OnUpdate += Updater.PlayerList.Update;
+                    Game.OnUpdate += Updater.BaseList.Update;
+                    Game.OnUpdate += Devolp.ConsoleCommands;
+                    RoshanAction.Flush();
+                    AutoItems.Flush();
+                    Game.OnUpdate += RoshanAction.Roshan;
+                    Game.OnUpdate += Game_OnUpdate;
+
+                    Drawing.OnDraw += DrawHelper.Overlay;
+
+                    Drawing.OnDraw += ItemPanel.Draw;
+                    Drawing.OnDraw += NewItemPanel.OnDraw;
+                    ShowMeMore.Flush();
+                    Drawing.OnDraw += ShowMeMore.Draw;
+
+
+                    Entity.OnParticleEffectAdded += ShowMeMore.Entity_OnParticleEffectAdded;
+
+
+                    Unit.OnModifierAdded += ShowMeMore.OnModifierAdded;
+                    Unit.OnModifierRemoved += ShowMeMore.OnModifierRemoved;
+                    Runes.Flush();
+                    Drawing.OnDraw += Runes.Draw;
+
+
+                    Drawing.OnPreReset += DrawHelper.Render.Drawing_OnPreReset;
+                    Drawing.OnPostReset += DrawHelper.Render.Drawing_OnPostReset;
+                    Drawing.OnEndScene += DrawHelper.Render.Drawing_OnEndScene;
+                    Game.OnWndProc += Game_OnWndProc;
+                    AppDomain.CurrentDomain.DomainUnload += DrawHelper.Render.CurrentDomainDomainUnload;
+                    Game.OnFireEvent += RoshanAction.Game_OnGameEvent;
+                    Entity.OnInt32PropertyChange += VisionHelper.OnChange;
+                    Game.PrintMessage(
+                        "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Members.Menu.DisplayName +
+                        " By Jumpering" +
+                        " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
+                    Printer.PrintSuccess("> " + Members.Menu.DisplayName + " loaded v" +
+                                         Assembly.GetExecutingAssembly().GetName().Version);
+
+                    /*Entity.OnParticleEffectAdded += Entity_OnParticleEffectAdded;
+                    Drawing.OnDraw += Drawing_OnDraw;*/
+                    DelayAction.Add(100, () =>
                     {
-                        
-                        if (Members.Menu.Item("Dev.CreepsDisabler.enable").GetValue<bool>())
-                            Game.ExecuteCommand("dota_creeps_no_spawning_enable");
-                    }
-                    catch (Exception)
-                    {
-                        Printer.Print("Members.Menu.AddToMainMenu();");
-                    }
+                        try
+                        {
+
+                            if (Members.Menu.Item("Dev.CreepsDisabler.enable").GetValue<bool>())
+                                Game.ExecuteCommand("dota_creeps_no_spawning_enable");
+                        }
+                        catch (Exception)
+                        {
+                            Printer.Print("Members.Menu.AddToMainMenu();");
+                        }
+                    });
                 });
             };
             Events.OnClose += (sender, args) =>
