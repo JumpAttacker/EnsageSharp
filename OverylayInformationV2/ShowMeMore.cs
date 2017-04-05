@@ -30,6 +30,8 @@ namespace OverlayInformation
 
             GetStartTime = Game.RawGameTime;
             GetTimer = timeCalc;
+
+            Printer.Print($"new: {isStartPart}");
         }
         
 
@@ -170,11 +172,11 @@ namespace OverlayInformation
             };
             Drawing.OnPostReset += args =>
             {
-                _textFont.OnResetDevice();
+                _textFont?.OnResetDevice();
             };
             Drawing.OnPreReset += args =>
             {
-                _textFont.OnLostDevice();
+                _textFont?.OnLostDevice();
             };
             Drawing.OnDraw += args =>
             {
@@ -268,6 +270,11 @@ namespace OverlayInformation
 
         public void Add(ParticleEffect effect, Vector3 position, Vector3 color, bool isStart)
         {
+            if (isStart)
+            {
+                //_effectList.Add(new TeleportEffect(effect, position, color, false, true, 5));
+                return;
+            }
             var id = (uint) ColorList.FindIndex(x => x == color);
             if (id > 10)
             {
