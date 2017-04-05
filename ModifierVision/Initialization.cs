@@ -43,7 +43,7 @@ namespace ModifierVision
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Members.Menu.DisplayName +
                     " By Jumpering" +
                     " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version,
-                    true, MessageType.LogMessage);
+                    true);
                 Printer.PrintSuccess("> " + Members.Menu.DisplayName + " loaded v" +
                                      Assembly.GetExecutingAssembly().GetName().Version);
                 Members.System = new List<HeroModifier>();

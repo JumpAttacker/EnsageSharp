@@ -17,6 +17,7 @@ namespace ModifierVision
             "modifier_slark_essence_shift_debuff",
             "modifier_slark_essence_shift_debuff_counter",
             "modifier_truesight",
+            "modifier_nevermore_shadowraze_counter",
             "modifier_shredder_reactive_armor_stack"
         };
 

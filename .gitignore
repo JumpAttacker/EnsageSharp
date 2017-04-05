@@ -85,3 +85,8 @@ Temporary Items
 /StormAnnihilation/bin
 /StormAnnihilation/obj
 *.sln
+/SfAnnihilation/SfAnnihilation/bin/Debug
+/SfAnnihilation/SfAnnihilation/obj/Debug
+*.suo
+/InvTest/InvokerAnnihilation/InvokerAnnihilation/bin/Release
+/SfAnnihilation/SfAnnihilation/obj/x64/Debug
