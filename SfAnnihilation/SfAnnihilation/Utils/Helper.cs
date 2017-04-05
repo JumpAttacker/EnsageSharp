@@ -134,9 +134,12 @@ namespace SfAnnihilation.Utils
             if (!raze.CanBeCasted()) return false;
             if (raze.IsInAbilityPhase) return true;
             if (!raze.CanHit(target, true, checkForAngle)) return false;
-            raze.UseAbility();
-            RazeCancelSystem.New(raze, target);
+            if (RazeCancelSystem.New(raze, target))
+            {
+                raze.UseAbility();
+            }
             return true;
+
         }
         public static bool HasItem(this Unit unit, ItemId classId)
         {

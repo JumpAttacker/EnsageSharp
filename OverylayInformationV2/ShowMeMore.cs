@@ -269,11 +269,17 @@ namespace OverlayInformation
         public void Add(ParticleEffect effect, Vector3 position, Vector3 color, bool isStart)
         {
             var id = (uint) ColorList.FindIndex(x => x == color);
+            if (id > 10)
+            {
+                Log.Debug($"Wrong id: {id} || clr: {color.PrintVector()}");
+                return;
+            }
             var player = ObjectManager.GetPlayerByID(id);
             var dontTryToFindBoots = false;
             if (player == null || !player.IsValid)
             {
                 Printer.Print("error #" + id + " (cant find player!)");
+                Log.Debug("error #" + id + $" (cant find player!) clr: {color.PrintVector()}");
                 return;
             }
             if (player.Hero == null || !player.Hero.IsValid)
@@ -342,7 +348,7 @@ namespace OverlayInformation
 
     internal static class ShowMeMore
     {
-        private static Sleeper _sleeper;
+        private static Sleeper _sleeper=new Sleeper();
         private static Unit AAunit { get; set; }
         private static readonly List<Unit> InSys = new List<Unit>();
         private static readonly List<Unit> Bombs = new List<Unit>();

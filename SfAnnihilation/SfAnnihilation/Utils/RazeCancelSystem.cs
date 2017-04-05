@@ -18,9 +18,12 @@ namespace SfAnnihilation.Utils
                 var target = element.Target;
 
                 var customDelay = (Game.RawGameTime - element.StartTime)*1000;
-                if (ability.CanHit(target, Math.Max(0,element.AbilityDelay-customDelay)) && target.IsAlive)
+                var lifeTime = element.AbilityDelay - customDelay;
+                if (element.X.Equals(Core.RazeLow))
+                    Printer.Both(lifeTime);
+                if (ability.CanHit(target, Math.Max(0, lifeTime)) && target.IsAlive)
                 {
-                    if (element.Sleeper.Sleeping)
+                    if (element.Sleeper.Sleeping && lifeTime>0)
                         tempList.Add(element);
                 }
                 else
@@ -28,16 +31,19 @@ namespace SfAnnihilation.Utils
                     if (ability.IsInAbilityPhase)
                     {
                         Core.Me.Stop();
+                        if (element.X.Equals(Core.RazeLow))
+                            Printer.Both("===================STOP========================");
                     }
                 }
             }
             StopList = tempList;
         }
 
-        public static void New(Ability s, Hero target)
+        public static bool New(Ability s, Hero target)
         {
-            if (StopList.Find(x => x.X.Equals(s)) == null)
-                StopList.Add(new StopElement(s, target));
+            if (StopList.Find(x => x.X.Equals(s)) != null) return false;
+            StopList.Add(new StopElement(s, target));
+            return true;
         }
 
         public class StopElement
@@ -55,6 +61,8 @@ namespace SfAnnihilation.Utils
                 StartTime = Game.RawGameTime;
                 AbilityDelay = x.GetAbilityDelay();
                 Sleeper.Sleep(AbilityDelay);
+                if (x.Equals(Core.RazeLow))
+                    Printer.Both("===================NEW========================");
             }
         }
     }
