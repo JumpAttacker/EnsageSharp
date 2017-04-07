@@ -40,7 +40,7 @@ namespace SfAnnihilation.Features
                 return;
             }
             
-            if (MenuManager.UseRazeInCombo && Target.IsValidRazeTarget() &&
+            if (MenuManager.UseRazeInCombo && Target.IsValidRazeTarget() && !Me.IsInvisible() &&
                 (!Orbwalker.CanAttack() || Me.GetAttackRange() <= Me.Distance2D(Target)))
             {
                 var r = Razes.OrderBy(x => Target.Distance2D(Prediction.InFront(Me, x.GetCastRange())));

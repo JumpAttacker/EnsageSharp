@@ -12,6 +12,14 @@ namespace SfAnnihilation.Utils
 {
     internal static class Helper
     {
+        public static string PrintVector(this Vector3 vec)
+        {
+            return $"({vec.X};{vec.Y};{vec.Z})";
+        }
+        public static string PrintVector(this Vector2 vec)
+        {
+            return $"({vec.X};{vec.Y})";
+        }
         public static int GetAbilityDelay(this Ability ability, Unit target)
         {
             return (int)((ability.FindCastPoint() + Core.Me.GetTurnTime(target)) * 1000.0 + Game.Ping);
@@ -52,8 +60,9 @@ namespace SfAnnihilation.Utils
                 }
                 else
                 {
-                    var inRange = target.Distance2D(Core.Me) <= radius + target.HullRadius + range &&
-                                  target.Distance2D(Core.Me) >= radius - target.HullRadius - range;
+                    var dist = target.Distance2D(Core.Me);
+                    var inRange = dist <= range + target.HullRadius + radius &&
+                                  dist >= range - target.HullRadius - radius;
                     return inRange;
                 }
             }

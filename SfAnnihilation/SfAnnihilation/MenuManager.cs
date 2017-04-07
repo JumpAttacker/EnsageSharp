@@ -48,7 +48,7 @@ namespace SfAnnihilation
             var eulsettings = new Menu("Eul Settings", "Eul Settings");
             eulsettings.AddItem(new MenuItem("eul.Key", "Eul Key").SetValue(new KeyBind('G', KeyBindType.Press)));
             eulsettings.AddItem(new MenuItem("eul.bkb.Key", "Eul Bkb toggle Key").SetValue(new KeyBind('H', KeyBindType.Toggle)));
-            eulsettings.AddItem(new MenuItem("eul.ExtraTime", "Extra Time").SetValue(new Slider(0, -50, 50)));
+            eulsettings.AddItem(new MenuItem("eul.ExtraTime", "Extra Time").SetValue(new Slider(-40, -100, 10)));
             var drawing = new Menu("Drawing", "Drawing");
             var drawingBkb = new Menu("Bkb", "Bkb");
             var drawingAim = new Menu("Aim", "Aim");

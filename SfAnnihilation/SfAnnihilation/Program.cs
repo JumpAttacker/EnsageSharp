@@ -1,5 +1,6 @@
 ﻿using Ensage;
 using Ensage.Common;
+using Ensage.Common.Threading;
 using SfAnnihilation.DrawingStuff;
 using SfAnnihilation.Features;
 using SfAnnihilation.Utils;
@@ -21,6 +22,7 @@ namespace SfAnnihilation
                     Game.OnUpdate += RazeDrawing.OnUpdate;
                     Game.OnUpdate += RazeCancelSystem.Updater;
                     Drawing.OnDraw += InfoDrawing.OnDraw;
+                    GameDispatcher.OnIngameUpdate += EulCombo.TestCombo;
                 });
             };
         }
