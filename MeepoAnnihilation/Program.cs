@@ -934,16 +934,20 @@ namespace MeepoAnnihilation
                             var anyAllyMeepoNearBase =
                                 _meepoList.Where(
                                     x =>
-                                        !Equals(x, me) && x.Distance2D(Fountains.GetAllyFountain()) <= 5000 &&
+                                        !Equals(x, me) && x.Distance2D(Fountains.GetAllyFountain()) <= 5000 && x != me &&
                                         !Heroes.GetByTeam(me.GetEnemyTeam()).Any(y => y.IsAlive && y.IsVisible && y.Distance2D(x) <= 1500))
                                     .OrderBy(z => z.Distance2D(Fountains.GetAllyFountain())).FirstOrDefault();
                             var underTower = Towers.All.Where(x => x.Team == me.GetEnemyTeam())
                                 .Any(x => x.Distance2D(me) <= 800);
-                            if (anyAllyMeepoNearBase != null && w.CanBeCasted() && !underTower)
+
+                            bool crossCheck = (me.Distance2D(Fountains.GetAllyFountain()) >= anyAllyMeepoNearBase.Distance2D(Fountains.GetAllyFountain())) 
+                                && (me.Distance2D(anyAllyMeepoNearBase) >= 300);
+
+                            if (anyAllyMeepoNearBase != null && w.CanBeCasted() && !underTower && crossCheck)
                             {
                                 if (Utils.SleepCheck("poofTimeToBase" + handle))
                                 {
-                                    w.UseAbility(anyAllyMeepoNearBase.Position);
+                                    w.UseAbility(anyAllyMeepoNearBase);
                                     Utils.Sleep(2000, "poofTimeToBase" + handle);
                                 }
                             }
