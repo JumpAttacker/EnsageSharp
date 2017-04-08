@@ -939,16 +939,19 @@ namespace MeepoAnnihilation
                                     .OrderBy(z => z.Distance2D(Fountains.GetAllyFountain())).FirstOrDefault();
                             var underTower = Towers.All.Where(x => x.Team == me.GetEnemyTeam())
                                 .Any(x => x.Distance2D(me) <= 800);
-
-                            bool crossCheck = (me.Distance2D(Fountains.GetAllyFountain()) >= anyAllyMeepoNearBase.Distance2D(Fountains.GetAllyFountain())) 
-                                && (me.Distance2D(anyAllyMeepoNearBase) >= 300);
-
-                            if (anyAllyMeepoNearBase != null && w.CanBeCasted() && !underTower && crossCheck)
+                            if (anyAllyMeepoNearBase != null && w.CanBeCasted() && !underTower)
                             {
-                                if (Utils.SleepCheck("poofTimeToBase" + handle))
+                                var crossCheck = (me.Distance2D(Fountains.GetAllyFountain()) >=
+                                                   anyAllyMeepoNearBase.Distance2D(Fountains.GetAllyFountain()))
+                                                  && (me.Distance2D(anyAllyMeepoNearBase) >= 500);
+
+                                if (crossCheck)
                                 {
-                                    w.UseAbility(anyAllyMeepoNearBase);
-                                    Utils.Sleep(2000, "poofTimeToBase" + handle);
+                                    if (Utils.SleepCheck("poofTimeToBase" + handle))
+                                    {
+                                        w.UseAbility(anyAllyMeepoNearBase);
+                                        Utils.Sleep(2000, "poofTimeToBase" + handle);
+                                    }
                                 }
                             }
                             var channeledAbility = me.GetChanneledAbility();
