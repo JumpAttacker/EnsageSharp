@@ -76,7 +76,7 @@ namespace OverlayInformation
 
         public static List<string> ShowIllusionList = new List<string>()
         {
-            "particles/items2_fx/smoke_of_deceit_buff.vpcf",
+            "materials/ensage_ui/particles/smoke_illusions_mod.vpcf",
             "materials/ensage_ui/particles/illusions_mod.vpcf",
             "materials/ensage_ui/particles/illusions_mod_v2.vpcf",
             "materials/ensage_ui/particles/illusions_mod_balloons.vpcf",
