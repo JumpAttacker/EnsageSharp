@@ -15,7 +15,6 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using SharpDX.Direct3D9;
-
 namespace OverlayInformation
 {
     internal class TeleportEffect
@@ -93,33 +92,35 @@ namespace OverlayInformation
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);        
         public static void OnValueChanged(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
         {
-            _textFont = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = MiniMapSize,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
+            if (Drawing.RenderMode == RenderMode.Dx9)
+                _textFont = new Font(
+                    Drawing.Direct3DDevice9,
+                    new FontDescription
+                    {
+                        FaceName = "Tahoma",
+                        Height = MiniMapSize,
+                        OutputPrecision = FontPrecision.Default,
+                        Quality = FontQuality.Default
+                    });
         }
         
         public TeleportCatcher()
         {
             _effectList = new List<TeleportEffect>();
-            _textFont = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = MiniMapSize,
-                    OutputPrecision = FontPrecision.Raster,
-                    Quality = FontQuality.ClearTypeNatural,
-                    CharacterSet = FontCharacterSet.Hangul,
-                    MipLevels = 3,
-                    PitchAndFamily = FontPitchAndFamily.Modern,
-                    Weight = FontWeight.Heavy,
-                });
+            if (Drawing.RenderMode == RenderMode.Dx9)
+                _textFont = new Font(
+                    Drawing.Direct3DDevice9,
+                    new FontDescription
+                    {
+                        FaceName = "Tahoma",
+                        Height = MiniMapSize,
+                        OutputPrecision = FontPrecision.Raster,
+                        Quality = FontQuality.ClearTypeNatural,
+                        CharacterSet = FontCharacterSet.Hangul,
+                        MipLevels = 3,
+                        PitchAndFamily = FontPitchAndFamily.Modern,
+                        Weight = FontWeight.Heavy,
+                    });
             Drawing.OnEndScene += args =>
             {
                 if (!Checker.IsActive())

@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Globalization;
-using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
-using log4net;
-using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace OverlayInformation

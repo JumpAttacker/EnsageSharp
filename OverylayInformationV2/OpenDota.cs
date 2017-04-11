@@ -111,6 +111,11 @@ namespace OverlayInformation
             if (Init)
                 return;
             Init = true;
+            if (Drawing.RenderMode != RenderMode.Dx9)
+            {
+                Printer.Print("You're using not dx9, OpenDota helper will not working!");
+                return;
+            }
             /*Console.WriteLine(
                 $"Screen Size: {HeroPickStageScreenHelper.ScreenSize.X}/{HeroPickStageScreenHelper.ScreenSize.Y}");*/
             //SingleFake();
