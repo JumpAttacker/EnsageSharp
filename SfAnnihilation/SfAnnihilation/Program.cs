@@ -13,6 +13,8 @@ namespace SfAnnihilation
         {
             Events.OnLoad += (sender, args) =>
             {
+                if (ObjectManager.LocalHero.ClassId != ClassId.CDOTA_Unit_Hero_Nevermore)
+                    return;
                 MenuManager.Init();
                 DelayAction.Add(250, () =>
                 {
