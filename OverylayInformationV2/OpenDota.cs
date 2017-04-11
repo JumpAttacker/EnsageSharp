@@ -113,7 +113,8 @@ namespace OverlayInformation
             Init = true;
             if (Drawing.RenderMode != RenderMode.Dx9)
             {
-                Printer.Print("You're using not dx9, OpenDota helper will not working!");
+                Printer.Print("You're using not dx9, OpenDota helper will not working!", true);
+                Printer.PrintError("You're using not dx9, OpenDota helper will not working!");
                 return;
             }
             /*Console.WriteLine(
