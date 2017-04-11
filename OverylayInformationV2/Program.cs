@@ -464,7 +464,7 @@ namespace OverlayInformation
         {
             ObjectManager.OnAddEntity += args =>
             {
-                Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
+                Printer.Print($"new: {args.Entity.ClassId}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
             };
             Entity.OnParticleEffectAdded += (entity, eventArgs) =>
             {
@@ -523,7 +523,7 @@ namespace OverlayInformation
                 DelayAction.Add(500, () =>
                 {
                     Members.MyHero = ObjectManager.LocalHero;
-                    Members.MyClass = Members.MyHero.ClassID;
+                    Members.MyClass = Members.MyHero.ClassId;
                     Members.MyPlayer = ObjectManager.LocalPlayer;
 
                     ShrineHelper.Init();

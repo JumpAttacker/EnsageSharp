@@ -71,7 +71,7 @@ namespace OverlayInformation
                                     x != null && x.IsValid && !x.IsIllusion && !IgnoreList.Contains(x.StoredName()))
                                 .ToList();
                         /*Printer.Print($"---------------");
-                        foreach (var source in Members.Heroes.Where(x=>x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo))
+                        foreach (var source in Members.Heroes.Where(x=>x.ClassId == ClassId.CDOTA_Unit_Hero_Meepo))
                         {
                             var hero = source as Meepo;
                             var isIllusion = hero.IsIllusion();
@@ -89,7 +89,7 @@ namespace OverlayInformation
                                     {
                                         var dividedWeStand = x.Spellbook.SpellR as DividedWeStand;
                                         return dividedWeStand != null && !Members.MeepoIgnoreList.Contains(x) &&
-                                               x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo &&
+                                               x.ClassId == ClassId.CDOTA_Unit_Hero_Meepo &&
                                                dividedWeStand.UnitIndex > 0;
                                     }))
                         {
@@ -101,90 +101,90 @@ namespace OverlayInformation
                         //Printer.Print($"Heroes.All: {Heroes.All.Count}; Members.Heroes: {Members.Heroes.Count}");
                         //Printer.Print("STATUS:[all] " + Members.Heroes.Count+ " [enemy] " + Members.EnemyHeroes.Count + " [ally] " + Members.AllyHeroes.Count);
                         if (!Members.Apparition &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_AncientApparition))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_AncientApparition))
                         {
                             Printer.Print("Apparition detected");
                             Members.Apparition = true;
                         }
                         if (Members.PAisHere == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_PhantomAssassin))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_PhantomAssassin))
                         {
                             Printer.Print("PhantomAssss detected");
-                            Members.PAisHere = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_PhantomAssassin);
+                            Members.PAisHere = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_PhantomAssassin);
                         }
                         if (!Members.BaraIsHere &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_SpiritBreaker))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_SpiritBreaker))
                         {
                             Printer.Print("BaraIsHere detected");
                             Members.BaraIsHere = true;
                         }
                         if (Members.Mirana == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Mirana))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Mirana))
                         {
                             Printer.Print("Mirana detected");
-                            Members.Mirana = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Mirana);
+                            Members.Mirana = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Mirana);
                         }
                         if (Members.Windrunner == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Windrunner))
                         {
                             Printer.Print("Windrunner detected");
-                            Members.Windrunner = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner);
+                            Members.Windrunner = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Windrunner);
                         }
                         if (Members.Invoker == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Invoker))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Invoker))
                         {
                             Printer.Print("Invoker detected");
-                            Members.Invoker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Invoker);
+                            Members.Invoker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Invoker);
                         }
                         if (Members.Kunkka == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Kunkka))
                         {
                             Printer.Print("Kunkka detected");
-                            Members.Kunkka = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka);
+                            Members.Kunkka = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Kunkka);
                         }
                         if (Members.Lina == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Lina))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Lina))
                         {
                             Printer.Print("Lina detected");
-                            Members.Lina = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Lina);
+                            Members.Lina = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Lina);
                         }
                         if (Members.Leshrac == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Leshrac))
                         {
                             Printer.Print("Leshrac detected");
-                            Members.Leshrac = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac);
+                            Members.Leshrac = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Leshrac);
                         }
                         if (Members.LifeStealer == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Life_Stealer))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Life_Stealer))
                         {
                             Printer.Print("LifeStealer detected");
-                            Members.LifeStealer = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Life_Stealer);
+                            Members.LifeStealer = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Life_Stealer);
                         }
 
                         if (Members.Techies == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Techies))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Techies))
                         {
                             Printer.Print("Techies detected");
-                            Members.Techies = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Techies);
+                            Members.Techies = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Techies);
                         }
                         if (Members.Tinker == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Tinker))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Tinker))
                         {
                             Printer.Print("Tinker detected");
-                            Members.Tinker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Tinker);
+                            Members.Tinker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Tinker);
                         }
                         if (Members.ArcWarden == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_ArcWarden))
+                            Members.EnemyHeroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_ArcWarden))
                         {
                             Printer.Print("ArcWarden detected");
-                            Members.ArcWarden = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_ArcWarden);
+                            Members.ArcWarden = Members.EnemyHeroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_ArcWarden);
                         }
                         //DividedWeStand
                         if (Members.Meepo == null &&
-                            Members.Heroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo))
+                            Members.Heroes.Any(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Meepo))
                         {
                             Printer.Print("Meepo detected");
-                            Members.Meepo = Members.Heroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo);
+                            Members.Meepo = Members.Heroes.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Meepo);
                             Members.MeepoDivided = (DividedWeStand) Members.Meepo.Spellbook.SpellR;
                         }
                     }
@@ -220,7 +220,7 @@ namespace OverlayInformation
                     _abilityUpdate.Sleep(1000);
                     foreach (var hero in /*Members.Heroes */Manager.HeroManager.GetViableHeroes())
                     {
-                        /*if ((hero.ClassID==ClassID.CDOTA_Unit_Hero_DoomBringer || hero.ClassID==ClassID.CDOTA_Unit_Hero_Rubick) && !hero.IsVisible)
+                        /*if ((hero.ClassId==ClassId.CDOTA_Unit_Hero_DoomBringer || hero.ClassId==ClassId.CDOTA_Unit_Hero_Rubick) && !hero.IsVisible)
                             continue;*/
                         try
                         {
@@ -244,7 +244,7 @@ namespace OverlayInformation
 
                             }
                             long worth = 0;
-                            /*if ((hero.ClassID == ClassID.CDOTA_Unit_Hero_Meepo) &&
+                            /*if ((hero.ClassId == ClassId.CDOTA_Unit_Hero_Meepo) &&
                                 (hero.FindSpell("meepo_divided_we_stand") as DividedWeStand).UnitIndex > 0)
                             {
                                 continue;
@@ -325,7 +325,7 @@ namespace OverlayInformation
                 _sleeper.Sleep(100);
                 Members.BaseList =
                     ObjectManager.GetEntities<Unit>()
-                        .Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team == Members.MyHero.GetEnemyTeam())
+                        .Where(x => x.ClassId == ClassId.CDOTA_BaseNPC && x.Team == Members.MyHero.GetEnemyTeam())
                         .ToList();
             }
 

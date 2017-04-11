@@ -35,9 +35,9 @@ namespace OverlayInformation
                             .Where(
                                 x =>
                                     !x.IsMagicImmune() && x.Team != Members.MyHero.Team &&
-                                    (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
-                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
-                                     x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
+                                    (x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Lane ||
+                                     x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Siege ||
+                                     x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && x.IsAlive &&
                                     x.Distance2D(Members.MyHero) <= 600 && !x.IsAncient).OrderByDescending(x => x.Health)
                             .DefaultIfEmpty(null)
                             .FirstOrDefault();
