@@ -14,7 +14,7 @@ namespace ArcAnnihilation
         {
             Events.OnLoad += (sender, args) =>
             {
-                if (ObjectManager.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_ArcWarden)
+                if (ObjectManager.LocalHero.ClassId != ClassId.CDOTA_Unit_Hero_ArcWarden)
                     return;
                 MyLittleCore = new Core();
             };

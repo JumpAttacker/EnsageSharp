@@ -270,7 +270,7 @@ namespace ArcAnnihilation
 
                 var drawItems = new Menu("Items Drawing", "ItemsDrawing");
                 drawItems.AddItem(new MenuItem("DrawItems", "Draw Items on cooldown").SetValue(true));
-                drawItems.AddItem(new MenuItem("Draw.Order.Type", "Draw Type: New").SetValue(true))
+                drawItems.AddItem(new MenuItem("Draw.OrderId.Type", "Draw Type: New").SetValue(true))
                     .SetTooltip("use new way for drawing current orders").ValueChanged += (sender, args) =>
                     {
                         _drawType = args.GetNewValue<bool>();
@@ -397,14 +397,14 @@ namespace ArcAnnihilation
 
         private static void InitOtherStuff()
         {
-            //Log.Info($"[{Menu.DisplayName}] Loaded - > ClassID ({_mainHero.ClassID})");
+            //Log.Info($"[{Menu.DisplayName}] Loaded - > ClassId ({_mainHero.ClassId})");
             Game.PrintMessage(
                 "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
                 " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
             _ethereal = new Sleeper();
             blinkSleeper = new MultiSleeper();
             _myHull = _mainHero.HullRadius;
-            _drawType = Menu.Item("Draw.Order.Type").GetValue<bool>();
+            _drawType = Menu.Item("Draw.OrderId.Type").GetValue<bool>();
         }
 
         public void UnLink()
@@ -464,11 +464,11 @@ namespace ArcAnnihilation
             #region code for monkey
             if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int)Orders.Monkey && !Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
             {
-                //Game.PrintMessage(args.Order.ToString(), MessageType.ChatMessage);
-                if (args.Order != Order.Stop && args.Order != Order.AttackLocation && args.Order != Order.AttackTarget &&
-                    args.Order != Order.Ability && args.Order != Order.AbilityTarget &&
-                    args.Order != Order.AbilityLocation &&
-                    args.Order != Order.MoveLocation && args.Order != Order.MoveTarget && args.Order != Order.Hold)
+                //Game.PrintMessage(args.OrderId.ToString(), MessageType.ChatMessage);
+                if (args.OrderId != OrderId.Stop && args.OrderId != OrderId.AttackLocation && args.OrderId != OrderId.AttackTarget &&
+                    args.OrderId != OrderId.Ability && args.OrderId != OrderId.AbilityTarget &&
+                    args.OrderId != OrderId.AbilityLocation &&
+                    args.OrderId != OrderId.MoveLocation && args.OrderId != OrderId.MoveTarget && args.OrderId != OrderId.Hold)
                     return;
 
                 // make each tempest clone copy main hero's moves
@@ -476,19 +476,19 @@ namespace ArcAnnihilation
                 {
                     Ability spell;
                     Ability needed;
-                    switch (args.Order)
+                    switch (args.OrderId)
                     {
-                        case Order.Stop:
+                        case OrderId.Stop:
                             hero.Stop();
                             break;
-                        case Order.AttackLocation:
+                        case OrderId.AttackLocation:
                             hero.Attack(args.TargetPosition);
                             break;
-                        case Order.AttackTarget:
+                        case OrderId.AttackTarget:
                             var target = args.Target;
                             hero.Attack(target as Unit);
                             break;
-                        case Order.Ability:
+                        case OrderId.Ability:
                             spell = args.Ability;
                             needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
                             if (needed != null && needed.CanBeCasted())
@@ -496,7 +496,7 @@ namespace ArcAnnihilation
                                 needed.UseAbility();
                             }
                             break;
-                        case Order.AbilityTarget:
+                        case OrderId.AbilityTarget:
                             spell = args.Ability;
                             needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
                             if (needed != null && needed.CanBeCasted())
@@ -504,7 +504,7 @@ namespace ArcAnnihilation
                                 needed.UseAbility(args.Target as Unit);
                             }
                             break;
-                        case Order.AbilityLocation:
+                        case OrderId.AbilityLocation:
                             spell = args.Ability;
                             needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
                             if (needed != null && needed.CanBeCasted())
@@ -512,17 +512,17 @@ namespace ArcAnnihilation
                                 needed.UseAbility(args.TargetPosition);
                             }
                             break;
-                        case Order.MoveLocation:
+                        case OrderId.MoveLocation:
                             hero.Move(args.TargetPosition);
                             break;
-                        case Order.MoveTarget:
+                        case OrderId.MoveTarget:
                             hero.Move(args.TargetPosition);
                             break;
-                        case Order.AbilityTargetTree:
+                        case OrderId.AbilityTargetTree:
                             break;
-                        case Order.ToggleAbility:
+                        case OrderId.ToggleAbility:
                             break;
-                        case Order.Hold:
+                        case OrderId.Hold:
                             hero.Stop();
                             break;
                     }
@@ -532,8 +532,8 @@ namespace ArcAnnihilation
             #region code for ez heal
             else if (Menu.Item("FirstClone").GetValue<bool>())
             {
-                if (args.Order != Order.Ability && args.Order != Order.AbilityTarget &&
-                    args.Order != Order.AbilityLocation)
+                if (args.OrderId != OrderId.Ability && args.OrderId != OrderId.AbilityTarget &&
+                    args.OrderId != OrderId.AbilityLocation)
                     return;
                 if (!CloneOnlyItems.Contains(args.Ability.Name)) return;
                 
@@ -542,9 +542,9 @@ namespace ArcAnnihilation
                 {
                     Ability spell;
                     Ability needed;
-                    switch (args.Order)
+                    switch (args.OrderId)
                     {
-                        case Order.Ability:
+                        case OrderId.Ability:
                             spell = args.Ability;
                             needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
                             if (needed != null && needed.CanBeCasted())
@@ -556,7 +556,7 @@ namespace ArcAnnihilation
                                 args.Process = false;
                             }
                             break;
-                        case Order.AbilityTarget:
+                        case OrderId.AbilityTarget:
                             spell = args.Ability;
                             needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
                             if (needed != null && needed.CanBeCasted())
@@ -565,7 +565,7 @@ namespace ArcAnnihilation
                                 args.Process = false;
                             }
                             break;
-                        case Order.AbilityLocation:
+                        case OrderId.AbilityLocation:
                             spell = args.Ability;
                             needed = hero.FindSpell(spell.Name) ?? hero.FindItem(spell.Name);
                             if (needed != null && needed.CanBeCasted())
@@ -951,10 +951,10 @@ namespace ArcAnnihilation
                         .Where(
                             x =>
                                 !x.IsMagicImmune() && x.Team != _mainHero.Team &&
-                                (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
-                                 x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
-                                 x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral ||
-                                 x.ClassID == ClassID.CDOTA_BaseNPC_Invoker_Forged_Spirit) && x.IsSpawned &&
+                                (x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Lane ||
+                                 x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Siege ||
+                                 x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Neutral ||
+                                 x.ClassId == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit) && x.IsSpawned &&
                                 !x.IsAncient && x.IsAlive &&
                                 x.Distance2D(_mainHero) <= 600).OrderByDescending(x => x.Health)
                         .DefaultIfEmpty(null)
@@ -985,9 +985,9 @@ namespace ArcAnnihilation
                         .Where(
                             x =>
                                 !x.IsMagicImmune() && x.Team != _mainHero.Team &&
-                                (x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
-                                 x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
-                                 x.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && !x.IsAncient && x.IsAlive &&
+                                (x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Lane ||
+                                 x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Siege ||
+                                 x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && !x.IsAncient && x.IsAlive &&
                                 x.Distance2D(clone) <= 600).OrderByDescending(x => x.Health)
                         .DefaultIfEmpty(null)
                         .FirstOrDefault();
