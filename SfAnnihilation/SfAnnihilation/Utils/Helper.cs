@@ -53,7 +53,7 @@ namespace SfAnnihilation.Utils
                 {
                     var predFontPos = Prediction.InFront(Core.Me, range);
                     var pred = ability.GetPrediction(target);
-                    //var inRange = (usePrediction ? pred.Distance2D(predFontPos) : target.Distance2D(predFontPos)) <= radius + target.HullRadius;
+                    //var inRange = (usePrediction ? pred.Distance2D(predFontPos) : Target.Distance2D(predFontPos)) <= radius + Target.HullRadius;
                     var inRange = target.Distance2D(predFontPos) <= radius + target.HullRadius;
 
                     return inRange;
@@ -84,7 +84,7 @@ namespace SfAnnihilation.Utils
                 var range = ability.GetCastRange();
                 var predFontPos = Prediction.InFront(Core.Me, range);
                 var pred = Prediction.PredictedXYZ(target, customDelay);
-                //var inRange = (usePrediction ? pred.Distance2D(predFontPos) : target.Distance2D(predFontPos)) <= radius + target.HullRadius;
+                //var inRange = (usePrediction ? pred.Distance2D(predFontPos) : Target.Distance2D(predFontPos)) <= radius + Target.HullRadius;
                 var inRange = pred.Distance2D(predFontPos) <= radius + target.HullRadius;
 
                 return inRange;
@@ -122,7 +122,7 @@ namespace SfAnnihilation.Utils
                 if (Core.Razes.Any(x => x.IsInAbilityPhase))
                     return false;
                 raze.UseAbility();
-                //StopSystem.New(raze, target);
+                //StopSystem.New(raze, Target);
                 Core.RazeCanceler.Sleep(raze.GetAbilityDelay()+50, raze);
                 Printer.Print($"cast: [{raze.Name}]->{raze.GetAbilityDelay() + 50}");
                 return true;

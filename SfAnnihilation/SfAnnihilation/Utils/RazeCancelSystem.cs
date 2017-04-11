@@ -6,6 +6,40 @@ using SfAnnihilation.Features;
 
 namespace SfAnnihilation.Utils
 {
+    public static class RazeCancelSystemNewOne
+    {
+        public static Ability CurrenyAbility;
+        public static Hero Target;
+        public static float StartTime;
+        public static float AbilityDelay;
+        public static float LifeTime;
+        public static Sleeper Sleeper = new Sleeper();
+
+        static RazeCancelSystemNewOne()
+        {
+            Game.OnIngameUpdate += args =>
+            {
+                if (!IsValid)
+                    Core.Me.Stop();
+            };
+        }
+        
+        public static bool IsValid
+            =>
+                CurrenyAbility != null && Target != null && CurrenyAbility.IsInAbilityPhase &&
+                CurrenyAbility.CanHit(Target, Math.Max(0, AbilityDelay - CustomDelay)) &&
+                Target.IsAlive;
+
+        public static float CustomDelay => (Game.RawGameTime - StartTime)*1000;
+        public static void InitNewMember(Ability s,Hero newTarget)
+        {
+            CurrenyAbility = s;
+            Target = newTarget;
+            StartTime = Game.RawGameTime;
+            AbilityDelay = s.GetAbilityDelay();
+            Sleeper.Sleep(AbilityDelay);
+        }
+    }
     internal class RazeCancelSystem
     {
         public static List<StopElement> StopList = new List<StopElement>();

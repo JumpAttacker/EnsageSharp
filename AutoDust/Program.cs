@@ -30,14 +30,14 @@ namespace Auto_Dust
         {
             if (!_loaded)
             {
-                _me = ObjectMgr.LocalHero;
-                _player = ObjectMgr.LocalPlayer;
+                _me = ObjectManager.LocalHero;
+                _player = ObjectManager.LocalPlayer;
                 if (!Game.IsInGame || _me == null)
                 {
                     return;
                 }
                 _loaded = true;
-                PrintSuccess(string.Format("> Auto Dust Loaded v{0}", Ver)); 
+                PrintSuccess($"> Auto Dust Loaded v{Ver}"); 
             }
 
             if (!Game.IsInGame || _me == null)
@@ -56,7 +56,7 @@ namespace Auto_Dust
                 return;
             var dust = _me.FindItem("item_dust");
             if (dust==null|| !dust.CanBeCasted() || _me.IsInvisible())return;
-            var enemy = ObjectMgr.GetEntities<Hero>()
+            var enemy = ObjectManager.GetEntities<Hero>()
                 .Where(
                     v =>
                         !v.IsIllusion && v.Team != _player.Team && v.IsAlive && v.IsVisible &&

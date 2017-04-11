@@ -90,3 +90,14 @@ Temporary Items
 *.suo
 /InvTest/InvokerAnnihilation/InvokerAnnihilation/bin/Release
 /SfAnnihilation/SfAnnihilation/obj/x64/Debug
+/TemplarAnnihilation/obj/x64/Debug
+/Item Panel/obj/x64/Debug
+/EscapeMaster/obj/x64/Debug
+/EarthSpirit/obj/x64/Debug
+/AutoDust/obj/x64/Debug
+/AntiCourFeed/AntiCourFeed/obj/x64/Debug
+/AutoDust/obj/Debug
+/EarthSpirit/obj/Debug
+/EscapeMaster/bin/Release
+/TemplarAnnihilation/bin/Debug
+/TemplarAnnihilation/obj/Debug

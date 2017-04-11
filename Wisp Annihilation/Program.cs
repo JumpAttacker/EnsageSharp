@@ -83,7 +83,7 @@ namespace Wisp_Annihilation
                 _loaded = true;
             };
             if (!_loaded && ObjectManager.LocalHero != null &&
-                ObjectManager.LocalHero.ClassID == ClassID.CDOTA_Unit_Hero_Wisp && Game.IsInGame)
+                ObjectManager.LocalHero.ClassId == ClassId.CDOTA_Unit_Hero_Wisp && Game.IsInGame)
             {
 
                 Load();
@@ -108,7 +108,7 @@ namespace Wisp_Annihilation
 
         private static void Load()
         {
-            if (ObjectManager.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_Wisp)
+            if (ObjectManager.LocalHero.ClassId != ClassId.CDOTA_Unit_Hero_Wisp)
                 return;
             if (Members.MyHero == null || !Members.MyHero.IsValid)
             {
@@ -132,7 +132,7 @@ namespace Wisp_Annihilation
         private static List<Tracker> _trackList = new List<Tracker>();
         private static void EntityOnOnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
         {
-            if (sender.ClassID != ClassID.CDOTA_Wisp_Spirit)
+            if (sender.ClassId != ClassId.CDOTA_Wisp_Spirit)
                 return;
             if (sender.Team != Members.MyTeam)
                 return;
@@ -206,7 +206,7 @@ namespace Wisp_Annihilation
             {
                 _fountain = ObjectManager.GetEntities<Unit>()
                     .FirstOrDefault(
-                        x => x != null && x.Team == ObjectManager.LocalHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                        x => x != null && x.Team == ObjectManager.LocalHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
                 return;
             }
             var tether = Abilities.FindAbility("wisp_tether");
@@ -323,7 +323,7 @@ namespace Wisp_Annihilation
                 }
             }
             _trackList = _trackList.Where(x => !x.Ef.IsDestroyed).ToList();
-            var wispList = _trackList;//ObjectManager.GetEntities<Unit>().Where(x => x.ClassID == ClassID.CDOTA_Wisp_Spirit && x.Team==Members.MyHero.Team && x.IsAlive).ToList();
+            var wispList = _trackList;//ObjectManager.GetEntities<Unit>().Where(x => x.ClassId == ClassId.CDOTA_Wisp_Spirit && x.Team==Members.MyHero.Team && x.IsAlive).ToList();
             if (!wispList.Any())
                 return;
             var spellIn = Abilities.FindAbility("wisp_spirits_in");

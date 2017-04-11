@@ -9,7 +9,9 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
 using SfAnnihilation.Utils;
 using SharpDX;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
+
+//using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace SfAnnihilation.Features
 {

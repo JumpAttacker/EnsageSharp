@@ -57,8 +57,8 @@ namespace AutoDeward
                 ObjectManager.GetEntitiesFast<Unit>()
                     .FirstOrDefault(
                         x =>
-                            (x.ClassID == ClassID.CDOTA_NPC_Observer_Ward ||
-                             x.ClassID == ClassID.CDOTA_NPC_Observer_Ward_TrueSight) && x.Team != _me.Team &&
+                            (x.ClassId == ClassId.CDOTA_NPC_Observer_Ward ||
+                             x.ClassId == ClassId.CDOTA_NPC_Observer_Ward_TrueSight) && x.Team != _me.Team &&
                             x.IsAlive && x.IsVisible && item.CanHit(x));
             if (target==null)
                 return;

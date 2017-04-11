@@ -30,14 +30,14 @@ namespace Auto_Disable
                 Menu.Item("itemEnable").GetValue<AbilityToggler>().IsEnabled(item);
         public static bool IsItemEnable(Hero hero, string item, string enemyAbility)
             => 
-                Menu.Item("itemEnable" + hero.ClassID + enemyAbility).GetValue<AbilityToggler>().IsEnabled(item);
+                Menu.Item("itemEnable" + hero.ClassId + enemyAbility).GetValue<AbilityToggler>().IsEnabled(item);
 
         public static bool IsAbilityEnable(Hero hero, string item)
             =>
                 Menu.Item("abilityEnable").GetValue<AbilityToggler>().IsEnabled(item);
         public static bool IsAbilityEnable(Hero hero, string item, string enemyAbility)
             =>
-                Menu.Item("abilityEnable" + hero.ClassID + enemyAbility).GetValue<AbilityToggler>().IsEnabled(item);
+                Menu.Item("abilityEnable" + hero.ClassId + enemyAbility).GetValue<AbilityToggler>().IsEnabled(item);
 
 
         private static Menu _heroes;
@@ -76,35 +76,35 @@ namespace Auto_Disable
             Menu.AddSubMenu(devolper);
 
             #region Initiators
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_FacelessVoid, AbilityId.faceless_void_time_walk);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Shredder, AbilityId.shredder_timber_chain);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Phoenix, AbilityId.phoenix_icarus_dive);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_AntiMage, AbilityId.antimage_blink);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Legion_Commander, AbilityId.legion_commander_duel);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Mirana, AbilityId.mirana_leap);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_PhantomLancer, AbilityId.phantom_lancer_doppelwalk);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Terrorblade, AbilityId.terrorblade_sunder);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Huskar, AbilityId.huskar_life_break);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Rattletrap, AbilityId.rattletrap_hookshot);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_EarthSpirit, AbilityId.earth_spirit_rolling_boulder);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_ChaosKnight, AbilityId.chaos_knight_reality_rift);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Morphling, AbilityId.morphling_waveform);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_VengefulSpirit, AbilityId.vengefulspirit_nether_swap);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_PhantomAssassin, AbilityId.phantom_assassin_phantom_strike);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Riki, AbilityId.riki_blink_strike);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Weaver, AbilityId.weaver_time_lapse);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_SandKing, AbilityId.sandking_epicenter);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Slark, AbilityId.slark_pounce);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_CrystalMaiden, AbilityId.crystal_maiden_freezing_field);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Pudge, AbilityId.pudge_dismember);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Bane, AbilityId.bane_fiends_grip);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Enigma, AbilityId.enigma_black_hole);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_WitchDoctor, AbilityId.witch_doctor_death_ward);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_QueenOfPain, AbilityId.queenofpain_blink);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_StormSpirit, AbilityId.storm_spirit_ball_lightning);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Puck, AbilityId.puck_illusory_orb);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Magnataur, AbilityId.magnataur_skewer);
-            Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_EmberSpirit, AbilityId.ember_spirit_fire_remnant);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_FacelessVoid, AbilityId.faceless_void_time_walk);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Shredder, AbilityId.shredder_timber_chain);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Phoenix, AbilityId.phoenix_icarus_dive);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_AntiMage, AbilityId.antimage_blink);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Legion_Commander, AbilityId.legion_commander_duel);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Mirana, AbilityId.mirana_leap);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_PhantomLancer, AbilityId.phantom_lancer_doppelwalk);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Terrorblade, AbilityId.terrorblade_sunder);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Huskar, AbilityId.huskar_life_break);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Rattletrap, AbilityId.rattletrap_hookshot);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_EarthSpirit, AbilityId.earth_spirit_rolling_boulder);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_ChaosKnight, AbilityId.chaos_knight_reality_rift);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Morphling, AbilityId.morphling_waveform);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_VengefulSpirit, AbilityId.vengefulspirit_nether_swap);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_PhantomAssassin, AbilityId.phantom_assassin_phantom_strike);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Riki, AbilityId.riki_blink_strike);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Weaver, AbilityId.weaver_time_lapse);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_SandKing, AbilityId.sandking_epicenter);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Slark, AbilityId.slark_pounce);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_CrystalMaiden, AbilityId.crystal_maiden_freezing_field);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Pudge, AbilityId.pudge_dismember);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Bane, AbilityId.bane_fiends_grip);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Enigma, AbilityId.enigma_black_hole);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_WitchDoctor, AbilityId.witch_doctor_death_ward);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_QueenOfPain, AbilityId.queenofpain_blink);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_StormSpirit, AbilityId.storm_spirit_ball_lightning);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Puck, AbilityId.puck_illusory_orb);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_Magnataur, AbilityId.magnataur_skewer);
+            Members.Initiators.Add(ClassId.CDOTA_Unit_Hero_EmberSpirit, AbilityId.ember_spirit_fire_remnant);
             //Members.Initiators.Add(ClassID.CDOTA_Unit_Hero_Tidehunter, AbilityId.tidehunter_ravage);
             #endregion
         }
@@ -145,32 +145,32 @@ namespace Auto_Disable
         {
             if (HeroesInSystem.Contains(hero))
                 return;
-            if (Menus[hero.Player.ID] != null)
+            if (Menus[hero.Player.Id] != null)
                 return;
             HeroesInSystem.Add(hero);
-            Menus[hero.Player.ID] = new Menu("", hero.ClassID.ToString(), false, hero.StoredName());
-            _heroes.AddSubMenu(Menus[hero.Player.ID]);
+            Menus[hero.Player.Id] = new Menu("", hero.ClassId.ToString(), false, hero.StoredName());
+            _heroes.AddSubMenu(Menus[hero.Player.Id]);
             foreach (var ability in hero.Spellbook.Spells.Where(x=>x.IsShield() || x.IsDisable()))
             {
-                var item = new Menu("", hero.ClassID + ability.StoredName(), false, ability.StoredName());
-                Menus[hero.Player.ID].AddSubMenu(item);
+                var item = new Menu("", hero.ClassId + ability.StoredName(), false, ability.StoredName());
+                Menus[hero.Player.Id].AddSubMenu(item);
                 item.AddItem(
-                    new MenuItem("text1" + hero.ClassID + ability.StoredName(), "Abilities:")).SetFontColor(Color.GhostWhite);
+                    new MenuItem("text1" + hero.ClassId + ability.StoredName(), "Abilities:")).SetFontColor(Color.GhostWhite);
                 item.AddItem(
-                    new MenuItem("abilityEnable" + hero.ClassID + ability.StoredName(), "").SetValue(
+                    new MenuItem("abilityEnable" + hero.ClassId + ability.StoredName(), "").SetValue(
                         new AbilityToggler(new Dictionary<string, bool>())));
                 foreach (var spell in Members.Spells)
                 {
-                    item.Item("abilityEnable" + hero.ClassID + ability.StoredName()).GetValue<AbilityToggler>().Add(spell);
+                    item.Item("abilityEnable" + hero.ClassId + ability.StoredName()).GetValue<AbilityToggler>().Add(spell);
                 }
                 item.AddItem(
-                    new MenuItem("text2" + hero.ClassID + ability.StoredName(), "Items:")).SetFontColor(Color.GhostWhite);
+                    new MenuItem("text2" + hero.ClassId + ability.StoredName(), "Items:")).SetFontColor(Color.GhostWhite);
                 item.AddItem(
-                    new MenuItem("itemEnable" + hero.ClassID + ability.StoredName(), "").SetValue(
+                    new MenuItem("itemEnable" + hero.ClassId + ability.StoredName(), "").SetValue(
                         new AbilityToggler(new Dictionary<string, bool>())));
                 foreach (var spell in Members.Items)
                 {
-                    item.Item("itemEnable" + hero.ClassID + ability.StoredName()).GetValue<AbilityToggler>().Add(spell);
+                    item.Item("itemEnable" + hero.ClassId + ability.StoredName()).GetValue<AbilityToggler>().Add(spell);
                 }
             }
             InitAbility(hero,"item_force_staff");
@@ -179,48 +179,48 @@ namespace Auto_Disable
         }
         private static void InitAbility(Hero hero, string name)
         {
-            var item = new Menu("", hero.ClassID + name, false, name);
-            Menus[hero.Player.ID].AddSubMenu(item);
+            var item = new Menu("", hero.ClassId + name, false, name);
+            Menus[hero.Player.Id].AddSubMenu(item);
             item.AddItem(
-                new MenuItem("text1" + hero.ClassID + name, "Abilities:")).SetFontColor(Color.GhostWhite);
+                new MenuItem("text1" + hero.ClassId + name, "Abilities:")).SetFontColor(Color.GhostWhite);
             item.AddItem(
-                new MenuItem("abilityEnable" + hero.ClassID + name, "").SetValue(
+                new MenuItem("abilityEnable" + hero.ClassId + name, "").SetValue(
                     new AbilityToggler(new Dictionary<string, bool>())));
             foreach (var spell in Members.Spells)
             {
-                item.Item("abilityEnable" + hero.ClassID + name).GetValue<AbilityToggler>().Add(spell);
+                item.Item("abilityEnable" + hero.ClassId + name).GetValue<AbilityToggler>().Add(spell);
             }
             item.AddItem(
-                    new MenuItem("text2" + hero.ClassID + name, "Items:")).SetFontColor(Color.GhostWhite);
+                    new MenuItem("text2" + hero.ClassId + name, "Items:")).SetFontColor(Color.GhostWhite);
             item.AddItem(
-                new MenuItem("itemEnable" + hero.ClassID + name, "").SetValue(
+                new MenuItem("itemEnable" + hero.ClassId + name, "").SetValue(
                     new AbilityToggler(new Dictionary<string, bool>())));
             foreach (var spell in Members.Items)
             {
-                item.Item("itemEnable" + hero.ClassID + name).GetValue<AbilityToggler>().Add(spell);
+                item.Item("itemEnable" + hero.ClassId + name).GetValue<AbilityToggler>().Add(spell);
             }
         }
         private static void InitNewSubMenu(Hero hero, string name)
         {
-            var item = new Menu(name, hero.ClassID + name);
-            Menus[hero.Player.ID].AddSubMenu(item);
+            var item = new Menu(name, hero.ClassId + name);
+            Menus[hero.Player.Id].AddSubMenu(item);
             item.AddItem(
-                new MenuItem("text1" + hero.ClassID + name, "Abilities:")).SetFontColor(Color.GhostWhite);
+                new MenuItem("text1" + hero.ClassId + name, "Abilities:")).SetFontColor(Color.GhostWhite);
             item.AddItem(
-                new MenuItem("abilityEnable" + hero.ClassID + name, "").SetValue(
+                new MenuItem("abilityEnable" + hero.ClassId + name, "").SetValue(
                     new AbilityToggler(new Dictionary<string, bool>())));
             foreach (var spell in Members.Spells)
             {
-                item.Item("abilityEnable" + hero.ClassID + name).GetValue<AbilityToggler>().Add(spell);
+                item.Item("abilityEnable" + hero.ClassId + name).GetValue<AbilityToggler>().Add(spell);
             }
             item.AddItem(
-                    new MenuItem("text2" + hero.ClassID + name, "Items:")).SetFontColor(Color.GhostWhite);
+                    new MenuItem("text2" + hero.ClassId + name, "Items:")).SetFontColor(Color.GhostWhite);
             item.AddItem(
-                new MenuItem("itemEnable" + hero.ClassID + name, "").SetValue(
+                new MenuItem("itemEnable" + hero.ClassId + name, "").SetValue(
                     new AbilityToggler(new Dictionary<string, bool>())));
             foreach (var spell in Members.Items)
             {
-                item.Item("itemEnable" + hero.ClassID + name).GetValue<AbilityToggler>().Add(spell);
+                item.Item("itemEnable" + hero.ClassId + name).GetValue<AbilityToggler>().Add(spell);
             }
         }
         public static void UpdateAbility(string storedName)
@@ -229,7 +229,7 @@ namespace Auto_Disable
             {
                 foreach (var ability in hero.Spellbook.Spells.Where(x=>x.IsShield() || x.IsDisable()))
                 {
-                    Menu.Item("abilityEnable" + hero.ClassID+ ability.StoredName()).GetValue<AbilityToggler>().Add(storedName);
+                    Menu.Item("abilityEnable" + hero.ClassId+ ability.StoredName()).GetValue<AbilityToggler>().Add(storedName);
                 }
                 
             }
@@ -245,10 +245,10 @@ namespace Auto_Disable
             {
                 foreach (var ability in hero.Inventory.Items.Where(x => x.IsShield() || x.IsDisable()))
                 {
-                    Menu.Item("itemEnable" + hero.ClassID + ability.StoredName()).GetValue<AbilityToggler>().Add(storedName);
+                    Menu.Item("itemEnable" + hero.ClassId + ability.StoredName()).GetValue<AbilityToggler>().Add(storedName);
                 }
-                Menu.Item("itemEnable" + hero.ClassID + "item_blink").GetValue<AbilityToggler>().Add(storedName);
-                Menu.Item("itemEnable" + hero.ClassID + "item_force_staff").GetValue<AbilityToggler>().Add(storedName);
+                Menu.Item("itemEnable" + hero.ClassId + "item_blink").GetValue<AbilityToggler>().Add(storedName);
+                Menu.Item("itemEnable" + hero.ClassId + "item_force_staff").GetValue<AbilityToggler>().Add(storedName);
             }
         }
 
@@ -258,10 +258,10 @@ namespace Auto_Disable
             {
                 foreach (var ability in hero.Inventory.Items.Where(x => x.IsShield() || x.IsDisable()))
                 {
-                    Menu.Item("itemEnable" + hero.ClassID + ability.StoredName()).GetValue<AbilityToggler>().Remove(storedName);
+                    Menu.Item("itemEnable" + hero.ClassId + ability.StoredName()).GetValue<AbilityToggler>().Remove(storedName);
                 }
-                Menu.Item("itemEnable" + hero.ClassID + "item_blink").GetValue<AbilityToggler>().Remove(storedName);
-                Menu.Item("itemEnable" + hero.ClassID + "item_force_staff").GetValue<AbilityToggler>().Remove(storedName);
+                Menu.Item("itemEnable" + hero.ClassId + "item_blink").GetValue<AbilityToggler>().Remove(storedName);
+                Menu.Item("itemEnable" + hero.ClassId + "item_force_staff").GetValue<AbilityToggler>().Remove(storedName);
             }
         }
 

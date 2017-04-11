@@ -13,7 +13,7 @@ namespace Legion_Annihilation
 
         public static Hero MyHero;
         public static Team MyTeam;
-        public static ClassID MyClassId = ClassID.CDOTA_Unit_Hero_Legion_Commander;
+        public static ClassId MyClassId = ClassId.CDOTA_Unit_Hero_Legion_Commander;
 
         public static List<string> Items = new List<string>();
 

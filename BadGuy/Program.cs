@@ -144,7 +144,7 @@ namespace BadGuy
                 if (_fountain2 == null || !_fountain2.IsValid)
                 {
                     _fountain2 = ObjectManager.GetEntities<Unit>()
-                        .FirstOrDefault(x => x.Team != _myHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                        .FirstOrDefault(x => x.Team != _myHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
                     return;
                 }
                 var angle = (float)Math.Max(
@@ -172,12 +172,12 @@ namespace BadGuy
                 if (_fountain == null || !_fountain.IsValid)
                 {
                     _fountain = ObjectManager.GetEntities<Unit>()
-                        .FirstOrDefault(x => x.Team == _myHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                        .FirstOrDefault(x => x.Team == _myHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
                 }
                 if (_fountain2 == null || !_fountain2.IsValid)
                 {
                     _fountain2 = ObjectManager.GetEntities<Unit>()
-                        .FirstOrDefault(x => x.Team != _myHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                        .FirstOrDefault(x => x.Team != _myHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
                 }
                 var index = Menu.Item("Courier.Order").GetValue<StringList>().SelectedIndex;
                 var needFountain = index == (int) Orders.BlockOnBase

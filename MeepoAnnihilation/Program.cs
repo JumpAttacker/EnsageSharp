@@ -86,7 +86,7 @@ namespace MeepoAnnihilation
             {
                 InitMenu();
                 MyHero = ObjectManager.LocalHero;
-                if (MyHero.ClassID!=ClassID.CDOTA_Unit_Hero_Meepo) return;
+                if (MyHero.ClassId!=ClassId.CDOTA_Unit_Hero_Meepo) return;
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
                     " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
@@ -228,8 +228,8 @@ namespace MeepoAnnihilation
             if (!Menu.Item("Enable").GetValue<bool>()) return;
             if (MyHero == null || !MyHero.IsValid || !MyHero.IsAlive) return;
             var me = sender.Selection.First();
-            var order = args.Order;
-            if (order == Order.Hold || order == Order.MoveLocation)
+            var order = args.OrderId;
+            if (order == OrderId.Hold || order == OrderId.MoveLocation)
             {
                 foreach (
                     var me2 in
@@ -241,7 +241,7 @@ namespace MeepoAnnihilation
                 }
             }
             else if (Menu.Item("Drawing.PoffSystem").GetValue<bool>() &&
-                (args.Order == Order.AbilityLocation || args.Order == Order.AbilityTarget) &&
+                (args.OrderId == OrderId.AbilityLocation || args.OrderId == OrderId.AbilityTarget) &&
                 args.Ability.StoredName() == SpellW[MyHero.Handle].Name)
             {
                 var pos = args.TargetPosition; 
@@ -1269,7 +1269,7 @@ namespace MeepoAnnihilation
         {
             if (Utils.SleepCheck("SelectChecker"))
             {
-                _selectedMeepo = MyPlayer.Selection.Where(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo).ToList();
+                _selectedMeepo = MyPlayer.Selection.Where(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Meepo).ToList();
                 //Print("selected count: " + SelectedMeepo.Count);
                 Utils.Sleep(150, "SelectChecker");
             }

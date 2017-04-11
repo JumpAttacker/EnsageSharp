@@ -48,7 +48,7 @@ namespace EscapeMaster
 
         private static void Game_OnUpdate(EventArgs args)
         {
-            var me = ObjectMgr.LocalHero;
+            var me = ObjectManager.LocalHero;
 
             if (!_loaded)
             {
@@ -59,7 +59,7 @@ namespace EscapeMaster
                 _loaded = true;
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version, MessageType.LogMessage);
+                    " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
             }
 
             if (!Game.IsInGame || me == null)
@@ -81,15 +81,12 @@ namespace EscapeMaster
             }
             if (mod!=null && !me.IsInvul())
             {
-                var kun = ObjectMgr.GetEntities<Hero>().FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka && x.IsVisible && x.IsAlive && x.Team!=me.Team);
-                if (kun != null)
+                var kun = ObjectManager.GetEntities<Hero>().FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Kunkka && x.IsVisible && x.IsAlive && x.Team!=me.Team);
+                var spell = kun?.FindSpell("kunkka_return");
+                if (spell != null && spell.IsInAbilityPhase)
                 {
-                    var spell = kun.FindSpell("kunkka_return");
-                    if (spell != null && spell.IsInAbilityPhase)
-                    {
-                        TryToHideMyAss(me);
-                        return;
-                    }
+                    TryToHideMyAss(me);
+                    return;
                 }
                 if (mod.RemainingTime <= 0.2)
                 {

@@ -59,9 +59,9 @@ namespace PerfectBlink
                 if (args.Ability.Name == "item_tpscroll" || args.Ability.Name == "item_travel_boots" ||
                     args.Ability.Name == "item_travel_boots_2")
                     TpPos = args.TargetPosition;*/
-            if (args.Order == Order.Stop || args.Order == Order.Hold)
+            if (args.OrderId == OrderId.Stop || args.OrderId == OrderId.Hold)
                 _shouldCheckForModifier = false;
-            if (args.Order != Order.AbilityLocation) return;
+            if (args.OrderId != OrderId.AbilityLocation) return;
             if (args.Ability.Name != "item_blink") return;
             _me = args.Entities.FirstOrDefault() as Hero;//ObjectMgr.LocalHero);
             if (_me==null) return;
@@ -134,7 +134,7 @@ namespace PerfectBlink
 
         private static void Print(string s)
         {
-            Game.PrintMessage(s,MessageType.ChatMessage);
+            Game.PrintMessage(s);
         }
     }
 }

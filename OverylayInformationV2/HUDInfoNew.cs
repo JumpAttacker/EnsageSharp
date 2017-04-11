@@ -249,8 +249,6 @@ namespace OverlayInformation
         //private static Line _line;
         #endregion
 
-
-
         #region Public Methods and Operators
 
         /// <summary>

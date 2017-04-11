@@ -57,7 +57,7 @@ namespace InvokerAnnihilation
             Events.OnLoad += (sender, args) =>
             {
                 _myHero = ObjectManager.LocalHero;
-                if (_myHero.ClassID != ClassID.CDOTA_Unit_Hero_Invoker)
+                if (_myHero.ClassId != ClassId.CDOTA_Unit_Hero_Invoker)
                 {
                     return;
                 }
@@ -144,7 +144,7 @@ namespace InvokerAnnihilation
 
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
-                    " loaded!</font> <font color='#aa0000'>v"  + Ver, MessageType.LogMessage);
+                    " loaded!</font> <font color='#aa0000'>v"  + Ver);
                 PrintSuccess(string.Format("> {1} Loaded v{0}", Ver, Menu.DisplayName));
 
                 Game.OnUpdate += Game_OnUpdate;
@@ -337,7 +337,7 @@ namespace InvokerAnnihilation
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
             if (!Menu.Item("smartIsActive").GetValue<bool>() || !Utils.SleepCheck("flee_mode")) return;
-            if (args.Order != Order.AttackTarget && args.Order != Order.MoveLocation && _inAction) return;
+            if (args.OrderId != OrderId.AttackTarget && args.OrderId != OrderId.MoveLocation && _inAction) return;
             var me = sender.Hero;
             Ability spell = null;
             switch (Menu.Item("OnAttacking").GetValue<StringList>().SelectedIndex)
@@ -352,7 +352,7 @@ namespace InvokerAnnihilation
                     spell = me.Spellbook.SpellE;
                     break;
             }
-            if (!me.IsAlive || args.Order != Order.AttackTarget || !(me.Distance2D(args.Target) <= 650)) return;
+            if (!me.IsAlive || args.OrderId != OrderId.AttackTarget || !(me.Distance2D(args.Target) <= 650)) return;
             if (spell == null || !spell.CanBeCasted()) return;
             spell.UseAbility();
             spell.UseAbility();
@@ -1088,7 +1088,7 @@ namespace InvokerAnnihilation
                 ObjectManager.GetEntities<Unit>()
                     .Where(
                         x =>
-                            x.ClassID == ClassID.CDOTA_BaseNPC_Invoker_Forged_Spirit && x.IsAlive &&
+                            x.ClassId == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit && x.IsAlive &&
                             x.Team == _myHero.Team && x.Distance2D(_myHero)<=800);
             return forge.FirstOrDefault();
         }
@@ -1707,11 +1707,11 @@ namespace InvokerAnnihilation
 
         private static void Print(string s)
         {
-            Game.PrintMessage(s, MessageType.ChatMessage);
+            Game.PrintMessage(s);
         }
         private static string GPrint(this string s)
         {
-            Game.PrintMessage("[debug]: "+s, MessageType.ChatMessage);
+            Game.PrintMessage("[debug]: "+s);
             return s;
         }
 

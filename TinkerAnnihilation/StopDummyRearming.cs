@@ -9,7 +9,7 @@ namespace TinkerAnnihilation
         public static void OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
             if (!Block) return;
-            if (args.Ability?.Name == "tinker_rearm" && args.Order == Order.Ability &&
+            if (args.Ability?.Name == "tinker_rearm" && args.OrderId == OrderId.Ability &&
                 (Members.MyHero.IsChanneling() || args.Ability.IsInAbilityPhase))
             {
                 args.Process = false;

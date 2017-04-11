@@ -40,7 +40,7 @@ namespace MeepoAnnihilation
         {
             All =
                 ObjectManager.GetEntities<Building>()
-                    .Where(x => x.IsAlive && x.ClassID == ClassID.CDOTA_BaseNPC_Tower)
+                    .Where(x => x.IsAlive && x.ClassId == ClassId.CDOTA_BaseNPC_Tower)
                     .ToList();
             Dire = All.Where(x => x.Team == Team.Dire).ToList();
             Radiant = All.Where(x => x.Team == Team.Radiant).ToList();
@@ -76,7 +76,7 @@ namespace MeepoAnnihilation
         {
             All =
                 ObjectManager.GetEntities<Building>()
-                    .Where(x => x.IsAlive && x.ClassID == ClassID.CDOTA_BaseNPC_Tower)
+                    .Where(x => x.IsAlive && x.ClassId == ClassId.CDOTA_BaseNPC_Tower)
                     .ToList();
             Dire = All.Where(x => x.Team == Team.Dire).ToList();
             Radiant = All.Where(x => x.Team == Team.Radiant).ToList();
