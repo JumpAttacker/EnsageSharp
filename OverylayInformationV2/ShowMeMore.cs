@@ -139,7 +139,7 @@ namespace OverlayInformation
                             var position = particleEffect.GetPosition;
                             var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
                             var player =
-                                    ObjectManager.GetPlayerByID(
+                                    ObjectManager.GetPlayerById(
                                         (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
                             if (player == null || !player.IsValid)
                                 continue;
@@ -201,7 +201,7 @@ namespace OverlayInformation
                         safeList.Add(particleEffect);
                         var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
                         var player =
-                                ObjectManager.GetPlayerByID(
+                                ObjectManager.GetPlayerById(
                                     (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
                         if (player == null || !player.IsValid)
                             continue;
@@ -280,7 +280,7 @@ namespace OverlayInformation
                 Log.Debug($"Wrong id: {id} || clr: {color.PrintVector()}");
                 return;
             }
-            var player = ObjectManager.GetPlayerByID(id);
+            var player = ObjectManager.GetPlayerById(id);
             var dontTryToFindBoots = false;
             if (player == null || !player.IsValid)
             {
@@ -795,7 +795,7 @@ namespace OverlayInformation
                     {
                         var baseList =
                             ObjectManager.GetEntities<Unit>()
-                                .Where(x => x.IsAlive && x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team != Members.MyHero.Team && !Bombs.Contains(x));
+                                .Where(x => x.IsAlive && x.ClassId == ClassId.CDOTA_NPC_TechiesMines && x.Team != Members.MyHero.Team && !Bombs.Contains(x));
                         foreach (var unit in baseList)
                         {
                             Bombs.Add(unit);

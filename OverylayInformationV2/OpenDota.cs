@@ -158,13 +158,13 @@ namespace OverlayInformation
                 _loaded = true;
                 for (uint i = 0; i < Game.MaximumClients; i++)
                 {
-                    var player = ObjectManager.GetPlayerByID(i);
+                    var player = ObjectManager.GetPlayerById(i);
                     if (player == null || !player.IsValid || player.IsFakeClient)
                         continue;
                     try
                     {
                         Printer.PrintSuccess(new string('-', Console.BufferWidth));
-                        var steamId = player.PlayerSteamID;
+                        var steamId = player.PlayerSteamId;
                         Log.Debug($"Player({i}): {player.Name} => id: {steamId}");
                         if (steamId <= 10)
                         {

@@ -41,7 +41,7 @@ namespace OverlayInformation
             Members.RoshanSeconds = tickDelta % 60;
             var roshan =
                 ObjectManager.GetEntities<Unit>()
-                    .FirstOrDefault(unit => unit.ClassID == ClassID.CDOTA_Unit_Roshan && unit.IsAlive);
+                    .FirstOrDefault(unit => unit.ClassId == ClassId.CDOTA_Unit_Roshan && unit.IsAlive);
             if (roshan != null)
             {
                 Members.RoshIsAlive = true;

@@ -23,7 +23,7 @@ namespace OverlayInformation
         private static int B => Members.Menu.Item("shrineHelper.Blue").GetValue<Slider>().Value;
         private static int Alpha => Members.Menu.Item("shrineHelper.Alpha").GetValue<Slider>().Value;
         private static bool _firstTime = true;
-        private const ClassID SrineClass = ClassID.CDOTA_BaseNPC_Healer;
+        private const ClassId SrineClass = ClassId.CDOTA_BaseNPC_Healer;
         private static List<Unit> _shrineList=new List<Unit>();
         private static readonly Dictionary<Unit, ParticleEffect> Effects = new Dictionary<Unit, ParticleEffect>();
         private static Sleeper _sleeper = new Sleeper();
@@ -62,7 +62,7 @@ namespace OverlayInformation
                 _firstTime = false;
                 _shrineList =
                     ObjectManager.GetEntities<Unit>()
-                        .Where(x => x.IsValid && x.IsAlive && x.ClassID == SrineClass && x.Team == Members.MyPlayer.Team)
+                        .Where(x => x.IsValid && x.IsAlive && x.ClassId == SrineClass && x.Team == Members.MyPlayer.Team)
                         .ToList();
                 Game.OnUpdate += args =>
                 {
@@ -141,7 +141,7 @@ namespace OverlayInformation
                 ObjectManager.OnRemoveEntity += args =>
                 {
                     var shrine = args.Entity;
-                    if (shrine.ClassID == SrineClass)
+                    if (shrine.ClassId == SrineClass)
                         _shrineList.Remove(shrine as Unit);
                 };
             }

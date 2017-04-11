@@ -138,7 +138,7 @@ namespace OverlayInformation
                 {
                     continue;
                 }
-                if (hero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
+                if (hero.ClassId == ClassId.CDOTA_Unit_Hero_MonkeyKing)
                 {
                     var mod = hero.Modifiers.Any(x=>x.Name== "modifier_monkey_king_fur_army_soldier_hidden");
                     if (mod)
@@ -228,7 +228,7 @@ namespace OverlayInformation
                     {
                         return;
                     }
-                    if (hero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
+                    if (hero.ClassId == ClassId.CDOTA_Unit_Hero_MonkeyKing)
                     {
                         var mod = hero.Modifiers.Any(x => x.Name == "modifier_monkey_king_fur_army_soldier_hidden");
                         if (mod)

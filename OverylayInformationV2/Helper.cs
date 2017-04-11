@@ -87,7 +87,7 @@ namespace OverlayInformation
         /// <returns></returns>
         public static Ability GetItemById(this Unit owner, ItemId itemId)
         {
-            return owner.Inventory.Items.FirstOrDefault(x => x!=null && x.IsValid && x.AbilityData2.ID == (uint)itemId);
+            return owner.Inventory.Items.FirstOrDefault(x => x!=null && x.IsValid && (uint)x.AbilityData.Id == (uint)itemId);
         }
         public static void GenerateSideMessage(string hero, string spellName)
         {
