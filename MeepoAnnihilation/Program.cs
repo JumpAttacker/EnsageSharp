@@ -167,7 +167,7 @@ namespace MeepoAnnihilation
                 new MenuItem("Drawing.posX", "OverlayMenu pos X").SetValue(new Slider(120, 0,
                     500)));
             drawingMenu.AddItem(
-                new MenuItem("Drawing.posY", "OverlayMenu pos Y").SetValue(new Slider(95, 0,
+                new MenuItem("Drawing.posY", "OverlayMenu pos Y").SetValue(new Slider(137, 0,
                     500)));
             drawingMenu.AddItem(
                 new MenuItem("Drawing.Size", "OverlayMenu size").SetValue(new Slider(75, 0,
@@ -224,7 +224,6 @@ namespace MeepoAnnihilation
 
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
-            
             if (!Menu.Item("Enable").GetValue<bool>()) return;
             if (MyHero == null || !MyHero.IsValid || !MyHero.IsAlive) return;
             var me = sender.Selection.First();
@@ -244,15 +243,22 @@ namespace MeepoAnnihilation
                 (args.OrderId == OrderId.AbilityLocation || args.OrderId == OrderId.AbilityTarget) &&
                 args.Ability.StoredName() == SpellW[MyHero.Handle].Name)
             {
-                var pos = args.TargetPosition; 
-                foreach (var meepo in _selectedMeepo.Where(x => !Equals(x, me)))
+                if (Utils.SleepCheck("meepo_anal_dick_shit"))
                 {
-                    var handle = meepo.Handle;
-                    var spell = SpellW[handle];
-                    if (spell.CanBeCasted())
+                    Utils.Sleep(Game.Ping*2.5f, "meepo_anal_dick_shit");
+                    var pos = args.TargetPosition;
+                    foreach (var meepo in _selectedMeepo.Where(x => !Equals(x, me)))
                     {
-                        //spell.UseAbility(meepo.Position);
-                        spell.UseAbility(pos);
+                        var handle = meepo.Handle;
+                        var spell = SpellW[handle];
+                        if (spell == null)
+                        {
+                            continue;
+                        }
+                        if (spell.CanBeCasted())
+                        {
+                            spell.UseAbility(pos);
+                        }
                     }
                 }
             }
@@ -1355,10 +1361,15 @@ namespace MeepoAnnihilation
             return enemyHeroes.FirstOrDefault();
         }
 
-        private static void Print(string s,bool print=false)
+        private static void Print(string s,bool print=true)
         {
             if (print)
                 Game.PrintMessage(s);
+        }
+
+        private static string PrintVector(this Vector3 s)
+        {
+            return $"({s.X}:{s.Y}:{s.Z})";
         }
 
         private static float GetRealCastRange(this Ability ability)
@@ -1460,5 +1471,23 @@ namespace MeepoAnnihilation
         }
 
         #endregion
+    }
+    internal class Printer
+    {
+        private static readonly ILog Logger = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static void Print(string s)
+        {
+            Game.PrintMessage(s);
+        }
+        public static void Log(object s)
+        {
+            Logger.Debug(s);
+        }
+        public static void Both(object s)
+        {
+            Logger.Debug(s);
+            Console.WriteLine(s);
+            Game.PrintMessage(s.ToString());
+        }
     }
 }
