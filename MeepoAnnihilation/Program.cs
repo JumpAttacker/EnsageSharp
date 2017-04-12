@@ -225,6 +225,8 @@ namespace MeepoAnnihilation
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
             if (!Menu.Item("Enable").GetValue<bool>()) return;
+            if (!args.IsPlayerInput)
+                return;
             if (MyHero == null || !MyHero.IsValid || !MyHero.IsAlive) return;
             var me = sender.Selection.First();
             var order = args.OrderId;
@@ -243,22 +245,18 @@ namespace MeepoAnnihilation
                 (args.OrderId == OrderId.AbilityLocation || args.OrderId == OrderId.AbilityTarget) &&
                 args.Ability.StoredName() == SpellW[MyHero.Handle].Name)
             {
-                if (Utils.SleepCheck("meepo_anal_dick_shit"))
+                var pos = args.TargetPosition;
+                foreach (var meepo in _selectedMeepo.Where(x => !Equals(x, me)))
                 {
-                    Utils.Sleep(Game.Ping*2.5f, "meepo_anal_dick_shit");
-                    var pos = args.TargetPosition;
-                    foreach (var meepo in _selectedMeepo.Where(x => !Equals(x, me)))
+                    var handle = meepo.Handle;
+                    var spell = SpellW[handle];
+                    if (spell == null)
                     {
-                        var handle = meepo.Handle;
-                        var spell = SpellW[handle];
-                        if (spell == null)
-                        {
-                            continue;
-                        }
-                        if (spell.CanBeCasted())
-                        {
-                            spell.UseAbility(pos);
-                        }
+                        continue;
+                    }
+                    if (spell.CanBeCasted())
+                    {
+                        spell.UseAbility(pos);
                     }
                 }
             }
