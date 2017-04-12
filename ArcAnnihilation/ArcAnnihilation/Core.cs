@@ -461,6 +461,8 @@ namespace ArcAnnihilation
         **/
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
+            if (!args.IsPlayerInput)
+                return;
             #region code for monkey
             if (Menu.Item("order").GetValue<StringList>().SelectedIndex == (int)Orders.Monkey && !Menu.Item("AutoPush.Enable").GetValue<KeyBind>().Active)
             {
