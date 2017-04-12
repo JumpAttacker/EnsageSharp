@@ -24,7 +24,7 @@ namespace MorphlingAnnihilation.Interface
         {
             _abilitySleeper = new MultiSleeper();
             Me = me;
-            Log.Debug($"[new]: {me.ClassID}");
+            Log.Debug($"[new]: {me.ClassId}");
         }
         
         public virtual void AttackTarget(Hero target, bool follow = false)

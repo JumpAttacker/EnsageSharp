@@ -18,7 +18,7 @@ namespace MorphlingAnnihilation.Interface
         protected StandartUnit(Hero me)
         {
             Me = me;
-            Log.Debug($"[new]: {me.ClassID}");
+            Log.Debug($"[new]: {me.ClassId}");
         }
         public virtual void AttackTarget(Hero target=null, bool follow = false)
         {

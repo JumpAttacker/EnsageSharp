@@ -41,3 +41,12 @@ E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilatio
 E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\obj\x64\Debug\InvokerAnnihilation.exe
 E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\obj\x64\Debug\InvokerAnnihilation.pdb
 E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\obj\x64\Debug\InvokerAnnihilation.csproj.InvokerAnnihilation.exe.config
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\clipper_library.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\Ensage.SDK.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\PlaySharp.Toolkit.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\SharpDX.Direct2D1.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\SharpDX.Direct3D11.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\SharpDX.DXGI.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\SharpDX.Mathematics.dll
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\clipper_library.pdb
+E:\Ensage\EnsageSharp\EnsageSharp\InvTest\InvokerAnnihilation\InvokerAnnihilation\bin\Debug\Ensage.SDK.pdb
