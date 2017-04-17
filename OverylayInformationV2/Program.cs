@@ -445,16 +445,19 @@ namespace OverlayInformation
             Members.DamageCalculation = new DamageCalculation();
             Members.AbilityOverlay = new AbilityOverlay();
 
-            if (Drawing.Direct3DDevice9 != null)
-                Members.RoshanFont = new Font(
-                    Drawing.Direct3DDevice9,
-                    new FontDescription
-                    {
-                        FaceName = "Tahoma",
-                        Height = 15,
-                        OutputPrecision = FontPrecision.Default,
-                        Quality = FontQuality.Default
-                    });
+            if (Drawing.RenderMode == RenderMode.Dx9)
+            {
+                if (Drawing.Direct3DDevice9 != null)
+                    Members.RoshanFont = new Font(
+                        Drawing.Direct3DDevice9,
+                        new FontDescription
+                        {
+                            FaceName = "Tahoma",
+                            Height = 15,
+                            OutputPrecision = FontPrecision.Default,
+                            Quality = FontQuality.Default
+                        });
+            }
             Members.Menu.AddToMainMenu();
         }
     }
