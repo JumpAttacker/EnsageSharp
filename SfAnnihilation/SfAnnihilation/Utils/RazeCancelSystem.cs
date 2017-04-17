@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Ensage;
+using Ensage.Common;
 using Ensage.Common.Objects.UtilityObjects;
 using SfAnnihilation.Features;
+using SharpDX;
 
 namespace SfAnnihilation.Utils
 {
-    public static class RazeCancelSystemNewOne
+    public static class RazeCancelSystem
     {
         public static Ability CurrenyAbility;
         public static Hero Target;
@@ -15,20 +17,38 @@ namespace SfAnnihilation.Utils
         public static float LifeTime;
         public static Sleeper Sleeper = new Sleeper();
 
-        static RazeCancelSystemNewOne()
+        static RazeCancelSystem()
         {
+            /*var effect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf", ObjectManager.LocalHero.Position);
+            effect.SetControlPoint(1, new Vector3(50, 255, 0));
+            effect.SetControlPoint(2, new Vector3(255, 0, 0));*/
             Game.OnIngameUpdate += args =>
             {
+                /*if (Target != null)
+                {
+                    var pred = Prediction.PredictedXYZ(Target, AbilityDelay - CustomDelay);
+                    effect.SetControlPoint(0, pred);
+                }*/
                 if (!IsValid)
-                    Core.Me.Stop();
+                {
+                    //Printer.Both($"Ability: {CurrenyAbility != null} Target: {Target != null} Phase: {CurrenyAbility?.IsInAbilityPhase} canHit: {CurrenyAbility.CanHit(Target, AbilityDelay - CustomDelay)} Alive: {Target?.IsAlive} Visible: {Target?.IsVisible} Sleeping: {Sleeper.Sleeping}");
+                    if (CurrenyAbility != null)
+                    {
+                        Core.Me.Stop();
+                        CurrenyAbility = null;
+                    }
+                    return;
+                }
+                
+                // Printer.Print($"Custom: {CustomDelay} Time: {AbilityDelay - CustomDelay}");
             };
         }
         
         public static bool IsValid
             =>
-                CurrenyAbility != null && Target != null && CurrenyAbility.IsInAbilityPhase &&
-                CurrenyAbility.CanHit(Target, Math.Max(0, AbilityDelay - CustomDelay)) &&
-                Target.IsAlive;
+                CurrenyAbility != null && Target != null && (CurrenyAbility.IsInAbilityPhase || Sleeper.Sleeping) &&
+                CurrenyAbility.CanHit(Target, AbilityDelay - CustomDelay) &&
+                Target.IsAlive /*&& Target.IsVisible*/;
 
         public static float CustomDelay => (Game.RawGameTime - StartTime)*1000;
         public static void InitNewMember(Ability s,Hero newTarget)
@@ -38,66 +58,6 @@ namespace SfAnnihilation.Utils
             StartTime = Game.RawGameTime;
             AbilityDelay = s.GetAbilityDelay();
             Sleeper.Sleep(AbilityDelay);
-        }
-    }
-    internal class RazeCancelSystem
-    {
-        public static List<StopElement> StopList = new List<StopElement>();
-        public static void Updater(EventArgs args)
-        {
-            var tempList=new List<StopElement>();
-            foreach (var element in StopList)
-            {
-                var ability = element.X;
-                var target = element.Target;
-
-                var customDelay = (Game.RawGameTime - element.StartTime)*1000;
-                var lifeTime = element.AbilityDelay - customDelay;
-                if (element.X.Equals(Core.RazeLow))
-                    Printer.Both(lifeTime);
-                if (ability.CanHit(target, Math.Max(0, lifeTime)) && target.IsAlive)
-                {
-                    if (element.Sleeper.Sleeping && lifeTime>0)
-                        tempList.Add(element);
-                }
-                else
-                {
-                    if (ability.IsInAbilityPhase)
-                    {
-                        Core.Me.Stop();
-                        if (element.X.Equals(Core.RazeLow))
-                            Printer.Both("===================STOP========================");
-                    }
-                }
-            }
-            StopList = tempList;
-        }
-
-        public static bool New(Ability s, Hero target)
-        {
-            if (StopList.Find(x => x.X.Equals(s)) != null) return false;
-            StopList.Add(new StopElement(s, target));
-            return true;
-        }
-
-        public class StopElement
-        {
-            public readonly Hero Target;
-            public Ability X { get; set; }
-            public Sleeper Sleeper;
-            public float StartTime;
-            public float AbilityDelay;
-            public StopElement(Ability x, Hero target)
-            {
-                Target = target;
-                X = x;
-                Sleeper = new Sleeper();
-                StartTime = Game.RawGameTime;
-                AbilityDelay = x.GetAbilityDelay();
-                Sleeper.Sleep(AbilityDelay);
-                if (x.Equals(Core.RazeLow))
-                    Printer.Both("===================NEW========================");
-            }
         }
     }
 }

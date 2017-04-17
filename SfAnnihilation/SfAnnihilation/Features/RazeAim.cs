@@ -29,7 +29,7 @@ namespace SfAnnihilation.Features
                              AbilityDamage.CalculateDamage(Core.RazeLow, Core.Me, x) > x.Health + x.HealthRegeneration));
             if (target != null)
             {
-                if (!KillStealer.Sleeping && Core.Razes.Any(x=>x.CanBeCasted() && x.CanHit(target,checkForFace:false)) && !Core.Razes.Any(y => y.IsInAbilityPhase))
+                if (!KillStealer.Sleeping && Core.Razes.Any(x=>x.CanBeCasted() && x.CanHit(target, x.GetAbilityDelay() + 50,false)) && !Core.Razes.Any(y => y.IsInAbilityPhase))
                 {
                     /*var mePos = Me.Position;
                     var targetPos = Prediction.PredictedXYZ(Target, 550);//Target.Position;

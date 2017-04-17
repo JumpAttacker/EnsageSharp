@@ -41,11 +41,12 @@ namespace SfAnnihilation.Features
             }
             
             if (MenuManager.UseRazeInCombo && Target.IsValidRazeTarget() && !Me.IsInvisible() &&
-                (!Orbwalker.CanAttack() || Me.GetAttackRange() <= Me.Distance2D(Target)))
+                (!Orbwalker.CanAttack() || Me.GetAttackRange() <= Me.Distance2D(Target)) && !RazeCancelSystem.IsValid)
             {
                 var r = Razes.OrderBy(x => Target.Distance2D(Prediction.InFront(Me, x.GetCastRange())));
                 foreach (var ability in r)
                 {
+                    
                     var razeStatus = Helper.RazeAimCasterTemp(ability, Target);
                     //var razeStatus = Helper.RazeCaster(ability, Target);
                     if (razeStatus)

@@ -35,59 +35,38 @@ namespace SfAnnihilation.Utils
         }
 
         /// <summary>
-        /// Razers Extensions
-        /// </summary>
-        /// <param name="ability"></param>
-        /// <param name="target"></param>
-        /// <param name="usePrediction"></param>
-        /// <param name="checkForFace"></param>
-        /// <returns></returns>
-        public static bool CanHit(this Ability ability, Hero target, bool usePrediction = false, bool checkForFace = true)
-        {
-            var aId = ability.GetAbilityId();
-            if (aId >= AbilityId.nevermore_shadowraze1 && aId <= AbilityId.nevermore_shadowraze3)
-            {
-                var radius = ability.GetRadius();
-                var range = ability.GetCastRange();
-                if (checkForFace)
-                {
-                    var predFontPos = Prediction.InFront(Core.Me, range);
-                    var pred = ability.GetPrediction(target);
-                    //var inRange = (usePrediction ? pred.Distance2D(predFontPos) : Target.Distance2D(predFontPos)) <= radius + Target.HullRadius;
-                    var inRange = target.Distance2D(predFontPos) <= radius + target.HullRadius;
-
-                    return inRange;
-                }
-                else
-                {
-                    var dist = target.Distance2D(Core.Me);
-                    var inRange = dist <= range + target.HullRadius + radius &&
-                                  dist >= range - target.HullRadius - radius;
-                    return inRange;
-                }
-            }
-            return AbilityExtensions.CanHit(ability, target);
-        }
-        /// <summary>
         /// with custom delay
         /// </summary>
         /// <param name="ability"></param>
         /// <param name="target"></param>
         /// <param name="customDelay"></param>
         /// <returns></returns>
-        public static bool CanHit(this Ability ability, Hero target, float customDelay)
+        public static bool CanHit(this Ability ability, Hero target, float customDelay, bool checkForFace = true)
         {
             var aId = ability.GetAbilityId();
             if (aId >= AbilityId.nevermore_shadowraze1 && aId <= AbilityId.nevermore_shadowraze3)
             {
-                var radius = ability.GetRadius();
-                var range = ability.GetCastRange();
-                var predFontPos = Prediction.InFront(Core.Me, range);
-                var pred = Prediction.PredictedXYZ(target, customDelay);
-                //var inRange = (usePrediction ? pred.Distance2D(predFontPos) : Target.Distance2D(predFontPos)) <= radius + Target.HullRadius;
-                var inRange = pred.Distance2D(predFontPos) <= radius + target.HullRadius;
+                if (checkForFace)
+                {
+                    var radius = ability.GetRadius();
+                    var range = ability.GetCastRange();
+                    var predFontPos = Prediction.InFront(Core.Me, range);
+                    var pred = Prediction.PredictedXYZ(target, customDelay);
+                    //var inRange = (usePrediction ? pred.Distance2D(predFontPos) : Target.Distance2D(predFontPos)) <= radius + Target.HullRadius;
+                    var inRange = pred.Distance2D(predFontPos) <= radius + target.HullRadius;
 
-                return inRange;
+                    return inRange;
+                }
+                else
+                {
+                    var radius = ability.GetRadius();
+                    var range = ability.GetCastRange();
+                    var pred = Prediction.PredictedXYZ(target, customDelay);
+                    var dist = pred.Distance2D(Core.Me);
+                    var inRange = dist <= (range + radius + target.HullRadius) && dist >= (range - radius - target.HullRadius);
+
+                    return inRange; 
+                }
             }
             return AbilityExtensions.CanHit(ability, target);
         }
@@ -117,7 +96,7 @@ namespace SfAnnihilation.Utils
                 StopSleeper.Sleep(Game.Ping+10, raze);
                 Printer.Print($"stop: [sl: {Core.RazeCanceler.Sleeping(raze)}] [ph: {raze.IsInAbilityPhase}]");
             }
-            else if (raze.CanHit(target,true, checkForAngle))
+            else if (raze.CanHit(target, raze.GetAbilityDelay() + 50, checkForAngle))
             {
                 if (Core.Razes.Any(x => x.IsInAbilityPhase))
                     return false;
@@ -135,18 +114,17 @@ namespace SfAnnihilation.Utils
             if (raze.IsInAbilityPhase) return true;
             if (!raze.CanHit(target, raze.GetAbilityDelay())) return false;
             raze.UseAbility();
-            RazeCancelSystem.New(raze, target);
+            RazeCancelSystem.InitNewMember(raze, target);
+            //RazeCancelSystem.New(raze, target);
             return true;
         }
         public static bool RazeAimCaster(Ability raze, Hero target, bool checkForAngle = true)
         {
             if (!raze.CanBeCasted()) return false;
             if (raze.IsInAbilityPhase) return true;
-            if (!raze.CanHit(target, true, checkForAngle)) return false;
-            if (RazeCancelSystem.New(raze, target))
-            {
-                raze.UseAbility();
-            }
+            if (!raze.CanHit(target, raze.GetAbilityDelay() + 50, checkForAngle)) return false;
+            raze.UseAbility();
+            RazeCancelSystem.InitNewMember(raze, target);
             return true;
 
         }
