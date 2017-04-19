@@ -601,7 +601,7 @@ namespace OverlayInformation
 
         }
         public static bool IsEnable
-            => Members.Menu.Item("toppanel.AllyVision.Type").GetValue<StringList>().SelectedIndex == 1;
+            => true/*Members.Menu.Item("toppanel.AllyVision.Type").GetValue<StringList>().SelectedIndex == 1*/;
         private static void DrawStatus(Vector2 pos, Hero hero, Vector2 size, int height = 7)
         {
             if (!Members.Menu.Item("toppanel.Status.Enable").GetValue<bool>()) return;

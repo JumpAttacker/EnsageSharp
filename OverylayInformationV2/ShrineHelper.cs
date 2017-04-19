@@ -63,6 +63,25 @@ namespace OverlayInformation
                     ObjectManager.GetEntities<Unit>()
                         .Where(x => x.IsValid && x.IsAlive && x.ClassId == SrineClass && x.Team == Members.MyPlayer.Team)
                         .ToList();
+                Entity.OnInt32PropertyChange += (sender, args) =>
+                {
+                    var me = sender as Unit;
+                    if (me?.ClassId == SrineClass)
+                    {
+                        if (args.PropertyName == "m_iTaggedAsVisibleByTeam")
+                        {
+                            //22 not vis
+                            //30 under vis
+                            
+                            var newValue = args.NewValue;
+                            var oldValue = args.OldValue;
+                            if (newValue != oldValue && newValue == 30)
+                            {
+                                
+                            }
+                        }
+                    }
+                };
                 Game.OnUpdate += args =>
                 {
                     if (_sleeper.Sleeping)

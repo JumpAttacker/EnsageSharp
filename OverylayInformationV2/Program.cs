@@ -5,6 +5,7 @@ using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
+using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
 using SharpDX.Direct3D9;
 using Color = SharpDX.Color;
@@ -458,9 +459,20 @@ namespace OverlayInformation
                             Quality = FontQuality.Default
                         });
             }
+            /*var sleeper=new Sleeper();
+            Game.OnUpdate += args =>
+            {
+                if (sleeper.Sleeping)
+                    return;
+                sleeper.Sleep(250);
+                Printer.Print("asd");
+                Unit test = null;
+                Printer.Print(test.ClassId.ToString());
+            };*/
             Members.Menu.AddToMainMenu();
         }
     }
+
     internal static class Program
     {
         private static void TestShit()
