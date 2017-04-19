@@ -23,14 +23,30 @@ namespace Techies_Annihilation
         public static bool CheckForAegis => Menu.Item("Settings.Aegis.Enable").GetValue<bool>();
 
         public static bool IsEnableForceStaff => GetBool("Settings.ForceStaff.Enable");
+        public static bool LandMineIndicatorEnable => GetBool("Drawing.LandMineStatus.Enable");
+        public static double GetLandMineIndicatorDigSize => GetSlider("Drawing.LandMineStatus.Dig.Size")/100f;
+        public static float GetLandMineBarSize => GetSlider("Drawing.LandMineStatus.Bar.Size");
+        public static bool LandMinesDrawDigs => GetBool("Drawing.LandMineStatus.Digs.Enable");
+        public static double GetBombDelay => GetSlider("Settings.Delay")/1000f;
+
+        public static bool IsEnableDelayBlow => GetBool("Settings.Delay.Enable");
 
         public static void Init()
         {
             Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var settings = new Menu("Settings", "Settings");
+            var delay = new Menu("Delay", "Delay");
             settings.AddItem(new MenuItem("Settings.Aegis.Enable", "Detonate in aegis").SetValue(true));
             settings.AddItem(new MenuItem("Settings.ForceStaff.Enable", "Enable ForceStaff").SetValue(true));
+            delay.AddItem(new MenuItem("Settings.Delay.Enable", "Enable").SetValue(false));
+            delay.AddItem(new MenuItem("Settings.Delay", "Delay bomb activation").SetValue(new Slider(150, 1, 500)));
             var draw = new Menu("Drawing", "Drawing");
+            var landMineIndicator = new Menu("Indicator", "Indicator");
+            landMineIndicator.AddItem(new MenuItem("Drawing.LandMineStatus.Enable", "Enable LandMine Indicator").SetValue(true));
+            landMineIndicator.AddItem(new MenuItem("Drawing.LandMineStatus.Digs.Enable", "Draw [%]").SetValue(true));
+            landMineIndicator.AddItem(
+                new MenuItem("Drawing.LandMineStatus.Bar.Size", "Indicator size").SetValue(new Slider(13, 5, 30)));
+            landMineIndicator.AddItem(new MenuItem("Drawing.LandMineStatus.Dig.Size", "Text size").SetValue(new Slider(100,50,150)));
             /*draw.AddItem(new MenuItem("Drawing.Range.LandMine", "Range for LandMine").SetValue(true));
             draw.AddItem(new MenuItem("Drawing.Range.StaticTrap", "Range for StaticTrap").SetValue(true));
             draw.AddItem(new MenuItem("Drawing.Range.RemoteMine", "Range for RemoteMine").SetValue(true));*/
@@ -48,9 +64,11 @@ namespace Techies_Annihilation
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages ingame").SetValue(false));
             devolper.AddItem(new MenuItem("Dev.Text2.enable", "Debug messages in console").SetValue(false));
             Menu.AddSubMenu(settings);
+            settings.AddSubMenu(delay);
             settings.AddSubMenu(draw);
             settings.AddSubMenu(perfomance);
             draw.AddSubMenu(topPanel);
+            draw.AddSubMenu(landMineIndicator);
             
             Menu.AddSubMenu(devolper);
             Menu.AddToMainMenu();

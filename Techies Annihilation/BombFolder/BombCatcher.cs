@@ -3,6 +3,7 @@ using Ensage;
 using Ensage.Common.Extensions;
 using SharpDX;
 using Techies_Annihilation.Features;
+using Techies_Annihilation.Utils;
 
 namespace Techies_Annihilation.BombFolder
 {
@@ -111,6 +112,8 @@ namespace Techies_Annihilation.BombFolder
                             {
                                 update.RangEffect.SetControlPoint(2, new Vector3(255, 255, 255));
                                 update.Active = true;
+                                if (update.Bomb.IsVisibleToEnemies)
+                                    update.Status = Enums.BombStatus.WillDetonate;
                             }
                         }
                         else
@@ -123,8 +126,15 @@ namespace Techies_Annihilation.BombFolder
                         }
                     }
                 }
+                else if (args.PropertyName== "m_iTaggedAsVisibleByTeam")
+                {
+                    var update = Core.Bombs.Find(z => z.Bomb.Equals(x));
+                    if (update != null)
+                    {
+                        update.Status = (Enums.BombStatus) args.NewValue;
+                    }
+                }
             }
-
         }
     }
 }

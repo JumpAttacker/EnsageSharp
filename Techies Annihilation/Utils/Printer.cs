@@ -10,7 +10,7 @@ namespace Techies_Annihilation.Utils
         private static readonly ILog Logger = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static void Print(string s, bool print = false)
         {
-            if (MenuManager.DebugInGame || print)
+            //if (MenuManager.DebugInGame || print)
                 Game.PrintMessage(s);
         }
         public static void Log(object s, bool print = false)

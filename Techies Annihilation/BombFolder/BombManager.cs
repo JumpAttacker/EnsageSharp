@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Net.Configuration;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -16,6 +18,26 @@ namespace Techies_Annihilation.BombFolder
         public ParticleEffect RangEffect;
         public bool Active;
         public Vector3 BombPosition;
+        public Dictionary<uint, float> HeroManager { get; set; }
+        private Enums.BombStatus _status;
+        public Enums.BombStatus Status
+        {
+            get { return _status; }
+            set
+            {
+                StatusStartTIme = Game.RawGameTime;
+                _status = value;
+                //Printer.Print($"changed to -> {_status} time: {StatusStartTIme}");
+            }
+        }
+
+        public float GetBombDelay(Hero target)
+        {
+            float temp;
+            return HeroManager.TryGetValue(target.Handle, out temp) ? Game.RawGameTime-temp : 0;
+        }
+
+        public float StatusStartTIme;
         public BombManager(Unit bomb, bool isRemoteMine)
         {
             Bomb = bomb;
@@ -34,6 +56,7 @@ namespace Techies_Annihilation.BombFolder
                     : new Vector3(100, 100, 100));
             BombPosition = bomb.Position;
             Active = bomb.NetworkActivity != NetworkActivity.Spawn;
+            HeroManager = new Dictionary<uint, float>();
             //Printer.Print($"Damage: {Damage} || Raduis: {Radius} || Activity: {bomb.NetworkActivity}");
         }
 
@@ -55,10 +78,29 @@ namespace Techies_Annihilation.BombFolder
 
         public bool CanHit(Hero target)
         {
+            var handle = target.Handle;
+
             var targetPos = target.Position;
-            if (!(targetPos.Distance2D(BombPosition) <= Radius)) return false;
+            if (!(targetPos.Distance2D(BombPosition) <= Radius))
+            {
+                HeroManager.Remove(handle);
+                return false;
+            }
             var pred = Prediction.PredictedXYZ(target, 250 + Game.Ping);
-            return pred.Distance2D(BombPosition) <= Radius;
+            var canHit = pred.Distance2D(BombPosition) <= Radius;
+            if (canHit)
+            {
+                float underHit;
+                if (!HeroManager.TryGetValue(handle, out underHit))
+                {
+                    HeroManager.Add(handle, Game.RawGameTime);
+                }
+            }
+            else
+            {
+                HeroManager.Remove(handle);
+            }
+            return canHit;
         }
         public bool CanHit(Vector3 targetPos,Hero target)
         {

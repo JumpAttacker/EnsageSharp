@@ -83,6 +83,7 @@
     <Compile Include="BombFolder\BombCatcher.cs" />
     <Compile Include="BombFolder\BombDamageManager.cs" />
     <Compile Include="BombFolder\BombManager.cs" />
+    <Compile Include="BombFolder\Enums.cs" />
     <Compile Include="Features\Core.cs" />
     <Compile Include="Features\DrawHelper.cs" />
     <Compile Include="Features\ForceStaff.cs" />

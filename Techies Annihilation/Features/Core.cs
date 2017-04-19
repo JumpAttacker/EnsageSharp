@@ -45,6 +45,12 @@ namespace Techies_Annihilation.Features
                     {
                         if (element.CanHit(hero))
                         {
+                            //Printer.Print($"BombDelay: {element.GetBombDelay(hero)} MaxDelay: {MenuManager.GetBombDelay}");
+                            if (MenuManager.IsEnableDelayBlow &&
+                                !(element.GetBombDelay(hero) >= MenuManager.GetBombDelay))
+                            {
+                                continue;
+                            }
                             heroHealth -= DamageHelpers.GetSpellDamage(element.Damage, spellAmp, reduction);
                             listForDetonation.Add(element);
                             if (heroHealth <= 0)
