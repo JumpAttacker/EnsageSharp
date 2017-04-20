@@ -48,9 +48,11 @@ namespace Techies_Annihilation.Utils
                 new[]
                 {
                     "modifier_dazzle_shallow_grave", "modifier_oracle_false_promise",
-                    "modifier_skeleton_king_reincarnation_scepter_active"
+                    "modifier_skeleton_king_reincarnation_scepter_active", "modifier_abaddon_borrowed_time"
                 },
-                false);
+                false) &&
+                      (hero.ClassId != ClassId.CDOTA_Unit_Hero_Abaddon ||
+                       !hero.GetAbilityById(Ensage.AbilityId.abaddon_borrowed_time).CanBeCasted());
             if (checkForAegis)
                 return mod && !hero.HasItem(ItemId.item_aegis);
             return mod;

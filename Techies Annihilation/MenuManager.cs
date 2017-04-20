@@ -1,6 +1,5 @@
 ﻿using Ensage.Common.Menu;
 using SharpDX;
-using SharpDX.Direct2D1;
 
 namespace Techies_Annihilation
 {

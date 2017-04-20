@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Configuration;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -10,15 +9,6 @@ using Techies_Annihilation.Utils;
 
 namespace Techies_Annihilation.BombFolder
 {
-    public class Stacker
-    {
-        public bool IsActive => Counter > 0;
-        public int Counter;
-        public Stacker()
-        {
-            Counter = 0;
-        }
-    }
     public class BombManager
     {
         private const float StackerRange=200f;
