@@ -3,6 +3,7 @@ using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using SharpDX;
+using Techies_Annihilation.BombFolder;
 using Techies_Annihilation.Features;
 using AbilityId = Ensage.Common.Enums.AbilityId;
 
@@ -53,6 +54,25 @@ namespace Techies_Annihilation.Utils
             if (checkForAegis)
                 return mod && !hero.HasItem(ItemId.item_aegis);
             return mod;
+        }
+
+        public static void InitNewStacker(this BombManager manager, BombManager ignreManager)
+        {
+            var closest =
+                    Core.Bombs.Where(
+                        x =>
+                            !x.Equals(ignreManager) && x.IsRemoteMine && x.Stacker.IsActive &&
+                            x.BombPosition.Distance2D(manager.BombPosition) <= 200)
+                        .OrderBy(y => y.BombPosition.Distance2D(manager.BombPosition))
+                        .FirstOrDefault();
+            if (closest != null)
+            {
+                closest.Stacker.Counter++;
+            }
+            else
+            {
+                manager.Stacker.Counter++;
+            }
         }
     }
 }

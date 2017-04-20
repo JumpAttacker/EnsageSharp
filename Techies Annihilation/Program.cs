@@ -20,6 +20,7 @@ namespace Techies_Annihilation
                 Game.OnIngameUpdate += Core.OnUpdate;
                 Drawing.OnDraw += DrawHelper.OnDraw;
                 Drawing.OnDraw += BombStatus.OnDraw;
+                Drawing.OnDraw += StackDrawing.OnDraw;
                 ObjectManager.OnAddEntity += BombCatcher.OnAddEntity;
                 ObjectManager.OnRemoveEntity += BombCatcher.OnRemoveEntity;
                 Entity.OnInt32PropertyChange += BombCatcher.OnInt32Change;

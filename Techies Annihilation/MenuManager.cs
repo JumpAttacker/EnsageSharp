@@ -30,6 +30,7 @@ namespace Techies_Annihilation
         public static double GetBombDelay => GetSlider("Settings.Delay")/1000f;
 
         public static bool IsEnableDelayBlow => GetBool("Settings.Delay.Enable");
+        public static bool IsStackerEnabled => GetBool("Drawing.Stacker.Enable");
 
         public static void Init()
         {
@@ -41,6 +42,8 @@ namespace Techies_Annihilation
             delay.AddItem(new MenuItem("Settings.Delay.Enable", "Enable").SetValue(false));
             delay.AddItem(new MenuItem("Settings.Delay", "Delay bomb activation").SetValue(new Slider(150, 1, 500)));
             var draw = new Menu("Drawing", "Drawing");
+            var stacker = new Menu("Stacker", "Stacker");
+            stacker.AddItem(new MenuItem("Drawing.Stacker.Enable", "Enable").SetValue(true));
             var landMineIndicator = new Menu("Indicator", "Indicator");
             landMineIndicator.AddItem(new MenuItem("Drawing.LandMineStatus.Enable", "Enable LandMine Indicator").SetValue(true));
             landMineIndicator.AddItem(new MenuItem("Drawing.LandMineStatus.Digs.Enable", "Draw [%]").SetValue(true));
@@ -69,6 +72,7 @@ namespace Techies_Annihilation
             settings.AddSubMenu(perfomance);
             draw.AddSubMenu(topPanel);
             draw.AddSubMenu(landMineIndicator);
+            draw.AddSubMenu(stacker);
             
             Menu.AddSubMenu(devolper);
             Menu.AddToMainMenu();

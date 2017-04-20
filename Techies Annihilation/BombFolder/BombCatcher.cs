@@ -25,6 +25,7 @@ namespace Techies_Annihilation.BombFolder
             var remove = Core.Bombs.Find(x => x.Bomb.Equals(bomb));
             if (remove != null)
             {
+                remove.UnStacker();
                 Core.Bombs.Remove(remove);
                 remove.RangEffect.Dispose();
                 //Printer.Both("Removed: "+remove.Bomb.Handle);
