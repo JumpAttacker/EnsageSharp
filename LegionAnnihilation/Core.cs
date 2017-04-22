@@ -107,12 +107,12 @@ namespace Legion_Annihilation
                            !Members.MyHero.HasModifiers(new[]
                            {"modifier_item_invisibility_edge_windwalk", "modifier_item_silver_edge_windwalk"}) &&
                            !ComboSleeper.Sleeping("invisAction");
-            if (notInInvis)
+            if (notInInvis || !MenuManager.IsInvisEnable)
             {
                 if (Members.MyHero.FindItem("item_blink", true) != null)
                     await UseBlink(target, cancellationToken);
-                else if (Members.MyHero.FindItem("item_invis_sword", true) != null ||
-                         Members.MyHero.FindItem("item_silver_edge", true) != null)
+                else if (MenuManager.IsInvisEnable && (Members.MyHero.FindItem("item_invis_sword", true) != null ||
+                         Members.MyHero.FindItem("item_silver_edge", true) != null))
                     await UseInvis(target, cancellationToken);
                 //await UseAbility(new Ability(), Target, cancellationToken);
 

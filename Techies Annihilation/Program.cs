@@ -16,6 +16,7 @@ namespace Techies_Annihilation
                 if (me.ClassId!=ClassId.CDOTA_Unit_Hero_Techies)
                     return;
                 MenuManager.Init();
+
                 Core.Init(me);
                 Game.OnIngameUpdate += Core.OnUpdate;
                 Drawing.OnDraw += DrawHelper.OnDraw;

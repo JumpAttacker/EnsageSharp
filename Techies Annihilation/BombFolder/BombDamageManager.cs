@@ -46,7 +46,7 @@ namespace Techies_Annihilation.BombFolder
             
             Game.OnUpdate += args =>
             {
-                if (sleeper.Sleeping)
+                if (sleeper.Sleeping || !MenuManager.IsEnable)
                     return;
                 sleeper.Sleep(MenuManager.GetUpdateSpeed);
                 // ReSharper disable once RedundantCheckBeforeAssignment

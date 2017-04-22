@@ -30,6 +30,7 @@ namespace Techies_Annihilation
 
         public static bool IsEnableDelayBlow => GetBool("Settings.Delay.Enable");
         public static bool IsStackerEnabled => GetBool("Drawing.Stacker.Enable");
+        public static bool IsEnable => GetBool("Enable");
 
         public static void Init()
         {

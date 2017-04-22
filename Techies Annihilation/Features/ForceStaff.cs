@@ -16,7 +16,7 @@ namespace Techies_Annihilation.Features
         private static readonly Sleeper Updater = new Sleeper();
         public static void OnUpdate(EventArgs args)
         {
-            if (!MenuManager.IsEnableForceStaff || Updater.Sleeping)
+            if (!MenuManager.IsEnableForceStaff || Updater.Sleeping || !MenuManager.IsEnable)
                 return;
             Updater.Sleep(1);
             var forceStuff = Core.Me.GetItemById(AbilityId.item_force_staff);

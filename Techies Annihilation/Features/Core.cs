@@ -30,6 +30,8 @@ namespace Techies_Annihilation.Features
         public static MultiSleeper HeroSleeper=new MultiSleeper();
         public static void OnUpdate(EventArgs args)
         {
+            if (!MenuManager.IsEnable)
+                return;
             var spellAmp = 0;//UnitExtensions.GetSpellAmplification(Me);
             foreach (var hero in Heroes.GetByTeam(EnemyTeam))      
             {

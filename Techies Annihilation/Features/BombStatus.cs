@@ -12,7 +12,7 @@ namespace Techies_Annihilation.Features
         private const float BombMaxTimer = 1.6f;
         public static void OnDraw(EventArgs args)
         {
-            if (!Enable) return;
+            if (!Enable || !MenuManager.IsEnable) return;
             foreach (
                 var bomb in
                     Core.Bombs.Where(x => x.Active && !x.IsRemoteMine && x.Status == Enums.BombStatus.WillDetonate))

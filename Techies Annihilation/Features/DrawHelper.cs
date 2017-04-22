@@ -11,6 +11,8 @@ namespace Techies_Annihilation.Features
     {
         public static void OnDraw(EventArgs args)
         {
+            if ( !MenuManager.IsEnable)
+                return;
             foreach (var heroCont in BombDamageManager.DamageContainers)
             {
                 DrawOnTopPanel(heroCont);

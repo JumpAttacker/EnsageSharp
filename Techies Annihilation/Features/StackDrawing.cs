@@ -10,7 +10,7 @@ namespace Techies_Annihilation.Features
     {
         public static void OnDraw(EventArgs args)
         {
-            if (!MenuManager.IsStackerEnabled) return;
+            if (!MenuManager.IsStackerEnabled || !MenuManager.IsEnable) return;
             foreach (var bomb in Core.Bombs.Where(x=>x.IsRemoteMine && x.Active && x.Stacker.IsActive))
             {
                 var topPos = HUDInfo.GetHPbarPosition(bomb.Bomb);
