@@ -106,11 +106,15 @@ namespace OverlayInformation
         private static bool _loaded;
         private static readonly bool Init;
         private static bool Check => Game.GameState == GameState.HeroSelection;
+        private static bool IsEnable => Members.Menu.Item("OpenDota.Enable").GetValue<bool>();
         static OpenDota()
         {
+            if (!IsEnable)
+                return;
             if (Init)
                 return;
             Init = true;
+            Printer.PrintInfo("[OpenDota] Init");
             if (Drawing.RenderMode != RenderMode.Dx9)
             {
                 Printer.Print("You're using not dx9, OpenDota helper will not working!", true);
@@ -162,6 +166,7 @@ namespace OverlayInformation
             if (Check)
             {
                 _loaded = true;
+                Printer.PrintInfo("[OpenDota] Loaded");
                 for (uint i = 0; i < Game.MaximumClients; i++)
                 {
                     var player = ObjectManager.GetPlayerById(i);

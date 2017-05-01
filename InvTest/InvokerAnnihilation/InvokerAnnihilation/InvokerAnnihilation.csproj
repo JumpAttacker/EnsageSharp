@@ -39,44 +39,44 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="clipper_library">
-      <HintPath>C:\Program Files (x86)\En\References\clipper_library.dll</HintPath>
+      <HintPath>C:\En\References\clipper_library.dll</HintPath>
     </Reference>
     <Reference Include="Ensage, Version=0.0.0.1, Culture=neutral, PublicKeyToken=a41ba14f653257a6, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\En\References\Ensage.dll</HintPath>
+      <HintPath>C:\En\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common, Version=1.2.5.7, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\En\References\Ensage.Common.dll</HintPath>
+      <HintPath>C:\En\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.SDK">
-      <HintPath>C:\Program Files (x86)\En\References\Ensage.SDK.dll</HintPath>
+      <HintPath>C:\En\References\Ensage.SDK.dll</HintPath>
     </Reference>
     <Reference Include="PlaySharp.Toolkit">
-      <HintPath>C:\Program Files (x86)\En\References\PlaySharp.Toolkit.dll</HintPath>
+      <HintPath>C:\En\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\En\References\SharpDX.dll</HintPath>
+      <HintPath>C:\En\References\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct2D1, Version=2.6.3.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\En\References\SharpDX.Direct2D1.dll</HintPath>
+      <HintPath>C:\En\References\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D11, Version=2.6.3.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\En\References\SharpDX.Direct3D11.dll</HintPath>
+      <HintPath>C:\En\References\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\En\References\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>C:\En\References\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DXGI, Version=2.6.3.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\En\References\SharpDX.DXGI.dll</HintPath>
+      <HintPath>C:\En\References\SharpDX.DXGI.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics">
-      <HintPath>C:\Program Files (x86)\En\References\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>C:\En\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

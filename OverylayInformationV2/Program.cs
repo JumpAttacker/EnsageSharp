@@ -530,7 +530,6 @@ namespace OverlayInformation
         private static void Main()
         {
             //TestShit();
-            _openDota = new OpenDota();
             Events.OnLoad += (sender, args) =>
             {
                 MenuManager.Init();
@@ -539,7 +538,7 @@ namespace OverlayInformation
                     Members.MyHero = ObjectManager.LocalHero;
                     Members.MyClass = Members.MyHero.ClassId;
                     Members.MyPlayer = ObjectManager.LocalPlayer;
-
+                    _openDota = new OpenDota();
                     ShrineHelper.Init();
                     Members.AbilityDictionary = new Dictionary<uint, List<Ability>>();
                     Members.ItemDictionary = new Dictionary<uint, List<Item>>();
