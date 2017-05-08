@@ -70,7 +70,7 @@ namespace Legion_Annihilation
         {
             var oldOne = args.GetOldValue<KeyBind>().Active;
             var newOne = args.GetNewValue<KeyBind>().Active;
-            if (oldOne == newOne || newOne) return;
+            if (oldOne == newOne && newOne) return;
             try
             {
                 _tks.Cancel();
