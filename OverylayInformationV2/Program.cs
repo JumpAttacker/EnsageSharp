@@ -569,14 +569,14 @@ namespace OverlayInformation
                     AutoItems.Flush();
                     Game.OnUpdate += RoshanAction.Roshan;
                     Game.OnUpdate += Game_OnUpdate;
-
-                    Drawing.OnDraw += DrawHelper.Overlay;
-
-                    Drawing.OnDraw += ItemPanel.Draw;
-                    Drawing.OnDraw += NewItemPanel.OnDraw;
-                    ShowMeMore.Flush();
-                    Drawing.OnDraw += ShowMeMore.Draw;
-
+                    DelayAction.Add(500, () =>
+                    {
+                        Drawing.OnDraw += DrawHelper.Overlay;
+                        Drawing.OnDraw += ItemPanel.Draw;
+                        Drawing.OnDraw += NewItemPanel.OnDraw;
+                        ShowMeMore.Flush();
+                        Drawing.OnDraw += ShowMeMore.Draw;
+                    });
 
                     Entity.OnParticleEffectAdded += ShowMeMore.Entity_OnParticleEffectAdded;
 
