@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
-using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using SharpDX;
 
 namespace TemplarAnnihilation
 {
-    
     internal class Program
     {
         private static bool _loaded;
@@ -21,7 +17,7 @@ namespace TemplarAnnihilation
         {
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var settings = new Menu("Settings", "Settings");
-
+            settings.AddItem(new MenuItem("Combo.key", "Combo").SetValue(new KeyBind('0')));
             settings.AddItem(new MenuItem("Range.Enable", "Psi Baldes Helper").SetValue(true)).ValueChanged +=
                 (sender, args) =>
                 {
@@ -38,6 +34,7 @@ namespace TemplarAnnihilation
             
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
+            devolper.AddItem(new MenuItem("Dev.Console.enable", "Debug to console").SetValue(false));
             devolper.AddItem(new MenuItem("Dev.Drawing.enable", "Debug drawing").SetValue(false));
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
@@ -48,6 +45,7 @@ namespace TemplarAnnihilation
                     return;
                 Load();
                 _loaded = true;
+                
             };
             if (!_loaded && ObjectManager.LocalHero != null &&
                 ObjectManager.LocalHero.ClassId == Members.MyClassId && Game.IsInGame)
@@ -78,17 +76,19 @@ namespace TemplarAnnihilation
                 Members.MyTeam = ObjectManager.LocalHero.Team;
             }
             _updater = new Sleeper();
-            Orbwalking.Load();
-            Members.Items = new List<string>();
             Members.Menu.AddToMainMenu();
             Game.OnUpdate += Action.Game_OnUpdate;
             Drawing.OnDraw += Action.OnDrawing;
             Game.OnUpdate += UpdateItems;
-            if (Members.Menu.Item("Range.Enable").GetValue<bool>())
+            DelayAction.Add(500, () =>
             {
-                Printer.Print("fist drawing!");
-                DrawRange();
-            }
+                if (Members.Menu.Item("Range.Enable").GetValue<bool>())
+                {
+                    Printer.Print("fist drawing!");
+                    DrawRange();
+                }
+                Orbwalker.GetNewOrbwalker(Members.MyHero).Load();
+            });
         }
 
         private static void DrawRange()

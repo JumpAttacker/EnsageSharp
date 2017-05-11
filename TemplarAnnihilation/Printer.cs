@@ -1,10 +1,14 @@
 using System;
+using System.Reflection;
 using Ensage;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 
 namespace TemplarAnnihilation
 {
     internal static class Printer
     {
+        private static readonly ILog Logger = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #region Helpers
         public static void PrintInfo(string text, params object[] arguments)
         {
@@ -33,6 +37,14 @@ namespace TemplarAnnihilation
         {
             if (print || Members.Menu.Item("Dev.Text.enable").GetValue<bool>())
                 Game.PrintMessage(str);
+        }
+
+        public static void Both(object s, bool print = false)
+        {
+            if (print || Members.Menu.Item("Dev.Console.enable").GetValue<bool>())
+                Logger.Debug(s);
+            if (print || Members.Menu.Item("Dev.Text.enable").GetValue<bool>())
+                Game.PrintMessage(s.ToString());
         }
         #endregion
     }

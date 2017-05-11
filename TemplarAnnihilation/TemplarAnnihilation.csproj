@@ -80,6 +80,7 @@
     <Compile Include="EfeectMaster.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Members.cs" />
+    <Compile Include="OrbWalking.cs" />
     <Compile Include="Printer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

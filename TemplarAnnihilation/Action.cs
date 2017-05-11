@@ -15,7 +15,6 @@ namespace TemplarAnnihilation
         private static bool IsEnable => Menu.Item("Enable").GetValue<bool>();
         private static bool IsRangeEnable => Menu.Item("Range.Enable").GetValue<bool>();
 
-        public static Hero GlobalTarget;
         private static MultiSleeper _spellSleeper;
         private static EfeectMaster _rangeEfeectMaster;
 
@@ -94,7 +93,7 @@ namespace TemplarAnnihilation
 
         private static void DrawPsiBladeStuff()
         {
-            var psiBlade = Abilities.FindAbility("templar_assassin_psi_blades");
+            var psiBlade = ObjectManager.LocalHero.GetAbilityById(AbilityId.templar_assassin_psi_blades);
             if (psiBlade==null || psiBlade.Level==0)
                 return;
             _enemyHeroes =
@@ -105,7 +104,7 @@ namespace TemplarAnnihilation
                 ObjectManager.GetEntitiesFast<Creep>()
                     .Where(
                         x =>
-                            x.IsAlive && x.IsVisible && (x.Team != MyTeam || (float)x.Health / (float)x.MaximumHealth < 0.50) &&
+                            x!=null && x.IsValid && x.IsSpawned && x.IsAlive && x.IsVisible && (x.Team != MyTeam || (float)x.Health / (float)x.MaximumHealth < 0.50) &&
                             x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius);
             
             var extraRange = 550 + 40 * psiBlade.Level;
@@ -115,7 +114,6 @@ namespace TemplarAnnihilation
                         x.Team != MyTeam && x.IsAlive && x.IsVisible &&
                         x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius + extraRange)
                     .ToList();
-            var myPos = MyHero.Position;
             foreach (var hero in _enemyHeroes)
             {
                 var heroPos = hero.Position;
@@ -164,7 +162,6 @@ namespace TemplarAnnihilation
                 var someOne = false;
                 foreach (var possibleHero in _enemyPossibleHeroes)
                 {
-
                     var posHeroPos = possibleHero.Position;
                     var pointer = new Point((int)posHeroPos.X, (int)posHeroPos.Y);
                     var masPoints = Helper.GetNeededPoinits(heroPos, point, 75);
