@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4D386BB6-25A8-4F0A-A0C0-048081FA522F}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ArcAnnihilation</RootNamespace>
+    <AssemblyName>ArcAnnihilation</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <PreBuildEvent />
+    <PostBuildEvent />
+    <OutputPath>bin\Release</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="clipper_library">
+      <HintPath>C:\En\References\clipper_library.dll</HintPath>
+    </Reference>
+    <Reference Include="Ensage, Version=0.0.0.1, Culture=neutral, PublicKeyToken=a41ba14f653257a6, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\Ensage.dll</HintPath>
+    </Reference>
+    <Reference Include="Ensage.Common, Version=1.2.5.6, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\Ensage.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Ensage.SDK">
+      <HintPath>C:\En\References\Ensage.SDK.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PlaySharp.Service">
+      <HintPath>C:\En\References\PlaySharp.Service.dll</HintPath>
+    </Reference>
+    <Reference Include="PlaySharp.Toolkit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\PlaySharp.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1">
+      <HintPath>C:\En\References\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11">
+      <HintPath>C:\En\References\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI">
+      <HintPath>C:\En\References\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>C:\En\References\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.1.37.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AutoMidas.cs" />
+    <Compile Include="Core.cs" />
+    <Compile Include="Panels\PushLaneSelector.cs" />
+    <Compile Include="Panels\InfoPanel.cs" />
+    <Compile Include="Manager\CreepManager.cs" />
+    <Compile Include="Manager\IllusionManager.cs" />
+    <Compile Include="Panels\ItemPanel.cs" />
+    <Compile Include="Manager\NecronomiconManager.cs" />
+    <Compile Include="Manager\TempestManager.cs" />
+    <Compile Include="OrderState\AutoPushing.cs" />
+    <Compile Include="OrderState\DefaultCombo.cs" />
+    <Compile Include="OrderState\Idle.cs" />
+    <Compile Include="OrderState\Order.cs" />
+    <Compile Include="OrderState\SparkSpam.cs" />
+    <Compile Include="OrderState\SparkSpamTempest.cs" />
+    <Compile Include="OrderState\TempestCombo.cs" />
+    <Compile Include="Units\behaviour\Abilities\CanNotUseAbilties.cs" />
+    <Compile Include="Units\behaviour\Abilities\CanUseAbilitiesNecroArcher.cs" />
+    <Compile Include="Units\behaviour\Enabled\MainHeroAbilityChecker.cs" />
+    <Compile Include="Units\behaviour\Enabled\TempestAbilityChecker.cs" />
+    <Compile Include="Units\behaviour\Items\CanNotUseItems.cs" />
+    <Compile Include="Units\behaviour\Orbwalking\CantUseOrbwalking.cs" />
+    <Compile Include="Units\behaviour\Abilities\CanUseAbilities.cs" />
+    <Compile Include="Units\behaviour\Items\CanUseItems.cs" />
+    <Compile Include="Units\behaviour\Orbwalking\CanUseOrbwalking.cs" />
+    <Compile Include="Units\behaviour\Abilities\ICanUseAbilties.cs" />
+    <Compile Include="Units\behaviour\Items\ICanUseItems.cs" />
+    <Compile Include="Units\behaviour\Orbwalking\ICanUseOrbwalking.cs" />
+    <Compile Include="Units\behaviour\Enabled\IAbilityChecker.cs" />
+    <Compile Include="Units\behaviour\Orders\ComboExecutor.cs" />
+    <Compile Include="Units\behaviour\Orders\DefaultComboExecutor.cs" />
+    <Compile Include="Units\UnitBase.cs" />
+    <Compile Include="OrderManager.cs" />
+    <Compile Include="Units\Illusion.cs" />
+    <Compile Include="Units\MainHero.cs" />
+    <Compile Include="Units\Necronomicon.cs" />
+    <Compile Include="Units\Tempest.cs" />
+    <Compile Include="Utils\Helper.cs" />
+    <Compile Include="MenuManager.cs" />
+    <Compile Include="Utils\OrbWalking.cs" />
+    <Compile Include="Manager\ParticleManager.cs" />
+    <Compile Include="Utils\Printer.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

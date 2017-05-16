@@ -139,11 +139,11 @@ namespace OverlayInformation
 
                             var position = particleEffect.GetPosition;
                             var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
-                            var player =
+                            /*var player =
                                     ObjectManager.GetPlayerById(
                                         (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
                             if (player == null || !player.IsValid)
-                                continue;
+                                continue;*/
 
                             if (!pos.IsZero)
                             {
@@ -204,23 +204,23 @@ namespace OverlayInformation
                         var player =
                                 ObjectManager.GetPlayerById(
                                     (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
-                        if (player == null || !player.IsValid)
-                            continue;
-                        var hero = player.Hero;
+                        /*if (player == null || !player.IsValid)
+                            continue;*/
+                        var hero = player?.Hero;
                         if (!pos.IsZero)
                         {
                             var size = new Vector2(MiniMapSize);
                             /*Drawing.DrawRect(pos - size, size,
                                 new Color(particleEffect.GetColor.X, particleEffect.GetColor.Y,
                                     particleEffect.GetColor.Z));*/
-                            
+
                             //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
-                            if (MinimapType)
-                                Drawing.DrawRect(pos - size/2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
+                            if (MinimapType && hero!=null)
+                                Drawing.DrawRect(pos - size / 2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
                             else
                             {
-                                Drawing.DrawRect(pos - size/2, size, (Color) particleEffect.GetColor);
-                                Drawing.DrawRect(pos - size/2, size, Color.Black, true);
+                                Drawing.DrawRect(pos - size / 2, size, (Color) particleEffect.GetColor);
+                                Drawing.DrawRect(pos - size / 2, size, Color.Black, true);
                             }
                         }
                         pos = DrawOnMap ? Drawing.WorldToScreen(position) : new Vector2();
@@ -247,7 +247,7 @@ namespace OverlayInformation
                                 var time = particleEffect.GetTimer - (Game.RawGameTime - particleEffect.GetStartTime);
                                 if (time > 0)
                                     Drawing.DrawText(
-                                        $"{time.ToString("0.0")}",
+                                        $"{time:0.0}",
                                         pos + new Vector2(0, size.Y), new Vector2(TimerSize), Color.White,
                                         FontFlags.None);
                             }
@@ -272,13 +272,14 @@ namespace OverlayInformation
         {
             if (isStart)
             {
-                //_effectList.Add(new TeleportEffect(effect, position, color, false, true, 5));
+                _effectList.Add(new TeleportEffect(effect, position, color, false, true, 5));
                 return;
             }
             var id = (uint) ColorList.FindIndex(x => x == color);
             if (id > 10)
             {
-                Log.Debug($"Wrong id: {id} || clr: {color.PrintVector()}");
+                Printer.Print($"Wrong id: {id} || clr: {color.PrintVector()}");
+                //Log.Debug($"Wrong id: {id} || clr: {color.PrintVector()}");
                 return;
             }
             var player = ObjectManager.GetPlayerById(id);
@@ -286,7 +287,7 @@ namespace OverlayInformation
             if (player == null || !player.IsValid)
             {
                 Printer.Print("error #" + id + " (cant find player!)");
-                Log.Debug("error #" + id + $" (cant find player!) clr: {color.PrintVector()}");
+                //Log.Debug("error #" + id + $" (cant find player!) clr: {color.PrintVector()}");
                 return;
             }
             if (player.Hero == null || !player.Hero.IsValid)
@@ -304,7 +305,8 @@ namespace OverlayInformation
                 }
                 catch
                 {
-                    Printer.Print($"error in travels: player: {player.Name} || hero: {player?.Hero?.Name}",print: true);   
+                    Printer.Print($"error in travels: player: {player.Name} || hero: {player?.Hero?.Name}",print: true);
+                    Log.Debug($"error in travels: player: {player.Name} || hero: {player?.Hero?.Name}");
                 }
                 
                 var closestTower =
