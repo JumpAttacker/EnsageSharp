@@ -21,7 +21,7 @@ namespace ArcAnnihilation.Manager
                 {
                     var hero = args.Entity as Hero;
                     if (hero == null || !hero.IsIllusion || hero.Team != Core.MainHero.Hero.Team || !hero.IsControllable ||
-                        !hero.HasModifier("modifier_kill")) return;
+                        hero.HasModifier("modifier_kill")) return;
 
                     Printer.Both("added illusion: " + hero.Name);
                     var ill = new Illusion(hero);
