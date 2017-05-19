@@ -29,6 +29,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
         {
             if (!unitBase.Hero.CanUseItems())
                 return true;
+            var counter = 0;
             foreach (var ability in unitBase.GetItems())
             {
                 if (!ability.CanBeCasted(Core.Target))
@@ -70,7 +71,10 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     {
                         var isDisable = ability.IsDisable();
                         if (Core.Target.IsLinkensProtected() && isDisable)
+                        {
+                            counter++;
                             continue;
+                        }
                         if (ability.GetItemId() == ItemId.item_ethereal_blade &&
                             unitBase.GetItems()
                                 .Any(
@@ -91,10 +95,16 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             if (slarkMod && isDisable)
                                 continue;
                             if (ability.GetItemId() == ItemId.item_sheepstick && GlobalHexSleeper.Sleeping)
+                            {
+                                counter++;
                                 continue;
+                            }
                             if ((ability.GetItemId() == ItemId.item_orchid ||
                                  ability.GetItemId() == ItemId.item_bloodthorn) && GlobalOrchidSleeper.Sleeping)
+                            {
+                                counter++;
                                 continue;
+                            }
                             if (isDisable)
                             {
                                 if (Core.Target.IsUnitState(UnitState.Stunned) ||
@@ -102,7 +112,10 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                 {
                                     var time = Ensage.Common.Utils.DisableDuration(Core.Target);
                                     if (time >= 0.35f)
+                                    {
+                                        counter++;
                                         continue;
+                                    }
                                 }
                                 ability.UseAbility(Core.Target);
                                 GlobalHexSleeper.Sleep(800);
@@ -112,7 +125,10 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                 if (ability.IsSilence())
                                 {
                                     if (Core.Target.IsSilenced())
+                                    {
+                                        counter++;
                                         continue;
+                                    }
                                     GlobalOrchidSleeper.Sleep(800);
                                 }
                                 ability.UseAbility(Core.Target);
@@ -135,7 +151,10 @@ namespace ArcAnnihilation.Units.behaviour.Items
                         pos *= firstDist <= ability.TravelDistance() ? 50 : MenuManager.GetBlinkExtraRange;
                         pos = Core.Target.NetworkPosition - pos;
                         if (pos.Distance2D(unitBase.Hero.NetworkPosition) < MenuManager.GetBlinkMinRange)
+                        {
+                            counter++;
                             continue;
+                        }
                         ability.UseAbility(pos);
                     }
                     else
@@ -148,7 +167,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     $"[{unitBase}][item] {ability.Name} ({delayTime}) [After Blink: {_afterBlink.Sleeping}] [{ability.TravelDistance()}]");
                 await Await.Delay(delayTime, Core.ComboToken.Token);
             }
-            return !unitBase.GetItems().Any(x => x.CanBeCasted() || x.GetItemId() == ItemId.item_blink);
+            return unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter;
         }
     }
 }

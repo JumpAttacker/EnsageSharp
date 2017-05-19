@@ -18,12 +18,14 @@ namespace ArcAnnihilation.Manager
 
         private void Callback()
         {
-            GetCreeps =
-                ObjectManager.GetEntitiesFast<Creep>()
+            GetCreeps = EntityManager<Creep>.Entities.Where(unit =>
+                unit.IsValid && unit.IsAlive && unit.IsSpawned).ToList();
+
+            /*ObjectManager.GetEntitiesFast<Creep>()
                     .Where(
                         unit =>
                             unit.IsValid && unit.IsAlive && unit.IsSpawned)
-                    .ToList();
+                    .ToList();*/
         }
 
         public static CreepManager GetCreepManager()
