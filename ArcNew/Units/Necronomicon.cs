@@ -6,6 +6,7 @@ using ArcAnnihilation.Units.behaviour.Abilities;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
 using ArcAnnihilation.Utils;
 using Ensage;
+using Ensage.Common.Threading;
 
 namespace ArcAnnihilation.Units
 {
@@ -66,7 +67,19 @@ namespace ArcAnnihilation.Units
     {
         public MeleeNecr(Unit necr) : base(necr)
         {
+            OrbwalkingBehaviour = new CanUseOrbwalkingOnlyForPushing();
+        }
+        public override async Task Combo(CancellationToken cancellationToken)
+        {
+            await TargetFinder(cancellationToken);
+            await Attack(cancellationToken);
+        }
 
+        private async Task Attack(CancellationToken cancellationToken)
+        {
+            if (this.Orbwalker.CanAttack(Core.Target))
+                this.Necr.Attack(Core.Target);
+            await Await.Delay(250,cancellationToken);
         }
     }
 }

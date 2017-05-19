@@ -15,12 +15,14 @@ namespace ArcAnnihilation.Units.behaviour.Items
         private static readonly Sleeper GlobalHexSleeper = new Sleeper();
         private static readonly Sleeper GlobalOrchidSleeper = new Sleeper();
         private readonly Sleeper _afterBlink;
+        private readonly Sleeper _afterInvis;
         private readonly MultiSleeper _multiSleeper;
 
         public CanUseItems()
         {
             _multiSleeper = new MultiSleeper();
             _afterBlink = new Sleeper();
+            _afterInvis = new Sleeper();
         }
 
         public async Task<bool> UseItems(UnitBase unitBase)
@@ -31,9 +33,12 @@ namespace ArcAnnihilation.Units.behaviour.Items
             {
                 if (!ability.CanBeCasted(Core.Target))
                     continue;
-                var canHit = ability.CanHit(Core.Target) || _afterBlink.Sleeping;
+                var canHit = (ability.GetItemId() == ItemId.item_blink
+                                 ? unitBase.Hero.Distance2D(Core.Target) - MenuManager.GetBlinkExtraRange <
+                                   ability.TravelDistance()
+                                 : ability.CanHit(Core.Target)) || _afterBlink.Sleeping;
                 var isNoTarget = ability.IsAbilityBehavior(AbilityBehavior.NoTarget) &&
-                                 unitBase.Hero.Distance2D(Core.Target) <= 750;
+                                 (unitBase.Hero.Distance2D(Core.Target) <= 750 || ability.IsInvis());
                 if (!canHit && !isNoTarget)
                 {
                     Printer.Both($"{ability.Name} cant hit target!");
@@ -42,9 +47,16 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 /*if (isNoTarget && unitBase.Hero.Distance2D(Core.Target)>=800)
                     continue;*/
                 // if (canHit || _afterBlink)
+                if (_afterInvis.Sleeping || unitBase.Hero.IsInvisible())
+                {
+                    Printer.Both($"{ability.Name} cant cast, cuz under invis!");
+                    continue;
+                }
                 var delayTime = 0;
                 if (ability.IsAbilityBehavior(AbilityBehavior.NoTarget))
                 {
+                    if (ability.IsInvis())
+                        _afterInvis.Sleep(500);
                     ability.UseAbility();
                 }
                 else if (ability.IsAbilityBehavior(AbilityBehavior.UnitTarget))
@@ -118,8 +130,12 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     {
                         _afterBlink.Sleep(500);
                         var pos = (Core.Target.NetworkPosition - unitBase.Hero.NetworkPosition).Normalized();
-                        pos *= 50;
+                        var firstDist = Core.Target.NetworkPosition.Distance2D(unitBase.Hero.NetworkPosition);
+                        Printer.Both($"FirstDist: {firstDist}");
+                        pos *= firstDist <= ability.TravelDistance() ? 50 : MenuManager.GetBlinkExtraRange;
                         pos = Core.Target.NetworkPosition - pos;
+                        if (pos.Distance2D(unitBase.Hero.NetworkPosition) < MenuManager.GetBlinkMinRange)
+                            continue;
                         ability.UseAbility(pos);
                     }
                     else
@@ -129,10 +145,10 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 }
                 delayTime = ability.GetAbilityDelay();
                 Printer.Both(
-                    $"[{unitBase}][item] {ability.Name} ({delayTime}) [After Blink: {_afterBlink.Sleeping}] [{ability.AbilityBehavior}]");
+                    $"[{unitBase}][item] {ability.Name} ({delayTime}) [After Blink: {_afterBlink.Sleeping}] [{ability.TravelDistance()}]");
                 await Await.Delay(delayTime, Core.ComboToken.Token);
             }
-            return !unitBase.GetItems().Any(x => x.CanBeCasted());
+            return !unitBase.GetItems().Any(x => x.CanBeCasted() || x.GetItemId() == ItemId.item_blink);
         }
     }
 }

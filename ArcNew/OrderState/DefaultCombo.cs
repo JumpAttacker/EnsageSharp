@@ -11,7 +11,7 @@ namespace ArcAnnihilation.OrderState
                 Core.MainHero.ExTask(Core.MainHero.Combo(Core.ComboToken.Token));
             if (Core.TempestHero != null && Core.TempestHero.CanCallCombo)
                 Core.TempestHero.ExTask(Core.TempestHero.Combo(Core.ComboToken.Token));
-            foreach (var necronomicon in NecronomiconManager.GetRangeNecronomicons)
+            foreach (var necronomicon in NecronomiconManager.GetNecronomicons)
                 if (necronomicon.CanCallCombo)
                     necronomicon.ExTask(necronomicon.Combo(Core.ComboToken.Token));
         }

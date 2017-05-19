@@ -43,6 +43,8 @@ namespace ArcAnnihilation
             {ItemId.item_abyssal_blade.ToString(), 5},
             {ItemId.item_diffusal_blade.ToString(), 5},
             {ItemId.item_black_king_bar.ToString(), 5},
+            {ItemId.item_silver_edge.ToString(), 8},
+            {ItemId.item_invis_sword.ToString(), 8},
             {"item_arcane_boots", 1},
             {"item_guardian_greaves", 1},
             {"item_shivas_guard", 1},
@@ -119,6 +121,30 @@ namespace ArcAnnihilation
                     ? ItemId.item_dagon
                     : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);
 
+        public static void SetPushLanePanelPosition(int x, int y)
+        {
+            Menu.Item("PushLaneSelector.X").SetValue(new Slider(x, 0, 2000));
+            Menu.Item("PushLaneSelector.Y").SetValue(new Slider(y, 0, 2000));
+        }
+        public static void SetInfoPanelPosition(int x, int y)
+        {
+            Menu.Item("InfoPanel.X").SetValue(new Slider(x, 0, 2000));
+            Menu.Item("InfoPanel.Y").SetValue(new Slider(y, 0, 2000));
+        }
+
+        
+
+        public static bool PushLanePanelCanBeMovedByMouse => GetBool("PushLaneSelector.Moving");
+        public static bool ItemPanelCanBeMovedByMouse => GetBool("InfoPanel.Moving");
+        public static bool PushLanePanelHide => GetBool("PushLaneSelector.Hide");
+        public static Vector2 GetPushLanePanelPosition
+            => new Vector2(GetSlider("PushLaneSelector.X"), GetSlider("PushLaneSelector.Y"));
+        public static Vector2 GetInfoPanelPosition
+            => new Vector2(GetSlider("InfoPanel.X"), GetSlider("InfoPanel.Y"));
+
+        public static float GetBlinkExtraRange => GetSlider("Blink.ExtraRange");
+        public static float GetBlinkMinRange => GetSlider("Blink.MinRange");
+
         public static void Init()
         {
             Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
@@ -155,6 +181,14 @@ namespace ArcAnnihilation
                 .ValueChanged += PushLaneSelector.OnChange;
             pushLaneSelectorPanel.AddItem(
                 new MenuItem("PushLaneSelector.Size", "Text Size").SetValue(new Slider(30, 1, 70)));
+            pushLaneSelectorPanel.AddItem(
+                new MenuItem("PushLaneSelector.Hide", "Hide if current order isnt Push or Idle").SetValue(true));
+            pushLaneSelectorPanel.AddItem(
+                new MenuItem("PushLaneSelector.Moving", "Move by mouse").SetValue(false));
+            pushLaneSelectorPanel.AddItem(
+                new MenuItem("PushLaneSelector.X", "Pos X").SetValue(new Slider(10, 0, 2000)));
+            pushLaneSelectorPanel.AddItem(
+                new MenuItem("PushLaneSelector.Y", "Pos Y").SetValue(new Slider(350, 0, 2000)));
             var autoPushingSettings = new Menu("AutoPushing Settings", "AutoPushingSettings");
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.Travels", "Enable travel boots").SetValue(true));
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.AutoTargetting", "Do tempest combo").SetValue(true))
@@ -164,10 +198,23 @@ namespace ArcAnnihilation
             infoPanel.AddItem(new MenuItem("InfoPanel.Enable", "Enable").SetValue(true)).ValueChanged +=
                 InfoPanel.OnChange;
             infoPanel.AddItem(new MenuItem("InfoPanel.Size", "Text Size").SetValue(new Slider(30, 1, 70)));
-
+            infoPanel.AddItem(
+                new MenuItem("InfoPanel.Moving", "Move by mouse").SetValue(false));
+            infoPanel.AddItem(
+                new MenuItem("InfoPanel.X", "Pos X").SetValue(new Slider(10, 0, 2000)));
+            infoPanel.AddItem(
+                new MenuItem("InfoPanel.Y", "Pos Y").SetValue(new Slider(350, 0, 2000)));
             var mainHero = new Menu("For Main Hero", "mainHero");
             var spellHero = new Menu("Spells:", "HeroSpells");
             var itemHero = new Menu("Items:", "HeroItems");
+
+            var blink = new Menu("Blink Settings", "Blink Settings", textureName: "item_blink",
+                showTextWithTexture: true);
+            blink.AddItem(
+                    new MenuItem("Blink.ExtraRange", "Extra range").SetValue(new Slider(50, 0, 600)))
+                .SetTooltip("blink dist(1200 by def) + this value");
+            blink.AddItem(
+                new MenuItem("Blink.MinRange", "Min range for blink").SetValue(new Slider(400, 0, 600)));
 
             var tempest = new Menu("Tempest", "tempest");
             var spellTempest = new Menu("Spells:", "TempestSpells");
@@ -196,21 +243,28 @@ namespace ArcAnnihilation
 
 
             settings.AddSubMenu(usages);
+            settings.AddSubMenu(keys);
+            settings.AddSubMenu(panels);
+            settings.AddSubMenu(autoPushingSettings);
+
+
             usages.AddSubMenu(mainHero);
             usages.AddSubMenu(tempest);
+            usages.AddSubMenu(blink);
+
             mainHero.AddSubMenu(spellHero);
             mainHero.AddSubMenu(itemHero);
+
             tempest.AddSubMenu(spellTempest);
             tempest.AddSubMenu(itemTempest);
-            settings.AddSubMenu(panels);
 
-            Menu.AddSubMenu(settings);
-            settings.AddSubMenu(keys);
+
             panels.AddSubMenu(itemPanel);
             panels.AddSubMenu(infoPanel);
             panels.AddSubMenu(pushLaneSelectorPanel);
-            settings.AddSubMenu(autoPushingSettings);
 
+
+            Menu.AddSubMenu(settings);
             Menu.AddSubMenu(devolper);
             Menu.AddToMainMenu();
         }

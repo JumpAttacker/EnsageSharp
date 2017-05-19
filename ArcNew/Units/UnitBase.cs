@@ -90,14 +90,14 @@ namespace ArcAnnihilation.Units
         public virtual void Init()
         {
             InitAbilities();
-            if (OrbwalkingBehaviour is CanUseOrbwalking)
+            if (OrbwalkingBehaviour is CanUseOrbwalking || OrbwalkingBehaviour is CanUseOrbwalkingOnlyForPushing)
             {
                 Orbwalker = Orbwalker.GetNewOrbwalker(this);
                 Orbwalker.Load();
             }
             try
             {
-                Printer.Both($"[{this}][init] -> [{Hero?.Name}] [{Hero?.Handle}] [{Orbwalker.GetHashCode()}]");
+                Printer.Both($"[{this}][init] -> [{Hero?.Name}] [{Hero?.Handle}] [{Orbwalker?.GetHashCode()}]");
             }
             catch (Exception e)
             {

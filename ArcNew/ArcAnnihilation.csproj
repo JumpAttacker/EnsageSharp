@@ -103,6 +103,7 @@
   <ItemGroup>
     <Compile Include="AutoMidas.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="Panels\Movable.cs" />
     <Compile Include="Panels\PushLaneSelector.cs" />
     <Compile Include="Panels\InfoPanel.cs" />
     <Compile Include="Manager\CreepManager.cs" />
@@ -128,6 +129,7 @@
     <Compile Include="Units\behaviour\Orbwalking\CanUseOrbwalking.cs" />
     <Compile Include="Units\behaviour\Abilities\ICanUseAbilties.cs" />
     <Compile Include="Units\behaviour\Items\ICanUseItems.cs" />
+    <Compile Include="Units\behaviour\Orbwalking\CanUseOrbwalkingOnlyForPushing.cs" />
     <Compile Include="Units\behaviour\Orbwalking\ICanUseOrbwalking.cs" />
     <Compile Include="Units\behaviour\Enabled\IAbilityChecker.cs" />
     <Compile Include="Units\behaviour\Orders\ComboExecutor.cs" />

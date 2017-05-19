@@ -8,25 +8,34 @@ using SharpDX;
 
 namespace ArcAnnihilation.Panels
 {
-    public class InfoPanel
+    public class InfoPanel : Movable
     {
         private static InfoPanel _panel;
         private bool _loaded;
-
-        private static void OnDrawing(EventArgs args)
+        
+        private void OnDrawing(EventArgs args)
         {
             if (!MenuManager.IsEnable)
                 return;
             var isIdle = !OrderManager.CurrentOrder.CanBeExecuted;
-            if (isIdle)
+            if (isIdle && !MenuManager.ItemPanelCanBeMovedByMouse)
                 return;
             var isAutoPushing = OrderManager.CurrentOrder as AutoPushing;
             var isDefaultCombo = OrderManager.CurrentOrder as DefaultCombo;
             var isSparkSpam = OrderManager.CurrentOrder as SparkSpam;
             var isSparkSpamTempest = OrderManager.CurrentOrder as SparkSpamTempest;
             var isTempestCombo = OrderManager.CurrentOrder as TempestCombo;
-            var startPos = new Vector2(10, 350);
+            var startPos = MenuManager.GetInfoPanelPosition;//new Vector2(10, 350);
             var tSize = new Vector2(MenuManager.GetInfoPanelSize);
+            if (MenuManager.ItemPanelCanBeMovedByMouse)
+            {
+                var tempSize = new Vector2(200, 200);
+                if (CanMoveWindow(ref startPos, tempSize, true))
+                {
+                    MenuManager.SetInfoPanelPosition((int) startPos.X, (int) startPos.Y);
+                    return;
+                }
+            }
             if (isAutoPushing != null && !PushLaneSelector.GetInstance().Loaded)
             {
                 var lane = isAutoPushing.ClosestLane;
@@ -70,14 +79,17 @@ namespace ArcAnnihilation.Panels
         public void Load()
         {
             if (_loaded) return;
+            LoadMovable();
             Drawing.OnDraw += OnDrawing;
             _loaded = true;
             Printer.Both("[InfoPanel] loaded");
         }
+
         public void UnLoad()
         {
             if (!_loaded) return;
             _loaded = false;
+            UnloadMovable();
             Drawing.OnDraw -= OnDrawing;
             Printer.Both("[InfoPanel] unloaded");
         }

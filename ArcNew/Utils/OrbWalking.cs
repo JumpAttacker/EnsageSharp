@@ -120,7 +120,7 @@ namespace ArcAnnihilation.Utils
                         var creep =
                             CreepManager.GetCreepManager().GetCreeps.Where(
                                 unit =>
-                                    unit.IsValid && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit)).OrderBy(x=>x.Health).FirstOrDefault();
+                                    unit.IsValid && unit.Team != Owner.Team && (Owner.IsValidOrbwalkingTarget(unit) || Owner.Distance2D(unit)<=500)).OrderBy(x=>x.Health).FirstOrDefault();
 
                         if (creep != null)
                         {
@@ -214,7 +214,8 @@ namespace ArcAnnihilation.Utils
                 (OrderManager.CurrentOrder == OrderManager.Orders.TempestCombo && (isTempest != null ||
                  !(BasicUnit is MainHero))))
             {
-                Mode = OrbwalkingMode.Combo;
+                if (BasicUnit.OrbwalkingBehaviour is CanUseOrbwalking)
+                    Mode = OrbwalkingMode.Combo;
             }
             else if (OrderManager.CurrentOrder == OrderManager.Orders.AutoPushing)
             {

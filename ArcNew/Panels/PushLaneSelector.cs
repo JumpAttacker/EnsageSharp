@@ -11,7 +11,7 @@ using MouseEventArgs = Ensage.SDK.Input.MouseEventArgs;
 
 namespace ArcAnnihilation.Panels
 {
-    public class PushLaneSelector
+    public class PushLaneSelector : Movable
     {
         public class Button
         {
@@ -37,6 +37,7 @@ namespace ArcAnnihilation.Panels
         public bool Loaded;
         public string GetSelectedLane => _buttons.FirstOrDefault(x => x.Active)?.Text;
         private readonly Button[] _buttons;
+        
         public PushLaneSelector()
         {
             Input = new InputManager();
@@ -55,19 +56,33 @@ namespace ArcAnnihilation.Panels
             if (!MenuManager.IsEnable)
                 return;
             var canGo = OrderManager.CurrentOrder is AutoPushing || OrderManager.CurrentOrder is Idle;
-            if (!canGo)
+            if (!canGo && MenuManager.PushLanePanelHide)
                 return;
-            var startPos = new Vector2(10, 350);
+            var startPos = MenuManager.GetPushLanePanelPosition;//new Vector2(10, 350);
             var size = MenuManager.GetPushLaneSelectorSize;
             var text = _buttons[0].Text;
             var order = OrderManager.CurrentOrder as AutoPushing;
-            if (_buttons[0].Active && order != null)
+            if (_buttons[0].Active && order?.ClosestLane != null)
             {
                 text += $" {order.ClosestLane.Name}";
             }
             var textSize = Drawing.MeasureText($"{text}", "Arial",
                 new Vector2(size), FontFlags.None);
-            Drawing.DrawRect(startPos, new Vector2(textSize.X, textSize.Y * 4), new Color(0, 0, 0, 155));
+            var rectSize = new Vector2(textSize.X, textSize.Y * 4);
+            if (MenuManager.PushLanePanelCanBeMovedByMouse)
+            {
+                if (CanMoveWindow(ref startPos, rectSize))
+                {
+                    MenuManager.SetPushLanePanelPosition((int) startPos.X, (int) startPos.Y);
+                }
+            }
+            Drawing.DrawRect(startPos, rectSize, new Color(0, 0, 0, 155));
+            if (OrderManager.CurrentOrder is AutoPushing)
+                Drawing.DrawRect(startPos - new Vector2(1, 1), rectSize + new Vector2(2, 2), new Color(0, 255, 0, 255),
+                    true);
+            else
+                Drawing.DrawRect(startPos - new Vector2(1, 1), rectSize + new Vector2(2, 2), new Color(155, 0, 0, 255),
+                    true);
             var count = 0;
             foreach (var button in _buttons)
             {
@@ -78,6 +93,7 @@ namespace ArcAnnihilation.Panels
         public void Load()
         {
             if (Loaded) return;
+            LoadMovable();
             Drawing.OnDraw += OnDrawing;
             Loaded = true;
             Input.MouseClick += OnMouseClick;
@@ -87,6 +103,7 @@ namespace ArcAnnihilation.Panels
         {
             if (!Loaded) return;
             Loaded = false;
+            UnloadMovable();
             Drawing.OnDraw -= OnDrawing;
             Input.MouseClick -= OnMouseClick;
             Printer.Both($"[{this}] unloaded");

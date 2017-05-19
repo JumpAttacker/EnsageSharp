@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ArcAnnihilation.Units.behaviour.Orbwalking;
 using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common.Extensions;
@@ -10,15 +11,17 @@ namespace ArcAnnihilation.Units
         public Illusion(Hero s)
         {
             Hero = s;
+            OrbwalkingBehaviour = new CanUseOrbwalking();
+            CooldownOnMoving = 0.05f;
         }
         public bool IsValid => Hero != null && Hero.IsValid;
-        public override void Init()
+        /*public override void Init()
         {
             Orbwalker = Orbwalker.GetNewOrbwalker(this);
             Orbwalker.Load();
             Printer.Both($"[Illusion][init] -> {Hero.GetRealName()} [{Hero.Handle}]");
             CooldownOnMoving = 0.05f;
-        }
+        }*/
 
         public override void InitAbilities()
         {

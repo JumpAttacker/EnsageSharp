@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcAnnihilation.Manager;
 using ArcAnnihilation.Panels;
+using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
@@ -103,19 +105,19 @@ namespace ArcAnnihilation.OrderState
 
         public override void Execute()
         {
-            if (Core.TempestHero!=null && Core.TempestHero.IsAlive)
+            if (Core.TempestHero != null && Core.TempestHero.Hero.IsAlive)
             {
                 if (Core.TempestHero.Orbwalker.GetTarget() == null)
                 {
-                    ClosestLane = GetClosestLane();
+                    ClosestLane = GetClosestLane(Core.TempestHero.Hero);
                     var lastPoint = ClosestLane.Points[ClosestLane.Points.Count - 1];
                     ClosestLane.ClosestPosition =
                         ClosestLane.Points.Where(
                                 x =>
                                     x.Distance2D(lastPoint) < Core.TempestHero.Hero.Position.Distance2D(lastPoint) - 300)
-                            .OrderBy(CheckForDist)
+                            .OrderBy(pos => CheckForDist(pos, Core.TempestHero.Hero))
                             .FirstOrDefault();
-                    
+
                     if (ClosestLane.ClosestPosition != null && !ClosestLane.ClosestPosition.IsZero)
                     {
                         if (MenuManager.UseTravels)
@@ -131,7 +133,7 @@ namespace ArcAnnihilation.OrderState
                                     CreepManager.GetCreepManager()
                                         .GetCreeps.Where(x => x.Team != ObjectManager.LocalHero.Team);
                                 Creep creepForTravels = null;
-                                
+
                                 foreach (var v in temp)
                                 {
                                     creepForTravels = CreepManager.GetCreepManager()
@@ -143,7 +145,7 @@ namespace ArcAnnihilation.OrderState
                                     if (creepForTravels != null)
                                         break;
                                 }
-                                if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero)>1500)
+                                if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero) > 1500)
                                 {
                                     travels.UseAbility(creepForTravels);
                                     _sleeper.Sleep(500);
@@ -154,6 +156,21 @@ namespace ArcAnnihilation.OrderState
                             return;
                         _sleeper.Sleep(250);
                         Core.TempestHero.Hero.Move(ClosestLane.ClosestPosition);
+                        try
+                        {
+                            foreach (var illusion in IllusionManager.GetIllusions)
+                            {
+                                illusion.Hero.Move(ClosestLane.ClosestPosition);
+                            }
+                            foreach (var necro in NecronomiconManager.GetNecronomicons)
+                            {
+                                necro.Necr.Move(ClosestLane.ClosestPosition);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Printer.Both("kek "+e.Message);
+                        }
                         ClosestPosition = ClosestLane.ClosestPosition;
                     }
                 }
@@ -165,8 +182,8 @@ namespace ArcAnnihilation.OrderState
                         _sleeper.Sleep(500);
                     }
 
-                    var mjol = Core.TempestHero.Hero.GetItemById(ItemId.item_mjollnir);
-                    if (mjol != null && mjol.CanBeCasted())
+                    var itemForPushing = Core.TempestHero.Hero.GetItemById(ItemId.item_mjollnir);
+                    if (itemForPushing != null && itemForPushing.CanBeCasted())
                     {
                         var allyCreep =
                             CreepManager.GetCreepManager()
@@ -174,21 +191,39 @@ namespace ArcAnnihilation.OrderState
                                 .FirstOrDefault(
                                     x =>
                                         x.Team == ObjectManager.LocalHero.Team &&
-                                        x.IsInRange(Core.TempestHero.Hero, 500) && x.HealthPercent() <= 0.92 && x.IsMelee);
+                                        x.IsInRange(Core.TempestHero.Hero, 500) && x.HealthPercent() <= 0.92 &&
+                                        x.IsMelee);
                         if (allyCreep != null)
                         {
-                            mjol.UseAbility(allyCreep);
+                            itemForPushing.UseAbility(allyCreep);
                             _sleeper.Sleep(500);
                         }
                     }
+                    itemForPushing = Core.TempestHero.Hero.GetItemById(ItemId.item_manta);
 
+                    if (itemForPushing != null && itemForPushing.CanBeCasted())
+                    {
+                        itemForPushing.UseAbility();
+                        _sleeper.Sleep(500);
+                    }
+
+                    itemForPushing = Core.TempestHero.Hero.GetItemById(ItemId.item_necronomicon) ??
+                                     Core.TempestHero.Hero.GetItemById(ItemId.item_necronomicon_2) ??
+                                     Core.TempestHero.Hero.GetItemById(ItemId.item_necronomicon_3);
+                    if (itemForPushing != null && itemForPushing.CanBeCasted())
+                    {
+                        itemForPushing.UseAbility();
+                        _sleeper.Sleep(500);
+                    }
                     if (Core.TempestHero.Orbwalker.GetTarget() is Tower)
                     {
                         var field = Core.TempestHero.MagneticField;
                         if (field.CanBeCasted())
                         {
-                            var pos = (Core.TempestHero.Orbwalker.GetTarget().NetworkPosition - Core.TempestHero.Hero.NetworkPosition).Normalized();
-                            pos *= (280+150);
+                            var pos =
+                            (Core.TempestHero.Orbwalker.GetTarget().NetworkPosition -
+                             Core.TempestHero.Hero.NetworkPosition).Normalized();
+                            pos *= (280 + 150);
                             pos = Core.TempestHero.Orbwalker.GetTarget().NetworkPosition - pos;
                             field.UseAbility(pos);
                             _sleeper.Sleep(1000);
@@ -210,9 +245,27 @@ namespace ArcAnnihilation.OrderState
                     }
                 }
             }
+            else
+            {
+                if (_sleeper.Sleeping)
+                    return;
+                _sleeper.Sleep(400);
+                foreach (var illusion in IllusionManager.GetIllusions.Where(x => x.Orbwalker.GetTarget() == null))
+                {
+                    ClosestLane = GetClosestLane(illusion.Hero);
+                    var pushPos = ClosestLane.Points.LastOrDefault();
+                    illusion.Hero.Move(pushPos);
+                }
+                foreach (var necro in NecronomiconManager.GetNecronomicons.Where(x => x.Orbwalker.GetTarget() == null))
+                {
+                    ClosestLane = GetClosestLane(necro.Necr);
+                    var pushPos = ClosestLane.Points.LastOrDefault();
+                    necro.Necr.Move(pushPos);
+                }
+            }
         }
 
-        private Lane GetClosestLane()
+        private Lane GetClosestLane(Unit hero)
         {
             if (PushLaneSelector.GetInstance().Loaded)
             {
@@ -237,15 +290,15 @@ namespace ArcAnnihilation.OrderState
                     }
                 }
             }
-            var pos = Core.TempestHero.Hero.Position;
+            var pos = hero.Position;
             var top =
                 TopLane.Points.OrderBy(x => pos.Distance2D(x)).FirstOrDefault();
             var mid =
                 MidLane.Points.OrderBy(x => pos.Distance2D(x)).FirstOrDefault();
             var bot =
                 BotLane.Points.OrderBy(x => pos.Distance2D(x)).FirstOrDefault();
-            if (CheckForDist(top) < CheckForDist(mid))
-                if (CheckForDist(top) < CheckForDist(bot))
+            if (CheckForDist(top, hero) < CheckForDist(mid, hero))
+                if (CheckForDist(top, hero) < CheckForDist(bot, hero))
                 {
                     return TopLane;
                 }
@@ -253,16 +306,16 @@ namespace ArcAnnihilation.OrderState
                 {
                     return BotLane;
                 }
-            if (CheckForDist(mid) < CheckForDist(bot))
+            if (CheckForDist(mid, hero) < CheckForDist(bot, hero))
             {
                 return MidLane;
             }
             return BotLane;
         }
 
-        private float CheckForDist(Vector3 pos)
+        private float CheckForDist(Vector3 pos, Unit hero)
         {
-            return pos.Distance2D(Core.TempestHero.Hero.Position);
+            return pos.Distance2D(hero.Position);
         }
     }
 }
