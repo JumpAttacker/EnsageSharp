@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using ArcAnnihilation.Utils;
 using Ensage.Common;
@@ -16,6 +17,8 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
 
         public async Task UseAbilities(UnitBase unitBase)
         {
+            if (unitBase.Hero.IsInvisible() || unitBase.Hero.Modifiers.Any(x=>x.Name.Contains("windwalk")))
+                return;
             var flux = unitBase.Flux;
             var magneticField = unitBase.MagneticField;
             var spark = unitBase.Spark;
