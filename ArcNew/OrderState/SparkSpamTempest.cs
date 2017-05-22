@@ -2,12 +2,14 @@ using System.Threading.Tasks;
 using ArcAnnihilation.Units;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
 using SharpDX;
 
 namespace ArcAnnihilation.OrderState
 {
     public class SparkSpamTempest : Order
     {
+        public override bool CanBeExecuted => MenuManager.SparkSpamTempestOnlyCombo.GetValue<KeyBind>().Active;
         private static async Task Spammer(UnitBase unit)
         {
             var pos = Game.MousePosition;

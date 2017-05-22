@@ -113,5 +113,11 @@ namespace ArcAnnihilation.Utils
 
             return true;
         }
+
+        public static bool IsDagon(this Item item)
+        {
+            var id = item.GetItemId();
+            return id == ItemId.item_dagon || id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 || id == ItemId.item_dagon_5;
+        }
     }
 }

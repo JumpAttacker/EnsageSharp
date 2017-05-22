@@ -10,19 +10,22 @@ using SharpDX;
 
 namespace ArcAnnihilation.Panels
 {
-    public class ItemPanel
+    public class ItemPanel : Movable
     {
         private bool _loaded;
         private static ItemPanel _panel;
 
-        public static void OnDrawing(EventArgs args)
+        public void OnDrawing(EventArgs args)
         {
             if (!MenuManager.IsEnable)
                 return;
 
             var count = 0;
-            var startPos = new Vector2(112, 215);
-
+            var startPos = MenuManager.GetItemPanelPosition;
+            if (MenuManager.ItemPanelCanBeMovedByMouse && CanMoveWindow(ref startPos,new Vector2(85),true))
+            {
+                MenuManager.SetItemPanelPosition((int)startPos.X, (int)startPos.Y);
+            }
             foreach (var item in TempestManager.Tempest.Inventory.Items.Where(x=>x.AbilityState == AbilityState.OnCooldown))
             {
                 count++;
@@ -56,6 +59,7 @@ namespace ArcAnnihilation.Panels
             if (_loaded) return;
             Drawing.OnDraw += OnDrawing;
             _loaded = true;
+            LoadMovable();
             Events.OnClose += EventsOnOnClose;
             Printer.Both("[InfoPanel] loaded");
         }
@@ -71,6 +75,7 @@ namespace ArcAnnihilation.Panels
             _loaded = false;
             Drawing.OnDraw -= OnDrawing;
             Events.OnClose -= EventsOnOnClose;
+            UnloadMovable();
             Printer.Both("[InfoPanel] unloaded");
         }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ArcAnnihilation.OrderState;
 using ArcAnnihilation.Utils;
 
@@ -6,7 +7,7 @@ namespace ArcAnnihilation
     public static class OrderManager
     {
         public static Order CurrentOrder;
-
+        public static List<Order> OrderList;
         static OrderManager()
         {
             Orders.AutoPushing = new AutoPushing();
@@ -15,7 +16,14 @@ namespace ArcAnnihilation
             Orders.SparkSpam = new SparkSpam();
             Orders.SparkSpamTempest = new SparkSpamTempest();
             Orders.TempestCombo = new TempestCombo();
-
+            OrderList = new List<Order>
+            {
+                Orders.AutoPushing,
+                Orders.DefaultCombo,
+                Orders.SparkSpam,
+                Orders.SparkSpamTempest,
+                Orders.TempestCombo
+            };
             ChangeOrder(Orders.Idle);
         }
 

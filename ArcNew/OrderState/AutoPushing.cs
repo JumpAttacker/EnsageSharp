@@ -78,7 +78,7 @@ namespace ArcAnnihilation.OrderState
         public readonly Lane BotLane;
         public readonly Lane MidLane;
         public readonly Lane TopLane;
-
+        public override bool CanBeExecuted => MenuManager.AutoPushingCombo.GetValue<KeyBind>().Active;
         private readonly Sleeper _sleeper;
         public Lane ClosestLane;
 

@@ -45,6 +45,9 @@ namespace ArcAnnihilation
             {ItemId.item_black_king_bar.ToString(), 5},
             {ItemId.item_silver_edge.ToString(), 8},
             {ItemId.item_invis_sword.ToString(), 8},
+            {ItemId.item_rod_of_atos.ToString(), 1},
+            {ItemId.item_solar_crest.ToString(), 1},
+            {ItemId.item_medallion_of_courage.ToString(), 1},
             {"item_arcane_boots", 1},
             {"item_guardian_greaves", 1},
             {"item_shivas_guard", 1},
@@ -131,16 +134,24 @@ namespace ArcAnnihilation
             Menu.Item("InfoPanel.X").SetValue(new Slider(x, 0, 2000));
             Menu.Item("InfoPanel.Y").SetValue(new Slider(y, 0, 2000));
         }
+        public static void SetItemPanelPosition(int x, int y)
+        {
+            Menu.Item("ItemPanel.X").SetValue(new Slider(x, 0, 2000));
+            Menu.Item("ItemPanel.Y").SetValue(new Slider(y, 0, 2000));
+        }
 
-        
+
 
         public static bool PushLanePanelCanBeMovedByMouse => GetBool("PushLaneSelector.Moving");
-        public static bool ItemPanelCanBeMovedByMouse => GetBool("InfoPanel.Moving");
+        public static bool InfoPanelCanBeMovedByMouse => GetBool("InfoPanel.Moving");
+        public static bool ItemPanelCanBeMovedByMouse => GetBool("ItemPanel.Moving");
         public static bool PushLanePanelHide => GetBool("PushLaneSelector.Hide");
         public static Vector2 GetPushLanePanelPosition
             => new Vector2(GetSlider("PushLaneSelector.X"), GetSlider("PushLaneSelector.Y"));
         public static Vector2 GetInfoPanelPosition
             => new Vector2(GetSlider("InfoPanel.X"), GetSlider("InfoPanel.Y"));
+        public static Vector2 GetItemPanelPosition
+            => new Vector2(GetSlider("ItemPanel.X"), GetSlider("ItemPanel.Y"));
 
         public static float GetBlinkExtraRange => GetSlider("Blink.ExtraRange");
         public static float GetBlinkMinRange => GetSlider("Blink.MinRange");
@@ -176,6 +187,13 @@ namespace ArcAnnihilation
             itemPanel.AddItem(new MenuItem("itemPanel.Enable", "Enable").SetValue(true)).ValueChanged +=
                 ItemPanel.OnChange;
             itemPanel.AddItem(new MenuItem("ItemPanelSize", "Size").SetValue(new Slider(40, 20, 70)));
+            itemPanel.AddItem(
+                new MenuItem("ItemPanel.Moving", "Move by mouse").SetValue(false));
+            itemPanel.AddItem(
+                new MenuItem("ItemPanel.X", "Pos X").SetValue(new Slider(10, 0, 2000)));
+            itemPanel.AddItem(
+                new MenuItem("ItemPanel.Y", "Pos Y").SetValue(new Slider(350, 0, 2000)));
+
             var pushLaneSelectorPanel = new Menu("AutoPushLaneSelector Panel", "PushLaneSelector");
             pushLaneSelectorPanel.AddItem(new MenuItem("AutoPushLaneSelector.Enable", "Enable").SetValue(true))
                 .ValueChanged += PushLaneSelector.OnChange;

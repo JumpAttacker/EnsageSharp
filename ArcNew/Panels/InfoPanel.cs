@@ -18,7 +18,7 @@ namespace ArcAnnihilation.Panels
             if (!MenuManager.IsEnable)
                 return;
             var isIdle = !OrderManager.CurrentOrder.CanBeExecuted;
-            if (isIdle && !MenuManager.ItemPanelCanBeMovedByMouse)
+            if (isIdle && !MenuManager.InfoPanelCanBeMovedByMouse)
                 return;
             var isAutoPushing = OrderManager.CurrentOrder as AutoPushing;
             var isDefaultCombo = OrderManager.CurrentOrder as DefaultCombo;
@@ -27,7 +27,7 @@ namespace ArcAnnihilation.Panels
             var isTempestCombo = OrderManager.CurrentOrder as TempestCombo;
             var startPos = MenuManager.GetInfoPanelPosition;//new Vector2(10, 350);
             var tSize = new Vector2(MenuManager.GetInfoPanelSize);
-            if (MenuManager.ItemPanelCanBeMovedByMouse)
+            if (MenuManager.InfoPanelCanBeMovedByMouse)
             {
                 var tempSize = new Vector2(200, 200);
                 if (CanMoveWindow(ref startPos, tempSize, true))
