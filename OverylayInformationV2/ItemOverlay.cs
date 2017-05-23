@@ -24,7 +24,7 @@ namespace OverlayInformation
         private static bool IsEnemy => Members.Menu.Item("itemOverlay.Enemy").GetValue<bool>();
         private static bool IsCour => Members.Menu.Item("itemOverlay.Cour").GetValue<bool>();
         private static float Size => (float) Members.Menu.Item("itemOverlay.Size").GetValue<Slider>().Value/100;
-        private static float Extra => (float) Members.Menu.Item("itemOverlay.Extra").GetValue<Slider>().Value/10;
+        private static float Extra => (float) Members.Menu.Item("itemOverlay.Extra").GetValue<Slider>().Value * (float)0.4;
 
 
         private static float _defSize;
@@ -176,10 +176,10 @@ namespace OverlayInformation
             
             var count = 0;
             var itemBoxSizeY = (float)(_defSize / 1.24);
-            var newSize = new Vector2(_defSize, itemBoxSizeY);
+            var newSize = new Vector2(_defSize / (float)0.54, itemBoxSizeY);
             var halfSize = HUDInfo.GetHPBarSizeX()/2;
             var maxSizeX = Math.Max((float)items.Count/2*newSize.X + _defSize/(float) 2.6, halfSize);
-            pos -= new Vector2(-halfSize + maxSizeX, _defSize + _defSize/Extra);
+            pos -= new Vector2(-halfSize + maxSizeX * (float)0.8, _defSize + _defSize + Extra);
             if (DangeItems && forEnemy)
             {
                 items = items.Where(Check).ToList();
@@ -204,11 +204,11 @@ namespace OverlayInformation
                                     $"materials/ensage_ui/items/{item.Name.Replace("item_", "") + "_" + bottletype.StoredRune}.vmat");
                         }
                     }
-                    var extraPos = new Vector2(_defSize * count, 0);
+                    var extraPos = new Vector2(_defSize / (float)0.60 * count, 0);
                     var itemPos = pos + extraPos;
-                    var normalSize = newSize + new Vector2(4, _defSize / (float)2.6 + 4);
+                    var normalSize = newSize / (float)1.5 + new Vector2(_defSize / (float)2.5 + 1, _defSize / (float)1.5 + 1);
                     var normalPos = itemPos - new Vector2(2, 2);
-                    Drawing.DrawRect(normalPos, newSize + new Vector2(4, _defSize / (float)2.6 + 4), Color.Black);
+                    Drawing.DrawRect(normalPos, newSize / (float)1.5 + new Vector2(_defSize / (float)2.4 + 1, _defSize / (float)1.3 + 1), Color.Black);
                     Drawing.DrawRect(itemPos, newSize + _defSize / (float)2.6, tex);
                     DrawState(item, normalPos, normalSize, v.Mana);
                     count++;
@@ -254,7 +254,7 @@ namespace OverlayInformation
 
         private static void DrawState(Item item, Vector2 itemPos2, Vector2 normalSize,float mana)
         {
-            var itemPos = itemPos2 + new Vector2(1, 0);
+            var itemPos = itemPos2 + new Vector2(1, 1);
             var size = normalSize - new Vector2(14, 3);
             
             if (item.AbilityState == AbilityState.OnCooldown)
