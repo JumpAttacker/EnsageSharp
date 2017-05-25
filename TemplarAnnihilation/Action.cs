@@ -65,11 +65,13 @@ namespace TemplarAnnihilation
             if (enemyPossibleHeroes == null)
                 return;*/
             var startPos = new Vector2(100, 100);
-            var size = new Vector2(160, 60);
+            var size = new Vector2(160, 80);
             Drawing.DrawRect(startPos, size, new Color(100, 100, 100, 100));
             var s1 = $"enemyHeroes: {_enemyHeroes?.Count}";
             var s2 = $"enemyCreeps: {_enemyCreeps?.Count()}";
             var s3 = $"enemyPossibleHeroes: {_enemyPossibleHeroes?.Count}";
+            var s4 =
+                $"trap_count: {ObjectManager.GetEntities<Entity>().Count(x => x.Name == "templar_assassin_self_trap")}";
             var textPos = startPos + new Vector2(5, 5);
             Drawing.DrawText(
                 s1,
@@ -86,6 +88,12 @@ namespace TemplarAnnihilation
             Drawing.DrawText(
                 s3,
                 textPos + new Vector2(0, 40),
+                new Vector2(15, 0),
+                Color.White,
+                FontFlags.AntiAlias | FontFlags.StrikeOut);
+            Drawing.DrawText(
+                s4,
+                textPos + new Vector2(0, 60),
                 new Vector2(15, 0),
                 Color.White,
                 FontFlags.AntiAlias | FontFlags.StrikeOut);

@@ -3,6 +3,7 @@ using System.Reflection;
 using Ensage;
 using log4net;
 using PlaySharp.Toolkit.Logging;
+using SharpDX;
 
 namespace TemplarAnnihilation
 {
@@ -10,6 +11,15 @@ namespace TemplarAnnihilation
     {
         private static readonly ILog Logger = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #region Helpers
+        public static string PrintVector(this Vector3 vec)
+        {
+            return $"new Vector3({(int)vec.X},{(int)vec.Y},{(int)vec.Z}),";
+
+        }
+        public static string PrintVector(this Vector2 vec)
+        {
+            return $"({vec.X};{vec.Y})";
+        }
         public static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments); ;

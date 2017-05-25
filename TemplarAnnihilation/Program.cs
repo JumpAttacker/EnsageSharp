@@ -79,9 +79,9 @@ namespace TemplarAnnihilation
             Members.Menu.AddToMainMenu();
             Game.OnUpdate += Action.Game_OnUpdate;
             Drawing.OnDraw += Action.OnDrawing;
-            Game.OnUpdate += UpdateItems;
             DelayAction.Add(500, () =>
             {
+                Game.OnUpdate += UpdateItems;
                 if (Members.Menu.Item("Range.Enable").GetValue<bool>())
                 {
                     Printer.Print("fist drawing!");

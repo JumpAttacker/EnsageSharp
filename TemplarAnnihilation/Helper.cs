@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Ensage;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
@@ -149,6 +150,23 @@ namespace TemplarAnnihilation
             var level = ability.Level == 0 ? 0 : ability.Level - 1;
             range = (uint)(data.Count > 1 ? data.GetValue(level) : data.Value);
             return range;
+        }
+
+        public static bool CanHit(this Item ability, Hero target, ref Vector3 sourcePosition)
+        {
+            if (ability.GetItemId() != ItemId.item_blink)
+                return ability.CanHit(target);
+            var owner = ability.Owner;
+            var pos = (target.NetworkPosition - owner.NetworkPosition).Normalized();
+            pos *= 50;
+            pos = target.NetworkPosition - pos;
+            var dist = pos.Distance2D(owner.NetworkPosition);
+            if (dist < ability.GetCastRange() && dist>=400)
+            {
+                sourcePosition = pos;
+                return true;
+            }
+            return false;
         }
     }
 }
