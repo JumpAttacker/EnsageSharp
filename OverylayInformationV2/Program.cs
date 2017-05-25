@@ -231,8 +231,8 @@ namespace OverlayInformation
             var itemOverlay = new Menu("Item overlay", "itemOverlay");
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enable", "Enable").SetValue(false)).SetTooltip("will show all items on heroes");
             itemOverlay.AddItem(new MenuItem("itemOverlay.DrawCharges", "Draw Charges").SetValue(true));
-            itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(100, 1, 200)));
-            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra", "Extra").SetValue(new Slider(26, 1, 100)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(85, 1, 200)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra", "Extra").SetValue(new Slider(-25, -500, 200)));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Ally", "Enable for ally").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enemy", "Enable for enemy").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Cour", "Enable for couriers").SetValue(true)).SetTooltip("only for enemy");
