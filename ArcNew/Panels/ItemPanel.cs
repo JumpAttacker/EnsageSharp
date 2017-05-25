@@ -34,7 +34,7 @@ namespace ArcAnnihilation.Panels
                 Drawing.DrawRect(startPos, new Vector2(size, size / 2f), Textures.GetItemTexture(item.StoredName()));
                 Drawing.DrawRect(startPos, new Vector2(size * 70 / 100f, size / 2f), Color.White, true);
 
-                var text = ((int) item.Cooldown).ToString();
+                var text = ((int) item.Cooldown+1).ToString();
                 var textSize = Drawing.MeasureText(text, "Arial",
                     new Vector2((float)(size/2 * .9), (float)(size/2 * .9)), FontFlags.AntiAlias);
                 Drawing.DrawRect(startPos + new Vector2(0, 2), textSize + new Vector2(0, -2), new Color(0, 0, 0, 155));

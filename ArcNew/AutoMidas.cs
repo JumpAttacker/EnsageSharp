@@ -67,13 +67,13 @@ namespace ArcAnnihilation
 
         private void MidasChecker()
         {
-            if (!Me.IsAlive)
+            if (!Me.IsAlive || Me.IsInvisible())
                 return;
             if (Midas != null && Midas.CanBeCasted() && !_sleeper.Sleeping)
             {
                 var creep =
                     CreepManager.GetCreepManager()
-                        .GetCreeps.Where(x => x.IsValid && x.Team != Me.Team && Midas.CanHit(x))
+                        .GetCreeps.Where(x => x.IsValid && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient)
                         .OrderByDescending(x => x.Health).FirstOrDefault();
                 if (creep != null)
                 {

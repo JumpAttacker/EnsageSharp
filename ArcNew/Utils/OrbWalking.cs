@@ -4,6 +4,7 @@ using System.Linq;
 using ArcAnnihilation.Manager;
 using ArcAnnihilation.Units;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
+using ArcAnnihilation.Units.behaviour.Range;
 using Ensage;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
@@ -156,9 +157,10 @@ namespace ArcAnnihilation.Utils
             }
 
             Initialized = true;
-            if (BasicUnit.OrbwalkingBehaviour is CanUseOrbwalking && !(BasicUnit is Necronomicon))
-                UpdateManager.Subscribe(OnDrawingsUpdate, 1000);
             EffectManager = new ParticleManager();
+            if (BasicUnit.DrawRanger is DrawAttackRange)
+                UpdateManager.Subscribe(OnDrawingsUpdate, 1000);
+            
 
             Game.OnIngameUpdate += OnOnIngameUpdate;
             Entity.OnInt32PropertyChange += Hero_OnInt32PropertyChange;
@@ -189,7 +191,7 @@ namespace ArcAnnihilation.Utils
             }
 
             Initialized = false;
-            if (BasicUnit.OrbwalkingBehaviour is CanUseOrbwalking)
+            if (BasicUnit.DrawRanger is DrawAttackRange)
                 UpdateManager.Unsubscribe(OnDrawingsUpdate);
             Game.OnIngameUpdate -= OnOnIngameUpdate;
             Entity.OnInt32PropertyChange -= Hero_OnInt32PropertyChange;
@@ -286,9 +288,7 @@ namespace ArcAnnihilation.Utils
         {
             if (!MenuManager.IsEnable)
                 return;
-
-            if (BasicUnit.OrbwalkingBehaviour is CanUseOrbwalking)
-                EffectManager.DrawRange(Owner, "attackRange" + Owner.Handle, Owner.AttackRange(Owner), Color.LimeGreen);
+            EffectManager.DrawRange(Owner, "attackRange" + Owner.Handle, Owner.AttackRange(Owner), Color.LimeGreen);
         }
     }
 }

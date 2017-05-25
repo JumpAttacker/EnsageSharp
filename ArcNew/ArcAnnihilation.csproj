@@ -134,6 +134,7 @@
     <Compile Include="Units\behaviour\Enabled\IAbilityChecker.cs" />
     <Compile Include="Units\behaviour\Orders\ComboExecutor.cs" />
     <Compile Include="Units\behaviour\Orders\DefaultComboExecutor.cs" />
+    <Compile Include="Units\behaviour\Range\IDrawAttackRange.cs" />
     <Compile Include="Units\UnitBase.cs" />
     <Compile Include="OrderManager.cs" />
     <Compile Include="Units\Illusion.cs" />

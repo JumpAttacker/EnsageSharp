@@ -7,6 +7,7 @@ using ArcAnnihilation.Units.behaviour.Abilities;
 using ArcAnnihilation.Units.behaviour.Enabled;
 using ArcAnnihilation.Units.behaviour.Items;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
+using ArcAnnihilation.Units.behaviour.Range;
 using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common.Extensions;
@@ -22,6 +23,7 @@ namespace ArcAnnihilation.Units
             AbilitiesBehaviour = new CanUseAbilities();
             ItemsBehaviour = new CanUseItems();
             OrbwalkingBehaviour = new CanUseOrbwalking();
+            DrawRanger = new DrawAttackRange();
         }
 
         public override void InitAbilities()

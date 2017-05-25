@@ -155,7 +155,8 @@ namespace ArcAnnihilation
 
         public static float GetBlinkExtraRange => GetSlider("Blink.ExtraRange");
         public static float GetBlinkMinRange => GetSlider("Blink.MinRange");
-
+        public static bool IsAutoPushPanelEnable => GetBool("AutoPushLaneSelector.Enable");
+        public static bool IsItemPanelEnable => GetBool("itemPanel.Enable");
         public static void Init()
         {
             Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));

@@ -11,7 +11,6 @@ namespace ArcAnnihilation
         {
             Events.OnLoad += (sender, args) =>
             {
-                Game.PrintMessage("ObjectManager.LocalHero.ClassId: " + ObjectManager.LocalHero.ClassId);
                 if (ObjectManager.LocalHero.ClassId != ClassId.CDOTA_Unit_Hero_ArcWarden)
                     return;
                 MenuManager.Init();

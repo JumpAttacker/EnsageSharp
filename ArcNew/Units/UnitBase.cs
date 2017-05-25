@@ -6,6 +6,7 @@ using ArcAnnihilation.Units.behaviour.Abilities;
 using ArcAnnihilation.Units.behaviour.Enabled;
 using ArcAnnihilation.Units.behaviour.Items;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
+using ArcAnnihilation.Units.behaviour.Range;
 using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common;
@@ -21,6 +22,7 @@ namespace ArcAnnihilation.Units
         public ICanUseOrbwalking OrbwalkingBehaviour;
         public ICanUseItems ItemsBehaviour;
         public IAbilityChecker AbilityChecker;
+        public IDrawAttackRange DrawRanger;
         public Ability Flux;
         public Ability MagneticField;
         public Ability Spark;
@@ -39,6 +41,7 @@ namespace ArcAnnihilation.Units
             AbilitiesBehaviour = new CanNotUseAbilties();
             OrbwalkingBehaviour = new CantUseOrbwalking();
             ItemsBehaviour = new CanNotUseItems();
+            DrawRanger = new DontDrawAttackRange();
         }
         public void ExTask(Task combo)
         {
@@ -108,6 +111,4 @@ namespace ArcAnnihilation.Units
         public abstract void MoveAction(Unit target);
         public abstract IEnumerable<Item> GetItems();
     }
-
-    
 }

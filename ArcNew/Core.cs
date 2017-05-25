@@ -44,14 +44,16 @@ namespace ArcAnnihilation
         {
             if (TempestManager.Tempest != null && TempestManager.Tempest.IsValid)
             {
-                ItemPanel.GetItemPanel().Load();
+                if (MenuManager.IsItemPanelEnable)
+                    ItemPanel.GetItemPanel().Load();
                 TempestHero = new Tempest();
                 TempestHero.Init();
                 UpdateManager.Unsubscribe(TempestUpdater);
                 AutoMidas.GetNewInstance(TempestHero);
                 DelayAction.Add(200, () =>
                 {
-                    PushLaneSelector.GetInstance().Load();
+                    if (MenuManager.IsAutoPushPanelEnable)
+                        PushLaneSelector.GetInstance().Load();
                 });
 
             }
