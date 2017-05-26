@@ -58,12 +58,12 @@ namespace OverlayInformation
             topPanel.AddItem(new MenuItem("toppanel.Enable", "Enable").SetValue(true));
             topPanel.AddItem(
                 new MenuItem("toppanel.Targets", "Draw For: ").SetValue(
-                    new StringList(new[] { "Both", "Ally Team", "Enemy Team" })));
+                    new StringList("Both", "Ally Team", "Enemy Team")));
             //===========================
             spellPanel.AddItem(new MenuItem("spellpanel.Enable", "Enable").SetValue(true));
             spellPanel.AddItem(
                 new MenuItem("spellpanel.Targets", "Draw For: ").SetValue(
-                    new StringList(new[] { "Both", "Ally Team", "Enemy Team" })));
+                    new StringList("Both", "Ally Team", "Enemy Team")));
             var oldMethod = new Menu("OldMethod", "Without Textures");
             oldMethod.AddItem(new MenuItem("spellpanel.OldMethod.Enable", "Enable").SetValue(true));
             oldMethod.AddItem(new MenuItem("spellPanel.distBetweenSpells", "Distance spells").SetValue(new Slider(36, 0, 200)));
@@ -87,7 +87,7 @@ namespace OverlayInformation
                     .SetTooltip("render lack of mana when spell on cooldown"));
             ultimate.AddItem(
                 new MenuItem("ultimate.Type", "Type of drawing").SetValue(
-                    new StringList(new[] { "Draw Icon", "Draw Line" }))).ValueChanged += (sender, args) =>
+                    new StringList("Draw Icon", "Draw Line"))).ValueChanged += (sender, args) =>
                     {
                         var newArg = args.GetNewValue<StringList>().SelectedIndex;
                         var newColor = newArg == 1 ? Color.DarkSlateGray : new Color(195, 186, 173, 255);
@@ -119,7 +119,7 @@ namespace OverlayInformation
                 };
             var items = new MenuItem[5];
             visionOnAllyHeroes.AddItem(
-                new MenuItem("toppanel.AllyVision.Type", "Type:").SetValue(new StringList(new[] { "rectangle", "text" }))).ValueChanged +=
+                new MenuItem("toppanel.AllyVision.Type", "Type:").SetValue(new StringList("rectangle", "text"))).ValueChanged +=
                 (sender, args) =>
                 {
                     var index = args.GetNewValue<StringList>().SelectedIndex;
@@ -232,7 +232,9 @@ namespace OverlayInformation
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enable", "Enable").SetValue(false)).SetTooltip("will show all items on heroes");
             itemOverlay.AddItem(new MenuItem("itemOverlay.DrawCharges", "Draw Charges").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(85, 1, 200)));
-            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra", "Extra").SetValue(new Slider(-25, -500, 200)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.TextSize", "Text Size").SetValue(new Slider(75, 1, 100)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra.X", "Extra X").SetValue(new Slider(0, -250, 250)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra.Y", "Extra Y").SetValue(new Slider(-25, -500, 200)));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Ally", "Enable for ally").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enemy", "Enable for enemy").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Cour", "Enable for couriers").SetValue(true)).SetTooltip("only for enemy");

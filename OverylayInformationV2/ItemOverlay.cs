@@ -24,7 +24,14 @@ namespace OverlayInformation
         private static bool IsEnemy => Members.Menu.Item("itemOverlay.Enemy").GetValue<bool>();
         private static bool IsCour => Members.Menu.Item("itemOverlay.Cour").GetValue<bool>();
         private static float Size => (float) Members.Menu.Item("itemOverlay.Size").GetValue<Slider>().Value/100;
-        private static float Extra => (float) Members.Menu.Item("itemOverlay.Extra").GetValue<Slider>().Value * (float)0.4;
+
+        private static float ExtraY
+            => (float)Members.Menu.Item("itemOverlay.Extra.Y").GetValue<Slider>().Value * (float)0.4;
+        private static float ExtraX
+            => (float)Members.Menu.Item("itemOverlay.Extra.X").GetValue<Slider>().Value * (float)0.4;
+
+        private static float TextSize
+            => (float) Members.Menu.Item("itemOverlay.TextSize").GetValue<Slider>().Value / 100;
 
 
         private static float _defSize;
@@ -133,7 +140,7 @@ namespace OverlayInformation
             var newSize = new Vector2(_defSize, itemBoxSizeY);
             var halfSize = HUDInfo.GetHPBarSizeX() / 2;
             var maxSizeX = Math.Max((float)items.Count / 2 * newSize.X + _defSize / (float)2.6, halfSize);
-            pos -= new Vector2(-halfSize + maxSizeX, _defSize + _defSize / Extra);
+            pos -= new Vector2(-halfSize + maxSizeX+ExtraX, _defSize + _defSize / ExtraY);
             foreach (var item in items)
             {
                 try
@@ -179,7 +186,7 @@ namespace OverlayInformation
             var newSize = new Vector2(_defSize / (float)0.54, itemBoxSizeY);
             var halfSize = HUDInfo.GetHPBarSizeX()/2;
             var maxSizeX = Math.Max((float)items.Count/2*newSize.X + _defSize/(float) 2.6, halfSize);
-            pos -= new Vector2(-halfSize + maxSizeX * (float)0.8, _defSize + _defSize + Extra);
+            pos -= new Vector2(-halfSize + maxSizeX * (float)0.8+ExtraX, _defSize + _defSize + ExtraY);
             if (DangeItems && forEnemy)
             {
                 items = items.Where(Check).ToList();
@@ -262,7 +269,7 @@ namespace OverlayInformation
                 var ultimateCd =
                     ((int) Math.Min(item.Cooldown + 1, 99)).ToString(CultureInfo.InvariantCulture);
                 var textSize = Drawing.MeasureText(ultimateCd, "Arial",
-                    new Vector2((float)(size.Y * .75), size.Y / 2), FontFlags.AntiAlias);
+                    new Vector2((float)(size.Y * TextSize), size.Y / 2.0f), FontFlags.AntiAlias);
                 var textPos = itemPos + new Vector2(2, (normalSize.Y - textSize.Y) / 2);
                 Drawing.DrawRect(textPos - new Vector2(0, 0),
                     new Vector2(textSize.X, textSize.Y),
