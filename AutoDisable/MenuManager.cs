@@ -143,6 +143,11 @@ namespace Auto_Disable
 
         public static void TryToInitNewHero(Hero hero)
         {
+            if (hero == null)
+            {
+                Printer.PrintError("[AutoDisable] TryToInitNewHero (hero==null)");
+                return;
+            }
             if (HeroesInSystem.Contains(hero))
                 return;
             if (Menus[hero.Player.Id] != null)
@@ -179,6 +184,16 @@ namespace Auto_Disable
         }
         private static void InitAbility(Hero hero, string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                Printer.PrintError("[AutoDisable] InitAbility (name==null)");
+                return;
+            }
+            if (hero == null)
+            {
+                Printer.PrintError("[AutoDisable] InitAbility (hero==null)");
+                return;
+            }
             var item = new Menu("", hero.ClassId + name, false, name);
             Menus[hero.Player.Id].AddSubMenu(item);
             item.AddItem(
@@ -202,6 +217,16 @@ namespace Auto_Disable
         }
         private static void InitNewSubMenu(Hero hero, string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                Printer.PrintError("[AutoDisable] InitNewSubMenu (name==null)");
+                return;
+            }
+            if (hero==null)
+            {
+                Printer.PrintError("[AutoDisable] InitNewSubMenu (hero==null)");
+                return;
+            }
             var item = new Menu(name, hero.ClassId + name);
             Menus[hero.Player.Id].AddSubMenu(item);
             item.AddItem(
@@ -225,6 +250,11 @@ namespace Auto_Disable
         }
         public static void UpdateAbility(string storedName)
         {
+            if (string.IsNullOrEmpty(storedName))
+            {
+                Printer.PrintError("[AutoDisable] UpdateAbility");
+                return;
+            }
             foreach (var hero in HeroesInSystem)
             {
                 foreach (var ability in hero.Spellbook.Spells.Where(x=>x.IsShield() || x.IsDisable()))
@@ -236,14 +266,16 @@ namespace Auto_Disable
         }
         public static void UpdateItem(string storedName)
         {
-            if (storedName == null)
+            if (string.IsNullOrEmpty(storedName))
             {
                 Printer.PrintError("[AutoDisable] UpdateItem");
                 return;
             }
             foreach (var hero in HeroesInSystem)
             {
-                foreach (var ability in hero.Inventory.Items.Where(x => x.IsShield() || x.IsDisable()))
+                if (hero == null || !hero.IsValid)
+                    continue;
+                foreach (var ability in hero.Spellbook.Spells.Where(x => x != null && x.IsValid && (x.IsShield() || x.IsDisable())))
                 {
                     Menu.Item("itemEnable" + hero.ClassId + ability.StoredName()).GetValue<AbilityToggler>().Add(storedName);
                 }
@@ -254,9 +286,16 @@ namespace Auto_Disable
 
         public static void RemoveItem(string storedName)
         {
+            if (string.IsNullOrEmpty(storedName))
+            {
+                Printer.PrintError("[AutoDisable] RemoveItem");
+                return;
+            }
             foreach (var hero in HeroesInSystem)
             {
-                foreach (var ability in hero.Inventory.Items.Where(x => x.IsShield() || x.IsDisable()))
+                if (hero==null || !hero.IsValid)
+                    continue;
+                foreach (var ability in hero.Spellbook.Spells.Where(x => x!=null && x.IsValid && (x.IsShield() || x.IsDisable())))
                 {
                     Menu.Item("itemEnable" + hero.ClassId + ability.StoredName()).GetValue<AbilityToggler>().Remove(storedName);
                 }

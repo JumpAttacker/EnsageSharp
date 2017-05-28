@@ -15,12 +15,9 @@ namespace Auto_Disable
             MenuManager.Init();
             Events.OnLoad += (sender, eventArgs) =>
             {
-                Log.Info("[Init] starting");
                 if (!_loaded)
                 {
-                    Log.Info("MenuManager.Handle: start");
                     MenuManager.Handle();
-                    Log.Info("MenuManager.Handle: end");
                     Members.MyTeam = ObjectManager.LocalPlayer.Team;
                     _loaded = true;
                     Game.PrintMessage($"AutoDisable loaded. ver {Assembly.GetExecutingAssembly().GetName().Version}");
