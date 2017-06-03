@@ -105,7 +105,7 @@ namespace OverlayInformation
         private static readonly List<PlayerInfo> PlayerInfoList;
         private static bool _loaded;
         private static readonly bool Init;
-        private static bool Check => Game.GameState == GameState.HeroSelection;
+        private static bool Check => Game.GameState == GameState.PreGame;
         private static bool IsEnable => Members.Menu.Item("OpenDota.Enable").GetValue<bool>();
         static OpenDota()
         {
@@ -319,7 +319,7 @@ namespace OverlayInformation
             {
                 return;
             }
-            if (Check || Game.GameState == GameState.StrategyTime)
+            if (Check)
             {
                 var newlist = PlayerInfoList.ToList();
                 foreach (var playerInfo in newlist)
@@ -334,7 +334,7 @@ namespace OverlayInformation
                     DrawShadowText(playerInfo.Wr, (int)position.X, (int)position.Y, defClr);
                     position.Y += 15;
                     DrawShadowText(
-                        playerInfo.Solo == 0 ? $"Rank ~ {playerInfo.PossibleMmr}" : $"Solo: {playerInfo.Solo}",
+                        playerInfo.Solo == 0 ? $"Estimated: {playerInfo.PossibleMmr}" : $"Solo: {playerInfo.Solo}",
                         (int)position.X, (int)position.Y, defClr);
                     if (playerInfo.Party > 0)
                     {
