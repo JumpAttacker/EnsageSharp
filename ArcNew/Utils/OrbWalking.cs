@@ -102,7 +102,7 @@ namespace ArcAnnihilation.Utils
                     case OrbwalkingMode.Pushing:
                         var barracks =
                             ObjectManager.GetEntitiesFast<Building>()
-                                .FirstOrDefault(unit => unit.IsValid && unit.Team != Owner.Team && !(unit is Tower) && Owner.IsValidOrbwalkingTarget(unit));
+                                .FirstOrDefault(unit => unit.IsValid && unit.IsAlive && unit.Team != Owner.Team && !(unit is Tower) && Owner.IsValidOrbwalkingTarget(unit));
 
                         if (barracks != null)
                         {
@@ -110,8 +110,8 @@ namespace ArcAnnihilation.Utils
                         }
 
                         var jungleMob =
-                            CreepManager.GetCreepManager().GetCreeps.FirstOrDefault(
-                                unit => unit.IsValid && unit.IsNeutral && Owner.IsValidOrbwalkingTarget(unit));
+                            EntityManager<Creep>.Entities.FirstOrDefault(
+                                unit => unit.IsValid && unit.IsAlive && unit.IsNeutral && Owner.IsValidOrbwalkingTarget(unit));
 
                         if (jungleMob != null)
                         {
@@ -119,9 +119,9 @@ namespace ArcAnnihilation.Utils
                         }
 
                         var creep =
-                            CreepManager.GetCreepManager().GetCreeps.Where(
+                            EntityManager<Creep>.Entities.Where(
                                 unit =>
-                                    unit.IsValid && unit.Team != Owner.Team && (Owner.IsValidOrbwalkingTarget(unit) || Owner.Distance2D(unit)<=500)).OrderBy(x=>x.Health).FirstOrDefault();
+                                    unit.IsValid && unit.IsAlive && unit.Team != Owner.Team && (Owner.IsValidOrbwalkingTarget(unit) || Owner.Distance2D(unit)<=500)).OrderBy(x=>x.Health).FirstOrDefault();
 
                         if (creep != null)
                         {
@@ -130,7 +130,7 @@ namespace ArcAnnihilation.Utils
 
                         var tower =
                             ObjectManager.GetEntitiesFast<Tower>()
-                                .FirstOrDefault(unit => unit.IsValid && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit));
+                                .FirstOrDefault(unit => unit.IsValid && unit.IsAlive && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit));
 
                         if (tower != null)
                         {

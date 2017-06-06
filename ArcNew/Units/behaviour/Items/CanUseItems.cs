@@ -120,8 +120,12 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             var slarkMod =
                                 Core.Target.HasModifiers(
                                     new[] {"modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses"}, false);
-                            if (slarkMod && isDisable)
+                            var lotusMid = Core.Target.HasModifier("modifier_item_lotus_orb_active");
+                            if ((slarkMod || lotusMid) && isDisable)
+                            {
+                                counter++;
                                 continue;
+                            }
                             if (ability.GetItemId() == ItemId.item_sheepstick && GlobalHexSleeper.Sleeping)
                             {
                                 counter++;

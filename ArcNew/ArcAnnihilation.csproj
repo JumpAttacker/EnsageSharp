@@ -103,10 +103,10 @@
   <ItemGroup>
     <Compile Include="AutoMidas.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="InputBlocker.cs" />
     <Compile Include="Panels\Movable.cs" />
     <Compile Include="Panels\PushLaneSelector.cs" />
     <Compile Include="Panels\InfoPanel.cs" />
-    <Compile Include="Manager\CreepManager.cs" />
     <Compile Include="Manager\IllusionManager.cs" />
     <Compile Include="Panels\ItemPanel.cs" />
     <Compile Include="Manager\NecronomiconManager.cs" />

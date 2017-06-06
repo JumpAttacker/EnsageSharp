@@ -20,6 +20,7 @@ namespace ArcAnnihilation
                     TempestManager.Fresh();
                     IllusionManager.GetCreepManager();
                     NecronomiconManager.GetNecronomiconManager();
+                    InputBlocker.GetInputBlocker().Load();
                     if (MenuManager.IsInfoPanelEnabled)
                         InfoPanel.GetInfoPanel().Load();
                 });

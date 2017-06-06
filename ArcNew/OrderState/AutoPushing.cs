@@ -11,6 +11,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Extensions;
+using Ensage.SDK.Helpers;
 using SharpDX;
 using AbilityId = Ensage.AbilityId;
 
@@ -24,8 +25,8 @@ namespace ArcAnnihilation.OrderState
 
         public Lane(string name, List<Vector3> points)
         {
-            this.Name = name;
-            this.Points = points;
+            Name = name;
+            Points = points;
             ClosestPosition = Vector3.Zero;
         }
     }
@@ -126,22 +127,20 @@ namespace ArcAnnihilation.OrderState
                                           Core.TempestHero.Hero.GetItemById(AbilityId.item_travel_boots_2);
                             if (travels != null && travels.CanBeCasted() && !_sleeper.Sleeping)
                             {
-
                                 var temp = ClosestLane.Points.ToList();
                                 temp.Reverse();
                                 var enemyCreeps =
-                                    CreepManager.GetCreepManager()
-                                        .GetCreeps.Where(x => x.Team != ObjectManager.LocalHero.Team);
+                                    EntityManager<Creep>.Entities.Where(x => x.IsValid && x.IsAlive && x.Team != ObjectManager.LocalHero.Team);
                                 Creep creepForTravels = null;
 
-                                foreach (var v in temp)
+                                foreach (var point in temp)
                                 {
-                                    creepForTravels = CreepManager.GetCreepManager()
-                                        .GetCreeps.FirstOrDefault(
-                                            y =>
-                                                y.IsValid && y.HealthPercent() > 0.75 && v.IsInRange(y.Position, 1500) &&
-                                                y.Team == ObjectManager.LocalHero.Team &&
-                                                enemyCreeps.Any(z => z.IsInRange(y, 1500)));
+                                    creepForTravels = EntityManager<Creep>.Entities.FirstOrDefault(
+                                            allyCreep =>
+                                                allyCreep.IsValid && allyCreep.IsAlive && allyCreep.Team == ObjectManager.LocalHero.Team && 
+                                                allyCreep.HealthPercent() > 0.75 &&
+                                                point.IsInRange(allyCreep.Position, 1500) &&
+                                                enemyCreeps.Any(z => z.IsInRange(allyCreep, 1500)));
                                     if (creepForTravels != null)
                                         break;
                                 }
@@ -186,11 +185,10 @@ namespace ArcAnnihilation.OrderState
                     if (itemForPushing != null && itemForPushing.CanBeCasted())
                     {
                         var allyCreep =
-                            CreepManager.GetCreepManager()
-                                .GetCreeps
+                            EntityManager<Creep>.Entities
                                 .FirstOrDefault(
                                     x =>
-                                        x.Team == ObjectManager.LocalHero.Team &&
+                                         x.IsAlive && x.Team == ObjectManager.LocalHero.Team &&
                                         x.IsInRange(Core.TempestHero.Hero, 500) && x.HealthPercent() <= 0.92 &&
                                         x.IsMelee);
                         if (allyCreep != null)

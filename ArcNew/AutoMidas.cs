@@ -42,7 +42,7 @@ namespace ArcAnnihilation
                         if (iitem.Id == ItemId.item_hand_of_midas)
                         {
                             Midas = iitem.Item;
-                            UpdateManager.Subscribe(MidasChecker, 500);
+                            UpdateManager.Subscribe(MidasChecker, 100);
                             Printer.Both($"[{me}] Midas on!");
                         }
                     }
@@ -72,8 +72,7 @@ namespace ArcAnnihilation
             if (Midas != null && Midas.CanBeCasted() && !_sleeper.Sleeping)
             {
                 var creep =
-                    CreepManager.GetCreepManager()
-                        .GetCreeps.Where(x => x.IsValid && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient)
+                    EntityManager<Creep>.Entities.Where(x => x.IsValid && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient)
                         .OrderByDescending(x => x.Health).FirstOrDefault();
                 if (creep != null)
                 {

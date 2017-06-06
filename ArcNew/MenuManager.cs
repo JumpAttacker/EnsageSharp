@@ -157,6 +157,15 @@ namespace ArcAnnihilation
         public static float GetBlinkMinRange => GetSlider("Blink.MinRange");
         public static bool IsAutoPushPanelEnable => GetBool("AutoPushLaneSelector.Enable");
         public static bool IsItemPanelEnable => GetBool("itemPanel.Enable");
+        public static bool SmartFlux => GetBool("FluxSettings.Smart");
+
+        public static bool InAnyCombo(ulong key)
+            =>
+                GetKeyId("Combo.Key") == key || GetKeyId("Combo.Tempest.Key") == key ||
+                GetKeyId("Combo.Sparks.Tempest.Key") == key || GetKeyId("Combo.Sparks.Key") == key ||
+                GetKeyId("Combo.AutoPushing.Key") == key;
+            
+
         public static void Init()
         {
             Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
@@ -184,6 +193,9 @@ namespace ArcAnnihilation
                 new MenuItem("MagneticField.InFront", "Use Magnetic Field in front of ur hero").SetValue(true));
 
             var usages = new Menu("Using in combo", "usages");
+            var fluxSettings = new Menu("FluxSettings", "FluxSettings", false, AbilityId.arc_warden_flux.ToString());
+            fluxSettings.AddItem(new MenuItem("FluxSettings.Smart", "Smart flux").SetValue(false))
+                .SetTooltip("Use only if there are no allies around the enemy");
             var itemPanel = new Menu("Item Panel", "ItemPanel");
             itemPanel.AddItem(new MenuItem("itemPanel.Enable", "Enable").SetValue(true)).ValueChanged +=
                 ItemPanel.OnChange;
@@ -270,6 +282,7 @@ namespace ArcAnnihilation
             usages.AddSubMenu(mainHero);
             usages.AddSubMenu(tempest);
             usages.AddSubMenu(blink);
+            usages.AddSubMenu(fluxSettings);
 
             mainHero.AddSubMenu(spellHero);
             mainHero.AddSubMenu(itemHero);
@@ -296,6 +309,10 @@ namespace ArcAnnihilation
         private static bool GetKey(string item)
         {
             return Menu.Item(item).GetValue<KeyBind>().Active;
+        }
+        private static uint GetKeyId(string item)
+        {
+            return Menu.Item(item).GetValue<KeyBind>().Key;
         }
 
         private static bool GetBool(string item)

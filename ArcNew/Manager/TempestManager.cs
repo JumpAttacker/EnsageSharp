@@ -11,11 +11,11 @@ namespace ArcAnnihilation.Manager
         public static void Fresh()
         {
             Tempest =
-                ObjectManager.GetEntities<Hero>()
+                EntityManager<Hero>.Entities
                     .FirstOrDefault(
                         x => x != null && x.IsValid && x.Team == ObjectManager.LocalHero.Team && x.IsAlive && x.HasModifier("modifier_kill"));
             if (Tempest == null || !Tempest.IsValid)
-                UpdateManager.Subscribe(TempestUpdater, 500);
+                UpdateManager.Subscribe(TempestUpdater, 100);
         }
 
         private static void TempestUpdater()
@@ -23,7 +23,7 @@ namespace ArcAnnihilation.Manager
             if (Tempest == null || !Tempest.IsValid)
             {
                 Tempest =
-                    ObjectManager.GetEntities<Hero>()
+                    EntityManager<Hero>.Entities
                         .FirstOrDefault(
                             x =>
                                 x != null && x.IsValid && x.Team == ObjectManager.LocalHero.Team && x.IsAlive &&

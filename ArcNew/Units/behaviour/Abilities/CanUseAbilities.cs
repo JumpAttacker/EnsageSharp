@@ -1,9 +1,11 @@
 using System.Linq;
 using System.Threading.Tasks;
 using ArcAnnihilation.Utils;
+using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.SDK.Helpers;
 
 namespace ArcAnnihilation.Units.behaviour.Abilities
 {
@@ -24,10 +26,16 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
             var spark = unitBase.Spark;
             if (!_multiSleeper.Sleeping(flux) && unitBase.AbilityChecker.IsAbilityEnabled(flux.GetAbilityId()) && flux.CanBeCasted() && flux.CanHit(Core.Target))
             {
-                flux.UseAbility(Core.Target);
-                Printer.Both("Flux usages " + flux.GetAbilityDelay());
-                _multiSleeper.Sleep(500, flux);
-                await Task.Delay(flux.GetAbilityDelay(), Core.ComboToken.Token);
+                if (Core.Target.IsLinkensProtected() ||!MenuManager.SmartFlux || !EntityManager<Unit>.Entities.Any(
+                    x =>
+                        !x.Equals(Core.Target) && x.Team == Core.Target.Team && x.Name != "npc_dota_thinker" && x.IsAlive && x.IsVisible &&
+                        Ensage.SDK.Extensions.EntityExtensions.Distance2D(x, Core.Target) <= 225))
+                {
+                    flux.UseAbility(Core.Target);
+                    Printer.Both("Flux usages " + flux.GetAbilityDelay());
+                    _multiSleeper.Sleep(500, flux);
+                    await Task.Delay(flux.GetAbilityDelay(), Core.ComboToken.Token);
+                }
             }
             var distance = unitBase.Hero.Distance2D(Core.Target);
             if (!_multiSleeper.Sleeping(magneticField) && magneticField != null && unitBase.AbilityChecker.IsAbilityEnabled(magneticField.GetAbilityId()) && magneticField.CanBeCasted() &&
