@@ -61,6 +61,7 @@ namespace ModifierVision
                     if (counter >= maxCounter)
                         continue;
                     var remTime = modifier.RemainingTime;
+                    
                     /*if (remTime<=1)
                         continue;*/
                     var itemPos = startPos;
@@ -102,6 +103,20 @@ namespace ModifierVision
                         new Vector2(textSize.Y, 0),
                         clr,
                         FontFlags.AntiAlias | FontFlags.StrikeOut);
+                    if (Members.Menu.Item("Enable.Stacks").GetValue<bool>())
+                    {
+                        var stacks = modifier.StackCount;
+                        if (stacks > 0)
+                        {
+                            textPos = itemPos;
+                            Drawing.DrawText(
+                                stacks.ToString(),
+                                textPos,
+                                new Vector2(textSize.Y, 0),
+                                Color.White,
+                                FontFlags.AntiAlias | FontFlags.StrikeOut);
+                        }
+                    }
                     counter++;
                 }
             }

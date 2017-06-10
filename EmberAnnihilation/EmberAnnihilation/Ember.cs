@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Reflection;
@@ -6,9 +5,7 @@ using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
-using Ensage.SDK.Abilities;
 using Ensage.SDK.Helpers;
-using Ensage.SDK.Prediction;
 using Ensage.SDK.Service;
 using Ensage.SDK.Service.Metadata;
 using Ensage.SDK.TargetSelector;
@@ -24,17 +21,17 @@ namespace EmberAnnihilation
         private Ability Fist { get; }
         private Ability Chains { get; }
         private Ability Activator { get; }
-        private PredictionAbility Remnant { get; }
+        private Ability Remnant { get; }
         private Config Config { get; set; }
         public Hero Me { get; set; }
         private ITargetSelectorManager Selector { get; }
 
         [ImportingConstructor]
-        public Ember([Import] IServiceContext context, [Import] ITargetSelectorManager selector, [Import] IPrediction prediction)
+        public Ember([Import] IServiceContext context, [Import] ITargetSelectorManager selector/*, [Import] IPrediction prediction*/)
         {
             Me = context.Owner as Hero;
             Selector = selector;
-            Remnant = new PredictionAbility(Me, AbilityId.ember_spirit_fire_remnant, prediction);
+            Remnant = Me.GetAbilityById(AbilityId.ember_spirit_fire_remnant);
             Fist = Me.GetAbilityById(AbilityId.ember_spirit_sleight_of_fist);
             Activator = Me.GetAbilityById(AbilityId.ember_spirit_activate_fire_remnant);
             Chains = Me.GetAbilityById(AbilityId.ember_spirit_searing_chains);
@@ -85,7 +82,7 @@ namespace EmberAnnihilation
                     var stacks = mod?.StackCount;
                     if (stacks > 0)
                     {
-                        Remnant.Use(target);
+                        Remnant.UseAbility(target.Position);
                         Log.Debug("Remnant: "+stacks);
                         await Task.Delay(20);
                     }
