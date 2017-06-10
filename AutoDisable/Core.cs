@@ -31,7 +31,8 @@ namespace Auto_Disable
             var myAllAbilities = Me.Spellbook.Spells.Where(x => Members.Spells.Contains(x.StoredName()) && x.CanBeCasted());
             foreach (var v in Heroes.GetByTeam(Me.GetEnemyTeam()).Where(x=>x.IsAlive && x.IsVisible && !ComboSleeper.Sleeping(x.StoredName())))
             {
-                MenuManager.TryToInitNewHero(v);
+                if (!MenuManager.TryToInitNewHero(v))
+                    continue;
                 var myItems =
                     myAllItems.Where(
                         x =>
@@ -72,11 +73,11 @@ namespace Auto_Disable
                 }
                 myItems2 = myItems.ToList();
                 myAbilities2 = myAbilities.ToList();
-                if (distance <= 500 &&
-                    ((v.HasModifier("modifier_item_forcestaff_active") &&
-                      MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "item_force_staff")) ||
-                     (blink != null && blink.Cooldown/blink.CooldownLength > 0.99 && blink.CooldownLength >= 5 &&
-                      MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "item_blink"))) &&
+                if (distance <= 750 &&
+                    (v.HasModifier("modifier_item_forcestaff_active") &&
+                     MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "item_force_staff") ||
+                     blink != null && blink.Cooldown/blink.CooldownLength > 0.99 && blink.CooldownLength >= 5 &&
+                     MenuManager.CheckForMoveItem(v, ref myItems2, ref myAbilities2, "item_blink")) &&
                     v.HasDangAbility())
                 {
                     if (dpActivated /*|| magicImmnune*/ || linkProt || isInvul)
@@ -87,9 +88,13 @@ namespace Auto_Disable
                     else
                     {
                         if (TryToDisable(v, myItems2, myAbilities2))
+                        {
                             continue;
+                        }
                         if (TryToEscape(v, myItems2, myAbilities2))
+                        {
                             continue;
+                        }
                     }
                 }
                 if (v.IsChanneling() && MenuManager.IsDisableChannelGuys)
@@ -119,17 +124,17 @@ namespace Auto_Disable
                 }*/
                 if (MenuManager.HelpAllyHeroes && TryToHelpAllyHeroes(v, myItems, myAbilities))
                     continue;
-                if ((angle != 0 && !v.Spellbook.Spells.Any(
-                    x =>
-                        x.IsInAbilityPhase && (x.AbilityBehavior & AbilityBehavior.NoTarget) != 0 && x.IsDisable() &&
-                        x.CanHit(Me) && x.CanBeCasted(Me))) || distance >= 1000)
+                if (angle != 0 && !v.Spellbook.Spells.Any(
+                        x =>
+                            x.IsInAbilityPhase && (x.AbilityBehavior & AbilityBehavior.NoTarget) != 0 && x.IsDisable() &&
+                            x.CanHit(Me) && x.CanBeCasted(Me)) || distance >= 1000)
                 {
                     continue;
                 }
                 var anyDangAbility =
                     v.Spellbook.Spells.FirstOrDefault(
                         x =>
-                            x.IsInAbilityPhase && ((x.IsDisable() && x.CanHit(Me)) || x.IsShield()) && x.CanBeCasted(Me));
+                            x.IsInAbilityPhase && (x.IsDisable() && x.CanHit(Me) || x.IsShield()) && x.CanBeCasted(Me));
                 if (anyDangAbility!=null)
                 {
                     if (dpActivated /*|| magicImmnune */|| linkProt || isInvul)
@@ -196,7 +201,7 @@ namespace Auto_Disable
                     item.UseAbility();
                 }
                 ComboSleeper.Sleep(350, item.StoredName() + hero.StoredName());
-                Log.Debug($"item: {item.StoredName()}");
+                Log.Debug($"item: {item.StoredName()} --> {hero.GetRealName()}");
                 if (MenuManager.IsUseOnlyOne)
                     ComboSleeper.Sleep(350, hero.StoredName());
                 return MenuManager.IsUseOnlyOne;

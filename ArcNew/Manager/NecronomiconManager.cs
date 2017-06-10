@@ -16,7 +16,7 @@ namespace ArcAnnihilation.Manager
             ObjectManager.OnAddEntity += args =>
             {
                 var hero = args.Entity as Unit;
-                if (hero == null || hero.Team != Core.MainHero.Hero.Team || !hero.IsControllable) return;
+                if (hero == null || !hero.IsValid || hero.Team != Core.MainHero.Hero.Team || !hero.IsControllable) return;
 
                 if (hero.Name.Contains("npc_dota_necronomicon_warrior") ||
                     hero.Name.Contains("npc_dota_necronomicon_archer"))

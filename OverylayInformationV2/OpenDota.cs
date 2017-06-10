@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
+using Ensage.Common.Objects;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
@@ -85,6 +87,10 @@ namespace OverlayInformation
         public string Country;
         public string PossibleMmr;
         public string Wr;
+        public Hero Hero;
+        public string TotalGames;
+        public string Wins;
+        public int WrOnCurrentHero;
 
         public PlayerInfo(int id, int solo, int party, string country, string possibleMmr, string winrate, string matches, string name)
         {
@@ -96,6 +102,16 @@ namespace OverlayInformation
             PossibleMmr = possibleMmr;
             Wr = winrate;
             Name = name.Length > 10 ? name.Substring(0, 10) : name;
+        }
+
+        public PlayerInfo(int id, int solo, int party, string country, string possibleMmr, string winrate,
+            string matches, string name, Hero hero, string totalGames, string wins, int wrOnCurrentHero)
+            : this(id, solo, party, country, possibleMmr, winrate, matches, name)
+        {
+            Hero = hero;
+            TotalGames = totalGames;
+            Wins = wins;
+            WrOnCurrentHero = wrOnCurrentHero;
         }
     }
     public class OpenDota
@@ -141,16 +157,21 @@ namespace OverlayInformation
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
-
+            Drawing.OnDraw+=DrawingOnOnDraw;
             Events.OnLoad += (sender, args) =>
             {
-                //DelayAction.Add(5000, SingleFake);
+                //DelayAction.Add(1000, SingleFake);
             };
 
             //DelayAction.Add(1000,PartyFake);
         }
 
-        private static async void GameOnOnUpdate(EventArgs args)
+        private static void DrawingOnOnDraw(EventArgs args)
+        {
+            //DrawText("Test", new Vector2(50), new Vector2(500, 500));
+        }
+
+        private static void GameOnOnUpdate(EventArgs args)
         {
             try
             {
@@ -167,139 +188,168 @@ namespace OverlayInformation
             {
                 _loaded = true;
                 Printer.PrintInfo("[OpenDota] Loaded");
-                for (uint i = 0; i < Game.MaximumClients; i++)
+                Beeeeaaaaaar();
+            }
+        }
+
+        private static async void Beeeeaaaaaar()
+        {
+            for (uint i = 0; i < Game.MaximumClients; i++)
+            {
+                var player = ObjectManager.GetPlayerById(i);
+                if (player == null || !player.IsValid || player.IsFakeClient)
+                    continue;
+                try
                 {
-                    var player = ObjectManager.GetPlayerById(i);
-                    if (player == null || !player.IsValid || player.IsFakeClient)
+                    Printer.PrintSuccess(new string('-', Console.BufferWidth));
+                    var steamId = player.PlayerSteamId;
+                    Log.Debug($"Player({i}): {player.Name} => id: {steamId}");
+                    if (steamId <= 10)
+                    {
+                        Log.Error("Wrong steam id!");
                         continue;
+                    }
+                    var test = await FindWinRateAsync(steamId);
+                    if (test < 0 || test > 100)
+                    {
+                        Log.Error("Cant load this player!");
+                        continue;
+                    }
+                    var playerReq = await GetPlayerAsync(steamId);
+                    var wr = await FindFullWinRateAsync(steamId);
+                    //var accName = GetValue("personaname\":", playerReq);
+                    int estimate = 0;
+                    int stdDev = 0;
+                    int solo = 0;
+                    int party = 0;
+                    string country = "";
+                    string possibleMmr = "";
+                    string matches = "";
+                    string infoAboutHero = "";
+                    /*int estimate = Convert.ToInt32(GetValue("estimate\":", playerReq));
+                    int stdDev = Convert.ToInt32(GetValue("stdDev\":", playerReq));
+                    int solo = Convert.ToInt32(GetValue("solo_competitive_rank\":", playerReq));
+                    int party = Convert.ToInt32(GetValue("competitive_rank\":", playerReq));
+                    var country = GetValue("loccountrycode\":", playerReq);
+                    var possibleMmr = $"{estimate - stdDev}-{estimate + stdDev}";*/
                     try
                     {
-                        Printer.PrintSuccess(new string('-', Console.BufferWidth));
-                        var steamId = player.PlayerSteamId;
-                        Log.Debug($"Player({i}): {player.Name} => id: {steamId}");
-                        if (steamId <= 10)
-                        {
-                            Log.Error("Wrong steam id!");
-                            continue;
-                        }
-                        var test = await FindWinRateAsync(steamId);
-                        if (test < 0 || test > 100)
-                        {
-                            Log.Error("Cant load this player!");
-                            continue;
-                        }
-                        var playerReq = await GetPlayerAsync(steamId);
-                        var wr = await FindFullWinRateAsync(steamId);
-                        //var accName = GetValue("personaname\":", playerReq);
-                        int estimate = 0;
-                        int stdDev = 0;
-                        int solo = 0;
-                        int party = 0;
-                        string country = "";
-                        string possibleMmr = "";
-                        string matches = "";
-                        /*int estimate = Convert.ToInt32(GetValue("estimate\":", playerReq));
-                        int stdDev = Convert.ToInt32(GetValue("stdDev\":", playerReq));
-                        int solo = Convert.ToInt32(GetValue("solo_competitive_rank\":", playerReq));
-                        int party = Convert.ToInt32(GetValue("competitive_rank\":", playerReq));
-                        var country = GetValue("loccountrycode\":", playerReq);
-                        var possibleMmr = $"{estimate - stdDev}-{estimate + stdDev}";*/
-                        try
-                        {
-                            //Console.WriteLine("estimate: "+ GetValue("estimate\":", playerReq));
-                            estimate = Convert.ToInt32(GetValue("{\"estimate\":", playerReq));
-
-                        }
-                        catch (Exception)
-                        {
-                            //Log.Error("1");
-                        }
-                        try
-                        {
-                            var item = GetValue("stdDev\":", playerReq);
-                            item = item.Substring(0, item.IndexOf(".", StringComparison.Ordinal));
-                            stdDev = Convert.ToInt32(item);
-                        }
-                        catch (Exception)
-                        {
-                            //Log.Error("2");
-                        }
-                        try
-                        {
-                            var item = GetValue("solo_competitive_rank\":", playerReq);
-                            solo = Convert.ToInt32(item/*.Substring(1, item.Length - 2)*/);
-                        }
-                        catch (Exception)
-                        {
-                            //Log.Error("3");
-                        }
-                        try
-                        {
-                            var item = GetValue("\"competitive_rank\":", playerReq);
-                            party = Convert.ToInt32(item/*.Substring(1, item.Length - 2)*/);
-                        }
-                        catch (Exception)
-                        {
-                            //Log.Error("4");
-                        }
-                        try
-                        {
-                            country = GetValue("loccountrycode\":", playerReq);
-                        }
-                        catch (Exception)
-                        {
-                            //Log.Error("5");
-                        }
-                        try
-                        {
-                            possibleMmr = $"{estimate - stdDev}-{estimate + stdDev}";
-                        }
-                        catch (Exception)
-                        {
-                            //Log.Error("6");
-                        }
-                        try
-                        {
-                            matches = await FindMatches(steamId);
-                        }
-                        catch (Exception)
-                        {
-                            //Log.Error("7");
-                        }
-                        //Log.Debug("test: "+ matches);
-                        PlayerInfoList.Add(new PlayerInfo((int)i, solo, party, country, possibleMmr, wr, matches, player.Name));
-                        Log.Debug(
-                            $"[WinRate: {wr}] [solo: {solo}] [party {party}] [estimate mmr: {possibleMmr}] [{country}] history: {matches}");
-                        //var success = await TryToFindPlayerAsync(player.Name);
-                        //var success = TryToFindPlayer(player.Name);
-
-                        /*Log.Debug($"Try To Find player with search API -> player({i}): " + player.Name + " -> (steamId)" +
-                                  player.PlayerSteamID +
-                                  $" -> success: {success.Length != 2} bufferSize [{success.Length}]");
-
-                        if (success.Length != 2)
-                        {
-                            var accId = GetValue("account_id\":", success);
-                            var accName = GetValue("personaname\":", success);
-                            Log.Debug("id: " + accId);
-                            Log.Debug("personaname: " + accName);
-                            Log.Debug("wr: " + FindWinRate(Convert.ToUInt32(accId)) + "%");
-                            //Log.Debug("GetPlayer: " + GetPlayer(accId));
-                        }
-                        else
-                        {
-                            Log.Debug($"cant find {player.Name}!");
-                        }*/
-
-
+                        //Console.WriteLine("estimate: "+ GetValue("estimate\":", playerReq));
+                        estimate = Convert.ToInt32(GetValue("{\"estimate\":", playerReq));
 
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
-                        Log.Debug($"error with player: {player.Name} ({i}) -> {e}");
+                        //Log.Error("1");
+                    }
+                    try
+                    {
+                        var item = GetValue("stdDev\":", playerReq);
+                        item = item.Substring(0, item.IndexOf(".", StringComparison.Ordinal));
+                        stdDev = Convert.ToInt32(item);
+                    }
+                    catch (Exception)
+                    {
+                        //Log.Error("2");
+                    }
+                    try
+                    {
+                        var item = GetValue("solo_competitive_rank\":", playerReq);
+                        solo = Convert.ToInt32(item/*.Substring(1, item.Length - 2)*/);
+                    }
+                    catch (Exception)
+                    {
+                        //Log.Error("3");
+                    }
+                    try
+                    {
+                        var item = GetValue("\"competitive_rank\":", playerReq);
+                        party = Convert.ToInt32(item/*.Substring(1, item.Length - 2)*/);
+                    }
+                    catch (Exception)
+                    {
+                        //Log.Error("4");
+                    }
+                    try
+                    {
+                        country = GetValue("loccountrycode\":", playerReq);
+                    }
+                    catch (Exception)
+                    {
+                        //Log.Error("5");
+                    }
+                    try
+                    {
+                        possibleMmr = $"{estimate - stdDev}-{estimate + stdDev}";
+                    }
+                    catch (Exception)
+                    {
+                        //Log.Error("6");
+                    }
+                    try
+                    {
+                        matches = await FindMatches(steamId);
+                    }
+                    catch (Exception)
+                    {
+                        //Log.Error("7");
+                    }
+                    try
+                    {
+                        infoAboutHero = await FindInfoAboutHero(steamId, (uint)player.Hero.HeroId);
+                    }
+                    catch (Exception)
+                    {
+                        //Log.Error("8");
+                    }
+                    //Log.Debug("test: "+ matches);
+
+                    Log.Debug(
+                        $"[WinRate: {wr}] [solo: {solo}] [party {party}] [estimate mmr: {possibleMmr}] [{country}] history: {matches}");
+                    string totalGames = "";
+                    string wins = "";
+                    try
+                    {
+                        totalGames = GetValue("games", infoAboutHero).TrimStart(':');
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    try
+                    {
+                        wins = GetValue("win", infoAboutHero).TrimStart(':');
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    var wrOnCurrentHero = 0;
+                    try
+                    {
+                        wrOnCurrentHero = (int)((float)Convert.ToInt32(wins) / Convert.ToInt32(totalGames) * 100.0f);
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    try
+                    {
+                        Log.Debug(
+                        $"[Hero: {player?.Hero?.GetRealName()} -> [Games {totalGames}] [Wins {wins}] [WR {wrOnCurrentHero}%]");
+                    }
+                    catch (Exception)
+                    {
+
                     }
 
+                    PlayerInfoList.Add(new PlayerInfo((int)i, solo, party, country, possibleMmr, wr, matches, player?.Name, player?.Hero, totalGames, wins, wrOnCurrentHero));
                 }
+                catch (Exception e)
+                {
+                    Log.Debug($"error with player: {player.Name} ({i}) -> {e}");
+                }
+
             }
         }
 
@@ -325,7 +375,8 @@ namespace OverlayInformation
                 foreach (var playerInfo in newlist)
                 {
                     var id = playerInfo.Id;
-                    var position = new Vector2(HeroPickStageScreenHelper.GetPlayerPosition(id), 35);
+                    var startXPosition = HeroPickStageScreenHelper.GetPlayerPosition(id);
+                    var position = new Vector2(startXPosition, 35);
                     var size = HudInfoNew.GetTopPanelSizeY();
                     position += new Vector2(0, (float)size * 1.8f);
                     var defClr = Color.White;
@@ -359,18 +410,37 @@ namespace OverlayInformation
                         try
                         {
                             var n = Convert.ToInt32(playerInfo.Country);
+                            if (n > 0)
+                            {
+                                position.Y += 15;
+                                DrawShadowText($"[{playerInfo.Country}]", (int) position.X, (int) position.Y, defClr);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        
+                    }
+                    if (playerInfo.TotalGames.Length > 0)
+                    {
+                        try
+                        {
+                            var n = Convert.ToInt32(playerInfo.TotalGames);
                             if (n == 0)
                                 continue;
                         }
                         catch (Exception)
                         {
-                            // ignored
+                            continue;
                         }
-
+                        var totalGames = Convert.ToInt32(playerInfo.TotalGames);
+                        var wins = Convert.ToInt32(playerInfo.Wins);
+                        var loses = totalGames-wins;
+                        var wr = playerInfo.WrOnCurrentHero;
                         position.Y += 15;
-                        DrawShadowText($"[{playerInfo.Country}]", (int)position.X, (int)position.Y, defClr);
+                        position.X = startXPosition;
+                        DrawShadowText($"[{playerInfo.Hero?.GetRealName()}: {wins}/{loses} ({wr}%)]", (int)position.X, (int)position.Y, defClr);
                     }
-
                 }
             }
         }
@@ -522,11 +592,41 @@ namespace OverlayInformation
             Log.Debug("loading!");
             var s = await GetPlayerAsync(1);
             Log.Debug(s);
+            s = await FindInfoAboutHero(1, (uint) ObjectManager.LocalHero.HeroId);
+            Log.Debug(s);
+            var totalGames = GetValue("games", s).TrimStart(':');
+            var wins = GetValue("win", s).TrimStart(':');
+            var wrOnCurrentHero = (float)Convert.ToInt32(wins) / Convert.ToInt32(totalGames) * 100.0f;
+            Log.Debug(
+                $"[Hero: {ObjectManager.LocalHero.GetRealName()} -> [Games {totalGames}] [Wins {wins}] [WR {wrOnCurrentHero}%]");
         }
 
         #endregion
 
         #region render stuff
+
+        private static Vector2 DrawText(string text, Vector2 tSize, Vector2 startPos)
+        {
+            var textSize = Drawing.MeasureText(text, "Arial",
+                tSize, FontFlags.None);
+            Drawing.DrawRect(startPos, textSize, new Color(0, 0, 0, 155));
+            var textPos = startPos;
+            Drawing.DrawText(
+                text,
+                textPos, tSize,
+                Color.White,
+                FontFlags.AntiAlias | FontFlags.StrikeOut);
+            return textSize;
+        }
+
+        private static Vector2 DrawHeroIcon(Hero target, Vector2 size, Vector2 startPos)
+        {
+            var extra = new Vector2(size.X / 3, 0);
+            var finalSize = size + extra;
+            Drawing.DrawRect(startPos, finalSize, Textures.GetHeroTexture(target.StoredName()));
+            Drawing.DrawRect(startPos, finalSize, new Color(0, 0, 0, 255), true);
+            return finalSize;
+        }
 
         private static void DrawShadowText(string stext, int x, int y, Color clr)
         {
@@ -701,6 +801,25 @@ namespace OverlayInformation
             info += "]";
             return info;
         }
+        private static async Task<string> FindInfoAboutHero(uint playerid,uint heroId)
+        {
+            var webRequest = WebRequest.Create($"https://api.opendota.com/api/players/{playerid}/heroes?hero_id={heroId}");
+            string strContent;
+            var response = (HttpWebResponse)await Task.Factory
+                .FromAsync(webRequest.BeginGetResponse,
+                    webRequest.EndGetResponse,
+                    null);
+            using (var content = response.GetResponseStream())
+            using (var reader = new StreamReader(content))
+            {
+                strContent = reader.ReadToEnd();
+                //Console.WriteLine(strContent);
+            }
+            string trimmed = strContent.Trim();
+            var end = trimmed.Substring(0, trimmed.IndexOf('}') + 1);
+            return end;
+        }
+
         private static string GetValue(string value, string path2)
         {
             var path = string.Copy(path2);

@@ -26,7 +26,7 @@ namespace ArcAnnihilation
             Me = me.Hero;
             _sleeper = new Sleeper();
             var manager = new InventoryManager(new EnsageServiceContext(Me));
-            Printer.Print("trying to init new midas manager for "+me);
+            Printer.Print("trying to init new midas manager for " + me);
             var working = true;
             manager.CollectionChanged += (sender, args) =>
             {
@@ -72,7 +72,7 @@ namespace ArcAnnihilation
             if (Midas != null && Midas.CanBeCasted() && !_sleeper.Sleeping)
             {
                 var creep =
-                    EntityManager<Creep>.Entities.Where(x => x.IsValid && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient)
+                    EntityManager<Creep>.Entities.Where(x => x.IsValid && x.IsAlive && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient)
                         .OrderByDescending(x => x.Health).FirstOrDefault();
                 if (creep != null)
                 {
@@ -82,11 +82,9 @@ namespace ArcAnnihilation
             }
         }
 
-
         public static AutoMidas GetNewInstance(UnitBase me)
         {
             return new AutoMidas(me);
         }
-
     }
 }

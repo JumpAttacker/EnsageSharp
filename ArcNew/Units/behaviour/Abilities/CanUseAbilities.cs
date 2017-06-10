@@ -24,12 +24,14 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
             var flux = unitBase.Flux;
             var magneticField = unitBase.MagneticField;
             var spark = unitBase.Spark;
-            if (!_multiSleeper.Sleeping(flux) && unitBase.AbilityChecker.IsAbilityEnabled(flux.GetAbilityId()) && flux.CanBeCasted() && flux.CanHit(Core.Target))
+            if (!_multiSleeper.Sleeping(flux) && unitBase.AbilityChecker.IsAbilityEnabled(flux.GetAbilityId()) &&
+                flux.CanBeCasted() && flux.CanHit(Core.Target))
             {
-                if (Core.Target.IsLinkensProtected() ||!MenuManager.SmartFlux || !EntityManager<Unit>.Entities.Any(
-                    x =>
-                        !x.Equals(Core.Target) && x.Team == Core.Target.Team && x.Name != "npc_dota_thinker" && x.IsAlive && x.IsVisible &&
-                        Ensage.SDK.Extensions.EntityExtensions.Distance2D(x, Core.Target) <= 225))
+                if (Core.Target.IsLinkensProtected() || !MenuManager.SmartFlux || !EntityManager<Unit>.Entities.Any(
+                        x =>
+                            !x.Equals(Core.Target) && x.Team == Core.Target.Team && x.Name != "npc_dota_thinker" &&
+                            x.IsAlive && x.IsVisible &&
+                            Ensage.SDK.Extensions.EntityExtensions.Distance2D(x, Core.Target) <= 225))
                 {
                     flux.UseAbility(Core.Target);
                     Printer.Both("Flux usages " + flux.GetAbilityDelay());
@@ -38,8 +40,10 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
                 }
             }
             var distance = unitBase.Hero.Distance2D(Core.Target);
-            if (!_multiSleeper.Sleeping(magneticField) && magneticField != null && unitBase.AbilityChecker.IsAbilityEnabled(magneticField.GetAbilityId()) && magneticField.CanBeCasted() &&
-                !unitBase.Hero.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 && Core.Target.IsVisible)
+            if (!_multiSleeper.Sleeping(magneticField) && magneticField != null &&
+                unitBase.AbilityChecker.IsAbilityEnabled(magneticField.GetAbilityId()) && magneticField.CanBeCasted() &&
+                !unitBase.Hero.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 &&
+                Core.Target.IsVisible)
             {
                 if (!MenuManager.MagneticField && Core.Target.IsMelee)
                 {
@@ -51,7 +55,9 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
                 Printer.Both("MagneticField usages");
                 await Task.Delay(magneticField.GetAbilityDelay(), Core.ComboToken.Token);
             }
-            if (!_multiSleeper.Sleeping(spark) && spark != null && unitBase.AbilityChecker.IsAbilityEnabled(spark.GetAbilityId()) && spark.CanBeCasted() && !Prediction.IsTurning(Core.Target) && unitBase.Hero.IsVisibleToEnemies)
+            if (!_multiSleeper.Sleeping(spark) && spark != null &&
+                unitBase.AbilityChecker.IsAbilityEnabled(spark.GetAbilityId()) && spark.CanBeCasted() &&
+                !Prediction.IsTurning(Core.Target) && unitBase.Hero.IsVisibleToEnemies)
             {
                 var delay = spark.GetAbilityDelay();
                 var predVector3 = Prediction.PredictedXYZ(Core.Target, 2000 + delay);

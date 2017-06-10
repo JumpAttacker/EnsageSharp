@@ -26,7 +26,10 @@ namespace Auto_Disable
         public static bool HasDangAbility(this Hero v)
         {
             var spells =
-                v.Spellbook.Spells.Any(x => x.IsDisable() && x.CanHit(Core.Me) && x.CanBeCasted());
+                v.Spellbook.Spells.Any(
+                    x =>
+                        x.IsDisable() && (x.CanHit(Core.Me) || x.Distance2D(ObjectManager.LocalHero) <= 500) &&
+                        x.CanBeCasted());
             var items =
                 v.Inventory.Items.Any(x => x.IsDisable() && x.CanHit(Core.Me) && x.CanBeCasted());
             return spells || items;

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Ensage;
-using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -141,17 +140,19 @@ namespace Auto_Disable
         public static Menu[] Menus = new Menu[10];
         
 
-        public static void TryToInitNewHero(Hero hero)
+        public static bool TryToInitNewHero(Hero hero)
         {
             if (hero == null)
             {
                 Printer.PrintError("[AutoDisable] TryToInitNewHero (hero==null)");
-                return;
+                return false;
             }
+            if (hero.Player==null)
+                return false;
             if (HeroesInSystem.Contains(hero))
-                return;
+                return true;
             if (Menus[hero.Player.Id] != null)
-                return;
+                return true;
             HeroesInSystem.Add(hero);
             Menus[hero.Player.Id] = new Menu("", hero.ClassId.ToString(), false, hero.StoredName());
             _heroes.AddSubMenu(Menus[hero.Player.Id]);
@@ -181,6 +182,7 @@ namespace Auto_Disable
             InitAbility(hero,"item_force_staff");
             InitAbility(hero,"item_blink");
             InitNewSubMenu(hero,"Angry Disabler");
+            return true;
         }
         private static void InitAbility(Hero hero, string name)
         {
