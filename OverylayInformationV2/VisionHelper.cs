@@ -40,6 +40,7 @@ namespace OverlayInformation
 
         public static void OnChange(Entity sender, Int32PropertyChangeEventArgs args)
         {
+            return;
             var hero = sender as Hero;
             if (hero == null)
                 return;

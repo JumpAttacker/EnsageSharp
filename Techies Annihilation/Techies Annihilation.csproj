@@ -36,17 +36,38 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="clipper_library">
+      <HintPath>C:\En\References\clipper_library.dll</HintPath>
+    </Reference>
     <Reference Include="Ensage">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\Ensage.dll</HintPath>
+      <HintPath>C:\En\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\Ensage.Common.dll</HintPath>
+      <HintPath>C:\En\References\Ensage.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Ensage.SDK">
+      <HintPath>C:\En\References\Ensage.SDK.dll</HintPath>
+    </Reference>
+    <Reference Include="PlaySharp.Toolkit">
+      <HintPath>C:\En\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\SharpDX.dll</HintPath>
+      <HintPath>C:\En\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1">
+      <HintPath>C:\En\References\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11">
+      <HintPath>C:\En\References\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9">
-      <HintPath>C:\Users\Jumbo\Downloads\LeagueSharp_2\System\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>C:\En\References\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI">
+      <HintPath>C:\En\References\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>C:\En\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -59,6 +80,19 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BombFolder\BombCatcher.cs" />
+    <Compile Include="BombFolder\BombDamageManager.cs" />
+    <Compile Include="BombFolder\BombManager.cs" />
+    <Compile Include="BombFolder\Enums.cs" />
+    <Compile Include="BombFolder\Stacker.cs" />
+    <Compile Include="Features\BombStatus.cs" />
+    <Compile Include="Features\Core.cs" />
+    <Compile Include="Features\DrawHelper.cs" />
+    <Compile Include="Features\ForceStaff.cs" />
+    <Compile Include="Features\StackDrawing.cs" />
+    <Compile Include="Utils\Helper.cs" />
+    <Compile Include="MenuManager.cs" />
+    <Compile Include="Utils\Printer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

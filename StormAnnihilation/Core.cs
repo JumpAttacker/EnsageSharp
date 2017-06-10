@@ -6,7 +6,7 @@ using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using log4net;
 using PlaySharp.Toolkit.Logging;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
 
 namespace StormAnnihilation
 {

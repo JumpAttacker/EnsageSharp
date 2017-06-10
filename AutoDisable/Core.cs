@@ -98,7 +98,7 @@ namespace Auto_Disable
                         continue;
                 }
                 AbilityId initAbility;
-                if (Members.Initiators.TryGetValue(v.ClassID, out initAbility) && MenuManager.IsAntiInitiators)
+                if (Members.Initiators.TryGetValue(v.ClassId, out initAbility) && MenuManager.IsAntiInitiators)
                 {
                     var initSpell = v.FindSpell322(initAbility);
                     if (initSpell != null && (initSpell.Cooldown / initSpell.CooldownLength > 0.99 || initSpell.IsInAbilityPhase))
@@ -310,7 +310,7 @@ namespace Auto_Disable
             if (_fountain == null || !_fountain.IsValid)
             {
                 _fountain = ObjectManager.GetEntities<Unit>()
-                    .FirstOrDefault(x => x.Team == Me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                    .FirstOrDefault(x => x.Team == Me.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
                 if (_fountain != null)
                 {
                     Log.Info($"[Init] fountain {_fountain.Team}");

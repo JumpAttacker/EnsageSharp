@@ -93,7 +93,7 @@ namespace TinkerAnnihilation
 
             };
             if (!_loaded && ObjectManager.LocalHero != null &&
-                ObjectManager.LocalHero.ClassID == ClassID.CDOTA_Unit_Hero_Tinker && Game.IsInGame)
+                ObjectManager.LocalHero.ClassId == ClassId.CDOTA_Unit_Hero_Tinker && Game.IsInGame)
             {
                 Load();
                 _loaded = true;
@@ -117,7 +117,7 @@ namespace TinkerAnnihilation
 
         private static void Load()
         {
-            if (ObjectManager.LocalHero.ClassID != ClassID.CDOTA_Unit_Hero_Tinker)
+            if (ObjectManager.LocalHero.ClassId != ClassId.CDOTA_Unit_Hero_Tinker)
                 return;
             if (Members.MyHero == null || !Members.MyHero.IsValid)
             {

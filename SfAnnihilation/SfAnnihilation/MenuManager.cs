@@ -40,7 +40,7 @@ namespace SfAnnihilation
             var combo = new Menu("Combo", "Combo");
             combo.AddItem(new MenuItem("combo.Key", "Combo Key").SetValue(new KeyBind('F', KeyBindType.Press)));
             combo.AddItem(new MenuItem("combo.Raze", "Use ShadowRaze in combo").SetValue(true));
-            combo.AddItem(new MenuItem("combo.orbwalking.followTarget", "OrbWalking: follow target?").SetValue(true))
+            combo.AddItem(new MenuItem("combo.orbwalking.followTarget", "OrbWalking: follow Target?").SetValue(true))
                 .SetTooltip("or mouse");
             var aim = new Menu("Raze Aim Settings", "Raze Aim Settings");
             aim.AddItem(new MenuItem("aim.Key", "aim Key").SetValue(new KeyBind('Q', KeyBindType.Toggle)));

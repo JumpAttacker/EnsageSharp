@@ -12,7 +12,7 @@ namespace MeepoAnnihilation
             if (_ally == null || !_ally.IsValid)
             {
                 _ally = ObjectManager.GetEntities<Unit>()
-                    .FirstOrDefault(x => x.Team == ObjectManager.LocalHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                    .FirstOrDefault(x => x.Team == ObjectManager.LocalHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
             }
             return _ally;
         }
@@ -21,7 +21,7 @@ namespace MeepoAnnihilation
             if (_enemy == null || !_enemy.IsValid)
             {
                 _enemy = ObjectManager.GetEntities<Unit>()
-                    .FirstOrDefault(x => x.Team != ObjectManager.LocalHero.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                    .FirstOrDefault(x => x.Team != ObjectManager.LocalHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
             }
             return _enemy;
         }

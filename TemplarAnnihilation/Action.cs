@@ -15,7 +15,6 @@ namespace TemplarAnnihilation
         private static bool IsEnable => Menu.Item("Enable").GetValue<bool>();
         private static bool IsRangeEnable => Menu.Item("Range.Enable").GetValue<bool>();
 
-        public static Hero GlobalTarget;
         private static MultiSleeper _spellSleeper;
         private static EfeectMaster _rangeEfeectMaster;
 
@@ -66,11 +65,13 @@ namespace TemplarAnnihilation
             if (enemyPossibleHeroes == null)
                 return;*/
             var startPos = new Vector2(100, 100);
-            var size = new Vector2(160, 60);
+            var size = new Vector2(160, 80);
             Drawing.DrawRect(startPos, size, new Color(100, 100, 100, 100));
             var s1 = $"enemyHeroes: {_enemyHeroes?.Count}";
             var s2 = $"enemyCreeps: {_enemyCreeps?.Count()}";
             var s3 = $"enemyPossibleHeroes: {_enemyPossibleHeroes?.Count}";
+            var s4 =
+                $"trap_count: {ObjectManager.GetEntities<Entity>().Count(x => x.Name == "templar_assassin_self_trap")}";
             var textPos = startPos + new Vector2(5, 5);
             Drawing.DrawText(
                 s1,
@@ -90,11 +91,17 @@ namespace TemplarAnnihilation
                 new Vector2(15, 0),
                 Color.White,
                 FontFlags.AntiAlias | FontFlags.StrikeOut);
+            Drawing.DrawText(
+                s4,
+                textPos + new Vector2(0, 60),
+                new Vector2(15, 0),
+                Color.White,
+                FontFlags.AntiAlias | FontFlags.StrikeOut);
         }
 
         private static void DrawPsiBladeStuff()
         {
-            var psiBlade = Abilities.FindAbility("templar_assassin_psi_blades");
+            var psiBlade = ObjectManager.LocalHero.GetAbilityById(AbilityId.templar_assassin_psi_blades);
             if (psiBlade==null || psiBlade.Level==0)
                 return;
             _enemyHeroes =
@@ -105,7 +112,7 @@ namespace TemplarAnnihilation
                 ObjectManager.GetEntitiesFast<Creep>()
                     .Where(
                         x =>
-                            x.IsAlive && x.IsVisible && (x.Team != MyTeam || (float)x.Health / (float)x.MaximumHealth < 0.50) &&
+                            x!=null && x.IsValid && x.IsSpawned && x.IsAlive && x.IsVisible && (x.Team != MyTeam || (float)x.Health / (float)x.MaximumHealth < 0.50) &&
                             x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius);
             
             var extraRange = 550 + 40 * psiBlade.Level;
@@ -115,7 +122,6 @@ namespace TemplarAnnihilation
                         x.Team != MyTeam && x.IsAlive && x.IsVisible &&
                         x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius + extraRange)
                     .ToList();
-            var myPos = MyHero.Position;
             foreach (var hero in _enemyHeroes)
             {
                 var heroPos = hero.Position;
@@ -164,7 +170,6 @@ namespace TemplarAnnihilation
                 var someOne = false;
                 foreach (var possibleHero in _enemyPossibleHeroes)
                 {
-
                     var posHeroPos = possibleHero.Position;
                     var pointer = new Point((int)posHeroPos.X, (int)posHeroPos.Y);
                     var masPoints = Helper.GetNeededPoinits(heroPos, point, 75);

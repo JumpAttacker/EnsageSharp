@@ -30,12 +30,12 @@ namespace Auto_Disable
 
         public static Team MyTeam;
 
-        public static readonly Dictionary<ClassID, AbilityId> Initiators = new Dictionary<ClassID, AbilityId>();
-        public static readonly List<ClassID> DangIltimate = new List<ClassID>
+        public static readonly Dictionary<ClassId, AbilityId> Initiators = new Dictionary<ClassId, AbilityId>();
+        public static readonly List<ClassId> DangIltimate = new List<ClassId>
         {
-            ClassID.CDOTA_Unit_Hero_Magnataur,
-            ClassID.CDOTA_Unit_Hero_Tidehunter,
-            ClassID.CDOTA_Unit_Hero_FacelessVoid
+            ClassId.CDOTA_Unit_Hero_Magnataur,
+            ClassId.CDOTA_Unit_Hero_Tidehunter,
+            ClassId.CDOTA_Unit_Hero_FacelessVoid
         };
     }
 }

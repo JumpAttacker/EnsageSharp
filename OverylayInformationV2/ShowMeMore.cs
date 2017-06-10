@@ -15,7 +15,6 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using SharpDX.Direct3D9;
-
 namespace OverlayInformation
 {
     internal class TeleportEffect
@@ -93,33 +92,35 @@ namespace OverlayInformation
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);        
         public static void OnValueChanged(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
         {
-            _textFont = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = MiniMapSize,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
+            if (Drawing.RenderMode == RenderMode.Dx9)
+                _textFont = new Font(
+                    Drawing.Direct3DDevice9,
+                    new FontDescription
+                    {
+                        FaceName = "Tahoma",
+                        Height = MiniMapSize,
+                        OutputPrecision = FontPrecision.Default,
+                        Quality = FontQuality.Default
+                    });
         }
         
         public TeleportCatcher()
         {
             _effectList = new List<TeleportEffect>();
-            _textFont = new Font(
-                Drawing.Direct3DDevice9,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = MiniMapSize,
-                    OutputPrecision = FontPrecision.Raster,
-                    Quality = FontQuality.ClearTypeNatural,
-                    CharacterSet = FontCharacterSet.Hangul,
-                    MipLevels = 3,
-                    PitchAndFamily = FontPitchAndFamily.Modern,
-                    Weight = FontWeight.Heavy,
-                });
+            if (Drawing.RenderMode == RenderMode.Dx9)
+                _textFont = new Font(
+                    Drawing.Direct3DDevice9,
+                    new FontDescription
+                    {
+                        FaceName = "Tahoma",
+                        Height = MiniMapSize,
+                        OutputPrecision = FontPrecision.Raster,
+                        Quality = FontQuality.ClearTypeNatural,
+                        CharacterSet = FontCharacterSet.Hangul,
+                        MipLevels = 3,
+                        PitchAndFamily = FontPitchAndFamily.Modern,
+                        Weight = FontWeight.Heavy,
+                    });
             Drawing.OnEndScene += args =>
             {
                 if (!Checker.IsActive())
@@ -138,11 +139,11 @@ namespace OverlayInformation
 
                             var position = particleEffect.GetPosition;
                             var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
-                            var player =
-                                    ObjectManager.GetPlayerByID(
+                            /*var player =
+                                    ObjectManager.GetPlayerById(
                                         (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
                             if (player == null || !player.IsValid)
-                                continue;
+                                continue;*/
 
                             if (!pos.IsZero)
                             {
@@ -201,25 +202,25 @@ namespace OverlayInformation
                         safeList.Add(particleEffect);
                         var pos = DrawOnMiniMap ? Helper.WorldToMinimap(position) : new Vector2();
                         var player =
-                                ObjectManager.GetPlayerByID(
+                                ObjectManager.GetPlayerById(
                                     (uint)ColorList.FindIndex(x => x == particleEffect.GetColor));
-                        if (player == null || !player.IsValid)
-                            continue;
-                        var hero = player.Hero;
+                        /*if (player == null || !player.IsValid)
+                            continue;*/
+                        var hero = player?.Hero;
                         if (!pos.IsZero)
                         {
                             var size = new Vector2(MiniMapSize);
                             /*Drawing.DrawRect(pos - size, size,
                                 new Color(particleEffect.GetColor.X, particleEffect.GetColor.Y,
                                     particleEffect.GetColor.Z));*/
-                            
+
                             //Printer.Print($"Player: {player.Name} | Hero: {hero.GetRealName()}");
-                            if (MinimapType)
-                                Drawing.DrawRect(pos - size/2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
+                            if (MinimapType && hero!=null)
+                                Drawing.DrawRect(pos - size / 2, size, Helper.GetHeroTextureMinimap(hero.StoredName()));
                             else
                             {
-                                Drawing.DrawRect(pos - size/2, size, (Color) particleEffect.GetColor);
-                                Drawing.DrawRect(pos - size/2, size, Color.Black, true);
+                                Drawing.DrawRect(pos - size / 2, size, (Color) particleEffect.GetColor);
+                                Drawing.DrawRect(pos - size / 2, size, Color.Black, true);
                             }
                         }
                         pos = DrawOnMap ? Drawing.WorldToScreen(position) : new Vector2();
@@ -246,7 +247,7 @@ namespace OverlayInformation
                                 var time = particleEffect.GetTimer - (Game.RawGameTime - particleEffect.GetStartTime);
                                 if (time > 0)
                                     Drawing.DrawText(
-                                        $"{time.ToString("0.0")}",
+                                        $"{time:0.0}",
                                         pos + new Vector2(0, size.Y), new Vector2(TimerSize), Color.White,
                                         FontFlags.None);
                             }
@@ -271,21 +272,22 @@ namespace OverlayInformation
         {
             if (isStart)
             {
-                //_effectList.Add(new TeleportEffect(effect, position, color, false, true, 5));
+                _effectList.Add(new TeleportEffect(effect, position, color, false, true, 5));
                 return;
             }
             var id = (uint) ColorList.FindIndex(x => x == color);
             if (id > 10)
             {
-                Log.Debug($"Wrong id: {id} || clr: {color.PrintVector()}");
+                Printer.Print($"Wrong id: {id} || clr: {color.PrintVector()}");
+                //Log.Debug($"Wrong id: {id} || clr: {color.PrintVector()}");
                 return;
             }
-            var player = ObjectManager.GetPlayerByID(id);
+            var player = ObjectManager.GetPlayerById(id);
             var dontTryToFindBoots = false;
             if (player == null || !player.IsValid)
             {
                 Printer.Print("error #" + id + " (cant find player!)");
-                Log.Debug("error #" + id + $" (cant find player!) clr: {color.PrintVector()}");
+                //Log.Debug("error #" + id + $" (cant find player!) clr: {color.PrintVector()}");
                 return;
             }
             if (player.Hero == null || !player.Hero.IsValid)
@@ -303,7 +305,8 @@ namespace OverlayInformation
                 }
                 catch
                 {
-                    Printer.Print($"error in travels: player: {player.Name} || hero: {player?.Hero?.Name}",print: true);   
+                    Printer.Print($"error in travels: player: {player.Name} || hero: {player?.Hero?.Name}",print: true);
+                    Log.Debug($"error in travels: player: {player.Name} || hero: {player?.Hero?.Name}");
                 }
                 
                 var closestTower =
@@ -795,7 +798,7 @@ namespace OverlayInformation
                     {
                         var baseList =
                             ObjectManager.GetEntities<Unit>()
-                                .Where(x => x.IsAlive && x.ClassID == ClassID.CDOTA_NPC_TechiesMines && x.Team != Members.MyHero.Team && !Bombs.Contains(x));
+                                .Where(x => x.IsAlive && x.ClassId == ClassId.CDOTA_NPC_TechiesMines && x.Team != Members.MyHero.Team && !Bombs.Contains(x));
                         foreach (var unit in baseList)
                         {
                             Bombs.Add(unit);

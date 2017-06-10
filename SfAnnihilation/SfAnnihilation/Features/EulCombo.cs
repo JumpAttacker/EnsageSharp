@@ -9,7 +9,9 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
 using SfAnnihilation.Utils;
 using SharpDX;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
+
+//using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace SfAnnihilation.Features
 {
@@ -245,12 +247,14 @@ namespace SfAnnihilation.Features
 
         private static async Task MoveToTarget(CancellationToken token,float dist=1200)
         {
-            while (Me.Distance2D(_target) >= dist)
+            Me.Move(_target.Position);
+            await Task.Delay(100, token);
+            /*while (Me.Distance2D(_target) >= dist)
             {
                 Printer.Log($"{Me.Distance2D(_target)}>={dist} ==> move to target position");
                 Me.Move(_target.Position);
                 await Task.Delay(100,token);
-            }
+            }*/
         }
 
         private static async Task CheckingForBlade(CancellationToken token)

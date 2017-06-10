@@ -58,12 +58,12 @@ namespace OverlayInformation
             topPanel.AddItem(new MenuItem("toppanel.Enable", "Enable").SetValue(true));
             topPanel.AddItem(
                 new MenuItem("toppanel.Targets", "Draw For: ").SetValue(
-                    new StringList(new[] { "Both", "Ally Team", "Enemy Team" })));
+                    new StringList("Both", "Ally Team", "Enemy Team")));
             //===========================
             spellPanel.AddItem(new MenuItem("spellpanel.Enable", "Enable").SetValue(true));
             spellPanel.AddItem(
                 new MenuItem("spellpanel.Targets", "Draw For: ").SetValue(
-                    new StringList(new[] { "Both", "Ally Team", "Enemy Team" })));
+                    new StringList("Both", "Ally Team", "Enemy Team")));
             var oldMethod = new Menu("OldMethod", "Without Textures");
             oldMethod.AddItem(new MenuItem("spellpanel.OldMethod.Enable", "Enable").SetValue(true));
             oldMethod.AddItem(new MenuItem("spellPanel.distBetweenSpells", "Distance spells").SetValue(new Slider(36, 0, 200)));
@@ -87,7 +87,7 @@ namespace OverlayInformation
                     .SetTooltip("render lack of mana when spell on cooldown"));
             ultimate.AddItem(
                 new MenuItem("ultimate.Type", "Type of drawing").SetValue(
-                    new StringList(new[] { "Draw Icon", "Draw Line" }))).ValueChanged += (sender, args) =>
+                    new StringList("Draw Icon", "Draw Line"))).ValueChanged += (sender, args) =>
                     {
                         var newArg = args.GetNewValue<StringList>().SelectedIndex;
                         var newColor = newArg == 1 ? Color.DarkSlateGray : new Color(195, 186, 173, 255);
@@ -119,7 +119,7 @@ namespace OverlayInformation
                 };
             var items = new MenuItem[5];
             visionOnAllyHeroes.AddItem(
-                new MenuItem("toppanel.AllyVision.Type", "Type:").SetValue(new StringList(new[] { "rectangle", "text" }))).ValueChanged +=
+                new MenuItem("toppanel.AllyVision.Type", "Type:").SetValue(new StringList("rectangle", "text"))).ValueChanged +=
                 (sender, args) =>
                 {
                     var index = args.GetNewValue<StringList>().SelectedIndex;
@@ -231,8 +231,10 @@ namespace OverlayInformation
             var itemOverlay = new Menu("Item overlay", "itemOverlay");
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enable", "Enable").SetValue(false)).SetTooltip("will show all items on heroes");
             itemOverlay.AddItem(new MenuItem("itemOverlay.DrawCharges", "Draw Charges").SetValue(true));
-            itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(100, 1, 200)));
-            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra", "Extra").SetValue(new Slider(26, 1, 100)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Size", "Size").SetValue(new Slider(85, 1, 200)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.TextSize", "Text Size").SetValue(new Slider(75, 1, 100)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra.X", "Extra X").SetValue(new Slider(0, -250, 250)));
+            itemOverlay.AddItem(new MenuItem("itemOverlay.Extra.Y", "Extra Y").SetValue(new Slider(-25, -500, 200)));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Ally", "Enable for ally").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Enemy", "Enable for enemy").SetValue(true));
             itemOverlay.AddItem(new MenuItem("itemOverlay.Cour", "Enable for couriers").SetValue(true)).SetTooltip("only for enemy");
@@ -445,26 +447,40 @@ namespace OverlayInformation
             Members.DamageCalculation = new DamageCalculation();
             Members.AbilityOverlay = new AbilityOverlay();
 
-            if (Drawing.Direct3DDevice9 != null)
-                Members.RoshanFont = new Font(
-                    Drawing.Direct3DDevice9,
-                    new FontDescription
-                    {
-                        FaceName = "Tahoma",
-                        Height = 15,
-                        OutputPrecision = FontPrecision.Default,
-                        Quality = FontQuality.Default
-                    });
+            if (Drawing.RenderMode == RenderMode.Dx9)
+            {
+                if (Drawing.Direct3DDevice9 != null)
+                    Members.RoshanFont = new Font(
+                        Drawing.Direct3DDevice9,
+                        new FontDescription
+                        {
+                            FaceName = "Tahoma",
+                            Height = 15,
+                            OutputPrecision = FontPrecision.Default,
+                            Quality = FontQuality.Default
+                        });
+            }
+            /*var sleeper=new Sleeper();
+            Game.OnUpdate += args =>
+            {
+                if (sleeper.Sleeping)
+                    return;
+                sleeper.Sleep(250);
+                Printer.Print("asd");
+                Unit test = null;
+                Printer.Print(test.ClassId.ToString());
+            };*/
             Members.Menu.AddToMainMenu();
         }
     }
+
     internal static class Program
     {
         private static void TestShit()
         {
             ObjectManager.OnAddEntity += args =>
             {
-                Printer.Print($"new: {args.Entity.ClassID}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
+                Printer.Print($"new: {args.Entity.ClassId}/{args.Entity.Name}/{(args.Entity as Unit)?.DayVision}");
             };
             Entity.OnParticleEffectAdded += (entity, eventArgs) =>
             {
@@ -516,16 +532,15 @@ namespace OverlayInformation
         private static void Main()
         {
             //TestShit();
-            _openDota = new OpenDota();
             Events.OnLoad += (sender, args) =>
             {
                 MenuManager.Init();
                 DelayAction.Add(500, () =>
                 {
                     Members.MyHero = ObjectManager.LocalHero;
-                    Members.MyClass = Members.MyHero.ClassID;
+                    Members.MyClass = Members.MyHero.ClassId;
                     Members.MyPlayer = ObjectManager.LocalPlayer;
-
+                    _openDota = new OpenDota();
                     ShrineHelper.Init();
                     Members.AbilityDictionary = new Dictionary<uint, List<Ability>>();
                     Members.ItemDictionary = new Dictionary<uint, List<Item>>();
@@ -556,14 +571,14 @@ namespace OverlayInformation
                     AutoItems.Flush();
                     Game.OnUpdate += RoshanAction.Roshan;
                     Game.OnUpdate += Game_OnUpdate;
-
-                    Drawing.OnDraw += DrawHelper.Overlay;
-
-                    Drawing.OnDraw += ItemPanel.Draw;
-                    Drawing.OnDraw += NewItemPanel.OnDraw;
-                    ShowMeMore.Flush();
-                    Drawing.OnDraw += ShowMeMore.Draw;
-
+                    DelayAction.Add(500, () =>
+                    {
+                        Drawing.OnDraw += DrawHelper.Overlay;
+                        Drawing.OnDraw += ItemPanel.Draw;
+                        Drawing.OnDraw += NewItemPanel.OnDraw;
+                        ShowMeMore.Flush();
+                        Drawing.OnDraw += ShowMeMore.Draw;
+                    });
 
                     Entity.OnParticleEffectAdded += ShowMeMore.Entity_OnParticleEffectAdded;
 

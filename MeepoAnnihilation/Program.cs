@@ -86,7 +86,7 @@ namespace MeepoAnnihilation
             {
                 InitMenu();
                 MyHero = ObjectManager.LocalHero;
-                if (MyHero.ClassID!=ClassID.CDOTA_Unit_Hero_Meepo) return;
+                if (MyHero.ClassId!=ClassId.CDOTA_Unit_Hero_Meepo) return;
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
                     " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
@@ -167,7 +167,7 @@ namespace MeepoAnnihilation
                 new MenuItem("Drawing.posX", "OverlayMenu pos X").SetValue(new Slider(120, 0,
                     500)));
             drawingMenu.AddItem(
-                new MenuItem("Drawing.posY", "OverlayMenu pos Y").SetValue(new Slider(95, 0,
+                new MenuItem("Drawing.posY", "OverlayMenu pos Y").SetValue(new Slider(137, 0,
                     500)));
             drawingMenu.AddItem(
                 new MenuItem("Drawing.Size", "OverlayMenu size").SetValue(new Slider(75, 0,
@@ -224,12 +224,13 @@ namespace MeepoAnnihilation
 
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
-            
             if (!Menu.Item("Enable").GetValue<bool>()) return;
+            if (!args.IsPlayerInput)
+                return;
             if (MyHero == null || !MyHero.IsValid || !MyHero.IsAlive) return;
             var me = sender.Selection.First();
-            var order = args.Order;
-            if (order == Order.Hold || order == Order.MoveLocation)
+            var order = args.OrderId;
+            if (order == OrderId.Hold || order == OrderId.MoveLocation)
             {
                 foreach (
                     var me2 in
@@ -241,17 +242,20 @@ namespace MeepoAnnihilation
                 }
             }
             else if (Menu.Item("Drawing.PoffSystem").GetValue<bool>() &&
-                (args.Order == Order.AbilityLocation || args.Order == Order.AbilityTarget) &&
+                (args.OrderId == OrderId.AbilityLocation || args.OrderId == OrderId.AbilityTarget) &&
                 args.Ability.StoredName() == SpellW[MyHero.Handle].Name)
             {
-                var pos = args.TargetPosition; 
+                var pos = args.TargetPosition;
                 foreach (var meepo in _selectedMeepo.Where(x => !Equals(x, me)))
                 {
                     var handle = meepo.Handle;
                     var spell = SpellW[handle];
+                    if (spell == null)
+                    {
+                        continue;
+                    }
                     if (spell.CanBeCasted())
                     {
-                        //spell.UseAbility(meepo.Position);
                         spell.UseAbility(pos);
                     }
                 }
@@ -1269,7 +1273,7 @@ namespace MeepoAnnihilation
         {
             if (Utils.SleepCheck("SelectChecker"))
             {
-                _selectedMeepo = MyPlayer.Selection.Where(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Meepo).ToList();
+                _selectedMeepo = MyPlayer.Selection.Where(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Meepo).ToList();
                 //Print("selected count: " + SelectedMeepo.Count);
                 Utils.Sleep(150, "SelectChecker");
             }
@@ -1355,10 +1359,15 @@ namespace MeepoAnnihilation
             return enemyHeroes.FirstOrDefault();
         }
 
-        private static void Print(string s,bool print=false)
+        private static void Print(string s,bool print=true)
         {
             if (print)
                 Game.PrintMessage(s);
+        }
+
+        private static string PrintVector(this Vector3 s)
+        {
+            return $"({s.X}:{s.Y}:{s.Z})";
         }
 
         private static float GetRealCastRange(this Ability ability)
@@ -1460,5 +1469,23 @@ namespace MeepoAnnihilation
         }
 
         #endregion
+    }
+    internal class Printer
+    {
+        private static readonly ILog Logger = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static void Print(string s)
+        {
+            Game.PrintMessage(s);
+        }
+        public static void Log(object s)
+        {
+            Logger.Debug(s);
+        }
+        public static void Both(object s)
+        {
+            Logger.Debug(s);
+            Console.WriteLine(s);
+            Game.PrintMessage(s.ToString());
+        }
     }
 }

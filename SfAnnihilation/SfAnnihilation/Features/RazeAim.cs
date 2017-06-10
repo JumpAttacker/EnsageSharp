@@ -29,10 +29,10 @@ namespace SfAnnihilation.Features
                              AbilityDamage.CalculateDamage(Core.RazeLow, Core.Me, x) > x.Health + x.HealthRegeneration));
             if (target != null)
             {
-                if (!KillStealer.Sleeping && Core.Razes.Any(x=>x.CanBeCasted() && x.CanHit(target,checkForFace:false)) && !Core.Razes.Any(y => y.IsInAbilityPhase))
+                if (!KillStealer.Sleeping && Core.Razes.Any(x=>x.CanBeCasted() && x.CanHit(target, x.GetAbilityDelay() + 50,false)) && !Core.Razes.Any(y => y.IsInAbilityPhase))
                 {
-                    var mePos = Me.Position;
-                    var targetPos = Prediction.PredictedXYZ(target, 550);//target.Position;
+                    /*var mePos = Me.Position;
+                    var targetPos = Prediction.PredictedXYZ(Target, 550);//Target.Position;
                     var angle = Me.FindAngleBetween(targetPos, true);
                     var point = new Vector3(
                         (float)
@@ -43,8 +43,9 @@ namespace SfAnnihilation.Features
                             (mePos.Y +
                              100 *
                              Math.Sin(angle)),
-                        target.Position.Z);
-                    Me.Move(point);
+                        Target.Position.Z);
+                    Me.Move(point);*/
+                    Me.Attack(target);
                     KillStealer.Sleep(350);
                 }
                 if (Helper.RazeAimCaster(Core.RazeLow, target))

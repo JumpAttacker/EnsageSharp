@@ -16,7 +16,7 @@ namespace MorphlingAnnihilation
             {
                 if (!_loaded)
                 {
-                    if (ObjectManager.LocalHero.ClassID!=ClassID.CDOTA_Unit_Hero_Morphling)
+                    if (ObjectManager.LocalHero.ClassId!=ClassId.CDOTA_Unit_Hero_Morphling)
                         return;
                     MenuManager.Handle();
                     _loaded = true;

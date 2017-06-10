@@ -134,7 +134,7 @@ namespace OverlayInformation
                 InSys.Any(
                     x => IsAbilityEnable(x.StoredName()) && x.StoredName() == "item_veil_of_discord" && x.CanBeCasted());
             var myPhysDmg = 0f;
-            if (Members.MyHero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
+            if (Members.MyHero.ClassId == ClassId.CDOTA_Unit_Hero_MonkeyKing)
             {
                 var extraMkAbility = Members.MyHero.FindSpell("special_bonus_unique_monkey_king", true)?.Level == 1;
                 var passiveDmg = MkDmg[Members.MyHero.FindSpell("monkey_king_jingu_mastery", true).Level];

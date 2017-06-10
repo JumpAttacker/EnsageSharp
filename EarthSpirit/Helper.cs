@@ -42,7 +42,7 @@ namespace EarthAn
             var remnant = ObjectManager.GetEntities<Unit>()
                 .Where(
                     x =>
-                        x.ClassID == ClassID.CDOTA_Unit_Earth_Spirit_Stone && x.Team == Members.MyTeam &&
+                        x.ClassId == ClassId.CDOTA_Unit_Earth_Spirit_Stone && x.Team == Members.MyTeam &&
                         pos.Distance2D(x.NetworkPosition) <= range && x.IsAlive).OrderBy(y => pos.Distance2D(y.NetworkPosition));
             return remnant.FirstOrDefault();
         }
@@ -53,7 +53,7 @@ namespace EarthAn
             var remnant = ObjectManager.GetEntities<Unit>()
                 .Where(
                     x =>
-                        x.ClassID == ClassID.CDOTA_Unit_Earth_Spirit_Stone && x.Team == Members.MyTeam &&
+                        x.ClassId == ClassId.CDOTA_Unit_Earth_Spirit_Stone && x.Team == Members.MyTeam &&
                         pos.Distance2D(x.NetworkPosition) <= 1500 && x.IsAlive && x.HasModifier(mod)).OrderBy(y => pos.Distance2D(y.NetworkPosition));
             return remnant.FirstOrDefault();
         }

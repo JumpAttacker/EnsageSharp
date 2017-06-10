@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // Управление общими сведениями о сборке осуществляется с помощью 
@@ -32,5 +31,5 @@ using System.Runtime.InteropServices;
 // Можно задать все значения или принять номера сборки и редакции по умолчанию 
 // используя "*", как показано ниже:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.1.6.7")]
-[assembly: AssemblyFileVersion("3.1.6.7")]
+[assembly: AssemblyVersion("3.1.7.5")]
+[assembly: AssemblyFileVersion("3.1.7.5")]

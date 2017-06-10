@@ -11,6 +11,8 @@ namespace StormAnnihilation
             Events.OnLoad += (sender, args) =>
             {
                 Core.Me = ObjectManager.LocalHero;
+                if (Core.Me.ClassId != ClassId.CDOTA_Unit_Hero_StormSpirit)
+                    return;
                 MenuManager.Init();
                 MenuManager.Handle();
                 Game.PrintMessage($"{MenuManager.Menu.DisplayName} loaded! v.{MenuManager.Ver}");

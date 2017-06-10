@@ -1,6 +1,5 @@
 ﻿using System;
 using Ensage;
-using Ensage.Common.Objects.UtilityObjects;
 
 namespace OverlayInformation
 {

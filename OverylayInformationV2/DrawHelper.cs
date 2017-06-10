@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Ensage;
-using Ensage.Abilities;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
-using Ensage.Items;
 using SharpDX;
 using SharpDX.Direct3D9;
 
@@ -603,7 +601,7 @@ namespace OverlayInformation
 
         }
         public static bool IsEnable
-            => Members.Menu.Item("toppanel.AllyVision.Type").GetValue<StringList>().SelectedIndex == 1;
+            => true/*Members.Menu.Item("toppanel.AllyVision.Type").GetValue<StringList>().SelectedIndex == 1*/;
         private static void DrawStatus(Vector2 pos, Hero hero, Vector2 size, int height = 7)
         {
             if (!Members.Menu.Item("toppanel.Status.Enable").GetValue<bool>()) return;

@@ -141,7 +141,7 @@ namespace EarthAn
                 _loaded = true;
             };
             if (!_loaded && ObjectManager.LocalHero != null &&
-                ObjectManager.LocalHero.ClassID == Members.MyClassId && Game.IsInGame)
+                ObjectManager.LocalHero.ClassId == Members.MyClassId && Game.IsInGame)
             {
                 Load();
                 _loaded = true;
@@ -162,7 +162,7 @@ namespace EarthAn
 
         private static void Load()
         {
-            if (ObjectManager.LocalHero.ClassID != Members.MyClassId)
+            if (ObjectManager.LocalHero.ClassId != Members.MyClassId)
                 return;
             if (Members.MyHero == null || !Members.MyHero.IsValid)
             {

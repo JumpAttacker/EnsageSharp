@@ -36,19 +36,45 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ensage">
-      <HintPath>C:\Program Files (x86)\6LmEQsuox\References\Ensage.dll</HintPath>
+    <Reference Include="clipper_library">
+      <HintPath>C:\En\References\clipper_library.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage.Common">
-      <HintPath>C:\Program Files (x86)\6LmEQsuox\References\Ensage.Common.dll</HintPath>
+    <Reference Include="Ensage, Version=0.0.0.1, Culture=neutral, PublicKeyToken=a41ba14f653257a6, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\Ensage.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX">
-      <HintPath>C:\Program Files (x86)\6LmEQsuox\References\SharpDX.dll</HintPath>
+    <Reference Include="Ensage.Common, Version=1.2.5.7, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\Ensage.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Direct3D9">
-      <HintPath>C:\Program Files (x86)\6LmEQsuox\References\SharpDX.Direct3D9.dll</HintPath>
+    <Reference Include="Ensage.SDK">
+      <HintPath>C:\En\References\Ensage.SDK.dll</HintPath>
+    </Reference>
+    <Reference Include="PlaySharp.Toolkit">
+      <HintPath>C:\En\References\PlaySharp.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1">
+      <HintPath>C:\En\References\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11">
+      <HintPath>C:\En\References\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI">
+      <HintPath>C:\En\References\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>C:\En\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
@@ -59,7 +85,19 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="BadGuy.cs" />
+    <Compile Include="Configs\Config.cs" />
+    <Compile Include="Configs\CourierConfig.cs" />
+    <Compile Include="Configs\DrawingConfig.cs" />
+    <Compile Include="Features\CourierAction.cs" />
+    <Compile Include="Features\DrawingAction.cs" />
+    <Compile Include="Features\HeroFeeder.cs" />
+    <Compile Include="Configs\HeroFeederConfig.cs" />
+    <Compile Include="Configs\LaughConfig.cs" />
+    <Compile Include="Configs\PingerConfig.cs" />
+    <Compile Include="Features\Laugh.cs" />
+    <Compile Include="Features\Pinger.cs" />
+    <Compile Include="Helpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

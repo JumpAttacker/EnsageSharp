@@ -9,6 +9,7 @@ namespace Legion_Annihilation
 {
     public static class MenuManager
     {
+        public static bool IsInvisEnable => Members.Menu.Item("invisibility.Enable").GetValue<bool>();
         public static void Init()
         {
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
@@ -57,6 +58,7 @@ namespace Legion_Annihilation
             items.AddItem(
                 new MenuItem("Bkb.Toggle", "BKB toggle").SetValue(new KeyBind('0', KeyBindType.Toggle))).ValueChanged +=
                 Core.BkbToggler;
+            invisibility.AddItem(new MenuItem("invisibility.Enable", "Enable invis").SetValue(true));
             invisibility.AddItem(new MenuItem("UseHealBeforeInvis.Enable", "Use heal before invis").SetValue(true));
             invisibility.AddItem(
                 new MenuItem("InvisRange.value", "Min distance for cast invis->heal->items").SetValue(

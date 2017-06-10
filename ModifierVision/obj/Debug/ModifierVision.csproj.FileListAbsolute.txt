@@ -1,15 +1,1 @@
 E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\ModifierVision.exe.config
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\ModifierVision.exe
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\ModifierVision.pdb
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\Ensage.Common.dll
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\Ensage.dll
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\SharpDX.Direct3D9.dll
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\SharpDX.dll
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\Newtonsoft.Json.dll
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\Ensage.Common.pdb
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\obj\Debug\ModifierVision.csprojResolveAssemblyReference.cache
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\obj\Debug\ModifierVision.exe
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\obj\Debug\ModifierVision.pdb
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\SharpDX.Direct2D1.dll
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\SharpDX.Direct3D11.dll
-E:\Ensage\EnsageSharp\EnsageSharp\ModifierVision\bin\Debug\SharpDX.DXGI.dll

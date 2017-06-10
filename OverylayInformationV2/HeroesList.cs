@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using log4net;
@@ -34,14 +33,14 @@ namespace OverlayInformation
         /// <summary>
         ///     The loaded.
         /// </summary>
-        private static bool loaded;
+        private static bool _loaded;
 
         /// <summary>
         ///     The temp list.
         /// </summary>
-        private static List<Hero> tempList;
+        private static List<Hero> _tempList;
 
-        private static Sleeper Sleeper;
+        private static Sleeper _sleeper;
 
         #endregion
 
@@ -57,17 +56,17 @@ namespace OverlayInformation
             Radiant = new List<Hero>();
             Events.OnLoad += (sender, args) =>
             {
-                if (loaded)
+                if (_loaded)
                 {
                     return;
                 }
                 Load();
-                loaded = true;
+                _loaded = true;
             };
-            if (!loaded && ObjectManager.LocalHero != null && Game.IsInGame)
+            if (!_loaded && ObjectManager.LocalHero != null && Game.IsInGame)
             {
                 Load();
-                loaded = true;
+                _loaded = true;
             }
 
             Events.OnClose += (sender, args) =>
@@ -75,11 +74,11 @@ namespace OverlayInformation
                 All = new List<Hero>();
                 Dire = new List<Hero>();
                 Radiant = new List<Hero>();
-                tempList = new List<Hero>();
+                _tempList = new List<Hero>();
                 Events.OnUpdate -= Update;
                 ObjectManager.OnAddEntity -= ObjectMgr_OnAddEntity;
                 ObjectManager.OnRemoveEntity -= ObjectMgr_OnRemoveEntity;
-                loaded = false;
+                _loaded = false;
             };
         }
 
@@ -114,13 +113,13 @@ namespace OverlayInformation
                 return;
             }
             //Printer.Print($"update#1 {!Utils.SleepCheck("Common.Heroes.Update2")} { All.Count(x => x.IsValid) >= 10}");
-            if (Sleeper.Sleeping || All.Count(x => x.IsValid) >= 10)
+            if (_sleeper.Sleeping || All.Count(x => x.IsValid) >= 10)
             {
                 return;
             }
             //Printer.Print("update#2");
             UpdateHeroes();
-            Sleeper.Sleep(1000);
+            _sleeper.Sleep(1000);
         }
 
         /// <summary>
@@ -132,13 +131,13 @@ namespace OverlayInformation
             var herolistRadiant = new List<Hero>(Radiant);
             var herolistDire = new List<Hero>(Dire);
             //Printer.Print("update#3");
-            foreach (var hero in tempList)
+            foreach (var hero in _tempList)
             {
                 if (!(hero != null && hero.IsValid) /*|| (hero.ClassID==ClassID.CDOTA_Unit_Hero_MonkeyKing && hero.HasModifier("modifier_monkey_king_fur_army_soldier_hidden"))*/)
                 {
                     continue;
                 }
-                if (hero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
+                if (hero.ClassId == ClassId.CDOTA_Unit_Hero_MonkeyKing)
                 {
                     var mod = hero.Modifiers.Any(x=>x.Name== "modifier_monkey_king_fur_army_soldier_hidden");
                     if (mod)
@@ -196,16 +195,16 @@ namespace OverlayInformation
                 Radiant.Add(ObjectManager.LocalHero);
             }
 
-            tempList = Players.All.Where(x => x.Hero != null && x.Hero.IsValid).Select(x => x.Hero).ToList();
+            _tempList = Players.All.Where(x => x.Hero != null && x.Hero.IsValid).Select(x => x.Hero).ToList();
             foreach (
-                var hero in ObjectManager.GetEntities<Hero>().Where(hero => !hero.IsIllusion && tempList.All(x => x.Handle != hero.Handle)))
+                var hero in ObjectManager.GetEntities<Hero>().Where(hero => !hero.IsIllusion && _tempList.All(x => x.Handle != hero.Handle)))
             {
                 //Printer.Print($"tempList.Add(hero): {hero.Name}");
-                tempList.Add(hero);
+                _tempList.Add(hero);
             }
 
             UpdateHeroes();
-            Sleeper = new Sleeper();
+            _sleeper = new Sleeper();
             Events.OnUpdate += Update;
             ObjectManager.OnAddEntity += ObjectMgr_OnAddEntity;
             ObjectManager.OnRemoveEntity += ObjectMgr_OnRemoveEntity;
@@ -228,13 +227,13 @@ namespace OverlayInformation
                     {
                         return;
                     }
-                    if (hero.ClassID == ClassID.CDOTA_Unit_Hero_MonkeyKing)
+                    if (hero.ClassId == ClassId.CDOTA_Unit_Hero_MonkeyKing)
                     {
                         var mod = hero.Modifiers.Any(x => x.Name == "modifier_monkey_king_fur_army_soldier_hidden");
                         if (mod)
                             return;
                     }
-                    tempList.Add(hero);
+                    _tempList.Add(hero);
                     if (!All.Contains(hero))
                     {
                         //Log.Debug($"All.Add(hero): {hero.Name} [{hero.IsIllusion}]");
@@ -271,7 +270,7 @@ namespace OverlayInformation
                 return;
             }
 
-            tempList.Remove(hero);
+            _tempList.Remove(hero);
             if (All.Contains(hero))
             {
                 All.Remove(hero);
