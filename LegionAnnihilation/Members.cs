@@ -40,5 +40,6 @@ namespace Legion_Annihilation
             ItemId.item_blink
         };
         public static ParticleEffect BlinkRange { get; set; }
+        public static float MyCurrentMana { get; set; }
     }
 }

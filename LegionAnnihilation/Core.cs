@@ -103,6 +103,8 @@ namespace Legion_Annihilation
             }
             var target = _globalTarget;
             Ability ult;
+            Members.MyCurrentMana = Members.MyHero.Mana -
+                                    Members.MyHero.GetAbilityById(AbilityId.legion_commander_duel).ManaCost;
             var notInInvis = !Members.MyHero.IsInvisible() &&
                            !Members.MyHero.HasModifiers(new[]
                            {"modifier_item_invisibility_edge_windwalk", "modifier_item_silver_edge_windwalk"}) &&
@@ -190,10 +192,11 @@ namespace Legion_Annihilation
                 }
                 if (dist <= InvisRange)
                 {
-                    if (invis.CanBeCasted())
+                    if (invis.CanBeCasted() && Members.MyCurrentMana>invis.ManaCost)
                     {
                         Printer.Print("inv");
                         invis.UseAbility();
+                        Members.MyCurrentMana -= invis.ManaCost;
                         await Task.Delay(5, cancellationToken);
                         ComboSleeper.Sleep(1000, "invisAction");
                     }
@@ -296,8 +299,9 @@ namespace Legion_Annihilation
         private static async Task UseHeal(CancellationToken cancellationToken)
         {
             var heal = Members.MyHero.FindSpell(Members.AbilityList[1]);
-            if (heal.CanBeCasted() && Helper.IsAbilityEnable(heal))
+            if (heal.CanBeCasted() && Helper.IsAbilityEnable(heal) && Members.MyCurrentMana>heal.ManaCost)
             {
+                Members.MyCurrentMana -= heal.ManaCost;
                 heal.UseAbility(Members.MyHero);
                 await Task.Delay((int) (200+Game.Ping), cancellationToken);
             }
@@ -307,6 +311,11 @@ namespace Legion_Annihilation
         {
             if (ComboSleeper.Sleeping("invisAction"))
                 return;
+            var manaCost = ability.ManaCost;
+            if (Members.MyCurrentMana < manaCost)
+            {
+                return;            }
+            Members.MyCurrentMana -= manaCost;
             ComboSleeper.Sleep(150, ability);
             var castTime = Helper.GetAbilityDelay(target, ability);
             if (ability.StoredName() == "item_armlet")
