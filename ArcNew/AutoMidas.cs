@@ -39,7 +39,7 @@ namespace ArcAnnihilation
                     }
                     foreach (InventoryItem iitem in args.NewItems)
                     {
-                        if (iitem.Id == ItemId.item_hand_of_midas)
+                        if (iitem.Id == Ensage.AbilityId.item_hand_of_midas)
                         {
                             Midas = iitem.Item;
                             UpdateManager.Subscribe(MidasChecker, 100);
@@ -53,7 +53,7 @@ namespace ArcAnnihilation
                     {
                         foreach (InventoryItem iitem in args.OldItems)
                         {
-                            if (iitem.Id == ItemId.item_hand_of_midas)
+                            if (iitem.Id == Ensage.AbilityId.item_hand_of_midas)
                             {
                                 UpdateManager.Unsubscribe(MidasChecker);
                                 Midas = null;
