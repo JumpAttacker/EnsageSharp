@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
-using ArcAnnihilation.Utils;
 using Ensage;
-using Ensage.Common.Extensions;
 
 namespace ArcAnnihilation.Units
 {

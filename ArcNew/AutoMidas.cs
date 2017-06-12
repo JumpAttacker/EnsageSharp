@@ -1,11 +1,9 @@
 using System.Collections.Specialized;
 using System.Linq;
-using ArcAnnihilation.Manager;
 using ArcAnnihilation.Units;
 using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Helpers;
@@ -39,7 +37,7 @@ namespace ArcAnnihilation
                     }
                     foreach (InventoryItem iitem in args.NewItems)
                     {
-                        if (iitem.Id == ItemId.item_hand_of_midas)
+                        if (iitem.Id == AbilityId.item_hand_of_midas)
                         {
                             Midas = iitem.Item;
                             UpdateManager.Subscribe(MidasChecker, 100);
@@ -53,7 +51,7 @@ namespace ArcAnnihilation
                     {
                         foreach (InventoryItem iitem in args.OldItems)
                         {
-                            if (iitem.Id == ItemId.item_hand_of_midas)
+                            if (iitem.Id == AbilityId.item_hand_of_midas)
                             {
                                 UpdateManager.Unsubscribe(MidasChecker);
                                 Midas = null;
