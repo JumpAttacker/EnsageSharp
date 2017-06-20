@@ -24,6 +24,7 @@ namespace EmberAnnihilation
         private Ability Remnant { get; }
         private Config Config { get; set; }
         public Hero Me { get; set; }
+        public Unit Fountain { get; set; }
         private ITargetSelectorManager Selector { get; }
 
         [ImportingConstructor]
@@ -35,6 +36,10 @@ namespace EmberAnnihilation
             Fist = Me.GetAbilityById(AbilityId.ember_spirit_sleight_of_fist);
             Activator = Me.GetAbilityById(AbilityId.ember_spirit_activate_fire_remnant);
             Chains = Me.GetAbilityById(AbilityId.ember_spirit_searing_chains);
+            Fountain =
+                ObjectManager.GetEntities<Unit>()
+                    .FirstOrDefault(
+                        x => x != null && x.IsValid && x.ClassId == ClassId.CDOTA_Unit_Fountain && x.Team == Me.Team);
         }
 
         protected override void OnActivate()
@@ -42,10 +47,35 @@ namespace EmberAnnihilation
             Config = new Config();
             Config.FistAndComboKey.Item.ValueChanged += FistAndComboKeyChanged;
             Config.RemntantCombo.Item.ValueChanged += RemnantActivator;
+            Config.PussyKey.Item.ValueChanged += PussyAction;
             Config.AutoChain.Item.ValueChanged += AutoChains;
             if (Config.AutoChain.Value)
                 UpdateManager.BeginInvoke(AutoChainer);
         }
+
+        private void PussyAction(object sender, OnValueChangeEventArgs e)
+        {
+            var newValue = e.GetNewValue<KeyBind>().Active;
+            if (newValue)
+            {
+                if (Me.HasModifier("modifier_ember_spirit_fire_remnant_timer") && Activator.CanBeCasted() && Me.CanCast())
+                {
+                    if (Fountain == null)
+                    {
+                        Log.Error("cant find Fountain");
+                        Fountain =
+                            ObjectManager.GetEntities<Unit>()
+                                .FirstOrDefault(
+                                    x =>
+                                        x != null && x.IsValid && x.ClassId == ClassId.CDOTA_Unit_Fountain &&
+                                        x.Team == Me.Team);
+                        return;
+                    }
+                    Activator.UseAbility(Fountain.Position);
+                }
+            }
+        }
+
         protected override void OnDeactivate()
         {
             Config?.Dispose();
