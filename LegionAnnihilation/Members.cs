@@ -19,7 +19,7 @@ namespace Legion_Annihilation
 
         public static List<string> AbilityList = new List<string>
         {
-            "legion_commander_overwhelming_odds",
+            /*"legion_commander_overwhelming_odds",*/
             "legion_commander_press_the_attack",
             "legion_commander_duel"
         };
