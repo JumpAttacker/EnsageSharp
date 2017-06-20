@@ -145,7 +145,7 @@ namespace Legion_Annihilation
                     await UseItem(item, target, cancellationToken);
                 }
 
-                ult = Members.MyHero.FindSpell(Members.AbilityList[2]);
+                ult = Members.MyHero.FindSpell(Members.AbilityList[1]);
                 if (ult.CanBeCasted() && !target.IsLinkensProtected())
                 {
                     if (true)//(ult.CanHit(target))
@@ -156,7 +156,7 @@ namespace Legion_Annihilation
                     }
                 }
             }
-            ult = Members.MyHero.FindSpell(Members.AbilityList[2]);
+            ult = Members.MyHero.FindSpell(Members.AbilityList[1]);
             if (!ult.CanBeCasted() || !notInInvis)
                 if (OrbEnable && (!target.IsStunned() || !OrbInStun))
                 {
@@ -298,7 +298,7 @@ namespace Legion_Annihilation
         }
         private static async Task UseHeal(CancellationToken cancellationToken)
         {
-            var heal = Members.MyHero.FindSpell(Members.AbilityList[1]);
+            var heal = Members.MyHero.FindSpell(Members.AbilityList[0]);
             if (heal.CanBeCasted() && Helper.IsAbilityEnable(heal) && Members.MyCurrentMana>heal.ManaCost)
             {
                 Members.MyCurrentMana -= heal.ManaCost;
