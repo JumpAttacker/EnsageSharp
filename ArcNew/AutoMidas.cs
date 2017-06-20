@@ -67,7 +67,7 @@ namespace ArcAnnihilation
         {
             if (!Me.IsAlive || Me.IsInvisible())
                 return;
-            if (Midas != null && Midas.CanBeCasted() && !_sleeper.Sleeping)
+            if (Midas != null && Midas.IsValid && Midas.CanBeCasted() && !_sleeper.Sleeping)
             {
                 var creep =
                     EntityManager<Creep>.Entities.Where(x => x.IsValid && x.IsAlive && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient)

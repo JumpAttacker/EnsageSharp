@@ -8,6 +8,7 @@ using ArcAnnihilation.Units.behaviour.Range;
 using Ensage;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
+using Ensage.SDK.Renderer.Particle;
 using SharpDX;
 using UnitExtensions = Ensage.Common.Extensions.UnitExtensions;
 

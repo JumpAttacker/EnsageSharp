@@ -144,7 +144,6 @@
     <Compile Include="Utils\Helper.cs" />
     <Compile Include="MenuManager.cs" />
     <Compile Include="Utils\OrbWalking.cs" />
-    <Compile Include="Manager\ParticleManager.cs" />
     <Compile Include="Utils\Printer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
