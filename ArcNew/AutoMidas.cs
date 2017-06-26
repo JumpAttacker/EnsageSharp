@@ -65,6 +65,8 @@ namespace ArcAnnihilation
 
         private void MidasChecker()
         {
+            if (!MenuManager.AutoMidas)
+                return;
             if (!Me.IsAlive || Me.IsInvisible())
                 return;
             if (Midas != null && Midas.IsValid && Midas.CanBeCasted() && !_sleeper.Sleeping)

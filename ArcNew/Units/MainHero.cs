@@ -42,8 +42,13 @@ namespace ArcAnnihilation.Units
                 return;
             }
             LastMoveOrderIssuedTime = Game.RawGameTime;
-            if (MenuManager.OrbWalkType && target!=null)
-                Hero.Move(target.Position);
+            if (MenuManager.OrbWalkType && target != null)
+            {
+                if (Hero.Distance2D(target) >= MenuManager.OrbWalkingRange)
+                {
+                    Hero.Move(target.Position);
+                }
+            }
             else
                 Hero.Move(Game.MousePosition);
         }

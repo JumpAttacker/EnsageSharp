@@ -8,6 +8,7 @@ using ArcAnnihilation.Units.behaviour.Orbwalking;
 using ArcAnnihilation.Units.behaviour.Range;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.SharpDX;
 
 namespace ArcAnnihilation.Units
 {
@@ -41,7 +42,15 @@ namespace ArcAnnihilation.Units
 
             LastMoveOrderIssuedTime = Game.RawGameTime;
             if (target != null)
-                Hero.Move(target.Position);
+                if (Hero.Distance2D(target) >= MenuManager.OrbWalkingRange)
+                    Hero.Move(target.Position);
+                else if (MenuManager.OrbWalkerGoBeyond)
+                {
+                    var pos = (target.NetworkPosition - Hero.NetworkPosition).Normalized();
+                    pos *= 50;
+                    pos = Hero.NetworkPosition - pos;
+                    Hero.Move(pos);
+                }
             /*else
                 Hero.Move(Game.MousePosition);*/
         }

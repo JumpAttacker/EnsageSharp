@@ -145,6 +145,7 @@ namespace ArcAnnihilation
         public static bool PushLanePanelCanBeMovedByMouse => GetBool("PushLaneSelector.Moving");
         public static bool InfoPanelCanBeMovedByMouse => GetBool("InfoPanel.Moving");
         public static bool ItemPanelCanBeMovedByMouse => GetBool("ItemPanel.Moving");
+        public static bool AutoMidas => GetBool("AutoMidas.Enable");
         public static bool PushLanePanelHide => GetBool("PushLaneSelector.Hide");
         public static Vector2 GetPushLanePanelPosition
             => new Vector2(GetSlider("PushLaneSelector.X"), GetSlider("PushLaneSelector.Y"));
@@ -158,6 +159,8 @@ namespace ArcAnnihilation
         public static bool IsAutoPushPanelEnable => GetBool("AutoPushLaneSelector.Enable");
         public static bool IsItemPanelEnable => GetBool("itemPanel.Enable");
         public static bool SmartFlux => GetBool("FluxSettings.Smart");
+        public static float OrbWalkingRange => GetSlider("OrbWalking.Range");
+        public static bool OrbWalkerGoBeyond => GetBool("OrbWalking.OrbWalkerGoBeyond");
 
         public static bool InAnyCombo(ulong key)
             =>
@@ -190,7 +193,14 @@ namespace ArcAnnihilation
             settings.AddItem(new MenuItem("OrbWalking.Type", "[Orbwalking] move to target").SetValue(false))
                 .SetTooltip("or to mouse");
             settings.AddItem(
+                new MenuItem("OrbWalking.Range", "[Orbwalking] min range").SetValue(new Slider(50, 10, 1000)));
+            settings.AddItem(
+                    new MenuItem("OrbWalking.OrbWalkerGoBeyond", "[Orbwalking] Go beyond of selected range").SetValue(true))
+                .SetTooltip("only for Tempest");
+            settings.AddItem(
                 new MenuItem("MagneticField.InFront", "Use Magnetic Field in front of ur hero").SetValue(true));
+            settings.AddItem(
+                new MenuItem("AutoMidas.Enable", "Auto midas").SetValue(true));
 
             var usages = new Menu("Using in combo", "usages");
             var fluxSettings = new Menu("FluxSettings", "FluxSettings", false, AbilityId.arc_warden_flux.ToString());
