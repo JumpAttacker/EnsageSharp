@@ -137,6 +137,14 @@ namespace ArcAnnihilation.Utils
                         {
                             return tower;
                         }
+                        var others =
+                            ObjectManager.GetEntitiesFast<Unit>()
+                                .FirstOrDefault(unit => unit.IsValid && unit.IsAlive && !unit.IsInvulnerable() && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit));
+
+                        if (others != null)
+                        {
+                            return others;
+                        }
                         break;
                     case OrbwalkingMode.Combo:
                         return Core.Target;
