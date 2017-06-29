@@ -112,7 +112,7 @@ namespace ArcAnnihilation.Utils
 
                         var jungleMob =
                             EntityManager<Creep>.Entities.FirstOrDefault(
-                                unit => unit.IsValid && unit.IsAlive && unit.IsNeutral && Owner.IsValidOrbwalkingTarget(unit));
+                                unit => unit.IsValid && unit.IsSpawned && unit.IsAlive && unit.IsNeutral && Owner.IsValidOrbwalkingTarget(unit));
 
                         if (jungleMob != null)
                         {
@@ -122,7 +122,7 @@ namespace ArcAnnihilation.Utils
                         var creep =
                             EntityManager<Creep>.Entities.Where(
                                 unit =>
-                                    unit.IsValid && unit.IsAlive && unit.Team != Owner.Team && (Owner.IsValidOrbwalkingTarget(unit) || Owner.Distance2D(unit)<=500)).OrderBy(x=>x.Health).FirstOrDefault();
+                                    unit.IsValid && unit.IsSpawned && unit.IsAlive && unit.Team != Owner.Team && (Owner.IsValidOrbwalkingTarget(unit) || Owner.Distance2D(unit)<=500)).OrderBy(x=>x.Health).FirstOrDefault();
 
                         if (creep != null)
                         {
@@ -139,7 +139,7 @@ namespace ArcAnnihilation.Utils
                         }
                         var others =
                             ObjectManager.GetEntitiesFast<Unit>()
-                                .FirstOrDefault(unit => unit.IsValid && unit.IsAlive && !unit.IsInvulnerable() && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit));
+                                .FirstOrDefault(unit => unit.IsValid && !(unit is Hero) && unit.IsAlive && !unit.IsInvulnerable() && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit));
 
                         if (others != null)
                         {

@@ -48,6 +48,7 @@ namespace ArcAnnihilation
             {ItemId.item_rod_of_atos.ToString(), 1},
             {ItemId.item_solar_crest.ToString(), 1},
             {ItemId.item_medallion_of_courage.ToString(), 1},
+            {ItemId.item_lotus_orb.ToString(), 1},
             {"item_arcane_boots", 1},
             {"item_guardian_greaves", 1},
             {"item_shivas_guard", 1},
