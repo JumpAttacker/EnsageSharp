@@ -108,7 +108,9 @@ namespace ArcAnnihilation.OrderState
         {
             if (Core.TempestHero != null && Core.TempestHero.Hero.IsAlive)
             {
-                if (Core.TempestHero.Orbwalker.GetTarget() == null)
+                if (_sleeper.Sleeping)
+                    return;
+                if (Core.TempestHero.Orbwalker.GetTarget() == null || Core.TempestHero.Orbwalker.GetTarget().Position.IsZero)
                 {
                     ClosestLane = GetClosestLane(Core.TempestHero.Hero);
                     var lastPoint = ClosestLane.Points[ClosestLane.Points.Count - 1];
@@ -151,9 +153,8 @@ namespace ArcAnnihilation.OrderState
                                 }
                             }
                         }
-                        if (_sleeper.Sleeping)
-                            return;
-                        _sleeper.Sleep(250);
+                        
+                        
                         Core.TempestHero.Hero.Move(ClosestLane.ClosestPosition);
                         try
                         {
@@ -172,6 +173,7 @@ namespace ArcAnnihilation.OrderState
                         }
                         ClosestPosition = ClosestLane.ClosestPosition;
                     }
+                    
                 }
                 else if (!_sleeper.Sleeping)
                 {
@@ -242,6 +244,7 @@ namespace ArcAnnihilation.OrderState
                         Core.Target = enemyHero;
                     }
                 }
+                _sleeper.Sleep(250);
             }
             else
             {

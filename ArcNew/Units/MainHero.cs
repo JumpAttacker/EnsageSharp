@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,7 +45,7 @@ namespace ArcAnnihilation.Units
             LastMoveOrderIssuedTime = Game.RawGameTime;
             if (MenuManager.OrbWalkType && target != null)
             {
-                if (Hero.Distance2D(target) >= MenuManager.OrbWalkingRange)
+                if (Hero.Distance2D(target) >= Math.Min(MenuManager.OrbWalkingRange, Hero.GetAttackRange()))
                 {
                     Hero.Move(target.Position);
                 }

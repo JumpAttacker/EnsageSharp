@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcAnnihilation.Manager;
 using ArcAnnihilation.Units;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
 using ArcAnnihilation.Units.behaviour.Range;
@@ -139,7 +138,7 @@ namespace ArcAnnihilation.Utils
                         }
                         var others =
                             ObjectManager.GetEntitiesFast<Unit>()
-                                .FirstOrDefault(unit => unit.IsValid && !(unit is Hero) && unit.IsAlive && !unit.IsInvulnerable() && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit));
+                                .FirstOrDefault(unit => unit.IsValid && !(unit is Hero) && !(unit is Creep) && unit.IsAlive && !unit.IsInvulnerable() && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit));
 
                         if (others != null)
                         {
