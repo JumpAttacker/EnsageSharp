@@ -8,6 +8,7 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Common.Threading;
+using AbilityId = Ensage.AbilityId;
 
 namespace ArcAnnihilation.Units.behaviour.Items
 {
@@ -99,8 +100,12 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     else if (ability.TargetTeamType == TargetTeamType.Enemy || ability.TargetTeamType == TargetTeamType.All ||
                              ability.TargetTeamType == TargetTeamType.Custom || ability.TargetTeamType == (TargetTeamType) 7)
                     {
+                        var amWithAghUnderLinken = Core.Target.ClassId == ClassId.CDOTA_Unit_Hero_AntiMage &&
+                                                   Core.Target.GetItemById(ItemId.item_ultimate_scepter) != null &&
+                                                   Core.Target.GetAbilityById(AbilityId.antimage_spell_shield)
+                                                       .CanBeCasted();
                         var isDisable = ability.IsDisable();
-                        if (Core.Target.IsLinkensProtected() &&
+                        if ((Core.Target.IsLinkensProtected() || amWithAghUnderLinken) &&
                             (isDisable || ability.IsDagon() || ability.GetItemId() == ItemId.item_ethereal_blade))
                         {
                             counter++;
