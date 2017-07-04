@@ -132,7 +132,7 @@ namespace ArcAnnihilation.OrderState
                                 var temp = ClosestLane.Points.ToList();
                                 temp.Reverse();
                                 var enemyCreeps =
-                                    EntityManager<Creep>.Entities.Where(x => x.IsValid && x.IsAlive && x.Team != ObjectManager.LocalHero.Team);
+                                    EntityManager<Creep>.Entities.Where(x => x.IsValid && x.IsVisible && x.IsAlive && x.Team != ObjectManager.LocalHero.Team);
                                 Creep creepForTravels = null;
 
                                 foreach (var point in temp)
@@ -179,8 +179,13 @@ namespace ArcAnnihilation.OrderState
                 {
                     if (Core.TempestHero.Spark.CanBeCasted())
                     {
-                        Core.TempestHero.Spark.UseAbility(Core.TempestHero.Orbwalker.GetTarget().Position);
-                        _sleeper.Sleep(500);
+                        var target = Core.TempestHero.Orbwalker.GetTarget();
+                        if (target != null)
+                        {
+                            Printer.Log($"[AutoPushing][Spark][{target.Name}]->{target.Position.PrintVector()}", true);
+                            Core.TempestHero.Spark.UseAbility(target.Position);
+                            _sleeper.Sleep(500);
+                        }
                     }
 
                     var itemForPushing = Core.TempestHero.Hero.GetItemById(ItemId.item_mjollnir);

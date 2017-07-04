@@ -7,6 +7,7 @@ using ArcAnnihilation.Units.behaviour.Enabled;
 using ArcAnnihilation.Units.behaviour.Items;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
 using ArcAnnihilation.Units.behaviour.Range;
+using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
@@ -40,18 +41,25 @@ namespace ArcAnnihilation.Units
             {
                 return;
             }
-
             LastMoveOrderIssuedTime = Game.RawGameTime;
             if (target != null)
-                if (Hero.Distance2D(target) >= Math.Min(MenuManager.OrbWalkingRange, Hero.GetAttackRange()))
-                    Hero.Move(target.Position);
-                else if (MenuManager.OrbWalkerGoBeyond)
+                if (target.IsVisible)
                 {
-                    var pos = (target.NetworkPosition - Hero.NetworkPosition).Normalized();
-                    pos *= 50;
-                    pos = Hero.NetworkPosition - pos;
-                    Hero.Move(pos);
+                    if (Hero.Distance2D(target) >= Math.Min(MenuManager.OrbWalkingRange, Hero.GetAttackRange()))
+                        Hero.Move(target.Position);
+                    else if (MenuManager.OrbWalkerGoBeyond)
+                    {
+                        var pos = (target.NetworkPosition - Hero.NetworkPosition).Normalized();
+                        pos *= 50;
+                        pos = Hero.NetworkPosition - pos;
+                        Hero.Move(pos);
+                    }
                 }
+                else
+                {
+                    Hero.Move(target.InFront(250));
+                }
+
             /*else
                 Hero.Move(Game.MousePosition);*/
         }

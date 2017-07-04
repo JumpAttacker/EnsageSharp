@@ -1,7 +1,10 @@
-﻿using ArcAnnihilation.Manager;
+﻿using System;
+using ArcAnnihilation.Manager;
 using ArcAnnihilation.Panels;
+using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common;
+using Ensage.SDK.Helpers;
 
 namespace ArcAnnihilation
 {
@@ -23,6 +26,10 @@ namespace ArcAnnihilation
                     InputBlocker.GetInputBlocker().Load();
                     if (MenuManager.IsInfoPanelEnabled)
                         InfoPanel.GetInfoPanel().Load();
+                    EntityManager<Unit>.EntityAdded += (o, unit) =>
+                    {
+                        Printer.Both($"added {unit.Name} -> {unit.NetworkName}", true);
+                    };
                 });
             };
         }

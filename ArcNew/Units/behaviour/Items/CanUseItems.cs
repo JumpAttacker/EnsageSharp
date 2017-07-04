@@ -60,7 +60,10 @@ namespace ArcAnnihilation.Units.behaviour.Items
             foreach (var ability in unitBase.GetItems())
             {
                 if (!ability.CanBeCasted(Core.Target))
+                {
+                    Printer.Log($"cant use {ability.Name} to {Core.Target.Name}");
                     continue;
+                }
                 var canHit = (ability.GetItemId() == ItemId.item_blink
                                  ? unitBase.Hero.Distance2D(Core.Target) - MenuManager.GetBlinkExtraRange <
                                    ability.TravelDistance()
@@ -176,7 +179,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 {
                     if (ability.GetItemId() == ItemId.item_blink)
                     {
-                        _afterBlink.Sleep(500);
+                        _afterBlink.Sleep(1000);
                         var pos = (Core.Target.NetworkPosition - unitBase.Hero.NetworkPosition).Normalized();
                         var firstDist = Core.Target.NetworkPosition.Distance2D(unitBase.Hero.NetworkPosition);
                         pos *= firstDist <= ability.TravelDistance() ? 50 : MenuManager.GetBlinkExtraRange;
@@ -198,6 +201,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     $"[{unitBase}][item] {ability.Name} ({delayTime}) [After Blink: {_afterBlink.Sleeping}] [{ability.TravelDistance()}]");
                 await Await.Delay(delayTime, Core.ComboToken.Token);
             }
+            Printer.Log("now we can use abilities -> " + (unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter));
             return unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter;
         }
     }

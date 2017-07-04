@@ -6,6 +6,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
+using Ensage.SDK.Helpers;
 using SharpDX;
 using AbilityId = Ensage.Common.Enums.AbilityId;
 
@@ -74,7 +75,20 @@ namespace ArcAnnihilation.Utils
         {
             if (Core.Target != null && Core.Target.IsValid && Core.Target.IsAlive)
                 return true;
+            var mousePos = Game.MousePosition;
             Core.Target = TargetSelector.ClosestToMouse(Core.MainHero.Hero, 500);
+            var tempTarget =
+                EntityManager<Unit>.Entities.FirstOrDefault(
+                    x =>
+                        (x.NetworkName == "CDOTA_Unit_SpiritBear" || x.Name == "npc_dota_phoenix_sun") && x.IsAlive &&
+                        x.Team == Core.MainHero.Hero.GetEnemyTeam() && x.Distance2D(mousePos) <= 500);
+            if (Core.Target != null && tempTarget != null)
+            {
+                if (Core.Target.Distance2D(mousePos) > tempTarget.Distance2D(mousePos))
+                    Core.Target = tempTarget;
+            }
+            else if (Core.Target == null && tempTarget != null)
+                Core.Target = tempTarget;
             if (Core.Target == null) return false;
             Printer.Both($"[TargetFinder] new target: {Core.Target.Name} | {Core.Target.Handle}");
             return true;

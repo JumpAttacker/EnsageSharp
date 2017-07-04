@@ -6,15 +6,17 @@ using ArcAnnihilation.Units;
 using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
+using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
 
 namespace ArcAnnihilation
 {
     public static class Core
     {
-        public static Hero Target;
+        public static Unit Target;
         public static CancellationTokenSource ComboToken;
         public static UnitBase MainHero;
         public static UnitBase TempestHero;

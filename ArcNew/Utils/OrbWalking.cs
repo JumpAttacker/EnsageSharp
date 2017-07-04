@@ -88,7 +88,7 @@ namespace ArcAnnihilation.Utils
             return Owner.CanAttack() && Game.RawGameTime + 0.1f + rotationTime + Game.Ping / 2000f - LastAttackTime > 1f / Owner.AttacksPerSecond;
         }
 
-        public bool CanMove()
+        public bool CanMove(Unit target)
         {
             return Game.RawGameTime - 0.1f + Game.Ping / 2000f - LastAttackTime > Owner.AttackPoint();
         }
@@ -245,7 +245,7 @@ namespace ArcAnnihilation.Utils
             }
             var target = GetTarget();
 
-            if ((target == null || !CanAttack(target) || UnitExtensions.IsAttackImmune(target)) && CanMove())
+            if ((target == null || !CanAttack(target) || UnitExtensions.IsAttackImmune(target)) && CanMove(target))
             {
                 if (BasicUnit.OrbwalkingBehaviour is CanUseOrbwalking)
                     BasicUnit.MoveAction(target);

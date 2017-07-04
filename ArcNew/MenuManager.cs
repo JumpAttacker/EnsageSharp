@@ -190,6 +190,7 @@ namespace ArcAnnihilation
             keys.AddItem(SparkSpamCombo).ValueChanged += Core.ComboStatusChanger;
             keys.AddItem(SparkSpamTempestOnlyCombo).ValueChanged += Core.ComboStatusChanger;
             keys.AddItem(AutoPushingCombo).ValueChanged += Core.ComboStatusChanger;
+            var autoPushingKeys = new Menu("Auto Pushing Hotkey", "Auto Pushing Hotkey");
             var panels = new Menu("Panels", "Panels");
             settings.AddItem(new MenuItem("OrbWalking.Type", "[Orbwalking] move to target").SetValue(false))
                 .SetTooltip("or to mouse");
@@ -266,18 +267,18 @@ namespace ArcAnnihilation
             var itemListHero = Items.Keys.ToList().ToDictionary(item => item, item => true);
             var itemListTempest = Items.Keys.ToList().ToDictionary(item => item, item => true);
             itemHero.AddItem(
-                new MenuItem("itemHeroEnable", "Toggle Items:").SetValue(new AbilityToggler(itemListHero)));
+                new MenuItem("itemHeroEnable", "").SetValue(new AbilityToggler(itemListHero)));
             itemHero.AddItem(new MenuItem("customOrderHero", "Use Custom Order").SetValue(false));
-            itemHero.AddItem(new MenuItem("itemHero", "Items:").SetValue(new PriorityChanger(Items.Keys.ToList())));
+            itemHero.AddItem(new MenuItem("itemHero", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
 
             itemTempest.AddItem(
-                new MenuItem("itemTempestEnable", "Toggle Items:").SetValue(new AbilityToggler(itemListTempest)));
+                new MenuItem("itemTempestEnable", "").SetValue(new AbilityToggler(itemListTempest)));
             itemTempest.AddItem(new MenuItem("customOrderTempest", "Use Custom Order").SetValue(false));
             itemTempest.AddItem(
-                new MenuItem("itemTempest", "Items:").SetValue(new PriorityChanger(Items.Keys.ToList())));
+                new MenuItem("itemTempest", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
 
-            spellHero.AddItem(new MenuItem("spellHero", "Ability:").SetValue(new AbilityToggler(dict)));
-            spellTempest.AddItem(new MenuItem("spellTempest", "Ability:").SetValue(new AbilityToggler(dict2)));
+            spellHero.AddItem(new MenuItem("spellHero", "").SetValue(new AbilityToggler(dict)));
+            spellTempest.AddItem(new MenuItem("spellTempest", "").SetValue(new AbilityToggler(dict2)));
 
             var devolper = new Menu("Developer", "Developer");
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages ingame").SetValue(false));

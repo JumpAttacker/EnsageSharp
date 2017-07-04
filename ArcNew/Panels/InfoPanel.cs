@@ -52,7 +52,7 @@ namespace ArcAnnihilation.Panels
                 if (target != null)
                 {
                     startPos += new Vector2(0, size.Y);
-                    DrawHeroIcon((Hero)target, new Vector2(size.X / 3), startPos);
+                    DrawHeroIcon(target, new Vector2(size.X / 3), startPos);
                 }
             }
             else if (isTempestCombo != null)
@@ -64,7 +64,7 @@ namespace ArcAnnihilation.Panels
                 if (target != null)
                 {
                     startPos += new Vector2(0, size.Y);
-                    DrawHeroIcon((Hero)target, new Vector2(size.X / 3), startPos);
+                    DrawHeroIcon(target, new Vector2(size.X / 3), startPos);
                 }
             }
             else if (isSparkSpam != null)
@@ -107,12 +107,19 @@ namespace ArcAnnihilation.Panels
                 FontFlags.AntiAlias | FontFlags.StrikeOut);
             return textSize;
         }
-        private static Vector2 DrawHeroIcon(Hero target, Vector2 size, Vector2 startPos)
+        private static Vector2 DrawHeroIcon(Unit target, Vector2 size, Vector2 startPos)
         {
             var extra = new Vector2(size.X / 3, 0);
             var finalSize = size + extra;
-            Drawing.DrawRect(startPos, finalSize, Textures.GetHeroTexture(target.StoredName()));
-            Drawing.DrawRect(startPos, finalSize, new Color(0, 0, 0, 255),true);
+            if (target is Hero)
+            {
+                Drawing.DrawRect(startPos, finalSize, Textures.GetHeroTexture(target.StoredName()));
+            }
+            else
+            {
+                Drawing.DrawRect(startPos, finalSize, new Color(0, 155, 255));
+            }
+            Drawing.DrawRect(startPos, finalSize, new Color(0, 0, 0, 255), true);
             return finalSize;
         }
 
