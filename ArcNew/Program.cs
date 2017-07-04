@@ -26,10 +26,6 @@ namespace ArcAnnihilation
                     InputBlocker.GetInputBlocker().Load();
                     if (MenuManager.IsInfoPanelEnabled)
                         InfoPanel.GetInfoPanel().Load();
-                    EntityManager<Unit>.EntityAdded += (o, unit) =>
-                    {
-                        Printer.Both($"added {unit.Name} -> {unit.NetworkName}", true);
-                    };
                 });
             };
         }
