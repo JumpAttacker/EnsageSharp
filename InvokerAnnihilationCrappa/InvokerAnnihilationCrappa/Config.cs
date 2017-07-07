@@ -14,9 +14,8 @@ namespace InvokerAnnihilationCrappa
             Invoker = invoker;
             Factory = MenuFactory.Create("Invoker Annihilation");
             ComboKey = Factory.Item("Combo Key", new KeyBind('G'));
-            FontSize = Factory.Item("Font Size", new Slider(13, 1, 100));
-            InvokeTime = Factory.Item("Time between spheres in combo", new Slider(20, 1, 200));
-            AfterInvokeDelay = Factory.Item("Delay after Invoke", new Slider(300, 1, 500));
+            InvokeTime = Factory.Item("Time between spheres in combo", new Slider(1, 1, 200));
+            AfterInvokeDelay = Factory.Item("Delay after Invoke", new Slider(1, 1, 500));
             AbilityPanel = new AbilityPanel(this);
             ComboPanel = new ComboPanel(this);
             SmartSphere = new SmartSphere(this);
@@ -37,8 +36,6 @@ namespace InvokerAnnihilationCrappa
         public SmartSphere SmartSphere { get; set; }
 
         public AbilityPanel AbilityPanel { get; set; }
-
-        public MenuItem<Slider> FontSize { get; set; }
 
         public MenuItem<KeyBind> ComboKey { get; set; }
 

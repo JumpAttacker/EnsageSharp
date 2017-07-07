@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
@@ -7,6 +8,8 @@ using Ensage.Common.Extensions;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Menu;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace InvokerAnnihilationCrappa.Features
@@ -21,6 +24,7 @@ namespace InvokerAnnihilationCrappa.Features
             _main = main;
             var panel = main.Factory.Menu("Auto SunStike");
             Enable = panel.Item("Enable Auto SunStrike", true);
+            Enable.Item.SetTooltip("on stunned enemy");
             OnlyKillSteal = panel.Item("Kill steal only", true);
             InvokeSunStrike = panel.Item("Invoke sun strike", true);
             DrawDamageHero = panel.Item("Draw Damage on hero", true);
@@ -106,7 +110,7 @@ namespace InvokerAnnihilationCrappa.Features
         public MenuItem<bool> DrawDamageTop { get; set; }
         public MenuItem<bool> DrawPrediction { get; set; }
         public MenuItem<bool> DrawPredictionInvoked { get; set; }
-
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public MenuItem<bool> OnlyKillSteal { get; set; }
 
         private float GetSunStikeDamage
@@ -117,8 +121,7 @@ namespace InvokerAnnihilationCrappa.Features
             var sunStike = _main.Invoker.SunStrike;
             while (Enable)
             {
-                if (!_main.Invoker._mode.CanExecute && sunStike.Ability.AbilityState == AbilityState.Ready &&
-                    _main.Invoker.InvokeAbility.CanBeCasted())
+                if (!_main.Invoker._mode.CanExecute && sunStike.Ability.AbilityState == AbilityState.Ready)
                 {
                     var canBeCasted = sunStike.Ability.ManaCost + _main.Invoker.InvokeAbility.ManaCost <
                                       _main.Invoker.Owner.Mana;
@@ -148,25 +151,33 @@ namespace InvokerAnnihilationCrappa.Features
                                 if (InvokeSunStrike && comboModifiers && time > 1.7)
                                 {
                                     if (!sunStike.Ability.CanBeCasted())
+                                    {
+                                        Log.Info("[before] invoke for Auto SS");
                                         await _main.Invoker.Invoke(sunStike);
+                                    }
                                 }
                                 if (comboModifiers && time <= 1.69 && time >= 1.35 ||
                                     !comboModifiers && time > 1.7 && !hero.IsInvul())
                                 {
                                     if (sunStike.Ability.CanBeCasted())
                                     {
+                                        Log.Info("casted SS due Auto SS");
                                         sunStike.Ability.UseAbility(hero.Position);
                                     }
                                     else if (InvokeSunStrike)
                                     {
+                                        Log.Info("invoke for Auto SS");
                                         await _main.Invoker.Invoke(sunStike);
+                                        Log.Info("casted SS due Auto SS");
                                         sunStike.Ability.UseAbility(hero.Position);
                                     }
+                                    
                                     await Task.Delay(500);
                                 }
                             }
                         }
                     }
+                    
                 }
                 await Task.Delay(10);
             }
