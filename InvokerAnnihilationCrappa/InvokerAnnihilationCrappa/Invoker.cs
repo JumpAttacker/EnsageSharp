@@ -153,6 +153,10 @@ namespace InvokerAnnihilationCrappa
         [ItemBinding]
         public item_sheepstick Hex { get; set; }
         [ItemBinding]
+        public item_orchid Orchid { get; set; }
+        [ItemBinding]
+        public item_bloodthorn Bloodthorn { get; set; }
+        [ItemBinding]
         public item_blink Blink { get; set; }
 
         public List<AbilityInfo> AbilityInfos;
@@ -278,14 +282,15 @@ namespace InvokerAnnihilationCrappa
                 Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown+1}");
                 return false;
             }
-            var sphereDelay = 50;
+            var sphereDelay = 5;
             info.One.UseAbility();
-            await Await.Delay(sphereDelay);
+            await Task.Delay(sphereDelay);
             info.Two.UseAbility();
-            await Await.Delay(sphereDelay);
+            await Task.Delay(sphereDelay);
             info.Three.UseAbility();
-            await Await.Delay(sphereDelay);
+            await Task.Delay(sphereDelay);
             InvokeAbility.UseAbility();
+            //TODO: check for wrong invoked spheres
             Log.Error($"invoke: [{info.Ability.Name}]");
             await Await.Delay((int) Game.Ping+75);
             return true;

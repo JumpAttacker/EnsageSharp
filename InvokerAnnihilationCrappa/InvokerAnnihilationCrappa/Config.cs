@@ -13,7 +13,7 @@ namespace InvokerAnnihilationCrappa
         {
             Invoker = invoker;
             Factory = MenuFactory.Create("Invoker Annihilation");
-            ComboKey = Factory.Item("Combo Key", new KeyBind('X'));
+            ComboKey = Factory.Item("Combo Key", new KeyBind('G'));
             FontSize = Factory.Item("Font Size", new Slider(13, 1, 100));
             AbilityPanel = new AbilityPanel(this);
             ComboPanel = new ComboPanel(this);

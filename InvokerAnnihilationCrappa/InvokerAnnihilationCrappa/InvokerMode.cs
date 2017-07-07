@@ -168,6 +168,14 @@ namespace InvokerAnnihilationCrappa
                             if (!_target.IsStunned(out duration) || duration <= 0.15f)
                                 Me.Hex.UseAbility(_target);
                         }
+                        if (Me.Orchid != null && Me.Orchid.CanBeCasted && Me.Orchid.CanHit(_target))
+                        {
+                            Me.Orchid.UseAbility(_target);
+                        }
+                        if (Me.Bloodthorn != null && Me.Bloodthorn.CanBeCasted && Me.Bloodthorn.CanHit(_target))
+                        {
+                            Me.Bloodthorn.UseAbility(_target);
+                        }
                     }
                     else
                     {
