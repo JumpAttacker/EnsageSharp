@@ -131,18 +131,18 @@ namespace OverlayInformation
                 return;
             Init = true;
             Printer.PrintInfo("[OpenDota] Init");
-            if (Drawing.RenderMode != RenderMode.Dx9)
+            /*if (Drawing.RenderMode != RenderMode.Dx9)
             {
                 Printer.Print("You're using not dx9, OpenDota helper will not working!", true);
                 Printer.PrintError("You're using not dx9, OpenDota helper will not working!");
                 return;
-            }
+            }*/
             /*Console.WriteLine(
                 $"Screen Size: {HeroPickStageScreenHelper.ScreenSize.X}/{HeroPickStageScreenHelper.ScreenSize.Y}");*/
             //SingleFake();
-            Game.OnUpdate += GameOnOnUpdate;
+            
             PlayerInfoList = new List<PlayerInfo>();
-            if (Drawing.Direct3DDevice9 != null)
+            /*if (Drawing.Direct3DDevice9 != null)
                 Text = new Font(
                     Drawing.Direct3DDevice9,
                     new FontDescription
@@ -151,12 +151,12 @@ namespace OverlayInformation
                         Height = 14,
                         OutputPrecision = FontPrecision.Default,
                         Quality = FontQuality.Default
-                    });
-
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
+                    });*/
+            Game.OnUpdate += GameOnOnUpdate;
+            /*AppDomain.CurrentDomain.DomainUnload += CurrentDomainDomainUnload;
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnPreReset += Drawing_OnPreReset;
-            Drawing.OnEndScene += Drawing_OnEndScene;
+            Drawing.OnEndScene += Drawing_OnEndScene;*/
             Drawing.OnDraw+=DrawingOnOnDraw;
             Events.OnLoad += (sender, args) =>
             {
@@ -168,7 +168,102 @@ namespace OverlayInformation
 
         private static void DrawingOnOnDraw(EventArgs args)
         {
-            //DrawText("Test", new Vector2(50), new Vector2(500, 500));
+            try
+            {
+                if (!Checker.IsActive()) return;
+                if (!Members.Menu.Item("OpenDota.Enable").GetValue<bool>()) return;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            if (Check)
+            {
+                var newlist = PlayerInfoList.ToList();
+                foreach (var playerInfo in newlist)
+                {
+                    var id = playerInfo.Id;
+                    var startXPosition = HeroPickStageScreenHelper.GetPlayerPosition(id);
+                    var position = new Vector2(startXPosition, 35);
+                    var size = HudInfoNew.GetTopPanelSizeY();
+                    position += new Vector2(0, (float)size * 1.8f);
+                    var defClr = Color.White;
+                    //DrawShadowText(playerInfo.Name, (int)position.X, (int)position.Y, defClr);
+                    Drawing.DrawText($"[{playerInfo.Name}]", position, defClr, FontFlags.None);
+                    position.Y += 15;
+                    //DrawShadowText(playerInfo.Wr, (int)position.X, (int)position.Y, defClr);
+                    Drawing.DrawText($"[{playerInfo.Wr}]", position, defClr, FontFlags.None);
+                    position.Y += 15;
+
+                    /*DrawShadowText(
+                        playerInfo.Solo == 0 ? $"Estimated: {playerInfo.PossibleMmr}" : $"Solo: {playerInfo.Solo}",
+                        (int)position.X, (int)position.Y, defClr);*/
+
+                    Drawing.DrawText(
+                        playerInfo.Solo == 0 ? $"Estimated: {playerInfo.PossibleMmr}" : $"Solo: {playerInfo.Solo}",
+                        position, defClr, FontFlags.None);
+                    if (playerInfo.Party > 0)
+                    {
+                        position.Y += 15;
+                        //DrawShadowText($"Party: {playerInfo.Party}", (int)position.X, (int)position.Y, defClr);
+                        Drawing.DrawText($"[{playerInfo.Party}]", position, defClr, FontFlags.None);
+                    }
+                    var gameHistorySize = playerInfo.Matches.Length - 2;
+                    if (gameHistorySize >= 1)
+                    {
+                        position.Y += 15;
+                        for (var i = 0; i < gameHistorySize; i++)
+                        {
+                            var isTrue = playerInfo.Matches[i + 1] == '+';
+                            var clr = isTrue ? Color.Green : Color.Red;
+                            position.X += 10;
+                            var text = '⬤';//●
+                            //DrawShadowText($"{text}", (int)position.X, (int)position.Y, clr);
+                            Drawing.DrawText($"[{text}]", position, clr, FontFlags.None);
+                        }
+                    }
+                    if (playerInfo.Country.Length > 0)
+                    {
+                        try
+                        {
+                            var n = Convert.ToInt32(playerInfo.Country);
+                            if (n > 0)
+                            {
+                                position.Y += 15;
+                                //DrawShadowText($"[{playerInfo.Country}]", (int) position.X, (int) position.Y, defClr);
+                                Drawing.DrawText($"[{playerInfo.Country}]", position, defClr, FontFlags.None);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+
+                    }
+                    if (playerInfo.TotalGames.Length > 0)
+                    {
+                        try
+                        {
+                            var n = Convert.ToInt32(playerInfo.TotalGames);
+                            if (n == 0)
+                                continue;
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
+                        var totalGames = Convert.ToInt32(playerInfo.TotalGames);
+                        var wins = Convert.ToInt32(playerInfo.Wins);
+                        var loses = totalGames - wins;
+                        var wr = playerInfo.WrOnCurrentHero;
+                        position.Y += 15;
+                        position.X = startXPosition;
+                        Drawing.DrawText($"[{playerInfo.Hero?.GetRealName()}: {wins}/{loses} ({wr}%)]", position, defClr,
+                            FontFlags.None);
+                        //DrawShadowText($"[{playerInfo.Hero?.GetRealName()}: {wins}/{loses} ({wr}%)]", (int)position.X, (int)position.Y, defClr);
+                    }
+                }
+            }
         }
 
         private static void GameOnOnUpdate(EventArgs args)
@@ -176,7 +271,7 @@ namespace OverlayInformation
             try
             {
                 if (!Checker.IsActive()) return;
-                if (!Members.Menu.Item("odp.Enable").GetValue<bool>()) return;
+                if (!Members.Menu.Item("OpenDota.Enable").GetValue<bool>()) return;
             }
             catch (Exception)
             {
@@ -187,8 +282,13 @@ namespace OverlayInformation
             if (Check)
             {
                 _loaded = true;
-                Printer.PrintInfo("[OpenDota] Loaded");
-                Beeeeaaaaaar();
+                Console.WriteLine("[OpenDota] [pre]Loaded");
+                DelayAction.Add(500, () =>
+                {
+                    Console.WriteLine("[OpenDota] Loaded");
+                    Beeeeaaaaaar();
+                });
+                //Beeeeaaaaaar();
             }
         }
 
@@ -358,7 +458,7 @@ namespace OverlayInformation
             try
             {
                 if (!Checker.IsActive()) return;
-                if (!Members.Menu.Item("odp.Enable").GetValue<bool>()) return;
+                if (!Members.Menu.Item("OpenDota.Enable").GetValue<bool>()) return;
             }
             catch (Exception)
             {
