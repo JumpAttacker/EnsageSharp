@@ -42,6 +42,8 @@ namespace InvokerAnnihilationCrappa.Features
 
         private void DrawingOnOnDraw(EventArgs args)
         {
+            if (Game.GameState == GameState.PostGame)
+                return;
             Vector2 startPos = new Vector2(PosX.Value.Value, PosY.Value.Value);
             var size = new Vector2(Size * 10 * _main.Invoker.AbilityInfos.Count, Size * 10);
             if (Movable)

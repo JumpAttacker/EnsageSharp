@@ -25,6 +25,7 @@ namespace InvokerAnnihilationCrappa.Features
             PosY = panel.Item("Position Y", new Slider(500, 0, 2000));
             IncCombo = panel.Item("Inc Combo", new KeyBind(0x6B));
             DecCombo = panel.Item("Dec Combo", new KeyBind(0x6D));
+            CanChangeByClicking = panel.Item("Change combo by clicking on them", true);
             IncCombo.PropertyChanged += (sender, args) =>
             {
                 if (IncCombo.Value.Active)
@@ -91,6 +92,8 @@ namespace InvokerAnnihilationCrappa.Features
                     Drawing.OnDraw -= DrawingOnOnDraw;
             };
         }
+
+        public MenuItem<bool> CanChangeByClicking { get; set; }
 
         public MenuItem<KeyBind> DecCombo { get; set; }
 

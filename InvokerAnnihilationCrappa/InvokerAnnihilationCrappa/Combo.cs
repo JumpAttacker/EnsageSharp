@@ -19,7 +19,8 @@ namespace InvokerAnnihilationCrappa
             LoadClickable();
             OnClick += () =>
             {
-                invoker.SelectedCombo = Id;
+                if (invoker.Config.ComboPanel.CanChangeByClicking)
+                    invoker.SelectedCombo = Id;
             };
         }
 

@@ -55,7 +55,7 @@ namespace InvokerAnnihilationCrappa
                 if (!Me.TargetManager.Value.IsActive)
                 {
                     Me.TargetManager.Value.Activate();
-                    Log.Debug("re Enable _targetManager");
+                    Log.Info("re Enable _targetManager");
                 }
                 _target = null;
                 Me.ParticleManager.Value.Remove("Invo_target");
@@ -84,7 +84,7 @@ namespace InvokerAnnihilationCrappa
                 _target = Me.TargetManager.Value.Active.GetTargets().FirstOrDefault() as Hero;
                 if (_target != null)
                 {
-                    Log.Debug("target detected");
+                    Log.Info("target detected");
                     var currentCombo = Me.Config.ComboPanel.Combos.First(x => x.Id == Me.SelectedCombo);
                     currentCombo.CurrentAbility = 0;
                     if (Me.TargetManager.Value.IsActive)
@@ -92,7 +92,7 @@ namespace InvokerAnnihilationCrappa
                 }
                 else
                 {
-                    Log.Debug("Cant find target");
+                    Log.Info("Cant find target");
                 }
             }
             
@@ -116,7 +116,7 @@ namespace InvokerAnnihilationCrappa
                             var casted = await currentAbility.UseAbility(_target, token);
                             if (casted)
                             {
-                                Log.Error($"using: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
+                                Log.Info($"using: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
                                 if (currentCombo.CurrentAbility + 1 >= currentCombo.AbilityCount)
                                     currentCombo.CurrentAbility = 0;
                                 else
@@ -124,13 +124,13 @@ namespace InvokerAnnihilationCrappa
                             }
                             else
                             {
-                                Log.Error($"not casted: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
+                                Log.Info($"not casted: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
                             }
                         }
                     }
                     else
                     {
-                        Log.Error($"skip ability cuz cd: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
+                        Log.Info($"skip ability cuz cd: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
                         if (currentCombo.CurrentAbility + 1 >= currentCombo.AbilityCount)
                             currentCombo.CurrentAbility = 0;
                         else
@@ -139,7 +139,7 @@ namespace InvokerAnnihilationCrappa
                 }
                 else
                 {
-                    Log.Error($"end of combo. Set current ability stage to 0");
+                    Log.Info($"end of combo. Set current ability stage to 0");
                     currentCombo.CurrentAbility = 0;
                 }
                 if (_target.IsAttackImmune() || _target.IsInvul())

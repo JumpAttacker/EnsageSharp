@@ -30,7 +30,8 @@ namespace InvokerAnnihilationCrappa.Features
         {
             if (args.GetNewValue<KeyBind>().Active)
             {
-                UpdateManager.BeginInvoke(Callback);
+                if (!Enable)
+                    UpdateManager.BeginInvoke(Callback);
             }
         }
 
@@ -38,13 +39,11 @@ namespace InvokerAnnihilationCrappa.Features
 
         private async void Callback()
         {
-            Console.WriteLine("start Call Back");
             while (Enable || CustomKey.Value.Active)
             {
                 var inAction = _main.Invoker._mode.CanExecute;
                 if ((inAction && Game.IsKeyDown(0x11)) || CustomKey.Value.Active)
                 {
-                    Console.WriteLine("lets invoke");
                     await Invoke();
                 }
                 await Task.Delay(100);

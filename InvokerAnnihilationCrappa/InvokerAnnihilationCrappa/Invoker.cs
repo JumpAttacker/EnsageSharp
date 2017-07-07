@@ -166,16 +166,18 @@ namespace InvokerAnnihilationCrappa
             Config = new Config(this);
             Log.Debug("new config");
             Config.ComboKey.Item.ValueChanged += HotkeyChanged;
-            Log.Debug("event to config");
+            Log.Debug($"event to config");
             OrbwalkerManager.Value.Activate();
             Log.Debug("activate OrbwalkerManager");
             TargetManager.Value.Activate();
             Log.Debug("activate TargetManager");
             _mode.UpdateConfig(Config);
-            Log.Debug("load config");
+            Log.Debug($"load config");
             OrbwalkerManager.Value.RegisterMode(_mode);
             Log.Debug("RegisterMode");
             _mode.Load();
+            var key = KeyInterop.KeyFromVirtualKey((int)Config.ComboKey.Item.GetValue<KeyBind>().Key);
+            _mode.Key = key;
             Log.Debug($"_mode loaded. Key for combo -> {_mode.Key}");
             InventoryManager.Value.Attach(this);
             Log.Debug("InventoryManager Attach");
@@ -200,6 +202,84 @@ namespace InvokerAnnihilationCrappa
                 Config.ComboPanel.Combos.Add(_eulCombo2);
                 Config.ComboPanel.Combos.Add(_eulCombo3);
             }
+
+            Unit.OnModifierAdded += HeroOnOnModifierAdded;
+            Unit.OnModifierRemoved += HeroOnOnModifierRemoved;
+            SpCounter = new SphereCounter();
+        }
+
+        public SphereCounter SpCounter { get; set; }
+
+        public class SphereCounter
+        {
+            public int q, w, e;
+
+            public SphereCounter()
+            {
+                q = 0;
+                w = 0;
+                e = 0;
+                foreach (var modifier in ObjectManager.LocalHero.Modifiers)
+                {
+                    var name = modifier.TextureName;
+                    switch (name)
+                    {
+                        case "invoker_quas":
+                            q++;
+                            break;
+                        case "invoker_wex":
+                            w++;
+                            break;
+                        case "invoker_exort":
+                            e++;
+                            break;
+                    }
+                }
+            }
+
+            public override string ToString()
+            {
+                return $"q->{q} w->{w} e->{e}";
+            }
+        }
+        private void HeroOnOnModifierRemoved(Unit sender, ModifierChangedEventArgs args)
+        {
+            if (!sender.Equals(Owner))
+                return;
+            var name = args.Modifier.TextureName;
+            switch (name)
+            {
+                case "invoker_quas":
+                    SpCounter.q--;
+                    break;
+                case "invoker_wex":
+                    SpCounter.w--;
+                    break;
+                case "invoker_exort":
+                    SpCounter.e--;
+                    break;
+            }
+            //Game.PrintMessage($"q->{SpCounter.q} w->{SpCounter.w} e->{SpCounter.e}");
+        }
+
+        private void HeroOnOnModifierAdded(Unit sender, ModifierChangedEventArgs args)
+        {
+            if (!sender.Equals(Owner))
+                return;
+            var name = args.Modifier.TextureName;
+            switch (name)
+            {
+                case "invoker_quas":
+                    SpCounter.q++;
+                    break;
+                case "invoker_wex":
+                    SpCounter.w++;
+                    break;
+                case "invoker_exort":
+                    SpCounter.e++;
+                    break;
+            }
+            //Game.PrintMessage($"q->{SpCounter.q} w->{SpCounter.w} e->{SpCounter.e}");
         }
 
         private Combo _eulCombo1;
@@ -249,17 +329,17 @@ namespace InvokerAnnihilationCrappa
         protected override void OnDeactivate()
         {
             OrbwalkerManager.Value.UnregisterMode(_mode);
-            Log.Debug("OrbwalkerManager UnregisterMode");
+            Log.Info("OrbwalkerManager UnregisterMode");
             OrbwalkerManager.Value.Deactivate();
-            Log.Debug("OrbwalkerManager deactivated");
+            Log.Info("OrbwalkerManager deactivated");
             TargetManager.Value.Deactivate();
-            Log.Debug("TargetManager deactivated");
+            Log.Info("TargetManager deactivated");
             Config?.Dispose();
-            Log.Debug("Config deactivated");
+            Log.Info("Config deactivated");
             _mode.Unload();
-            Log.Debug("_mode unloaded");
+            Log.Info("_mode unloaded");
             InventoryManager.Value.Detach(this);
-            Log.Debug("InventoryManager Detach");
+            Log.Info("InventoryManager Detach");
             InventoryManager.Value.CollectionChanged -= ValueOnCollectionChanged;
         }
 
@@ -272,7 +352,7 @@ namespace InvokerAnnihilationCrappa
             }
             var key = KeyInterop.KeyFromVirtualKey((int)keyCode);
             _mode.Key = key;
-            Log.Debug("new hotkey: " + key);
+            Log.Info("new hotkey: " + key);
         }
 
         public async Task<bool> Invoke(AbilityInfo info)
@@ -282,18 +362,45 @@ namespace InvokerAnnihilationCrappa
                 Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown+1}");
                 return false;
             }
-            var sphereDelay = 20;
+            var sphereDelay = Config.InvokeTime;
             info.One.UseAbility();
             await Task.Delay(sphereDelay);
             info.Two.UseAbility();
             await Task.Delay(sphereDelay);
             info.Three.UseAbility();
             await Task.Delay(sphereDelay);
+            if (!Check(info))
+            {
+                Log.Error("wrong spheres -> "+SpCounter+" let's recast");
+                await Task.Delay(sphereDelay);
+                return false;
+            }
             InvokeAbility.UseAbility();
-            //TODO: check for wrong invoked spheres
-            Log.Error($"invoke: [{info.Ability.Name}]");
-            await Task.Delay(300);
+            Log.Info($"invoke: [{info.Ability.Name}]");
+            await Task.Delay(Config.AfterInvokeDelay);
             return true;
+        }
+
+        private bool Check(AbilityInfo info)
+        {
+            var q = 0;
+            var w = 0;
+            var e = 0;
+            GetNumber(info.One, ref q, ref w, ref e);
+            GetNumber(info.Two, ref q, ref w, ref e);
+            GetNumber(info.Three, ref q, ref w, ref e);
+            Log.Warn($"Spheres for {info.Ability.Name} -> [{q}] [{w}] [{e}] ");
+            return SpCounter.q == q && SpCounter.w == w && SpCounter.e == e;
+        }
+
+        private void GetNumber(Ability ability, ref int q, ref int w, ref int e)
+        {
+            if (ReferenceEquals(ability, Quas))
+                q++;
+            else if (ReferenceEquals(ability, Wex))
+                w++;
+            else
+                e++;
         }
     }
 }

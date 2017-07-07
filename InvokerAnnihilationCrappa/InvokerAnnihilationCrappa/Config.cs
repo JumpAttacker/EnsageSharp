@@ -15,12 +15,18 @@ namespace InvokerAnnihilationCrappa
             Factory = MenuFactory.Create("Invoker Annihilation");
             ComboKey = Factory.Item("Combo Key", new KeyBind('G'));
             FontSize = Factory.Item("Font Size", new Slider(13, 1, 100));
+            InvokeTime = Factory.Item("Time between spheres in combo", new Slider(20, 1, 200));
+            AfterInvokeDelay = Factory.Item("Delay after Invoke", new Slider(300, 1, 500));
             AbilityPanel = new AbilityPanel(this);
             ComboPanel = new ComboPanel(this);
             SmartSphere = new SmartSphere(this);
             AutoSunStrike = new AutoSunStrike(this);
             Prepare = new Prepare(this);
         }
+
+        public MenuItem<Slider> AfterInvokeDelay { get; set; }
+
+        public MenuItem<Slider> InvokeTime { get; set; }
 
         public Prepare Prepare { get; set; }
 
