@@ -24,6 +24,12 @@ namespace InvokerAnnihilationCrappa.Features
                 UpdateManager.BeginInvoke(Callback);
                 CustomKey.Item.ValueChanged += ItemOnValueChanged;
             }
+
+            Enable.Item.ValueChanged += (sender, args) =>
+            {
+                if (args.GetNewValue<bool>())
+                    UpdateManager.BeginInvoke(Callback);
+            };
         }
 
         private void ItemOnValueChanged(object sender, OnValueChangeEventArgs args)

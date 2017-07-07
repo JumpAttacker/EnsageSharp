@@ -95,6 +95,7 @@
     <Compile Include="Features\AbilityPanel.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="AbilityInfo.cs" />
+    <Compile Include="Features\AutoGhostWalk.cs" />
     <Compile Include="Features\Prepare.cs" />
     <Compile Include="Invoker.cs" />
     <Compile Include="InvokerMode.cs" />

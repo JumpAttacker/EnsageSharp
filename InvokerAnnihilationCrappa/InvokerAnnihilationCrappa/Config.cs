@@ -20,8 +20,11 @@ namespace InvokerAnnihilationCrappa
             ComboPanel = new ComboPanel(this);
             SmartSphere = new SmartSphere(this);
             AutoSunStrike = new AutoSunStrike(this);
+            AutoGhostWalk = new AutoGhostWalk(this);
             Prepare = new Prepare(this);
         }
+
+        public AutoGhostWalk AutoGhostWalk { get; set; }
 
         public MenuItem<Slider> AfterInvokeDelay { get; set; }
 
