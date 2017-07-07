@@ -282,7 +282,7 @@ namespace InvokerAnnihilationCrappa
                 Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown+1}");
                 return false;
             }
-            var sphereDelay = 5;
+            var sphereDelay = 20;
             info.One.UseAbility();
             await Task.Delay(sphereDelay);
             info.Two.UseAbility();
@@ -292,7 +292,7 @@ namespace InvokerAnnihilationCrappa
             InvokeAbility.UseAbility();
             //TODO: check for wrong invoked spheres
             Log.Error($"invoke: [{info.Ability.Name}]");
-            await Await.Delay((int) Game.Ping+75);
+            await Task.Delay(300);
             return true;
         }
     }

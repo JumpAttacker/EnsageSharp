@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
@@ -23,35 +24,27 @@ namespace InvokerAnnihilationCrappa.Features
                 UpdateManager.BeginInvoke(Callback);
                 CustomKey.Item.ValueChanged += ItemOnValueChanged;
             }
-            Enable.Item.ValueChanged += (sender, args) =>
-            {
-                if (args.GetNewValue<bool>())
-                {
-                    UpdateManager.BeginInvoke(Callback);
-                    CustomKey.Item.ValueChanged += ItemOnValueChanged;
-                }
-                else
-                {
-                    CustomKey.Item.ValueChanged -= ItemOnValueChanged;
-                }
-            };
         }
 
         private void ItemOnValueChanged(object sender, OnValueChangeEventArgs args)
         {
             if (args.GetNewValue<KeyBind>().Active)
+            {
                 UpdateManager.BeginInvoke(Callback);
+            }
         }
 
         public MenuItem<KeyBind> CustomKey { get; set; }
 
         private async void Callback()
         {
+            Console.WriteLine("start Call Back");
             while (Enable || CustomKey.Value.Active)
             {
                 var inAction = _main.Invoker._mode.CanExecute;
-                if (inAction && Game.IsKeyDown(0x11))
+                if ((inAction && Game.IsKeyDown(0x11)) || CustomKey.Value.Active)
                 {
+                    Console.WriteLine("lets invoke");
                     await Invoke();
                 }
                 await Task.Delay(100);
