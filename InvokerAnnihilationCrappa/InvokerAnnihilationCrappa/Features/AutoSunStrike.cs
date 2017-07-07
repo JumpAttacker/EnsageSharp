@@ -114,7 +114,7 @@ namespace InvokerAnnihilationCrappa.Features
         public MenuItem<bool> OnlyKillSteal { get; set; }
 
         private float GetSunStikeDamage
-            => _main.Invoker.SunStrike.Ability.SpellAmplification() * (37.5f + 62.5f * _main.Invoker.Exort.Level);
+            => (_main.Invoker.SunStrike.Ability.SpellAmplification()+1) * (37.5f + 62.5f * _main.Invoker.Exort.Level);
 
         private async void Callback()
         {
