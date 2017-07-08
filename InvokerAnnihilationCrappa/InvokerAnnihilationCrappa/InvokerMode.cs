@@ -102,7 +102,7 @@ namespace InvokerAnnihilationCrappa
                 if (currentCombo.CurrentAbility < currentCombo.AbilityCount)
                 {
                     var currentAbility = currentCombo.AbilityInfos[currentCombo.CurrentAbility];
-                    if (Me.Config.AbilitiesInCombo.Value.IsEnabled(currentAbility.Ability.Name))
+                    if (Me.Config.AbilitiesInCombo.Value.IsEnabled(currentAbility.Ability.Name) || currentAbility.Ability is Item)
                     {
                         if (currentAbility.Ability.AbilityState == AbilityState.Ready)
                         {
