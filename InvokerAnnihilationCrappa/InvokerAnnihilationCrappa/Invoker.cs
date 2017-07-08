@@ -45,6 +45,7 @@ namespace InvokerAnnihilationCrappa
         public int SelectedCombo;
         public readonly InvokerMode _mode;
         private readonly Sleeper InvokeSleeper;
+        public readonly Sleeper GlobalGhostWalkSleeper;
         private Dictionary<Unit, IServiceContext> Orbwalkers { get; } = new Dictionary<Unit, IServiceContext>();
 
         [ImportingConstructor]
@@ -97,6 +98,7 @@ namespace InvokerAnnihilationCrappa
             Tornado = new AbilityInfo(Wex, Wex, Quas, Owner.GetAbilityById(AbilityId.invoker_tornado));
             Emp = new AbilityInfo(Wex, Wex, Wex, Owner.GetAbilityById(AbilityId.invoker_emp));
             InvokeSleeper = new Sleeper();
+            GlobalGhostWalkSleeper = new Sleeper();
             AbilityInfos = new List<AbilityInfo>
             {
                 SunStrike,

@@ -34,6 +34,17 @@ namespace InvokerAnnihilationCrappa.Features
                 if (args.GetNewValue<bool>())
                     UpdateManager.BeginInvoke(Callback);
             };
+
+            Player.OnExecuteOrder += (sender, args) =>
+            {
+                var order = args.OrderId;
+                if (order == OrderId.Ability || order == OrderId.AbilityLocation || order == OrderId.AbilityTarget ||
+                    order == OrderId.ToggleAbility)
+                {
+                    if (_main.Invoker.GlobalGhostWalkSleeper.Sleeping)
+                        args.Process = false;
+                }
+            };
         }
 
         public MenuItem<Slider> Range { get; set; }
@@ -54,6 +65,7 @@ namespace InvokerAnnihilationCrappa.Features
             if (invis.Ability.CanBeCasted())
             {
                 invis.Ability.UseAbility();
+                _main.Invoker.GlobalGhostWalkSleeper.Sleep(500);
                 await Task.Delay(1000);
             }
             else if (invis.Ability.AbilityState == AbilityState.Ready)
