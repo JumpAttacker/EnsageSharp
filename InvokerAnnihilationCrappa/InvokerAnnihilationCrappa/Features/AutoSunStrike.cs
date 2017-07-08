@@ -195,7 +195,7 @@ namespace InvokerAnnihilationCrappa.Features
             var damage = GetSunStikeDamage;
             foreach (var hero in heroes)
             {
-                var text = $"{hero.Health - damage}";
+                var text = $"{(int)(hero.Health - damage)}";
                 if (DrawDamageHero)
                 {
                     var pos = HUDInfo.GetHPbarPosition(hero);

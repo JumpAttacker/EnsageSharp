@@ -148,6 +148,8 @@ namespace InvokerAnnihilationCrappa.Features
             }
             else if (order == OrderId.MoveLocation || order == OrderId.MoveTarget)
             {
+                if (args.Target.ClassId == ClassId.CDOTA_BaseNPC_Healer)
+                    return;
                 if (ObjectManager.LocalHero.IsSilenced())
                     return;
                 var ability = _buttons.First(x => x.Active && !x.OnAttack).Ability;
