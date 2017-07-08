@@ -185,7 +185,14 @@ namespace InvokerAnnihilationCrappa
                             Me.Blink.UseAbility(_target.Position);
                     }
                 }
-                Me.ParticleManager.Value.DrawRange(_target, "Invo_target", 125, SharpDX.Color.YellowGreen);
+                try
+                {
+                    Me.ParticleManager.Value.DrawRange(_target, "Invo_target", 125, SharpDX.Color.YellowGreen);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
             else
             {

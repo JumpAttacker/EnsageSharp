@@ -366,6 +366,11 @@ namespace InvokerAnnihilationCrappa
                 Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
                 return false;
             }
+            if (info.One.Level == 0 && info.Two.Level == 0 && info.Three.Level == 0)
+            {
+                Log.Error($"can't invoke (not all spheres are learned)");
+                return false;
+            }
             var sphereDelay = Config.InvokeTime;
             info.One.UseAbility();
             await Task.Delay(sphereDelay);
@@ -390,6 +395,11 @@ namespace InvokerAnnihilationCrappa
             if (!InvokeAbility.CanBeCasted() || InvokeSleeper.Sleeping)
             {
                 Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
+                return false;
+            }
+            if (info.One.Level == 0 && info.Two.Level == 0 && info.Three.Level == 0)
+            {
+                Log.Error($"can't invoke (not all spheres are learned)");
                 return false;
             }
             info.One.UseAbility();

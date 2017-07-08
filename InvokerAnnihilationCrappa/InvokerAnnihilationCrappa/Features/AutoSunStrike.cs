@@ -167,15 +167,22 @@ namespace InvokerAnnihilationCrappa.Features
                                     else if (InvokeSunStrike)
                                     {
                                         Log.Info("invoke for Auto SS");
-                                        await _main.Invoker.InvokeAsync(sunStike);
-                                        Log.Info("casted SS due Auto SS");
-                                        sunStike.Ability.UseAbility(hero.Position);
+                                        var invoked = await _main.Invoker.InvokeAsync(sunStike);
+                                        if (invoked)
+                                        {
+                                            Log.Info("casted SS due Auto SS");
+                                            sunStike.Ability.UseAbility(hero.Position);
+                                        }
                                     }
                                     
                                     await Task.Delay(500);
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        Log.Error("auto ss cant be casted due low mana");
                     }
                     
                 }
