@@ -153,7 +153,7 @@ namespace InvokerAnnihilationCrappa.Features
                                     if (!sunStike.Ability.CanBeCasted())
                                     {
                                         Log.Info("[before] invoke for Auto SS");
-                                        await _main.Invoker.Invoke(sunStike);
+                                        await _main.Invoker.InvokeAsync(sunStike);
                                     }
                                 }
                                 if (comboModifiers && time <= 1.69 && time >= 1.35 ||
@@ -167,7 +167,7 @@ namespace InvokerAnnihilationCrappa.Features
                                     else if (InvokeSunStrike)
                                     {
                                         Log.Info("invoke for Auto SS");
-                                        await _main.Invoker.Invoke(sunStike);
+                                        await _main.Invoker.InvokeAsync(sunStike);
                                         Log.Info("casted SS due Auto SS");
                                         sunStike.Ability.UseAbility(hero.Position);
                                     }

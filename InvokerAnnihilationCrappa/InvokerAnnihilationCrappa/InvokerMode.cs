@@ -106,7 +106,7 @@ namespace InvokerAnnihilationCrappa
                     {
                         if (!currentAbility.Ability.CanBeCasted())
                         {
-                            await Me.Invoke(currentAbility);
+                            await Me.InvokeAsync(currentAbility);
                         }
                         else if (currentAbility.Ability.CanHit(_target)
                                  /*Ensage.SDK.Extensions.EntityExtensions.Distance2D(Me.Owner, _target) <=

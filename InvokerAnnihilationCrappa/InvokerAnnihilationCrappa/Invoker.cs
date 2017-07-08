@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Ensage.SDK.Input;
 using Ensage.SDK.Orbwalker;
 using System.Windows.Input;
+using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Common.Threading;
 using Ensage.SDK.Abilities;
 using Ensage.SDK.Abilities.Items;
@@ -43,6 +44,7 @@ namespace InvokerAnnihilationCrappa
         public Unit Owner { get; }
         public int SelectedCombo;
         public readonly InvokerMode _mode;
+        private readonly Sleeper InvokeSleeper;
         private Dictionary<Unit, IServiceContext> Orbwalkers { get; } = new Dictionary<Unit, IServiceContext>();
 
         [ImportingConstructor]
@@ -94,7 +96,7 @@ namespace InvokerAnnihilationCrappa
             IceWall = new AbilityInfo(Quas, Quas, Exort, Owner.GetAbilityById(AbilityId.invoker_ice_wall));
             Tornado = new AbilityInfo(Wex, Wex, Quas, Owner.GetAbilityById(AbilityId.invoker_tornado));
             Emp = new AbilityInfo(Wex, Wex, Wex, Owner.GetAbilityById(AbilityId.invoker_emp));
-
+            InvokeSleeper = new Sleeper();
             AbilityInfos = new List<AbilityInfo>
             {
                 SunStrike,
@@ -355,11 +357,11 @@ namespace InvokerAnnihilationCrappa
             Log.Info("new hotkey: " + key);
         }
 
-        public async Task<bool> Invoke(AbilityInfo info)
+        public async Task<bool> InvokeAsync(AbilityInfo info)
         {
             if (!InvokeAbility.CanBeCasted())
             {
-                Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown+1}");
+                Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
                 return false;
             }
             var sphereDelay = Config.InvokeTime;
@@ -371,13 +373,34 @@ namespace InvokerAnnihilationCrappa
             await Task.Delay(sphereDelay);
             if (!Check(info))
             {
-                Log.Error("wrong spheres -> "+SpCounter+" let's recast");
+                Log.Error("wrong spheres -> " + SpCounter + " let's recast");
                 await Task.Delay(sphereDelay);
                 return false;
             }
             InvokeAbility.UseAbility();
             Log.Info($"invoke: [{info.Ability.Name}]");
             await Task.Delay(Config.AfterInvokeDelay);
+            return true;
+        }
+
+        public bool Invoke(AbilityInfo info)
+        {
+            if (!InvokeAbility.CanBeCasted() || InvokeSleeper.Sleeping)
+            {
+                Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
+                return false;
+            }
+            info.One.UseAbility();
+            info.Two.UseAbility();
+            info.Three.UseAbility();
+            /*if (!Check(info))
+            {
+                Log.Error("wrong spheres -> " + SpCounter + " let's recast");
+                return false;
+            }*/
+            InvokeAbility.UseAbility();
+            InvokeSleeper.Sleep(250);
+            Log.Info($"invoke: [{info.Ability.Name}]");
             return true;
         }
 

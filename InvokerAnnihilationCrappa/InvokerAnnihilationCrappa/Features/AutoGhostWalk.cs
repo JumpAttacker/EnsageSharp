@@ -44,7 +44,8 @@ namespace InvokerAnnihilationCrappa.Features
 
         private void ItemOnValueChanged(object sender, OnValueChangeEventArgs e)
         {
-            UpdateManager.BeginInvoke(CustomGhostWalk);
+            if (e.GetNewValue<KeyBind>().Active)
+                UpdateManager.BeginInvoke(CustomGhostWalk);
         }
 
         private async Task TryToInvis()
@@ -57,13 +58,17 @@ namespace InvokerAnnihilationCrappa.Features
             }
             else if (invis.Ability.AbilityState == AbilityState.Ready)
             {
-                await _main.Invoker.Invoke(_main.Invoker.GhostWalk);
+                await _main.Invoker.InvokeAsync(_main.Invoker.GhostWalk);
             }
         }
 
         private async void CustomGhostWalk()
         {
-            await TryToInvis();
+            while (CustomKey)
+            {
+                await TryToInvis();
+                await Task.Delay(100);
+            }
         }
 
         private async void Callback()
