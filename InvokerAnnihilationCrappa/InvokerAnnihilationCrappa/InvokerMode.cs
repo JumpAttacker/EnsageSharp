@@ -149,7 +149,9 @@ namespace InvokerAnnihilationCrappa
                     Orbwalker.OrbwalkTo(_target);
                     var others =
                         EntityManager<Unit>.Entities.Where(
-                            x => x.IsAlive && x.IsControllable && x.Team == Owner.Team && !x.Equals(Owner));
+                            x =>
+                                x.IsAlive && x.IsControllable && x.Team == Owner.Team && !x.Equals(Owner) &&
+                                x.ClassId == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit);
                     foreach (var other in others)
                     {
                         if (other.IsAttacking())
