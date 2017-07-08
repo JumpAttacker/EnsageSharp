@@ -71,7 +71,7 @@ namespace InvokerAnnihilationCrappa.Features
                 if ((inAction && Game.IsKeyDown(0x11)) || CustomKey.Value.Active)
                 {
                     continue;
-                    await Invoke();
+                    //await Invoke();
                 }
                 await Task.Delay(100);
             }
@@ -105,6 +105,7 @@ namespace InvokerAnnihilationCrappa.Features
                 _main.Invoker.Invoke(one);
             }
         }
+
         private async Task Invoke()
         {
             var me = _main.Invoker.Owner;

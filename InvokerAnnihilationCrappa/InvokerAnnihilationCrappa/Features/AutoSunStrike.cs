@@ -67,8 +67,17 @@ namespace InvokerAnnihilationCrappa.Features
             if (_main.Invoker.TargetManager == null || !_main.Invoker.TargetManager.IsValueCreated ||
                 _main.Invoker.TargetManager.Value == null || !_main.Invoker.TargetManager.Value.IsActive)
                 return;
-            if (!_main.Invoker.TargetManager.Value.Active.IsActive)
+            try
+            {
+                if (!_main.Invoker.TargetManager.Value.Active.IsActive)
+                    return;
+            }
+            catch (Exception)
+            {
+                Log.Warn("Seems you set in Target Selector -> Activa selector -> none. Please activate this");
                 return;
+            }
+            
             if (!DrawPredictionInvoked && _main.Invoker.SunStrike.Ability.IsHidden)
             {
                 FlushEffect();

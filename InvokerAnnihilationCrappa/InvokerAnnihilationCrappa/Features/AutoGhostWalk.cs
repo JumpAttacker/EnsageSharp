@@ -6,6 +6,7 @@ using Ensage.Common.Menu;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Menu;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace InvokerAnnihilationCrappa.Features
 {
@@ -41,8 +42,12 @@ namespace InvokerAnnihilationCrappa.Features
                 if (order == OrderId.Ability || order == OrderId.AbilityLocation || order == OrderId.AbilityTarget ||
                     order == OrderId.ToggleAbility)
                 {
+                    var ability = args.Ability.GetAbilityId();
                     if (_main.Invoker.GlobalGhostWalkSleeper.Sleeping)
                         args.Process = false;
+                    else if (ability == AbilityId.invoker_ghost_walk)
+                        _main.Invoker.GlobalGhostWalkSleeper.Sleep(500);
+                    
                 }
             };
         }

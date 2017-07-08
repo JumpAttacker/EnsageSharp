@@ -102,39 +102,44 @@ namespace InvokerAnnihilationCrappa
                 if (currentCombo.CurrentAbility < currentCombo.AbilityCount)
                 {
                     var currentAbility = currentCombo.AbilityInfos[currentCombo.CurrentAbility];
-                    if (currentAbility.Ability.AbilityState == AbilityState.Ready)
+                    if (Me.Config.AbilitiesInCombo.Value.IsEnabled(currentAbility.Ability.Name))
                     {
-                        if (!currentAbility.Ability.CanBeCasted())
+                        if (currentAbility.Ability.AbilityState == AbilityState.Ready)
                         {
-                            await Me.InvokeAsync(currentAbility);
-                        }
-                        else if (currentAbility.Ability.CanHit(_target)
-                                 /*Ensage.SDK.Extensions.EntityExtensions.Distance2D(Me.Owner, _target) <=
-                                 currentAbility.Ability.CastRange*/||
-                                 currentAbility.Ability.GetAbilityId() == AbilityId.invoker_ice_wall)
-                        {
-                            var casted = await currentAbility.UseAbility(_target, token);
-                            if (casted)
+                            if (!currentAbility.Ability.CanBeCasted())
                             {
-                                Log.Info($"using: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
-                                if (currentCombo.CurrentAbility + 1 >= currentCombo.AbilityCount)
-                                    currentCombo.CurrentAbility = 0;
+                                await Me.InvokeAsync(currentAbility);
+                            }
+                            else if (currentAbility.Ability.CanHit(_target)
+                                     /*Ensage.SDK.Extensions.EntityExtensions.Distance2D(Me.Owner, _target) <=
+                                     currentAbility.Ability.CastRange*/||
+                                     currentAbility.Ability.GetAbilityId() == AbilityId.invoker_ice_wall)
+                            {
+                                var casted = await currentAbility.UseAbility(_target, token);
+                                if (casted)
+                                {
+                                    Log.Info($"using: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
+                                    IncComboStage(currentCombo);
+                                }
                                 else
-                                    currentCombo.CurrentAbility++;
+                                {
+                                    Log.Info($"not casted: [{currentCombo.CurrentAbility}]" +
+                                             currentAbility.Ability.Name);
+                                }
                             }
-                            else
-                            {
-                                Log.Info($"not casted: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
-                            }
+                        }
+                        else
+                        {
+                            Log.Info($"skip ability cuz cd: [{currentCombo.CurrentAbility}]" +
+                                     currentAbility.Ability.Name);
+                            IncComboStage(currentCombo);
                         }
                     }
                     else
                     {
-                        Log.Info($"skip ability cuz cd: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
-                        if (currentCombo.CurrentAbility + 1 >= currentCombo.AbilityCount)
-                            currentCombo.CurrentAbility = 0;
-                        else
-                            currentCombo.CurrentAbility++;
+                        Log.Info($"skip ability cuz disabled: [{currentCombo.CurrentAbility}]" +
+                                     currentAbility.Ability.Name);
+                        IncComboStage(currentCombo);
                     }
                 }
                 else
@@ -198,6 +203,14 @@ namespace InvokerAnnihilationCrappa
             {
                 Orbwalker.Move(Game.MousePosition);
             }
+        }
+
+        private void IncComboStage(Combo currentCombo)
+        {
+            if (currentCombo.CurrentAbility + 1 >= currentCombo.AbilityCount)
+                currentCombo.CurrentAbility = 0;
+            else
+                currentCombo.CurrentAbility++;
         }
     }
 }

@@ -6,12 +6,14 @@ using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
+using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Input;
 using Ensage.SDK.Menu;
 using InvokerAnnihilationCrappa.Features.behavior;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 using MouseEventArgs = Ensage.SDK.Input.MouseEventArgs;
 
 namespace InvokerAnnihilationCrappa.Features
@@ -39,7 +41,7 @@ namespace InvokerAnnihilationCrappa.Features
             _buttons[3] = new Button(Textures.GetSpellTexture(_main.Invoker.Quas.Name), false, _main.Invoker.Quas, true);
             _buttons[4] = new Button(Textures.GetSpellTexture(_main.Invoker.Wex.Name), false, _main.Invoker.Wex);
             _buttons[5] = new Button(Textures.GetSpellTexture(_main.Invoker.Exort.Name), false, _main.Invoker.Exort);
-
+            sleeper = new Sleeper();
             if (Enable)
             {
                 if (DrawPanel)
@@ -123,7 +125,7 @@ namespace InvokerAnnihilationCrappa.Features
         private readonly Button[] _buttons;
 
         public MenuItem<bool> DrawPanel { get; set; }
-
+        private readonly Sleeper sleeper;
         private void PlayerOnOnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
             if (!args.IsPlayerInput)
@@ -135,6 +137,15 @@ namespace InvokerAnnihilationCrappa.Features
             if (_main.Invoker.Owner.IsInvisible())
                 return;
             var order = args.OrderId;
+            if (order == OrderId.Ability)
+            {
+                var ability = args.Ability.GetAbilityId();
+                if (ability == AbilityId.invoker_quas ||
+                    ability == AbilityId.invoker_wex || ability == AbilityId.invoker_exort)
+                    sleeper.Sleep(500);
+            }
+            if (sleeper.Sleeping)
+                return;
             if (order == OrderId.AttackLocation || order == OrderId.AttackTarget)
             {
                 if (ObjectManager.LocalHero.IsSilenced())

@@ -43,9 +43,9 @@ namespace InvokerAnnihilationCrappa
         public Config Config { get; set; }
         public Unit Owner { get; }
         public int SelectedCombo;
-        public readonly InvokerMode _mode;
-        private readonly Sleeper InvokeSleeper;
-        public readonly Sleeper GlobalGhostWalkSleeper;
+        public InvokerMode _mode;
+        private Sleeper InvokeSleeper;
+        public Sleeper GlobalGhostWalkSleeper;
         private Dictionary<Unit, IServiceContext> Orbwalkers { get; } = new Dictionary<Unit, IServiceContext>();
 
         [ImportingConstructor]
@@ -77,45 +77,7 @@ namespace InvokerAnnihilationCrappa
                 Prediction,
                 renderer,
                 particleManager);*/
-            _mode = new InvokerMode(
-                Key.G,
-                OrbwalkerManager,
-                Input,
-                this);
-
-            Quas = Owner.GetAbilityById(AbilityId.invoker_quas);
-            Wex = Owner.GetAbilityById(AbilityId.invoker_wex);
-            Exort = Owner.GetAbilityById(AbilityId.invoker_exort);
-
-            SunStrike = new AbilityInfo(Exort, Exort, Exort, Owner.GetAbilityById(AbilityId.invoker_sun_strike));
-            ColdSnap = new AbilityInfo(Quas, Quas, Quas, Owner.GetAbilityById(AbilityId.invoker_cold_snap));
-            Alacrity = new AbilityInfo(Wex, Wex, Exort, Owner.GetAbilityById(AbilityId.invoker_alacrity));
-            Meteor = new AbilityInfo(Exort, Exort, Wex, Owner.GetAbilityById(AbilityId.invoker_chaos_meteor));
-            Blast = new AbilityInfo(Quas, Exort, Wex, Owner.GetAbilityById(AbilityId.invoker_deafening_blast));
-            ForgeSpirit = new AbilityInfo(Exort, Exort, Quas, Owner.GetAbilityById(AbilityId.invoker_forge_spirit));
-            GhostWalk = new AbilityInfo(Quas, Quas, Wex, Owner.GetAbilityById(AbilityId.invoker_ghost_walk));
-            IceWall = new AbilityInfo(Quas, Quas, Exort, Owner.GetAbilityById(AbilityId.invoker_ice_wall));
-            Tornado = new AbilityInfo(Wex, Wex, Quas, Owner.GetAbilityById(AbilityId.invoker_tornado));
-            Emp = new AbilityInfo(Wex, Wex, Wex, Owner.GetAbilityById(AbilityId.invoker_emp));
-            InvokeSleeper = new Sleeper();
-            GlobalGhostWalkSleeper = new Sleeper();
-            AbilityInfos = new List<AbilityInfo>
-            {
-                SunStrike,
-                ColdSnap,
-                Alacrity,
-                Meteor,
-                Blast,
-                ForgeSpirit,
-                GhostWalk,
-                IceWall,
-                Tornado,
-                Emp
-            };
-
-            Empty1 = Owner.GetAbilityById(AbilityId.invoker_empty1);
-            Empty2 = Owner.GetAbilityById(AbilityId.invoker_empty2);
-            InvokeAbility = Owner.GetAbilityById(AbilityId.invoker_invoke);
+            
         }
 
         public Ability InvokeAbility { get; set; }
@@ -167,6 +129,47 @@ namespace InvokerAnnihilationCrappa
 
         protected override void OnActivate()
         {
+            Log.Debug("pre init");
+            _mode = new InvokerMode(
+                Key.G,
+                OrbwalkerManager,
+                Input,
+                this);
+
+            Quas = Owner.GetAbilityById(AbilityId.invoker_quas);
+            Wex = Owner.GetAbilityById(AbilityId.invoker_wex);
+            Exort = Owner.GetAbilityById(AbilityId.invoker_exort);
+
+            SunStrike = new AbilityInfo(Exort, Exort, Exort, Owner.GetAbilityById(AbilityId.invoker_sun_strike));
+            ColdSnap = new AbilityInfo(Quas, Quas, Quas, Owner.GetAbilityById(AbilityId.invoker_cold_snap));
+            Alacrity = new AbilityInfo(Wex, Wex, Exort, Owner.GetAbilityById(AbilityId.invoker_alacrity));
+            Meteor = new AbilityInfo(Exort, Exort, Wex, Owner.GetAbilityById(AbilityId.invoker_chaos_meteor));
+            Blast = new AbilityInfo(Quas, Exort, Wex, Owner.GetAbilityById(AbilityId.invoker_deafening_blast));
+            ForgeSpirit = new AbilityInfo(Exort, Exort, Quas, Owner.GetAbilityById(AbilityId.invoker_forge_spirit));
+            GhostWalk = new AbilityInfo(Quas, Quas, Wex, Owner.GetAbilityById(AbilityId.invoker_ghost_walk));
+            IceWall = new AbilityInfo(Quas, Quas, Exort, Owner.GetAbilityById(AbilityId.invoker_ice_wall));
+            Tornado = new AbilityInfo(Wex, Wex, Quas, Owner.GetAbilityById(AbilityId.invoker_tornado));
+            Emp = new AbilityInfo(Wex, Wex, Wex, Owner.GetAbilityById(AbilityId.invoker_emp));
+            InvokeSleeper = new Sleeper();
+            GlobalGhostWalkSleeper = new Sleeper();
+            AbilityInfos = new List<AbilityInfo>
+            {
+                SunStrike,
+                ColdSnap,
+                Alacrity,
+                Meteor,
+                Blast,
+                ForgeSpirit,
+                GhostWalk,
+                IceWall,
+                Tornado,
+                Emp
+            };
+
+            Empty1 = Owner.GetAbilityById(AbilityId.invoker_empty1);
+            Empty2 = Owner.GetAbilityById(AbilityId.invoker_empty2);
+            InvokeAbility = Owner.GetAbilityById(AbilityId.invoker_invoke);
+            Log.Debug("post init");
             Config = new Config(this);
             Log.Debug("new config");
             Config.ComboKey.Item.ValueChanged += HotkeyChanged;
@@ -366,9 +369,8 @@ namespace InvokerAnnihilationCrappa
                 Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
                 return false;
             }
-            if (info.One.Level == 0 && info.Two.Level == 0 && info.Three.Level == 0)
+            if (!CheckSpheresForLevel(info))
             {
-                Log.Error($"can't invoke (not all spheres are learned)");
                 return false;
             }
             var sphereDelay = Config.InvokeTime;
@@ -397,9 +399,8 @@ namespace InvokerAnnihilationCrappa
                 Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
                 return false;
             }
-            if (info.One.Level == 0 && info.Two.Level == 0 && info.Three.Level == 0)
+            if (!CheckSpheresForLevel(info))
             {
-                Log.Error($"can't invoke (not all spheres are learned)");
                 return false;
             }
             info.One.UseAbility();
@@ -413,6 +414,16 @@ namespace InvokerAnnihilationCrappa
             InvokeAbility.UseAbility();
             InvokeSleeper.Sleep(250);
             Log.Info($"invoke: [{info.Ability.Name}]");
+            return true;
+        }
+
+        private bool CheckSpheresForLevel(AbilityInfo info)
+        {
+            if (info.One.Level == 0 || info.Two.Level == 0 || info.Three.Level == 0)
+            {
+                Log.Error($"can't invoke (not all spheres are learned)");
+                return false;
+            }
             return true;
         }
 

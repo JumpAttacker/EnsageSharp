@@ -123,11 +123,17 @@ namespace InvokerAnnihilationCrappa.Features
             {
                 var selectedAbility = combo.AbilityInfos[combo.CurrentAbility].Ability;
                 var clickStartPos = pos;
-                var clickSize = new Vector2(iconSize.X * combo.AbilityCount, iconSize.Y);
+                var count = combo.AbilityCount;
+                
                 foreach (var info in combo.AbilityInfos)
                 {
                     var ability = info.Ability;
                     var isItem = info.Ability is Item;
+                    if (!_main.AbilitiesInCombo.Value.IsEnabled(ability.Name) && !isItem)
+                    {
+                        count--;
+                        continue;
+                    }
                     var texture = isItem
                         ? Textures.GetItemTexture(ability.StoredName())
                         : Textures.GetSpellTexture(ability.StoredName());
@@ -135,23 +141,23 @@ namespace InvokerAnnihilationCrappa.Features
                     var cd = ability.Cooldown;
                     if (cd > 0)
                     {
-                        var text = ((int)(cd + 1)).ToString(CultureInfo.InvariantCulture);
+                        var text = ((int) (cd + 1)).ToString(CultureInfo.InvariantCulture);
                         Drawing.DrawText(
                             text,
                             pos, size / 10,
                             Color.White,
                             FontFlags.AntiAlias | FontFlags.StrikeOut);
                     }
-                    if (_main.Invoker._mode.CanExecute && selectedAbility.Equals(ability) &&
+                    if (_main.Invoker._mode.CanExecute && !Game.IsKeyDown(0x11) && selectedAbility.Equals(ability) &&
                         combo.Id == _main.Invoker.SelectedCombo)
                         Drawing.DrawRect(pos, iconSize, new Color(0, 155, 255, 125));
                     pos += new Vector2(iconSize.X, 0);
                 }
-
+                var clickSize = new Vector2(iconSize.X * count, iconSize.Y);
                 if (combo.Id == _main.Invoker.SelectedCombo && selectedComboPos.IsZero)
                 {
                     selectedComboPos = pos;
-                    selectedComboCounter = combo.AbilityCount;
+                    selectedComboCounter = count;
                 }
 
                 combo.Update(clickStartPos, clickSize);
