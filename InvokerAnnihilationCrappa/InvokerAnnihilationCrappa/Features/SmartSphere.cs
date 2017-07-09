@@ -41,7 +41,7 @@ namespace InvokerAnnihilationCrappa.Features
             _buttons[3] = new Button(Textures.GetSpellTexture(_main.Invoker.Quas.Name), false, _main.Invoker.Quas, true);
             _buttons[4] = new Button(Textures.GetSpellTexture(_main.Invoker.Wex.Name), false, _main.Invoker.Wex);
             _buttons[5] = new Button(Textures.GetSpellTexture(_main.Invoker.Exort.Name), false, _main.Invoker.Exort);
-            sleeper = new Sleeper();
+            _sleeper = new Sleeper();
             if (Enable)
             {
                 if (DrawPanel)
@@ -125,7 +125,7 @@ namespace InvokerAnnihilationCrappa.Features
         private readonly Button[] _buttons;
 
         public MenuItem<bool> DrawPanel { get; set; }
-        private readonly Sleeper sleeper;
+        private readonly Sleeper _sleeper;
         private void PlayerOnOnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
             if (!args.IsPlayerInput)
@@ -146,9 +146,9 @@ namespace InvokerAnnihilationCrappa.Features
                 var ability = args.Ability.GetAbilityId();
                 if (ability == AbilityId.invoker_quas ||
                     ability == AbilityId.invoker_wex || ability == AbilityId.invoker_exort)
-                    sleeper.Sleep(500);
+                    _sleeper.Sleep(500);
             }
-            if (sleeper.Sleeping)
+            if (_sleeper.Sleeping)
                 return;
             if (order == OrderId.AttackLocation || order == OrderId.AttackTarget)
             {
@@ -157,6 +157,21 @@ namespace InvokerAnnihilationCrappa.Features
                 var ability = _buttons.First(x => x.Active && x.OnAttack).Ability;
                 if (ability.Level==0)
                     return;
+                switch (ability.GetAbilityId())
+                {
+                    case AbilityId.invoker_quas:
+                        if (_main.Invoker.SpCounter.Q == 3)
+                            return;
+                        break;
+                    case AbilityId.invoker_wex:
+                        if (_main.Invoker.SpCounter.W == 3)
+                            return;
+                        break;
+                    case AbilityId.invoker_exort:
+                        if (_main.Invoker.SpCounter.E == 3)
+                            return;
+                        break;
+                }
                 ability.UseAbility();
                 ability.UseAbility();
                 ability.UseAbility();
@@ -170,6 +185,21 @@ namespace InvokerAnnihilationCrappa.Features
                 var ability = _buttons.First(x => x.Active && !x.OnAttack).Ability;
                 if (ability.Level == 0)
                     return;
+                switch (ability.GetAbilityId())
+                {
+                    case AbilityId.invoker_quas:
+                        if (_main.Invoker.SpCounter.Q == 3)
+                            return;
+                        break;
+                    case AbilityId.invoker_wex:
+                        if (_main.Invoker.SpCounter.W == 3)
+                            return;
+                        break;
+                    case AbilityId.invoker_exort:
+                        if (_main.Invoker.SpCounter.E == 3)
+                            return;
+                        break;
+                }
                 ability.UseAbility();
                 ability.UseAbility();
                 ability.UseAbility();
@@ -184,9 +214,9 @@ namespace InvokerAnnihilationCrappa.Features
         {
             if (!Enable)
                 return;
-            Vector2 startPos = new Vector2(PosX.Value.Value, PosY.Value.Value);
-            string text = "On Attacking";
-            Vector2 tSize = new Vector2(Size);
+            var startPos = new Vector2(PosX.Value.Value, PosY.Value.Value);
+            var text = "On Attacking";
+            var tSize = new Vector2(Size);
             var textSize = Drawing.MeasureText($"{text}", "Arial", tSize,
                 FontFlags.AntiAlias | FontFlags.StrikeOut);
             if (Movable)
@@ -243,7 +273,7 @@ namespace InvokerAnnihilationCrappa.Features
 
         private static void DrawButton(Vector2 pos,Vector2 tSize, Button button)
         {
-            Vector2 startPos = pos;
+            var startPos = pos;
             Drawing.DrawRect(pos, tSize, button.Texture);
             if (Ensage.Common.Utils.IsUnderRectangle(Game.MouseScreenPosition, startPos.X, startPos.Y, tSize.X,
                 tSize.Y))
