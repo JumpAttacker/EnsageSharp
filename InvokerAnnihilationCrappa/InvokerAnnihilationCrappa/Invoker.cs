@@ -16,7 +16,6 @@ using Ensage.SDK.Input;
 using Ensage.SDK.Orbwalker;
 using System.Windows.Input;
 using Ensage.Common.Objects.UtilityObjects;
-using Ensage.Common.Threading;
 using Ensage.SDK.Abilities;
 using Ensage.SDK.Abilities.Items;
 using Ensage.SDK.Inventory;
@@ -43,8 +42,8 @@ namespace InvokerAnnihilationCrappa
         public Config Config { get; set; }
         public Unit Owner { get; }
         public int SelectedCombo;
-        public InvokerMode _mode;
-        private Sleeper InvokeSleeper;
+        public InvokerMode Mode;
+        private Sleeper _invokeSleeper;
         public Sleeper GlobalGhostWalkSleeper;
         private Dictionary<Unit, IServiceContext> Orbwalkers { get; } = new Dictionary<Unit, IServiceContext>();
 
@@ -130,7 +129,7 @@ namespace InvokerAnnihilationCrappa
         protected override void OnActivate()
         {
             Log.Debug("pre init");
-            _mode = new InvokerMode(
+            Mode = new InvokerMode(
                 Key.G,
                 OrbwalkerManager,
                 Input,
@@ -150,7 +149,7 @@ namespace InvokerAnnihilationCrappa
             IceWall = new AbilityInfo(Quas, Quas, Exort, Owner.GetAbilityById(AbilityId.invoker_ice_wall));
             Tornado = new AbilityInfo(Wex, Wex, Quas, Owner.GetAbilityById(AbilityId.invoker_tornado));
             Emp = new AbilityInfo(Wex, Wex, Wex, Owner.GetAbilityById(AbilityId.invoker_emp));
-            InvokeSleeper = new Sleeper();
+            _invokeSleeper = new Sleeper();
             GlobalGhostWalkSleeper = new Sleeper();
             AbilityInfos = new List<AbilityInfo>
             {
@@ -173,25 +172,25 @@ namespace InvokerAnnihilationCrappa
             Config = new Config(this);
             Log.Debug("new config");
             Config.ComboKey.Item.ValueChanged += HotkeyChanged;
-            Log.Debug($"event to config");
+            Log.Debug("event to config");
             OrbwalkerManager.Value.Activate();
             Log.Debug("activate OrbwalkerManager");
             TargetManager.Value.Activate();
             Log.Debug("activate TargetManager");
-            _mode.UpdateConfig(Config);
-            Log.Debug($"load config");
-            OrbwalkerManager.Value.RegisterMode(_mode);
+            Mode.UpdateConfig(Config);
+            Log.Debug("load config");
+            OrbwalkerManager.Value.RegisterMode(Mode);
             Log.Debug("RegisterMode");
-            _mode.Load();
+            Mode.Load();
             var key = KeyInterop.KeyFromVirtualKey((int)Config.ComboKey.Item.GetValue<KeyBind>().Key);
-            _mode.Key = key;
-            Log.Debug($"_mode loaded. Key for combo -> {_mode.Key}");
+            Mode.Key = key;
+            Log.Debug($"_mode loaded. Key for combo -> {Mode.Key}");
             InventoryManager.Value.Attach(this);
             Log.Debug("InventoryManager Attach");
             SelectedCombo = 0;
             InventoryManager.Value.CollectionChanged += ValueOnCollectionChanged;
             //if (InventoryManager.Value.Inventory.Items.Any(x => x.Id == AbilityId.item_cyclone))
-            if (Eul!=null)
+            /*if (Eul!=null)
             {
                 _eulCombo1 = new Combo(this, new[]
                 {
@@ -208,7 +207,7 @@ namespace InvokerAnnihilationCrappa
                 Config.ComboPanel.Combos.Add(_eulCombo1);
                 Config.ComboPanel.Combos.Add(_eulCombo2);
                 Config.ComboPanel.Combos.Add(_eulCombo3);
-            }
+            }*/
 
             Unit.OnModifierAdded += HeroOnOnModifierAdded;
             Unit.OnModifierRemoved += HeroOnOnModifierRemoved;
@@ -219,26 +218,26 @@ namespace InvokerAnnihilationCrappa
 
         public class SphereCounter
         {
-            public int q, w, e;
+            public int Q, W, E;
 
             public SphereCounter()
             {
-                q = 0;
-                w = 0;
-                e = 0;
+                Q = 0;
+                W = 0;
+                E = 0;
                 foreach (var modifier in ObjectManager.LocalHero.Modifiers)
                 {
-                    var name = modifier.TextureName;
+                    var name = modifier.Name;
                     switch (name)
                     {
-                        case "invoker_quas":
-                            q++;
+                        case "modifier_invoker_quas_instance":
+                            Q++;
                             break;
-                        case "invoker_wex":
-                            w++;
+                        case "modifier_invoker_wex_instance":
+                            W++;
                             break;
-                        case "invoker_exort":
-                            e++;
+                        case "modifier_invoker_exort_instance":
+                            E++;
                             break;
                     }
                 }
@@ -246,24 +245,24 @@ namespace InvokerAnnihilationCrappa
 
             public override string ToString()
             {
-                return $"q->{q} w->{w} e->{e}";
+                return $"q->{Q} w->{W} e->{E}";
             }
         }
         private void HeroOnOnModifierRemoved(Unit sender, ModifierChangedEventArgs args)
         {
             if (!sender.Equals(Owner))
                 return;
-            var name = args.Modifier.TextureName;
+            var name = args.Modifier.Name;
             switch (name)
             {
-                case "invoker_quas":
-                    SpCounter.q--;
+                case "modifier_invoker_quas_instance":
+                    SpCounter.Q--;
                     break;
-                case "invoker_wex":
-                    SpCounter.w--;
+                case "modifier_invoker_wex_instance":
+                    SpCounter.W--;
                     break;
-                case "invoker_exort":
-                    SpCounter.e--;
+                case "modifier_invoker_exort_instance":
+                    SpCounter.E--;
                     break;
             }
             //Game.PrintMessage($"q->{SpCounter.q} w->{SpCounter.w} e->{SpCounter.e}");
@@ -273,17 +272,17 @@ namespace InvokerAnnihilationCrappa
         {
             if (!sender.Equals(Owner))
                 return;
-            var name = args.Modifier.TextureName;
+            var name = args.Modifier.Name;
             switch (name)
             {
-                case "invoker_quas":
-                    SpCounter.q++;
+                case "modifier_invoker_quas_instance":
+                    SpCounter.Q++;
                     break;
-                case "invoker_wex":
-                    SpCounter.w++;
+                case "modifier_invoker_wex_instance":
+                    SpCounter.W++;
                     break;
-                case "invoker_exort":
-                    SpCounter.e++;
+                case "modifier_invoker_exort_instance":
+                    SpCounter.E++;
                     break;
             }
             //Game.PrintMessage($"q->{SpCounter.q} w->{SpCounter.w} e->{SpCounter.e}");
@@ -335,7 +334,7 @@ namespace InvokerAnnihilationCrappa
 
         protected override void OnDeactivate()
         {
-            OrbwalkerManager.Value.UnregisterMode(_mode);
+            OrbwalkerManager.Value.UnregisterMode(Mode);
             Log.Info("OrbwalkerManager UnregisterMode");
             OrbwalkerManager.Value.Deactivate();
             Log.Info("OrbwalkerManager deactivated");
@@ -343,7 +342,7 @@ namespace InvokerAnnihilationCrappa
             Log.Info("TargetManager deactivated");
             Config?.Dispose();
             Log.Info("Config deactivated");
-            _mode.Unload();
+            Mode.Unload();
             Log.Info("_mode unloaded");
             InventoryManager.Value.Detach(this);
             Log.Info("InventoryManager Detach");
@@ -358,7 +357,7 @@ namespace InvokerAnnihilationCrappa
                 return;
             }
             var key = KeyInterop.KeyFromVirtualKey((int)keyCode);
-            _mode.Key = key;
+            Mode.Key = key;
             Log.Info("new hotkey: " + key);
         }
 
@@ -394,7 +393,7 @@ namespace InvokerAnnihilationCrappa
 
         public bool Invoke(AbilityInfo info)
         {
-            if (!InvokeAbility.CanBeCasted() || InvokeSleeper.Sleeping)
+            if (!InvokeAbility.CanBeCasted() || _invokeSleeper.Sleeping)
             {
                 Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
                 return false;
@@ -412,7 +411,7 @@ namespace InvokerAnnihilationCrappa
                 return false;
             }*/
             InvokeAbility.UseAbility();
-            InvokeSleeper.Sleep(250);
+            _invokeSleeper.Sleep(250);
             Log.Info($"invoke: [{info.Ability.Name}]");
             return true;
         }
@@ -436,7 +435,7 @@ namespace InvokerAnnihilationCrappa
             GetNumber(info.Two, ref q, ref w, ref e);
             GetNumber(info.Three, ref q, ref w, ref e);
             Log.Warn($"Spheres for {info.Ability.Name} -> [{q}] [{w}] [{e}] ");
-            return SpCounter.q == q && SpCounter.w == w && SpCounter.e == e;
+            return SpCounter.Q == q && SpCounter.W == w && SpCounter.E == e;
         }
 
         private void GetNumber(Ability ability, ref int q, ref int w, ref int e)

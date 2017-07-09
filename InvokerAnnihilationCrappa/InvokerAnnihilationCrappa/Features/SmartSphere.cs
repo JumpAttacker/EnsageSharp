@@ -132,7 +132,7 @@ namespace InvokerAnnihilationCrappa.Features
                 return;
             if (args.Entities.All(x => !ReferenceEquals(x, _main.Invoker.Owner)))
                 return;
-            if (_main.Invoker._mode.CanExecute)
+            if (_main.Invoker.Mode.CanExecute)
                 return;
             if (_main.Invoker.Owner.IsInvisible())
                 return;

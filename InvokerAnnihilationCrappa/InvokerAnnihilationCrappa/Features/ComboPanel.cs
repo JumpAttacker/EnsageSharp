@@ -148,7 +148,7 @@ namespace InvokerAnnihilationCrappa.Features
                             Color.White,
                             FontFlags.AntiAlias | FontFlags.StrikeOut);
                     }
-                    if (_main.Invoker._mode.CanExecute && !Game.IsKeyDown(0x11) && selectedAbility.Equals(ability) &&
+                    if (_main.Invoker.Mode.CanExecute && !Game.IsKeyDown(0x11) && selectedAbility.Equals(ability) &&
                         combo.Id == _main.Invoker.SelectedCombo)
                         Drawing.DrawRect(pos, iconSize, new Color(0, 155, 255, 125));
                     pos += new Vector2(iconSize.X, 0);

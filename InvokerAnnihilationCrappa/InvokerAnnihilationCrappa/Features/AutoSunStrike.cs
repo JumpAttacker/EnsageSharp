@@ -130,7 +130,7 @@ namespace InvokerAnnihilationCrappa.Features
             var sunStike = _main.Invoker.SunStrike;
             while (Enable)
             {
-                if (!_main.Invoker._mode.CanExecute && sunStike.Ability.AbilityState == AbilityState.Ready)
+                if (!_main.Invoker.Mode.CanExecute && sunStike.Ability.AbilityState == AbilityState.Ready)
                 {
                     var canBeCasted = sunStike.Ability.ManaCost + _main.Invoker.InvokeAbility.ManaCost <
                                       _main.Invoker.Owner.Mana;

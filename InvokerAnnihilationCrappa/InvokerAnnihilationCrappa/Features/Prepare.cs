@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
@@ -38,7 +37,7 @@ namespace InvokerAnnihilationCrappa.Features
 
         private void Tost()
         {
-            var inAction = _main.Invoker._mode.CanExecute;
+            var inAction = _main.Invoker.Mode.CanExecute;
             if (inAction && Game.IsKeyDown(0x11))
             {
                 Invoke2();
@@ -67,7 +66,7 @@ namespace InvokerAnnihilationCrappa.Features
             while (Enable || CustomKey.Value.Active)
             {
                 
-                var inAction = _main.Invoker._mode.CanExecute;
+                var inAction = _main.Invoker.Mode.CanExecute;
                 if ((inAction && Game.IsKeyDown(0x11)) || CustomKey.Value.Active)
                 {
                     continue;
