@@ -136,6 +136,10 @@ namespace InvokerAnnihilationCrappa.Features
                 return;
             if (_main.Invoker.Owner.IsInvisible())
                 return;
+            if (
+                _main.Invoker.Owner.HasModifiers(
+                    new[] {"modifier_invoker_ghost_walk_self", "modifier_rune_invis", "modifier_invisible"}, false))
+                return;
             var order = args.OrderId;
             if (order == OrderId.Ability)
             {
