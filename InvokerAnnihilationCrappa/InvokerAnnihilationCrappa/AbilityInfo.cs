@@ -59,7 +59,6 @@ namespace InvokerAnnihilationCrappa
                     }
                     if (!Ability.CastSkillShot(target))
                         return false;
-                    Log.Error("Hit delay for Tornado: "+ Ability.GetHitDelay(target)*1000+"ms");
                     AfterTornado.Sleep((float) Ability.GetHitDelay(target)*1000);
                     break;
                 case AbilityId.invoker_emp:
@@ -88,8 +87,14 @@ namespace InvokerAnnihilationCrappa
                     }
                     else
                     {
-                        if (!Ability.CastSkillShot(target))
+                        if (target.HasModifier("modifier_invoker_cold_snap"))
+                        {
+                            Ability.UseAbility(target.Position);
+                        }
+                        else if (!Ability.CastSkillShot(target))
+                        {
                             return false;
+                        }
                     }
                     break;
                 case AbilityId.invoker_sun_strike:

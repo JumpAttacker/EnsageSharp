@@ -110,7 +110,9 @@ namespace InvokerAnnihilationCrappa
                             {
                                 await Me.InvokeAsync(currentAbility);
                             }
-                            else if (currentAbility.Ability.CanHit(_target)
+                            else if (currentAbility.Ability.CanHit(_target) ||
+                                     currentAbility.Ability.GetAbilityId() == AbilityId.invoker_chaos_meteor &&
+                                     _target.HasModifier("modifier_invoker_cold_snap")
                                      /*Ensage.SDK.Extensions.EntityExtensions.Distance2D(Me.Owner, _target) <=
                                      currentAbility.Ability.CastRange*/||
                                      currentAbility.Ability.GetAbilityId() == AbilityId.invoker_ice_wall)

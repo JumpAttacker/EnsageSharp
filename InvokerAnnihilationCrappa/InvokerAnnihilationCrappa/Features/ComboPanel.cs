@@ -54,6 +54,8 @@ namespace InvokerAnnihilationCrappa.Features
                 new Combo(_main.Invoker,
                     new[] {_main.Invoker.ColdSnap, _main.Invoker.Alacrity, _main.Invoker.ForgeSpirit}),
                 new Combo(_main.Invoker,
+                    new[] {_main.Invoker.ColdSnap, _main.Invoker.Meteor, _main.Invoker.Alacrity}),
+                new Combo(_main.Invoker,
                     new[]
                     {
                         _main.Invoker.Tornado, _main.Invoker.Emp, _main.Invoker.IceWall, _main.Invoker.Meteor,

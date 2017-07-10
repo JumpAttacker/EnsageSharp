@@ -17,7 +17,10 @@ namespace InvokerAnnihilationCrappa
             ComboKey = Factory.Item("Combo Key", new KeyBind('G'));
             InvokeTime = Factory.Item("Time between spheres in combo", new Slider(1, 1, 200));
             AfterInvokeDelay = Factory.Item("Delay after Invoke", new Slider(1, 1, 500));
-            
+
+            SmartInvoke = Factory.Item("Smart invoke", true);
+            SmartInvoke.Item.SetTooltip("will check for spheres before invoke");
+
             AbilityPanel = new AbilityPanel(this);
             ComboPanel = new ComboPanel(this);
             SmartSphere = new SmartSphere(this);
@@ -28,7 +31,12 @@ namespace InvokerAnnihilationCrappa
             var panel = Factory.Menu("Abilities");
             var dict = invoker.AbilityInfos.Select(x => x.Ability.Name).ToDictionary(result => result, result => true);
             AbilitiesInCombo = panel.Item("Abilities in combo", new AbilityToggler(dict));
+
+            //Factory.Target.TextureName = "npc_dota_hero_invoker";
+            //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<bool> SmartInvoke { get; set; }
 
         public MenuItem<AbilityToggler> AbilitiesInCombo { get; set; }
 

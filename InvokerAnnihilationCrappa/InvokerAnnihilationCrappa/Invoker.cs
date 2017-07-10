@@ -365,25 +365,34 @@ namespace InvokerAnnihilationCrappa
         {
             if (!InvokeAbility.CanBeCasted())
             {
-                Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
+                Log.Info($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
                 return false;
             }
             if (!CheckSpheresForLevel(info))
             {
                 return false;
             }
-            var sphereDelay = Config.InvokeTime;
-            info.One.UseAbility();
-            await Task.Delay(sphereDelay);
-            info.Two.UseAbility();
-            await Task.Delay(sphereDelay);
-            info.Three.UseAbility();
-            await Task.Delay(sphereDelay);
-            if (!Check(info))
+            if (Config.SmartInvoke)
             {
-                Log.Error("wrong spheres -> " + SpCounter + " let's recast");
+                var sphereDelay = Config.InvokeTime;
+                info.One.UseAbility();
                 await Task.Delay(sphereDelay);
-                return false;
+                info.Two.UseAbility();
+                await Task.Delay(sphereDelay);
+                info.Three.UseAbility();
+                await Task.Delay(sphereDelay);
+                if (!Check(info))
+                {
+                    Log.Error("wrong spheres -> " + SpCounter + " let's recast");
+                    await Task.Delay(sphereDelay);
+                    return false;
+                }
+            }
+            else
+            {
+                info.One.UseAbility();
+                info.Two.UseAbility();
+                info.Three.UseAbility();
             }
             InvokeAbility.UseAbility();
             Log.Info($"invoke: [{info.Ability.Name}]");
@@ -420,7 +429,7 @@ namespace InvokerAnnihilationCrappa
         {
             if (info.One.Level == 0 || info.Two.Level == 0 || info.Three.Level == 0)
             {
-                Log.Error($"can't invoke (not all spheres are learned)");
+                Log.Info($"can't invoke (not all spheres are learned)");
                 return false;
             }
             return true;

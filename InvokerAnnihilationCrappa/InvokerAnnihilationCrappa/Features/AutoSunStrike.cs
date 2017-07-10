@@ -191,7 +191,7 @@ namespace InvokerAnnihilationCrappa.Features
                     }
                     else
                     {
-                        Log.Error("auto ss cant be casted due low mana");
+                        //Log.Error("auto ss cant be casted due low mana");
                     }
                     
                 }
