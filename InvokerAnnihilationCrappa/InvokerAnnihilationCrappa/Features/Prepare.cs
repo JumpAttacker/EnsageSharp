@@ -1,16 +1,19 @@
+using System.Reflection;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Menu;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 
 namespace InvokerAnnihilationCrappa.Features
 {
     public class Prepare
     {
         private readonly Config _main;
-
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public Prepare(Config main)
         {
             _main = main;
@@ -43,19 +46,27 @@ namespace InvokerAnnihilationCrappa.Features
                 Invoke2();
             }
         }
+        private void CustomHotkeyLooper()
+        {
+            var inAction = _main.Invoker.Mode.CanExecute;
+            if (!inAction)
+            {
+                Invoke2();
+            }
+        }
 
         private void ItemOnValueChanged(object sender, OnValueChangeEventArgs args)
         {
             if (args.GetNewValue<KeyBind>().Active)
             {
-                UpdateManager.Subscribe(Tost, 100);
+                UpdateManager.Subscribe(CustomHotkeyLooper, 100);
                 /*
                 if (!Enable)
                     UpdateManager.BeginInvoke(Callback);*/
             }
             else
             {
-                UpdateManager.Unsubscribe(Tost);
+                UpdateManager.Unsubscribe(CustomHotkeyLooper);
             }
         }
 
