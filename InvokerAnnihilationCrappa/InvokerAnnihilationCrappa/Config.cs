@@ -25,6 +25,9 @@ namespace InvokerAnnihilationCrappa
             SmartInvoke = Factory.Item("Smart invoke", true);
             SmartInvoke.Item.SetTooltip("will check for spheres before invoke");
 
+            AutoIceWall = Factory.Item("Dummy IceWall", true);
+            AutoIceWall.Item.SetTooltip("Hero will run to the enemy");
+
             AbilityPanel = new AbilityPanel(this);
             ComboPanel = new ComboPanel(this);
             SmartSphere = new SmartSphere(this);
@@ -49,6 +52,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<bool> AutoIceWall { get; set; }
 
         public ExortForFarmMode ExortForFarmMode { get; set; }
 

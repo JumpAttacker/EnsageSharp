@@ -7,6 +7,8 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
 using log4net;
 using PlaySharp.Toolkit.Logging;
+using SharpDX;
+using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace InvokerAnnihilationCrappa
 {
@@ -27,13 +29,20 @@ namespace InvokerAnnihilationCrappa
             Log.Info($"[{final.Name}] -> [{one.Name}] | [{two.Name}] | [{three.Name}]");
         }
 
+        public void LoadInvoker(Invoker invo)
+        {
+            Me = invo;
+        }
+
+        private Invoker Me { get; set; }
+
         public AbilityInfo(Ability itemAbility)
         {
             Ability = itemAbility;
             Log.Info($"[{Ability.Name}] -> item");
         }
 
-        public async Task<bool> UseAbility(Hero target, CancellationToken token, float ExtraTime)
+        public async Task<bool> UseAbility(Hero target, CancellationToken token)
         {
             var comboModifiers = target.HasModifiers(new[]
             {
@@ -109,7 +118,7 @@ namespace InvokerAnnihilationCrappa
                         }
                         else
                         {
-                            var timeForCast = timing + ExtraTime/100f + Game.Ping / 1000;
+                            var timeForCast = timing + Me.Config.SsExtraDelay/ 100f + Game.Ping / 1000;
                             var delayTime = (int) ((time - timeForCast) * 1000);
                             Log.Warn($"[SS] delay time: {delayTime} rem time: {time} Time for cast: {timeForCast}");
                             await Task.Delay(delayTime, token);
@@ -126,19 +135,38 @@ namespace InvokerAnnihilationCrappa
                     Ability.UseAbility();
                     break;
                 case AbilityId.invoker_ice_wall:
-                    var angle = Ensage.SDK.Extensions.UnitExtensions.FindRotationAngle(ObjectManager.LocalHero, target.NetworkPosition);
-                    //if (Ensage.SDK.Extensions.EntityExtensions.Distance2D(target, Ability.Owner) > 300 || angle>0.99)
-                    while (Ensage.SDK.Extensions.EntityExtensions.Distance2D(target, Ability.Owner) > 300 ||
-                           angle > 0.99)
+                    if (Me.Config.AutoIceWall)
                     {
-                        angle = Ensage.SDK.Extensions.UnitExtensions.FindRotationAngle(ObjectManager.LocalHero, target.NetworkPosition);
-                        var hero = Ability.Owner as Hero;
-                        hero?.Move(target.NetworkPosition);
-                        Log.Debug($"Dist: [{Ensage.SDK.Extensions.EntityExtensions.Distance2D(target, Ability.Owner)}] angle: [{angle}]");
-                        await Task.Delay(100, token);
+                        var angle = UnitExtensions.FindRotationAngle(ObjectManager.LocalHero,
+                            target.NetworkPosition);
+                        //if (Ensage.SDK.Extensions.EntityExtensions.Distance2D(target, Ability.Owner) > 300 || angle>0.99)
+                        while (Ensage.SDK.Extensions.EntityExtensions.Distance2D(target, Ability.Owner) > 300 ||
+                               angle > 0.99)
+                        {
+                            angle = UnitExtensions.FindRotationAngle(ObjectManager.LocalHero,
+                                target.NetworkPosition);
+                            var hero = Ability.Owner as Hero;
+                            hero?.Move(target.NetworkPosition);
+                            Log.Debug(
+                                $"Dist: [{Ensage.SDK.Extensions.EntityExtensions.Distance2D(target, Ability.Owner)}] angle: [{angle}]");
+                            await Task.Delay(100, token);
+                        }
+                        Ability.UseAbility();
                     }
-                    
-                    Ability.UseAbility();
+                    else
+                    {
+                        if (IceWallCanHit(target))
+                        {
+                            Me.BlockerSleeper.Sleep(300);
+                            Me.Owner.Stop();
+                            //Me.Owner.Move(Me.Owner.NetworkPosition + UnitExtensions.Direction(Me.Owner, 10));
+                            //await Task.Delay(100, token);
+                            Ability.UseAbility();
+                            await Task.Delay(300, token);
+                        }
+                        else
+                            return false;
+                    }
                     break;
                 case AbilityId.invoker_deafening_blast:
                     if (target.IsMagicImmune())
@@ -170,6 +198,37 @@ namespace InvokerAnnihilationCrappa
             {
                 await Task.Delay(100);
             }
+        }
+
+        private bool IceWallCanHit(Hero target)
+        {
+            var myPos = Me.Owner.NetworkPosition;
+            var startPos = myPos + UnitExtensions.Direction(Me.Owner, 200);
+            var rotation = Me.Owner.NetworkRotationRad;
+            var toLeft = rotation - Math.PI / 2;
+            var toRight = rotation + Math.PI / 2;
+            for (var i = 0; i < 7; i++)
+            {
+                var pos = startPos + Direction(toLeft, 80 * i);
+                if (Ensage.SDK.Extensions.EntityExtensions.IsInRange(target, pos, 50))
+                {
+                    return true;
+                }
+            }
+            for (var i = 0; i < 7; i++)
+            {
+                var pos = startPos + Direction(toRight, 80 * i);
+                if (Ensage.SDK.Extensions.EntityExtensions.IsInRange(target, pos, 50))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static Vector3 Direction(double angle, float length = 1f)
+        {
+            return new Vector3((float)Math.Cos(angle) * length, (float)Math.Sin(angle) * length, 0);
         }
     }
 }

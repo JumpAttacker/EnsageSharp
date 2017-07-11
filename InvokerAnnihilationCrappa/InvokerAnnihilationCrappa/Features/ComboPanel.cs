@@ -86,6 +86,8 @@ namespace InvokerAnnihilationCrappa.Features
                         _main.Invoker.ForgeSpirit, _main.Invoker.Alacrity
                     }),
             };
+
+
             Enable.Item.ValueChanged += (sender, args) =>
             {
                 if (args.GetNewValue<bool>())

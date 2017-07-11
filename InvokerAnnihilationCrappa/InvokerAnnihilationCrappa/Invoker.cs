@@ -45,6 +45,7 @@ namespace InvokerAnnihilationCrappa
         public InvokerMode Mode;
         private Sleeper _invokeSleeper;
         public Sleeper GlobalGhostWalkSleeper;
+        public Sleeper BlockerSleeper;
         private Dictionary<Unit, IServiceContext> Orbwalkers { get; } = new Dictionary<Unit, IServiceContext>();
 
         [ImportingConstructor]
@@ -138,7 +139,7 @@ namespace InvokerAnnihilationCrappa
             Quas = Owner.GetAbilityById(AbilityId.invoker_quas);
             Wex = Owner.GetAbilityById(AbilityId.invoker_wex);
             Exort = Owner.GetAbilityById(AbilityId.invoker_exort);
-
+            BlockerSleeper = new Sleeper();
             SunStrike = new AbilityInfo(Exort, Exort, Exort, Owner.GetAbilityById(AbilityId.invoker_sun_strike));
             ColdSnap = new AbilityInfo(Quas, Quas, Quas, Owner.GetAbilityById(AbilityId.invoker_cold_snap));
             Alacrity = new AbilityInfo(Wex, Wex, Exort, Owner.GetAbilityById(AbilityId.invoker_alacrity));
@@ -164,6 +165,11 @@ namespace InvokerAnnihilationCrappa
                 Tornado,
                 Emp
             };
+
+            //retards re coming
+            foreach (var ability in AbilityInfos)
+                ability.LoadInvoker(this);
+
 
             Empty1 = Owner.GetAbilityById(AbilityId.invoker_empty1);
             Empty2 = Owner.GetAbilityById(AbilityId.invoker_empty2);

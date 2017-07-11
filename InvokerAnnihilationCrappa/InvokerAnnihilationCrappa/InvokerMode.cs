@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Ensage;
 using Ensage.Common.Extensions;
-using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Input;
 using Ensage.SDK.Orbwalker;
 using Ensage.SDK.Orbwalker.Modes;
 using log4net;
 using PlaySharp.Toolkit.Logging;
+using SharpDX;
 using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace InvokerAnnihilationCrappa
@@ -21,21 +21,26 @@ namespace InvokerAnnihilationCrappa
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Hero _target;
-        private MultiSleeper sleeper;
 
         public InvokerMode(Key key, Lazy<IOrbwalkerManager> orbwalkerManager, Lazy<IInputManager> input,
             Invoker me) : base(orbwalkerManager.Value, input.Value, key)
         {
             Me = me;
-            sleeper = new MultiSleeper();
         }
 
         public Invoker Me { get; set; }
 
         public void Load()
         {
-            UpdateManager.Subscribe(TargetUpdater, 100);
+            UpdateManager.Subscribe(TargetUpdater, 25);
             UpdateManager.Subscribe(IndicatorUpdater);
+        }
+
+
+        public static Vector3 Direction(double angle, float length = 1f)
+        {
+            var rotation = angle;
+            return new Vector3((float) Math.Cos(rotation) * length, (float) Math.Sin(rotation) * length, 0);
         }
 
         private void IndicatorUpdater()
@@ -60,12 +65,22 @@ namespace InvokerAnnihilationCrappa
                 _target = null;
                 Me.ParticleManager.Value.Remove("Invo_target");
                 Me.ParticleManager.Value.Remove("Invo_line");
-
-                /*var target=Me.TargetManager.Value.Active.GetTargets().FirstOrDefault();
-                if (target != null)
+            }
+            else if (CanExecute && _target != null)
+            {
+                if (Me.Config.AutoIceWall)
                 {
-                    Game.PrintMessage($"Angle: {UnitExtensions.FindRotationAngle(Owner,target.Position)}");
-                }*/
+                    var currentCombo = Me.Config.ComboPanel.Combos.First(x => x.Id == Me.SelectedCombo);
+                    if (currentCombo.AbilityInfos[currentCombo.CurrentAbility].Ability.GetAbilityId() == AbilityId.invoker_ice_wall)
+                        return;
+                }
+                if (Me.BlockerSleeper.Sleeping)
+                    return;
+                //TODO: attack here
+                if (_target.IsAttackImmune() || _target.IsInvul())
+                    Orbwalker.Move(Game.MousePosition);
+                else
+                    Orbwalker.OrbwalkTo(_target);
             }
         }
         public void UpdateConfig(Config config)
@@ -117,7 +132,7 @@ namespace InvokerAnnihilationCrappa
                                      currentAbility.Ability.CastRange*/||
                                      currentAbility.Ability.GetAbilityId() == AbilityId.invoker_ice_wall)
                             {
-                                var casted = await currentAbility.UseAbility(_target, token, Me.Config.SsExtraDelay);
+                                var casted = await currentAbility.UseAbility(_target, token);
                                 if (casted)
                                 {
                                     Log.Info($"using: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
@@ -150,10 +165,12 @@ namespace InvokerAnnihilationCrappa
                     currentCombo.CurrentAbility = 0;
                 }
                 if (_target.IsAttackImmune() || _target.IsInvul())
+                {
                     Orbwalker.Move(Game.MousePosition);
+                }
                 else
                 {
-                    Orbwalker.OrbwalkTo(_target);
+                    
                     var others =
                         EntityManager<Unit>.Entities.Where(
                             x =>
@@ -199,7 +216,7 @@ namespace InvokerAnnihilationCrappa
                 }
                 try
                 {
-                    Me.ParticleManager.Value.DrawRange(_target, "Invo_target", 125, SharpDX.Color.YellowGreen);
+                    Me.ParticleManager.Value.DrawRange(_target, "Invo_target", 125, Color.YellowGreen);
                 }
                 catch (Exception)
                 {
