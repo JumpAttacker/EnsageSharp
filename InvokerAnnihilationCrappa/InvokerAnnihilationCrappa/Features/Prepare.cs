@@ -24,7 +24,7 @@ namespace InvokerAnnihilationCrappa.Features
             if (Enable)
             {
                 //UpdateManager.BeginInvoke(Callback);
-                UpdateManager.Subscribe(Tost,100);
+                UpdateManager.Subscribe(Tost, 100);
                 CustomKey.Item.ValueChanged += ItemOnValueChanged;
             }
 
@@ -72,20 +72,6 @@ namespace InvokerAnnihilationCrappa.Features
 
         public MenuItem<KeyBind> CustomKey { get; set; }
 
-        private async void Callback()
-        {
-            while (Enable || CustomKey.Value.Active)
-            {
-                
-                var inAction = _main.Invoker.Mode.CanExecute;
-                if ((inAction && Game.IsKeyDown(0x11)) || CustomKey.Value.Active)
-                {
-                    continue;
-                    //await Invoke();
-                }
-                await Task.Delay(100);
-            }
-        }
         private void Invoke2()
         {
             var me = _main.Invoker.Owner;

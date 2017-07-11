@@ -69,6 +69,9 @@ namespace InvokerAnnihilationCrappa.Features
             var invis = _main.Invoker.GhostWalk;
             if (invis.Ability.CanBeCasted())
             {
+                _main.Invoker.Wex.UseAbility();
+                _main.Invoker.Wex.UseAbility();
+                _main.Invoker.Wex.UseAbility();
                 invis.Ability.UseAbility();
                 _main.Invoker.GlobalGhostWalkSleeper.Sleep(500);
                 await Task.Delay(1000);

@@ -404,7 +404,7 @@ namespace InvokerAnnihilationCrappa
         {
             if (!InvokeAbility.CanBeCasted() || _invokeSleeper.Sleeping)
             {
-                Log.Error($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
+                Log.Info($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
                 return false;
             }
             if (!CheckSpheresForLevel(info))
@@ -429,7 +429,7 @@ namespace InvokerAnnihilationCrappa
         {
             if (info.One.Level == 0 || info.Two.Level == 0 || info.Three.Level == 0)
             {
-                Log.Info($"can't invoke (not all spheres are learned)");
+                Log.Info("can\'t invoke (not all spheres are learned)");
                 return false;
             }
             return true;
