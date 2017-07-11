@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Ensage;
 using Ensage.Common.Menu;
 using Ensage.SDK.Menu;
 using InvokerAnnihilationCrappa.Features;
@@ -31,10 +33,21 @@ namespace InvokerAnnihilationCrappa
             var panel = Factory.Menu("Abilities");
             var dict = invoker.AbilityInfos.Select(x => x.Ability.Name).ToDictionary(result => result, result => true);
             AbilitiesInCombo = panel.Item("Abilities in combo", new AbilityToggler(dict));
+            var dict2 = new Dictionary<string, bool>
+            {
+                {AbilityId.item_blink.ToString(),true},
+                {AbilityId.item_sheepstick.ToString(),true},
+                {AbilityId.item_shivas_guard.ToString(),true},
+                {AbilityId.item_orchid.ToString(),true},
+                {AbilityId.item_bloodthorn.ToString(),true},
+            };
+            ItemsInCombo = panel.Item("Items in combo", new AbilityToggler(dict2));
 
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<AbilityToggler> ItemsInCombo { get; set; }
 
         public MenuItem<bool> SmartInvoke { get; set; }
 

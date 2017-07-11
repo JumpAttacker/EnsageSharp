@@ -146,7 +146,7 @@ namespace InvokerAnnihilationCrappa
                 }
                 else
                 {
-                    Log.Info($"end of combo. Set current ability stage to 0");
+                    Log.Info("end of combo. Set current ability stage to 0");
                     currentCombo.CurrentAbility = 0;
                 }
                 if (_target.IsAttackImmune() || _target.IsInvul())
@@ -167,28 +167,33 @@ namespace InvokerAnnihilationCrappa
                     }
                     if (currentCombo.CurrentAbility > 1)
                     {
-                        if (Me.Shiva != null && Me.Shiva.CanBeCasted && Me.Owner.Distance2D(_target) <= Me.Shiva.Radius)
+                        if (Me.Shiva != null && Me.Config.ItemsInCombo.Value.IsEnabled(Me.Shiva.Ability.Name) &&
+                            Me.Shiva.CanBeCasted && Me.Owner.Distance2D(_target) <= Me.Shiva.Radius)
                         {
                             Me.Shiva.UseAbility();
                         }
-                        if (Me.Hex != null && Me.Hex.CanBeCasted && Me.Hex.CanHit(_target))
+                        if (Me.Hex != null && Me.Config.ItemsInCombo.Value.IsEnabled(Me.Hex.Ability.Name) &&
+                            Me.Hex.CanBeCasted && Me.Hex.CanHit(_target))
                         {
                             float duration;
                             if (!_target.IsStunned(out duration) || duration <= 0.15f)
                                 Me.Hex.UseAbility(_target);
                         }
-                        if (Me.Orchid != null && Me.Orchid.CanBeCasted && Me.Orchid.CanHit(_target))
+                        if (Me.Orchid != null && Me.Config.ItemsInCombo.Value.IsEnabled(Me.Orchid.Ability.Name) &&
+                            Me.Orchid.CanBeCasted && Me.Orchid.CanHit(_target))
                         {
                             Me.Orchid.UseAbility(_target);
                         }
-                        if (Me.Bloodthorn != null && Me.Bloodthorn.CanBeCasted && Me.Bloodthorn.CanHit(_target))
+                        if (Me.Bloodthorn != null && Me.Config.ItemsInCombo.Value.IsEnabled(Me.Bloodthorn.Ability.Name) &&
+                            Me.Bloodthorn.CanBeCasted && Me.Bloodthorn.CanHit(_target))
                         {
                             Me.Bloodthorn.UseAbility(_target);
                         }
                     }
                     else
                     {
-                        if (Me.Blink != null && Me.Blink.CanBeCasted && Me.Blink.CanHit(_target))
+                        if (Me.Blink != null && Me.Config.ItemsInCombo.Value.IsEnabled(Me.Blink.Ability.Name) &&
+                            Me.Blink.CanBeCasted && Me.Blink.CanHit(_target))
                             Me.Blink.UseAbility(_target.Position);
                     }
                 }
