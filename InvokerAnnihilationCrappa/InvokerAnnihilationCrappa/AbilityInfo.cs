@@ -33,7 +33,7 @@ namespace InvokerAnnihilationCrappa
             Log.Info($"[{Ability.Name}] -> item");
         }
 
-        public async Task<bool> UseAbility(Hero target, CancellationToken token)
+        public async Task<bool> UseAbility(Hero target, CancellationToken token, float ExtraTime)
         {
             var comboModifiers = target.HasModifiers(new[]
             {
@@ -109,7 +109,10 @@ namespace InvokerAnnihilationCrappa
                         }
                         else
                         {
-                            await Task.Delay((int)((time - timing + Game.Ping / 1000)*1000), token);
+                            var timeForCast = timing + ExtraTime/100f + Game.Ping / 1000;
+                            var delayTime = (int) ((time - timeForCast) * 1000);
+                            Log.Warn($"[SS] delay time: {delayTime} rem time: {time} Time for cast: {timeForCast}");
+                            await Task.Delay(delayTime, token);
                             Ability.UseAbility(target.Position);
                         }
                     }

@@ -117,7 +117,7 @@ namespace InvokerAnnihilationCrappa
                                      currentAbility.Ability.CastRange*/||
                                      currentAbility.Ability.GetAbilityId() == AbilityId.invoker_ice_wall)
                             {
-                                var casted = await currentAbility.UseAbility(_target, token);
+                                var casted = await currentAbility.UseAbility(_target, token, Me.Config.SsExtraDelay);
                                 if (casted)
                                 {
                                     Log.Info($"using: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);

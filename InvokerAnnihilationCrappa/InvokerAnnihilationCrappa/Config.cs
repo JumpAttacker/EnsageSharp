@@ -19,6 +19,8 @@ namespace InvokerAnnihilationCrappa
             ComboKey = Factory.Item("Combo Key", new KeyBind('G'));
             InvokeTime = Factory.Item("Time between spheres in combo", new Slider(1, 1, 200));
             AfterInvokeDelay = Factory.Item("Delay after Invoke", new Slider(1, 1, 500));
+            SsExtraDelay = Factory.Item("Sun Strike Extra Delay", new Slider(15, 0, 25));
+            SsExtraDelay.Item.SetTooltip("dec this value if you cant hit target by ss");
 
             SmartInvoke = Factory.Item("Smart invoke", true);
             SmartInvoke.Item.SetTooltip("will check for spheres before invoke");
@@ -46,6 +48,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<Slider> SsExtraDelay { get; set; }
 
         public MenuItem<AbilityToggler> ItemsInCombo { get; set; }
 
