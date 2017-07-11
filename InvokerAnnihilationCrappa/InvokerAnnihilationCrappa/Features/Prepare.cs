@@ -20,7 +20,7 @@ namespace InvokerAnnihilationCrappa.Features
             var panel = main.Factory.Menu("Prepare");
             Enable = panel.Item("Combo key with CTRL (need to hold)", true);
             CustomKey = panel.Item("Cusom key (need to hold)", new KeyBind('0'));
-            
+
             if (Enable)
             {
                 //UpdateManager.BeginInvoke(Callback);
@@ -140,7 +140,7 @@ namespace InvokerAnnihilationCrappa.Features
 
         public void OnDeactivate()
         {
-            
+
         }
 
         public MenuItem<bool> Enable { get; set; }

@@ -21,7 +21,7 @@ namespace InvokerAnnihilationCrappa
             AfterInvokeDelay = Factory.Item("Delay after Invoke", new Slider(1, 1, 500));
             SsExtraDelay = Factory.Item("Sun Strike Extra Delay", new Slider(15, 0, 25));
             SsExtraDelay.Item.SetTooltip("dec this value if you cant hit target by ss");
-
+            //Ensage.SDK.Orbwalker.Modes.Farm
             SmartInvoke = Factory.Item("Smart invoke", true);
             SmartInvoke.Item.SetTooltip("will check for spheres before invoke");
 
@@ -31,6 +31,7 @@ namespace InvokerAnnihilationCrappa
             AutoSunStrike = new AutoSunStrike(this);
             AutoGhostWalk = new AutoGhostWalk(this);
             Prepare = new Prepare(this);
+            ExortForFarmMode = new ExortForFarmMode(this);
 
             var panel = Factory.Menu("Abilities");
             var dict = invoker.AbilityInfos.Select(x => x.Ability.Name).ToDictionary(result => result, result => true);
@@ -48,6 +49,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public ExortForFarmMode ExortForFarmMode { get; set; }
 
         public MenuItem<Slider> SsExtraDelay { get; set; }
 
@@ -83,6 +86,7 @@ namespace InvokerAnnihilationCrappa
             SmartSphere.OnDeactivate();
             ComboPanel.OnDeactivate();
             AutoSunStrike.OnDeactivate();
+            ExortForFarmMode.OnDeactivate();
             Factory?.Dispose();
         }
     }

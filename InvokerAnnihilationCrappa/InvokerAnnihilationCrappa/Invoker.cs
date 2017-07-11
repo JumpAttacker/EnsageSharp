@@ -181,6 +181,14 @@ namespace InvokerAnnihilationCrappa
             Log.Debug("load config");
             OrbwalkerManager.Value.RegisterMode(Mode);
             Log.Debug("RegisterMode");
+            foreach (var valueOrbwalkingMode in OrbwalkerManager.Value.OrbwalkingModes)
+            {
+                Log.Warn($"Mode: {valueOrbwalkingMode.Value}");
+            }
+            foreach (var valueOrbwalkingMode in OrbwalkerManager.Value.CustomOrbwalkingModes)
+            {
+                Log.Warn($"Custom Mode: {valueOrbwalkingMode}");
+            }
             Mode.Load();
             var key = KeyInterop.KeyFromVirtualKey((int)Config.ComboKey.Item.GetValue<KeyBind>().Key);
             Mode.Key = key;
