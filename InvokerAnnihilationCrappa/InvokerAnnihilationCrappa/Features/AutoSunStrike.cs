@@ -150,7 +150,7 @@ namespace InvokerAnnihilationCrappa.Features
                         {
                             if (OnlyKillSteal || Notification)
                             {
-                                var heroWillDie = hero.Health + hero.HealthRegeneration * 1.7f > GetSunStikeDamage;
+                                var heroWillNotDie = hero.Health + hero.HealthRegeneration * 1.7f > GetSunStikeDamage;
                                 if (Notification)
                                 {
                                     bool value;
@@ -158,17 +158,17 @@ namespace InvokerAnnihilationCrappa.Features
                                     {
                                         _notificationForHero.Add(hero, true);
                                     }
-                                    if (heroWillDie && !value)
+                                    if (!heroWillNotDie && !value)
                                     {
-                                        //TODO: push the notification
                                         _notificationForHero[hero] = true;
+                                        Program.GenerateSideMessage(hero.Name.Replace("npc_dota_hero_", ""), sunStike.Ability.Name);
                                     }
-                                    else if (value && !heroWillDie)
+                                    else if (value && heroWillNotDie)
                                     {
                                         _notificationForHero[hero] = false;
                                     }
                                 }
-                                if (OnlyKillSteal && heroWillDie)
+                                if (OnlyKillSteal && heroWillNotDie)
                                 {
                                     continue;
                                 }
