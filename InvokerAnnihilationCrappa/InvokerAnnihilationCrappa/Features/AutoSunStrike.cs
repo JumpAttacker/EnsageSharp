@@ -19,7 +19,7 @@ namespace InvokerAnnihilationCrappa.Features
     {
         private readonly Config _main;
         private ParticleEffect _predictionEffect;
-
+        private readonly Dictionary<Hero, bool> _notificationForHero;
         public AutoSunStrike(Config main)
         {
             _main = main;
@@ -34,7 +34,8 @@ namespace InvokerAnnihilationCrappa.Features
             DrawPredictionInvoked = panel.Item("Draw Prediction only if ss invoked", true);
             DrawPredictionKillSteal = panel.Item("Draw Prediction only if enemy will die from ss", true);
             UseOnTeleportToo = panel.Item("Use SunStrike for heroes under tp", true);
-
+            Notification = panel.Item("Notification if ss can kill enemy hero", true);
+            _notificationForHero = new Dictionary<Hero, bool>();
             if (Enable)
             {
                 UpdateManager.BeginInvoke(Callback);
@@ -61,6 +62,8 @@ namespace InvokerAnnihilationCrappa.Features
 
             Drawing.OnDraw += DrawingOnOnDraw;
         }
+
+        public MenuItem<bool> Notification { get; set; }
 
         public MenuItem<bool> UseOnTeleportToo { get; set; }
 
@@ -145,9 +148,27 @@ namespace InvokerAnnihilationCrappa.Features
                                 x => x.IsAlive && !x.IsAlly(_main.Invoker.Owner) && x.IsVisible && !x.IsIllusion);
                         foreach (var hero in heroes)
                         {
-                            if (OnlyKillSteal)
+                            if (OnlyKillSteal || Notification)
                             {
-                                if (hero.Health + hero.HealthRegeneration * 1.7f > GetSunStikeDamage)
+                                var heroWillDie = hero.Health + hero.HealthRegeneration * 1.7f > GetSunStikeDamage;
+                                if (Notification)
+                                {
+                                    bool value;
+                                    if (!_notificationForHero.TryGetValue(hero, out value))
+                                    {
+                                        _notificationForHero.Add(hero, true);
+                                    }
+                                    if (heroWillDie && !value)
+                                    {
+                                        //TODO: push the notification
+                                        _notificationForHero[hero] = true;
+                                    }
+                                    else if (value && !heroWillDie)
+                                    {
+                                        _notificationForHero[hero] = false;
+                                    }
+                                }
+                                if (OnlyKillSteal && heroWillDie)
                                 {
                                     continue;
                                 }

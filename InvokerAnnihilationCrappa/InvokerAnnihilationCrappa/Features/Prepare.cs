@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Ensage;
@@ -80,8 +81,14 @@ namespace InvokerAnnihilationCrappa.Features
             var selectedComboId = _main.Invoker.SelectedCombo;
             var combo = _main.ComboPanel.Combos[selectedComboId];
             var abilities = combo.AbilityInfos;
-            var one = abilities[0].Ability is Item ? abilities[1] : abilities[0];
-            var two = abilities[0].Ability is Item ? abilities[2] : abilities[1];
+            /*var one = abilities[0].Ability is Item ? abilities[1] : abilities[0];
+            var two = abilities[0].Ability is Item ? abilities[2] : abilities[1];*/
+            var one =
+                abilities.First(x => !(x.Ability is Item) && _main.AbilitiesInCombo.Value.IsEnabled(x.Ability.Name));
+            var two =
+                abilities.First(
+                    x =>
+                        !(x.Ability is Item) && _main.AbilitiesInCombo.Value.IsEnabled(x.Ability.Name) && !one.Equals(x));
             var empty1 = _main.Invoker.Owner.Spellbook.Spell4;
             var empty2 = _main.Invoker.Owner.Spellbook.Spell5;
             var ability1Invoked = one.Ability.Equals(empty1) || one.Ability.Equals(empty2);
@@ -110,8 +117,14 @@ namespace InvokerAnnihilationCrappa.Features
             var selectedComboId = _main.Invoker.SelectedCombo;
             var combo = _main.ComboPanel.Combos[selectedComboId];
             var abilities = combo.AbilityInfos;
-            var one = abilities[0].Ability is Item ? abilities[1] : abilities[0];
-            var two = abilities[0].Ability is Item ? abilities[2] : abilities[1];
+            /*var one = abilities[0].Ability is Item ? abilities[1] : abilities[0];
+            var two = abilities[0].Ability is Item ? abilities[2] : abilities[1];*/
+            var one =
+                abilities.First(x => !(x.Ability is Item) && _main.AbilitiesInCombo.Value.IsEnabled(x.Ability.Name));
+            var two =
+                abilities.First(
+                    x =>
+                        !(x.Ability is Item) && _main.AbilitiesInCombo.Value.IsEnabled(x.Ability.Name) && !one.Equals(x));
             var empty1 = _main.Invoker.Owner.Spellbook.Spell4;
             var empty2 = _main.Invoker.Owner.Spellbook.Spell5;
             var ability1Invoked = one.Ability.Equals(empty1) || one.Ability.Equals(empty2);
