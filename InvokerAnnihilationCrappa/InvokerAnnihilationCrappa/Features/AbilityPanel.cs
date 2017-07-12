@@ -3,12 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Input;
 using Ensage;
+using Ensage.Common;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.SDK.Menu;
 using InvokerAnnihilationCrappa.Features.behavior;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace InvokerAnnihilationCrappa.Features
@@ -16,7 +20,7 @@ namespace InvokerAnnihilationCrappa.Features
     public class AbilityPanel : Movable
     {
         private readonly Config _main;
-
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public AbilityPanel(Config main)
         {
             _main = main;
@@ -53,6 +57,10 @@ namespace InvokerAnnihilationCrappa.Features
             var menu = QCast.MenuWithTexture("", ability.Ability.Name, ability.Ability.Name);
             var enable = menu.Item("Enable qCast", true);
             var key = menu.Item("Hotkey", new KeyBind('0'));
+            ability.UpdateKey(key.Value.Key);
+            var key2 = KeyInterop.KeyFromVirtualKey((int)key.Value.Key);
+            Log.Info($"{ability.Ability.Name} -> Key: {key.Value.Key} {key2}");
+
             key.Item.ValueChanged += (sender, args) =>
             {
                 if (!enable)
@@ -115,7 +123,7 @@ namespace InvokerAnnihilationCrappa.Features
                 else
                 {
                     var key = KeyInterop.KeyFromVirtualKey((int)info.Key);
-                    if (key != Key.None)
+                    if (key != Key.None && key != Key.D0)
                     {
                         var text = key.ToString();
                         Drawing.DrawText(
