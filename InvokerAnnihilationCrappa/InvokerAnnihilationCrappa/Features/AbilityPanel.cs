@@ -32,9 +32,9 @@ namespace InvokerAnnihilationCrappa.Features
             PosX = panel.Item("Position X", new Slider(500, 0, 2000));
             PosY = panel.Item("Position Y", new Slider(500, 0, 2000));
             ConfigSize = panel.Item("Text Size", new Slider(100, 1, 100));
-            ColorR = panel.Item("text -> Red", new Slider(0, 0, 255));
-            ColorG = panel.Item("text -> Gree", new Slider(0, 0, 255));
-            ColorB = panel.Item("text -> Blue", new Slider(0, 0, 255));
+            ColorR = panel.Item("text -> Red", new Slider(255, 0, 255));
+            ColorG = panel.Item("text -> Gree", new Slider(255, 0, 255));
+            ColorB = panel.Item("text -> Blue", new Slider(255, 0, 255));
             QCast = panel.Menu("Quick casts");
             foreach (var ability in _main.Invoker.AbilityInfos.Where(x => !(x.Ability is Item)))
             {
