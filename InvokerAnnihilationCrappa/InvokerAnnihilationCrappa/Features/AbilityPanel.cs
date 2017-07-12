@@ -31,6 +31,10 @@ namespace InvokerAnnihilationCrappa.Features
             Size = panel.Item("Size", new Slider(5, 0, 100));
             PosX = panel.Item("Position X", new Slider(500, 0, 2000));
             PosY = panel.Item("Position Y", new Slider(500, 0, 2000));
+            ConfigSize = panel.Item("Text Size", new Slider(100, 1, 100));
+            ColorR = panel.Item("text -> Red", new Slider(0, 0, 255));
+            ColorG = panel.Item("text -> Gree", new Slider(0, 0, 255));
+            ColorB = panel.Item("text -> Blue", new Slider(0, 0, 255));
             QCast = panel.Menu("Quick casts");
             foreach (var ability in _main.Invoker.AbilityInfos.Where(x => !(x.Ability is Item)))
             {
@@ -49,6 +53,12 @@ namespace InvokerAnnihilationCrappa.Features
                     Drawing.OnDraw -= DrawingOnOnDraw;
             };
         }
+
+        public MenuItem<Slider> ColorR { get; set; }
+        public MenuItem<Slider> ColorG { get; set; }
+        public MenuItem<Slider> ColorB { get; set; }
+
+        public MenuItem<Slider> ConfigSize { get; set; }
 
         public MenuFactory QCast { get; set; }
 
@@ -116,8 +126,8 @@ namespace InvokerAnnihilationCrappa.Features
                     var text = ((int) (cd + 1)).ToString(CultureInfo.InvariantCulture);
                     Drawing.DrawText(
                         text,
-                        pos, size / 10,
-                        Color.White,
+                        pos, size * ConfigSize / 100 / 10,
+                        new Color(ColorR, ColorG, ColorB),
                         FontFlags.AntiAlias | FontFlags.StrikeOut);
                 }
                 else
@@ -128,8 +138,8 @@ namespace InvokerAnnihilationCrappa.Features
                         var text = key.ToString();
                         Drawing.DrawText(
                             text,
-                            pos, size / 10,
-                            Color.White,
+                            pos, size * ConfigSize / 100 / 10,
+                            new Color(ColorR, ColorG, ColorB),
                             FontFlags.AntiAlias | FontFlags.StrikeOut);
                     }
                 }
