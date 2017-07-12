@@ -230,5 +230,12 @@ namespace InvokerAnnihilationCrappa
         {
             return new Vector3((float)Math.Cos(angle) * length, (float)Math.Sin(angle) * length, 0);
         }
+
+        public void UpdateKey(uint valueKey)
+        {
+            Key = valueKey;
+        }
+
+        public uint Key { get; set; }
     }
 }

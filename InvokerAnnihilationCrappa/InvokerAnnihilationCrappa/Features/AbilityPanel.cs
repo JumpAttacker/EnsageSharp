@@ -1,6 +1,9 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Input;
 using Ensage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -20,10 +23,15 @@ namespace InvokerAnnihilationCrappa.Features
             var panel = main.Factory.Menu("Ability Panel");
             Enable = panel.Item("Enable", true);
             Movable = panel.Item("Movable", false);
+            OderBy = panel.Item("Sort by cooldown", false);
             Size = panel.Item("Size", new Slider(5, 0, 100));
             PosX = panel.Item("Position X", new Slider(500, 0, 2000));
             PosY = panel.Item("Position Y", new Slider(500, 0, 2000));
-            
+            QCast = panel.Menu("Quick casts");
+            foreach (var ability in _main.Invoker.AbilityInfos.Where(x => !(x.Ability is Item)))
+            {
+                CreateQuickCastForAbility(ability);
+            }
             if (Enable)
             {
                 Drawing.OnDraw += DrawingOnOnDraw;
@@ -37,6 +45,31 @@ namespace InvokerAnnihilationCrappa.Features
                     Drawing.OnDraw -= DrawingOnOnDraw;
             };
         }
+
+        public MenuFactory QCast { get; set; }
+
+        private void CreateQuickCastForAbility(AbilityInfo ability)
+        {
+            var menu = QCast.MenuWithTexture("", ability.Ability.Name, ability.Ability.Name);
+            var enable = menu.Item("Enable qCast", true);
+            var key = menu.Item("Hotkey", new KeyBind('0'));
+            key.Item.ValueChanged += (sender, args) =>
+            {
+                if (!enable)
+                    return;
+                var o = args.GetOldValue<KeyBind>().Active;
+                var n = args.GetNewValue<KeyBind>().Active;
+                if (o!=n)
+                {
+                    if (args.GetNewValue<KeyBind>().Active)
+                        _main.Invoker.Invoke(ability);
+                    else
+                        ability.UpdateKey(key.Value.Key);
+                }
+            };
+        }
+
+        public MenuItem<bool> OderBy { get; set; }
 
         public MenuItem<Slider> Size { get; set; }
 
@@ -57,7 +90,10 @@ namespace InvokerAnnihilationCrappa.Features
             }
             var pos = startPos;
             var iconSize = new Vector2(Size * 10);
-            foreach (var info in _main.Invoker.AbilityInfos.OrderBy(x=>x.Ability.Cooldown))
+            var list = OderBy
+                ? _main.Invoker.AbilityInfos.OrderBy(x => x.Ability.Cooldown)
+                : (IEnumerable<AbilityInfo>)_main.Invoker.AbilityInfos;
+            foreach (var info in list)
             {
                 var ability = info.Ability;
                 Drawing.DrawRect(pos, iconSize, Textures.GetSpellTexture(ability.StoredName()));
@@ -75,6 +111,19 @@ namespace InvokerAnnihilationCrappa.Features
                         pos, size / 10,
                         Color.White,
                         FontFlags.AntiAlias | FontFlags.StrikeOut);
+                }
+                else
+                {
+                    var key = KeyInterop.KeyFromVirtualKey((int)info.Key);
+                    if (key != Key.None)
+                    {
+                        var text = key.ToString();
+                        Drawing.DrawText(
+                            text,
+                            pos, size / 10,
+                            Color.White,
+                            FontFlags.AntiAlias | FontFlags.StrikeOut);
+                    }
                 }
                 pos += new Vector2(iconSize.X, 0);
                 
