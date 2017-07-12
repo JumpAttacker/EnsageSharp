@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -32,6 +33,7 @@ namespace InvokerAnnihilationCrappa.Features
             DrawPrediction = panel.Item("Draw Prediction", true);
             DrawPredictionInvoked = panel.Item("Draw Prediction only if ss invoked", true);
             DrawPredictionKillSteal = panel.Item("Draw Prediction only if enemy will die from ss", true);
+            UseOnTeleportToo = panel.Item("Use SunStrike for heroes under tp", true);
 
             if (Enable)
             {
@@ -59,6 +61,8 @@ namespace InvokerAnnihilationCrappa.Features
 
             Drawing.OnDraw += DrawingOnOnDraw;
         }
+
+        public MenuItem<bool> UseOnTeleportToo { get; set; }
 
         public MenuItem<bool> DrawPredictionKillSteal { get; set; }
 
@@ -123,7 +127,7 @@ namespace InvokerAnnihilationCrappa.Features
         public MenuItem<bool> OnlyKillSteal { get; set; }
 
         private float GetSunStikeDamage
-            => (_main.Invoker.SunStrike.Ability.SpellAmplification()+1) * (37.5f + 62.5f * _main.Invoker.Exort.Level);
+            => (_main.Invoker.SunStrike.Ability.SpellAmplification() + 1) * (37.5f + 62.5f * _main.Invoker.Exort.Level);
 
         private async void Callback()
         {
@@ -187,6 +191,30 @@ namespace InvokerAnnihilationCrappa.Features
                                     await Task.Delay(500);
                                 }
                             }
+                            else if (UseOnTeleportToo)
+                            {
+                                var tpMod = hero.FindModifier("modifier_teleporting");
+                                var remTime = tpMod?.RemainingTime;
+
+                                if (!(remTime > 1.7)) continue;
+                                if (InvokeSunStrike)
+                                {
+                                    Log.Info("invoke for Auto SS");
+                                    var invoked = await _main.Invoker.InvokeAsync(sunStike);
+                                    if (invoked)
+                                    {
+                                        Log.Info("casted SS due Auto SS");
+                                        sunStike.Ability.UseAbility(hero.Position);
+                                    }
+                                }
+                                else if (sunStike.Ability.CanBeCasted())
+                                {
+                                    Log.Info("casted SS due Auto SS");
+                                    sunStike.Ability.UseAbility(hero.Position);
+                                }
+
+                                await Task.Delay(500);
+                            }
                         }
                     }
                     else
@@ -197,6 +225,11 @@ namespace InvokerAnnihilationCrappa.Features
                 }
                 await Task.Delay(10);
             }
+        }
+
+        private Modifier GetOneOfModifiers(Hero target, IEnumerable<string> modifiers)
+        {
+            return modifiers.Select(target.FindModifier).FirstOrDefault(mod => mod != null);
         }
 
         private void DrawingOnOnDraw(EventArgs args)
