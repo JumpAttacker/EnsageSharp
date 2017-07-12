@@ -35,6 +35,8 @@ namespace InvokerAnnihilationCrappa.Features
             DrawPredictionKillSteal = panel.Item("Draw Prediction only if enemy will die from ss", true);
             UseOnTeleportToo = panel.Item("Use SunStrike for heroes under tp", true);
             Notification = panel.Item("Notification if ss can kill enemy hero", true);
+            //SsLikeRetard = panel.Item("Use SS not only for stunned enemies", false);
+
             _notificationForHero = new Dictionary<Hero, bool>();
             if (Enable)
             {
@@ -62,6 +64,8 @@ namespace InvokerAnnihilationCrappa.Features
 
             Drawing.OnDraw += DrawingOnOnDraw;
         }
+
+        public MenuItem<bool> SsLikeRetard { get; set; }
 
         public MenuItem<bool> Notification { get; set; }
 

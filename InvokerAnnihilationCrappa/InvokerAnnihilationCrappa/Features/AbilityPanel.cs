@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Windows.Input;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.SDK.Menu;
@@ -80,7 +81,11 @@ namespace InvokerAnnihilationCrappa.Features
                 if (o!=n)
                 {
                     if (args.GetNewValue<KeyBind>().Active)
+                    {
+                        if (ability.Ability.Equals(_main.Invoker.Owner.Spellbook.Spell4) || ability.Ability.Equals(_main.Invoker.Owner.Spellbook.Spell5))
+                            return;
                         _main.Invoker.Invoke(ability);
+                    }
                     else
                         ability.UpdateKey(key.Value.Key);
                 }
