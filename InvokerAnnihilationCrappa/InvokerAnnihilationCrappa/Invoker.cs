@@ -333,14 +333,25 @@ namespace InvokerAnnihilationCrappa
                     }
                     break;
                 case NotifyCollectionChangedAction.Remove:
-                    foreach (InventoryItem argsNewItem in args.OldItems)
+                    try
                     {
-                        if (argsNewItem.Id == AbilityId.item_cyclone)
+                        foreach (InventoryItem argsNewItem in args.OldItems)
                         {
-                            Config.ComboPanel.Combos.Remove(_eulCombo1.Dispose());
-                            Config.ComboPanel.Combos.Remove(_eulCombo2.Dispose());
-                            Config.ComboPanel.Combos.Remove(_eulCombo3.Dispose());
+                            Log.Debug("REMOVE -> " + argsNewItem.Id);
+                            if (argsNewItem.Id == AbilityId.item_cyclone)
+                            {
+                                if (_eulCombo1 != null)
+                                {
+                                    Config.ComboPanel.Combos.Remove(_eulCombo1.Dispose());
+                                    Config.ComboPanel.Combos.Remove(_eulCombo2.Dispose());
+                                    Config.ComboPanel.Combos.Remove(_eulCombo3.Dispose());
+                                }
+                            }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
                     }
                     break;
             }
