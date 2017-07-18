@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Menu;
@@ -20,6 +21,7 @@ namespace InvokerAnnihilationCrappa.Features
         private readonly Config _main;
         private ParticleEffect _predictionEffect;
         private readonly Dictionary<Hero, bool> _notificationForHero;
+        private readonly Dictionary<Hero, float> _ssTimes;
         public AutoSunStrike(Config main)
         {
             _main = main;
@@ -35,9 +37,11 @@ namespace InvokerAnnihilationCrappa.Features
             DrawPredictionKillSteal = panel.Item("Draw Prediction only if enemy will die from ss", true);
             UseOnTeleportToo = panel.Item("Use SunStrike for heroes under tp", true);
             Notification = panel.Item("Notification if ss can kill enemy hero", true);
-            //SsLikeRetard = panel.Item("Use SS not only for stunned enemies", false);
+            SsLikeRetard = panel.Item("Use SS not only for stunned enemies", false);
+            SsLikeRetardTime = panel.Item("Time for auto ss (ms)", new Slider(2000, 100, 5000));
 
             _notificationForHero = new Dictionary<Hero, bool>();
+            _ssTimes = new Dictionary<Hero, float>();
             if (Enable)
             {
                 UpdateManager.BeginInvoke(Callback);
@@ -64,6 +68,8 @@ namespace InvokerAnnihilationCrappa.Features
 
             Drawing.OnDraw += DrawingOnOnDraw;
         }
+
+        public MenuItem<Slider> SsLikeRetardTime { get; set; }
 
         public MenuItem<bool> SsLikeRetard { get; set; }
 
@@ -152,7 +158,7 @@ namespace InvokerAnnihilationCrappa.Features
                                 x => x.IsAlive && !x.IsAlly(_main.Invoker.Owner) && x.IsVisible && !x.IsIllusion);
                         foreach (var hero in heroes)
                         {
-                            if (OnlyKillSteal || Notification)
+                            if (OnlyKillSteal || Notification || SsLikeRetard)
                             {
                                 var heroWillNotDie = hero.Health + hero.HealthRegeneration * 1.7f > GetSunStikeDamage;
                                 if (Notification)
@@ -170,6 +176,37 @@ namespace InvokerAnnihilationCrappa.Features
                                     else if (value && heroWillNotDie)
                                     {
                                         _notificationForHero[hero] = false;
+                                    }
+                                }
+                                if (SsLikeRetard)
+                                {
+                                    var currentTime = Game.RawGameTime;
+                                    float value;
+                                    if (!_ssTimes.TryGetValue(hero, out value))
+                                    {
+                                        _ssTimes.Add(hero, currentTime);
+                                    }
+                                    if (!heroWillNotDie)
+                                        if (!hero.IsRotating() && hero.IsMoving)
+                                        {
+                                            var timeForSs = (float) SsLikeRetardTime.Value.Value / 1000f;
+                                            /*var msg =
+                                                $"{currentTime - _ssTimes[hero]} > {timeForSs} => {currentTime - _ssTimes[hero] > timeForSs}";
+                                            Log.Info(msg);
+                                            Game.PrintMessage(msg);*/
+                                            if (currentTime - _ssTimes[hero] > timeForSs)
+                                            {
+                                                await CastSsOnPosition(hero.BasePredict(1700));
+                                                continue;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            _ssTimes[hero] = currentTime;
+                                        }
+                                    else
+                                    {
+                                        _ssTimes[hero] = currentTime;
                                     }
                                 }
                                 if (OnlyKillSteal && heroWillNotDie)
@@ -197,7 +234,7 @@ namespace InvokerAnnihilationCrappa.Features
                                 if (comboModifiers && time <= 1.69 && time >= 1.35 ||
                                     !comboModifiers && time > 1.7 && !hero.IsInvul())
                                 {
-                                    if (sunStike.Ability.CanBeCasted())
+                                    /*if (sunStike.Ability.CanBeCasted())
                                     {
                                         Log.Info("casted SS due Auto SS");
                                         sunStike.Ability.UseAbility(hero.Position);
@@ -211,8 +248,9 @@ namespace InvokerAnnihilationCrappa.Features
                                             Log.Info("casted SS due Auto SS");
                                             sunStike.Ability.UseAbility(hero.Position);
                                         }
-                                    }
-                                    
+                                    }*/
+                                    await CastSsOnPosition(hero);
+
                                     await Task.Delay(500);
                                 }
                             }
@@ -222,7 +260,8 @@ namespace InvokerAnnihilationCrappa.Features
                                 var remTime = tpMod?.RemainingTime;
 
                                 if (!(remTime > 1.7)) continue;
-                                if (InvokeSunStrike)
+                                await CastSsOnPosition(hero);
+                                /*if (InvokeSunStrike)
                                 {
                                     Log.Info("invoke for Auto SS");
                                     var invoked = await _main.Invoker.InvokeAsync(sunStike);
@@ -236,7 +275,7 @@ namespace InvokerAnnihilationCrappa.Features
                                 {
                                     Log.Info("casted SS due Auto SS");
                                     sunStike.Ability.UseAbility(hero.Position);
-                                }
+                                }*/
 
                                 await Task.Delay(500);
                             }
@@ -249,6 +288,47 @@ namespace InvokerAnnihilationCrappa.Features
                     
                 }
                 await Task.Delay(10);
+            }
+        }
+
+        private async Task CastSsOnPosition(Hero hero)
+        {
+            var sunStike = _main.Invoker.SunStrike;
+            if (sunStike.Ability.CanBeCasted())
+            {
+                Log.Info("casted SS due Auto SS");
+                sunStike.Ability.UseAbility(hero.Position);
+            }
+            else if (InvokeSunStrike)
+            {
+                Log.Info("invoke for Auto SS");
+                var invoked = await _main.Invoker.InvokeAsync(sunStike);
+                if (invoked)
+                {
+                    Log.Info("casted SS due Auto SS");
+                    sunStike.Ability.UseAbility(hero.Position);
+                }
+            }
+        }
+        private async Task CastSsOnPosition(Vector3 heroPos)
+        {
+            var sunStike = _main.Invoker.SunStrike;
+            if (sunStike.Ability.CanBeCasted())
+            {
+                Log.Info("casted SS due Auto SS");
+                sunStike.Ability.UseAbility(heroPos);
+                await Task.Delay(250);
+            }
+            else if (InvokeSunStrike)
+            {
+                Log.Info("invoke for Auto SS");
+                var invoked = await _main.Invoker.InvokeAsync(sunStike);
+                if (invoked)
+                {
+                    Log.Info("casted SS due Auto SS");
+                    sunStike.Ability.UseAbility(heroPos);
+                    await Task.Delay(250);
+                }
             }
         }
 

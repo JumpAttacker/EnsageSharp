@@ -340,11 +340,15 @@ namespace InvokerAnnihilationCrappa
                             Log.Debug("REMOVE -> " + argsNewItem.Id);
                             if (argsNewItem.Id == AbilityId.item_cyclone)
                             {
-                                if (_eulCombo1 != null)
+                                if (_eulCombo1 != null && Config.ComboPanel.Combos != null)
                                 {
                                     Config.ComboPanel.Combos.Remove(_eulCombo1.Dispose());
                                     Config.ComboPanel.Combos.Remove(_eulCombo2.Dispose());
                                     Config.ComboPanel.Combos.Remove(_eulCombo3.Dispose());
+                                }
+                                else
+                                {
+                                    Log.Debug("null ex");
                                 }
                             }
                         }
