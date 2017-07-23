@@ -10,6 +10,7 @@ using ArcAnnihilation.Units.behaviour.Range;
 using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Threading;
 using Orbwalker = ArcAnnihilation.Utils.Orbwalker;
@@ -68,7 +69,9 @@ namespace ArcAnnihilation.Units
                 var afterItems = await UseItems(cancellationToken);
                 if (afterItems)
                 {
-                    await UseAbilities(cancellationToken);
+                    if (Hero.GetItemById(ItemId.item_sheepstick) == null ||
+                        !Hero.GetItemById(ItemId.item_sheepstick).CanBeCasted())
+                        await UseAbilities(cancellationToken);
                 }
             }
             await Await.Delay(25, cancellationToken);

@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using ArcAnnihilation.Panels;
+using ArcAnnihilation.Utils;
+using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Menu;
+using Ensage.Common.Objects;
 using SharpDX;
 using AbilityId = Ensage.Common.Enums.AbilityId;
 
@@ -27,16 +30,16 @@ namespace ArcAnnihilation
             "arc_warden_flux"
         };
 
-        private static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
+        public static readonly Dictionary<string, byte> Items = new Dictionary<string, byte>
         {
             {"item_hurricane_pike", 1},
             {"item_mask_of_madness", 7},
             {"item_ancient_janggo", 1},
             {"item_dagon", 2},
-            /*{"item_dagon_2", 2},
+            {"item_dagon_2", 2},
             {"item_dagon_3", 2},
             {"item_dagon_4", 2},
-            {"item_dagon_5", 2},*/
+            {"item_dagon_5", 2},
             {"item_blink", 5},
             {"item_orchid", 4},
             {"item_manta", 1},
@@ -59,8 +62,8 @@ namespace ArcAnnihilation
             {"item_veil_of_discord", 4},
             {"item_heavens_halberd", 1},
             {"item_necronomicon", 2},
-            /*{"item_necronomicon_2", 2},
-            {"item_necronomicon_3", 2},*/
+            {"item_necronomicon_2", 2},
+            {"item_necronomicon_3", 2},
             {"item_mjollnir", 1},
             //{ "item_hurricane_pike",1},
 
@@ -91,39 +94,43 @@ namespace ArcAnnihilation
         public static bool IsAbilityEnabledTempest(AbilityId id) => GetToggle("spellTempest", id.ToString());
         public static bool IsAbilityEnabled(AbilityId id) => GetToggle("spellHero", id.ToString());
 
-        public static bool IsItemEnabledTempest(ItemId id) =>
+        /*public static bool IsItemEnabledTempest(ItemId id) =>
             GetToggle("itemTempestEnable",
                 id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
                     ? ItemId.item_necronomicon.ToString()
                     : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
                       id == ItemId.item_dagon_5
                         ? ItemId.item_dagon.ToString()
-                        : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());
+                        : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());*/
 
-        public static bool IsItemEnabled(ItemId id) =>
+        public static bool IsItemEnabledTempest(ItemId id) => GetToggle("itemTempestEnable", id.ToString());
+        public static bool IsItemEnabled(ItemId id) => GetToggle("itemHeroEnable", id.ToString());
+        /*public static bool IsItemEnabled(ItemId id) =>
             GetToggle("itemHeroEnable",
                 id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
                     ? ItemId.item_necronomicon.ToString()
                     : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
                       id == ItemId.item_dagon_5
                         ? ItemId.item_dagon.ToString()
-                        : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());
+                        : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());*/
 
-        public static uint GetItemOrderHero(ItemId id) => GetPriority("itemHero",
+        /*public static uint GetItemOrderHero(ItemId id) => GetPriority("itemHero",
             id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
                 ? ItemId.item_necronomicon
                 : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
                   id == ItemId.item_dagon_5
                     ? ItemId.item_dagon
-                    : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);
+                    : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);*/
 
-        public static uint GetItemOrderTempest(ItemId id) => GetPriority("itemTempest",
+        public static uint GetItemOrderTempest(ItemId id) => GetPriority("itemTempest", id);
+        public static uint GetItemOrderHero(ItemId id) => GetPriority("itemHero", id);
+        /*public static uint GetItemOrderTempest(ItemId id) => GetPriority("itemTempest",
             id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
                 ? ItemId.item_necronomicon
                 : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
                   id == ItemId.item_dagon_5
                     ? ItemId.item_dagon
-                    : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);
+                    : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);*/
 
         public static void SetPushLanePanelPosition(int x, int y)
         {
@@ -267,15 +274,18 @@ namespace ArcAnnihilation
             var itemListHero = Items.Keys.ToList().ToDictionary(item => item, item => true);
             var itemListTempest = Items.Keys.ToList().ToDictionary(item => item, item => true);
             itemHero.AddItem(
-                new MenuItem("itemHeroEnable", "").SetValue(new AbilityToggler(itemListHero)));
+                new MenuItem("itemHeroEnable", "").SetValue(new AbilityToggler(new Dictionary<string, bool>())));
+                //new MenuItem("itemHeroEnable", "").SetValue(new AbilityToggler(itemListHero)));
             itemHero.AddItem(new MenuItem("customOrderHero", "Use Custom Order").SetValue(false));
-            itemHero.AddItem(new MenuItem("itemHero", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
-
+            itemHero.AddItem(new MenuItem("itemHero", "").SetValue(new PriorityChanger(new List<string>())));
+            //itemHero.AddItem(new MenuItem("itemHero", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
             itemTempest.AddItem(
-                new MenuItem("itemTempestEnable", "").SetValue(new AbilityToggler(itemListTempest)));
+                new MenuItem("itemTempestEnable", "").SetValue(new AbilityToggler(new Dictionary<string, bool>())));
+                //new MenuItem("itemTempestEnable", "").SetValue(new AbilityToggler(itemListTempest)));
             itemTempest.AddItem(new MenuItem("customOrderTempest", "Use Custom Order").SetValue(false));
             itemTempest.AddItem(
-                new MenuItem("itemTempest", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
+                new MenuItem("itemTempest", "").SetValue(new PriorityChanger(new List<string>())));
+                //new MenuItem("itemTempest", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
 
             spellHero.AddItem(new MenuItem("spellHero", "").SetValue(new AbilityToggler(dict)));
             spellTempest.AddItem(new MenuItem("spellTempest", "").SetValue(new AbilityToggler(dict2)));
@@ -311,6 +321,25 @@ namespace ArcAnnihilation
             Menu.AddSubMenu(settings);
             Menu.AddSubMenu(devolper);
             Menu.AddToMainMenu();
+        }
+
+        public static void AddNewItem(Ensage.AbilityId item)
+        {
+            var name = item.ToString();
+            Menu.Item("itemHeroEnable").GetValue<AbilityToggler>().Add(name);
+            Menu.Item("itemTempestEnable").GetValue<AbilityToggler>().Add(name);
+            Menu.Item("itemHero").GetValue<PriorityChanger>().Add(name);
+            Menu.Item("itemTempest").GetValue<PriorityChanger>().Add(name);
+            Printer.Log($"Add new item -> {item}");
+        }
+        public static void RemoveOldItem(Ensage.AbilityId item)
+        {
+            var name = item.ToString();
+            Menu.Item("itemHeroEnable").GetValue<AbilityToggler>().Remove(name);
+            Menu.Item("itemTempestEnable").GetValue<AbilityToggler>().Remove(name);
+            Menu.Item("itemHero").GetValue<PriorityChanger>().Remove(name);
+            Menu.Item("itemTempest").GetValue<PriorityChanger>().Remove(name);
+            Printer.Log($"Remove old item -> {item}");
         }
 
         private static float GetSlider(string item)

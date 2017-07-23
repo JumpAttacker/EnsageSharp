@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Specialized;
 using System.Threading;
 using ArcAnnihilation.Manager;
 using ArcAnnihilation.Panels;
@@ -11,6 +12,8 @@ using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
+using Ensage.SDK.Inventory;
+using Ensage.SDK.Service;
 
 namespace ArcAnnihilation
 {
@@ -40,6 +43,30 @@ namespace ArcAnnihilation
             AutoMidas.GetNewInstance(MainHero);
             GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate;
             UpdateManager.Subscribe(TempestUpdater,500);
+            var manager = new InventoryManager(new EnsageServiceContext(MainHero.Hero));
+            manager.CollectionChanged += (sender, args) =>
+            {
+                if (args.Action == NotifyCollectionChangedAction.Add)
+                {
+                    foreach (InventoryItem iitem in args.NewItems)
+                    {
+                        if (MenuManager.Items.ContainsKey(iitem.Id.ToString()))
+                        {
+                            MenuManager.AddNewItem(iitem.Id);
+                        }
+                    }
+                }
+                else if (args.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    foreach (InventoryItem iitem in args.OldItems)
+                    {
+                        if (MenuManager.Items.ContainsKey(iitem.Id.ToString()))
+                        {
+                            MenuManager.RemoveOldItem(iitem.Id);
+                        }
+                    }
+                }
+            };
         }
 
         private static void TempestUpdater()

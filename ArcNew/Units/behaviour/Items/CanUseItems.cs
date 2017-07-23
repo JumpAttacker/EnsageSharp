@@ -195,6 +195,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             continue;
                         }
                         ability.UseAbility(pos);
+                        
                     }
                     else
                     {
@@ -205,6 +206,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 Printer.Both(
                     $"[{unitBase}][item] {ability.Name} ({delayTime}) [After Blink: {_afterBlink.Sleeping}] [{ability.TravelDistance()}]");
                 await Await.Delay(delayTime, Core.ComboToken.Token);
+                await Task.Delay(150, Core.ComboToken.Token);
             }
             Printer.Log("now we can use abilities -> " + (unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter));
             return unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter;
