@@ -121,7 +121,7 @@ namespace InvokerAnnihilationCrappa
                             var timeForCast = timing + Me.Config.SsExtraDelay/ 100f + Game.Ping / 1000;
                             var delayTime = (int) ((time - timeForCast) * 1000);
                             Log.Warn($"[SS] delay time: {delayTime} rem time: {time} Time for cast: {timeForCast}");
-                            await Task.Delay(delayTime, token);
+                            await Task.Delay(Math.Max(delayTime, 1), token);
                             Ability.UseAbility(target.Position);
                         }
                     }
