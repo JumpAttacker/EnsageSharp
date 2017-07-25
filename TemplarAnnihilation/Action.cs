@@ -5,6 +5,7 @@ using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.SDK.Helpers;
 using SharpDX;
 using static TemplarAnnihilation.Members;
 
@@ -105,22 +106,25 @@ namespace TemplarAnnihilation
             if (psiBlade==null || psiBlade.Level==0)
                 return;
             _enemyHeroes =
-                Heroes.All.Where(
-                    x => x.Team != MyTeam && x.IsAlive && x.IsVisible && x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius)
+                EntityManager<Hero>.Entities.Where(
+                        x =>
+                            x.Team != MyTeam && x.IsAlive && x.IsVisible &&
+                            x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius)
                     .ToList();
             _enemyCreeps =
-                ObjectManager.GetEntitiesFast<Creep>()
+                EntityManager<Creep>.Entities
                     .Where(
                         x =>
-                            x!=null && x.IsValid && x.IsSpawned && x.IsAlive && x.IsVisible && (x.Team != MyTeam || (float)x.Health / (float)x.MaximumHealth < 0.50) &&
+                            x != null && x.IsValid && x.IsSpawned && x.IsAlive && x.IsVisible &&
+                            (x.Team != MyTeam || (float) x.Health / (float) x.MaximumHealth < 0.50) &&
                             x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius);
             
             var extraRange = 550 + 40 * psiBlade.Level;
             _enemyPossibleHeroes =
-                Heroes.All.Where(
-                    x =>
-                        x.Team != MyTeam && x.IsAlive && x.IsVisible &&
-                        x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius + extraRange)
+                EntityManager<Hero>.Entities.Where(
+                        x =>
+                            x.Team != MyTeam && x.IsAlive && x.IsVisible &&
+                            x.Distance2D(MyHero) <= MyHero.GetAttackRange() + x.HullRadius + extraRange)
                     .ToList();
             foreach (var hero in _enemyHeroes)
             {

@@ -89,11 +89,25 @@ namespace TemplarAnnihilation
             return Game.RawGameTime - 0.1f + Game.Ping / 2000f - LastAttackTime > UnitExtensions.AttackPoint(Owner);
         }
 
-        public Unit GetTarget()
+        private Hero _globalTarget;
+
+        public Hero GetTarget(bool otherChecks = true)
         {
-            var target = TargetSelector.ClosestToMouse(Owner, 500);
-            if (target != null && (Owner.IsValidOrbwalkingTarget(target) || UnitExtensions.HasModifier(Owner, "modifier_item_hurricane_pike_range")))
-                return target;
+            if (_globalTarget != null && _globalTarget.IsAlive)
+            {
+                if (otherChecks)
+                {
+                    if (!Owner.IsValidOrbwalkingTarget(_globalTarget) &&
+                        !UnitExtensions.HasModifier(Owner, "modifier_item_hurricane_pike_range"))
+                        return null;
+                }
+                return _globalTarget;
+            }
+            _globalTarget = TargetSelector.ClosestToMouse(Owner);
+            if (_globalTarget != null &&
+                (!otherChecks || Owner.IsValidOrbwalkingTarget(_globalTarget) ||
+                 UnitExtensions.HasModifier(Owner, "modifier_item_hurricane_pike_range")))
+                return _globalTarget;
             return null;
         }
 
@@ -158,6 +172,7 @@ namespace TemplarAnnihilation
             }
             else if (Mode == OrbwalkingMode.Idle)
             {
+                _globalTarget = null;
                 EffectManager.Remove("attackTarget" + Owner.Handle);
                 return;
             }
@@ -166,44 +181,50 @@ namespace TemplarAnnihilation
                 return;
             }
             var target = GetTarget();
-            var tempTarget = TargetSelector.ClosestToMouse(Owner);
-            if (tempTarget != null)
+            if (!UnitExtensions.HasModifier(Owner,"modifier_templar_assassin_meld"))
             {
-                var blink = Owner.GetItemById(AbilityId.item_blink);
-                var tempPos=new Vector3();
-                if (blink != null && blink.CanBeCasted() && blink.CanHit(tempTarget,ref tempPos) && !_sleeper.Sleeping(blink))
+                var tempTarget = GetTarget(false);
+                if (tempTarget != null)
                 {
-                    blink.UseAbility(tempPos);
-                    _sleeper.Sleep(300,blink);
-                }
-                if (!UnitExtensions.HasModifier(tempTarget, "modifier_templar_assassin_trap_slow"))
-                {
-                    var trap = UnitExtensions.GetAbilityById(ObjectManager.LocalHero, AbilityId.templar_assassin_psionic_trap);
-                    var trapNearTarget =
-                        EntityManager<Unit>.Entities.FirstOrDefault(
-                            x =>
-                                x.IsValid && x.Name == "npc_dota_templar_assassin_psionic_trap" &&
-                                Ensage.SDK.Extensions.EntityExtensions.Distance2D(tempTarget, x.Position) <= 400);
-                    if (trapNearTarget != null)
+                    var blink = Owner.GetItemById(AbilityId.item_blink);
+                    var tempPos = new Vector3();
+                    if (blink != null && blink.CanBeCasted() && blink.CanHit(tempTarget, ref tempPos) &&
+                        !_sleeper.Sleeping(blink))
                     {
-                        if (!_sleeper.Sleeping(trap + "activate"))
+                        blink.UseAbility(tempPos);
+                        _sleeper.Sleep(300, blink);
+                    }
+                    if (!UnitExtensions.HasModifier(tempTarget, "modifier_templar_assassin_trap_slow"))
+                    {
+                        var trap = UnitExtensions.GetAbilityById(ObjectManager.LocalHero,
+                            AbilityId.templar_assassin_psionic_trap);
+                        var trapNearTarget =
+                            EntityManager<Unit>.Entities.FirstOrDefault(
+                                x =>
+                                    x.IsValid && x.Name == "npc_dota_templar_assassin_psionic_trap" &&
+                                    Ensage.SDK.Extensions.EntityExtensions.Distance2D(tempTarget, x.Position) <= 400);
+                        if (trapNearTarget != null)
                         {
-                            var activator = trapNearTarget.Spellbook.Spell1;
-                            if (activator.CanBeCasted())
+                            if (!_sleeper.Sleeping(trap + "activate"))
                             {
-                                activator.UseAbility();
+                                var activator = trapNearTarget.Spellbook.Spell1;
+                                if (activator.CanBeCasted())
+                                {
+                                    activator.UseAbility();
+                                }
+                                _sleeper.Sleep(300, trap + "activate");
                             }
-                            _sleeper.Sleep(300, trap + "activate");
                         }
-                    }
-                    else if (trap.CanBeCasted())
-                    {
-                        if (!_sleeper.Sleeping(trap + "place"))
+                        else if (trap.CanBeCasted())
                         {
-                            trap.UseAbility(tempTarget.Position);
-                            _sleeper.Sleep(300, trap + "place");
+                            if (!_sleeper.Sleeping(trap + "place"))
+                            {
+                                trap.UseAbility(tempTarget.Position);
+                                _sleeper.Sleep(300, trap + "place");
+                            }
                         }
                     }
+
                 }
             }
             if ((target == null || !CanAttack(target)) && CanMove())
