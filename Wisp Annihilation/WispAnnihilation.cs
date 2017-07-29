@@ -214,14 +214,22 @@ namespace Wisp_Annihilation
                 {
                     UpdateManager.BeginInvoke(Callback);
                     Drawing.OnDraw += DrawingOnOnDraw;
-                    //UpdateManager.Subscribe(particleUpdater);
+                    UpdateManager.Subscribe(ParticleUpdater);
                 }
                 else
                 {
                     Drawing.OnDraw -= DrawingOnOnDraw;
-                    //UpdateManager.Unsubscribe(particleUpdater);
+                    UpdateManager.Unsubscribe(ParticleUpdater);
+                    ParticleManager.Value.Remove("attackRange" + Owner.Handle);
                 }
             }
+        }
+
+        private void ParticleUpdater()
+        {
+            ParticleManager.Value.AddOrUpdate(Owner, "attackRange" + Owner.Handle,
+                        "materials/ensage_ui/particles/range_display_mod.vpcf", ParticleAttachment.AbsOriginFollow, true, 1,
+                        CurrentRange * 1.1f, 2, Color.LimeGreen);
         }
 
         private async void Callback()
@@ -267,9 +275,7 @@ namespace Wisp_Annihilation
                     await Task.Delay(125);
                 }
                 //particle.DrawRange(Owner, "attackRange" + Owner.Handle, CurrentRange, Color.LimeGreen);
-                /*particle.AddOrUpdate(Owner, "attackRange" + Owner.Handle,
-                    "particles/ui_mouseactions/drag_selected_ring.vpcf", ParticleAttachment.AbsOriginFollow, false, 1,
-                    Color.LimeGreen, 2, CurrentRange * 1.1f);*/
+                
                 /*if (effect == null)
                     effect = Owner.AddParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf");
                 effect.SetControlPoint(1, new Vector3(CurrentRange, 255, 0));
