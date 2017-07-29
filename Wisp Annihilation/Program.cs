@@ -23,7 +23,7 @@ namespace Wisp_Annihilation
         private static bool IsEnableAutoSaver => Members.Menu.Item("autoSaver.Enable").GetValue<bool>();
         private static bool IsEnableautoTether => Members.Menu.Item("autoTether.Enable").GetValue<bool>();
         private static bool UseOrbWalkker => Members.Menu.Item("OrbWalker.Enable").GetValue<bool>();
-        private static bool IsComboAim => Members.Menu.Item("Hero.Hotkey.Aim").GetValue<KeyBind>().Active;
+        private static bool IsComboAim => false;//Members.Menu.Item("Hero.Hotkey.Aim").GetValue<KeyBind>().Active;
         private static bool IsComboHero => Members.Menu.Item("Hero.Hotkey.Combo").GetValue<KeyBind>().Active;
         private static uint HeroAimHotkey => Members.Menu.Item("Hero.Hotkey.Aim").GetValue<KeyBind>().Key;
         private static uint HeroHotkey => Members.Menu.Item("Hero.Hotkey.Combo").GetValue<KeyBind>().Key;
@@ -56,8 +56,8 @@ namespace Wisp_Annihilation
                 new MenuItem("relocateTpAbuse.Slider", "Extra Delay").SetValue(new Slider(-50, -100, 0)));
 
             settings.AddItem(new MenuItem("OrbWalker.Enable", "Enable Orbwalking").SetValue(true));
-            settings.AddItem(
-                new MenuItem("Hero.Hotkey.Aim", "Enable Spirits Aim for selected enemy").SetValue(new KeyBind('Z', KeyBindType.Toggle)));
+            /*settings.AddItem(
+                new MenuItem("Hero.Hotkey.Aim", "Enable Spirits Aim for selected enemy").SetValue(new KeyBind('Z', KeyBindType.Toggle)));*/
             settings.AddItem(
                 new MenuItem("Hero.Hotkey.Combo", "Do Combo Fore Selected Enemy").SetValue(new KeyBind('G', KeyBindType.Press)));
             settings.AddItem(new MenuItem("Hero.Combo.AutoTether.Enable", "Tether in combo").SetValue(false))
