@@ -2,10 +2,8 @@
 using System.Linq;
 using ArcAnnihilation.Panels;
 using ArcAnnihilation.Utils;
-using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Menu;
-using Ensage.Common.Objects;
 using SharpDX;
 using AbilityId = Ensage.Common.Enums.AbilityId;
 

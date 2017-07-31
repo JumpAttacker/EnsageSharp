@@ -69,9 +69,9 @@ namespace ArcAnnihilation.Units
                 var afterItems = await UseItems(cancellationToken);
                 if (afterItems)
                 {
-                    if (Hero.GetItemById(ItemId.item_sheepstick) == null ||
-                        !Hero.GetItemById(ItemId.item_sheepstick).CanBeCasted())
-                        await UseAbilities(cancellationToken);
+                    /*if (Hero.GetItemById(ItemId.item_sheepstick) == null ||
+                        !Hero.GetItemById(ItemId.item_sheepstick).CanBeCasted())*/
+                    await UseAbilities(cancellationToken);
                 }
             }
             await Await.Delay(25, cancellationToken);

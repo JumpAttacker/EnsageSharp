@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ArcAnnihilation.OrderState;
 using ArcAnnihilation.Utils;
+using Ensage;
 
 namespace ArcAnnihilation
 {
@@ -28,7 +29,7 @@ namespace ArcAnnihilation
         }
 
         public static bool CanBeExecuted => CurrentOrder.CanBeExecuted;
-
+        private static bool _changed;
         public static void ChangeOrder(Order setOrder)
         {
             if (CurrentOrder == setOrder)
@@ -36,10 +37,35 @@ namespace ArcAnnihilation
                 Printer.Both($"[Order][Error] {setOrder}");
                 return;
             }
+            if (CurrentOrder is AutoPushing)
+            {
+                /*if (_changed)
+                {
+                    _changed = false;
+                    var reqh = Game.GetConsoleVar("dota_player_teleport_requires_halt");
+                    reqh?.SetValue(0);
+                }*/
+            }
+            else if (setOrder is AutoPushing)
+            {
+                /*var reqh = Game.GetConsoleVar("dota_player_teleport_requires_halt");
+                Game.PrintMessage((reqh!=null).ToString());
+                if (Game.GetConsoleVar("dota_player_teleport_requires_halt").GetInt() == 0)
+                {
+                    
+                    reqh.SetValue(1);
+                    _changed = true;
+                }*/
+            }
             Printer.Both(CurrentOrder != null
                 ? $"[Order] changed from {CurrentOrder} to {setOrder}"
                 : $"[Order][Init] {setOrder}");
             CurrentOrder = setOrder;
+
+            //dota_player_teleport_requires_halt
+            /*var reqh = Game.GetConsoleVar("dota_player_teleport_requires_halt");
+            if (reqh.GetInt() == 0)
+                reqh.SetValue(1);*/
         }
 
         public static class Orders

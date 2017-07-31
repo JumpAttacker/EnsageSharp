@@ -195,7 +195,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             continue;
                         }
                         ability.UseAbility(pos);
-                        
+                        await Task.Delay(200, Core.ComboToken.Token);
                     }
                     else
                     {

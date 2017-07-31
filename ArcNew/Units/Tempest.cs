@@ -7,7 +7,6 @@ using ArcAnnihilation.Units.behaviour.Enabled;
 using ArcAnnihilation.Units.behaviour.Items;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
 using ArcAnnihilation.Units.behaviour.Range;
-using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
