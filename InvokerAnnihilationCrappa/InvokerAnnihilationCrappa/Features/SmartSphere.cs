@@ -31,6 +31,7 @@ namespace InvokerAnnihilationCrappa.Features
             Size = panel.Item("Size", new Slider(10, 1, 50));
             PosX = panel.Item("Position X", new Slider(500, 0, 2000));
             PosY = panel.Item("Position Y", new Slider(500, 0, 2000));
+            Cooldown = panel.Item("Cooldown (ms)", new Slider(500, 0, 2000));
             Input = new InputManager();
 
             _buttons = new Button[6];
@@ -87,6 +88,8 @@ namespace InvokerAnnihilationCrappa.Features
                 }
             };
         }
+
+        public MenuItem<Slider> Cooldown { get; set; }
 
         public class Button
         {
@@ -146,7 +149,7 @@ namespace InvokerAnnihilationCrappa.Features
                 var ability = args.Ability.GetAbilityId();
                 if (ability == AbilityId.invoker_quas ||
                     ability == AbilityId.invoker_wex || ability == AbilityId.invoker_exort)
-                    _sleeper.Sleep(500);
+                    _sleeper.Sleep(Cooldown.Value);
             }
             if (_sleeper.Sleeping)
                 return;

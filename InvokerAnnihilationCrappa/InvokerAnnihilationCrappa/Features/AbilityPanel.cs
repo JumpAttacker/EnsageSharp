@@ -1,13 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Input;
 using Ensage;
-using Ensage.Common;
-using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.SDK.Menu;
@@ -37,6 +34,8 @@ namespace InvokerAnnihilationCrappa.Features
             ColorG = panel.Item("text -> Gree", new Slider(255, 0, 255));
             ColorB = panel.Item("text -> Blue", new Slider(255, 0, 255));
             QCast = panel.Menu("Quick casts");
+            QcastRecaster = QCast.Item("Slot changer", false);
+            QcastRecaster.Item.SetTooltip("quick cast will change ability slot from 2 to 1");
             foreach (var ability in _main.Invoker.AbilityInfos.Where(x => !(x.Ability is Item)))
             {
                 CreateQuickCastForAbility(ability);
@@ -54,6 +53,8 @@ namespace InvokerAnnihilationCrappa.Features
                     Drawing.OnDraw -= DrawingOnOnDraw;
             };
         }
+
+        public MenuItem<bool> QcastRecaster { get; set; }
 
         public MenuItem<Slider> ColorR { get; set; }
         public MenuItem<Slider> ColorG { get; set; }
@@ -82,7 +83,8 @@ namespace InvokerAnnihilationCrappa.Features
                 {
                     if (args.GetNewValue<KeyBind>().Active)
                     {
-                        if (ability.Ability.Equals(_main.Invoker.Owner.Spellbook.Spell4) || ability.Ability.Equals(_main.Invoker.Owner.Spellbook.Spell5))
+                        if (ability.Ability.Equals(_main.Invoker.Owner.Spellbook.Spell4) ||
+                            ability.Ability.Equals(_main.Invoker.Owner.Spellbook.Spell5) && !QcastRecaster)
                             return;
                         _main.Invoker.Invoke(ability);
                     }
