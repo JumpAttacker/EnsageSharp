@@ -132,8 +132,7 @@ namespace InvokerAnnihilationCrappa
             Log.Debug("pre init");
             Mode = new InvokerMode(
                 Key.G,
-                OrbwalkerManager,
-                Input,
+                Context.Value,
                 this);
 
             Quas = Owner.GetAbilityById(AbilityId.invoker_quas);

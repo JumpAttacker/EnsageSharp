@@ -7,9 +7,8 @@ using System.Windows.Input;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.SDK.Helpers;
-using Ensage.SDK.Input;
-using Ensage.SDK.Orbwalker;
 using Ensage.SDK.Orbwalker.Modes;
+using Ensage.SDK.Service;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
@@ -22,11 +21,17 @@ namespace InvokerAnnihilationCrappa
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private Hero _target;
 
-        public InvokerMode(Key key, Lazy<IOrbwalkerManager> orbwalkerManager, Lazy<IInputManager> input,
-            Invoker me) : base(orbwalkerManager.Value, input.Value, key)
+        public InvokerMode(Key key, IServiceContext context,
+            Invoker me) : base(context, key)
         {
             Me = me;
         }
+
+        /*public InvokerMode(Key key, Lazy<IOrbwalkerManager> orbwalkerManager, Lazy<IInputManager> input,
+            Invoker me) : base(orbwalkerManager.Value, input.Value, key)
+        {
+            Me = me;
+        }*/
 
         public Invoker Me { get; set; }
 
