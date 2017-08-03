@@ -135,19 +135,33 @@ namespace InvokerAnnihilationCrappa
                                      _target.HasModifier("modifier_invoker_cold_snap")
                                      /*Ensage.SDK.Extensions.EntityExtensions.Distance2D(Me.Owner, _target) <=
                                      currentAbility.Ability.CastRange*/||
-                                     currentAbility.Ability.GetAbilityId() == AbilityId.invoker_ice_wall)
+                                     currentAbility.Ability.GetAbilityId() == AbilityId.invoker_ice_wall ||
+                                     currentAbility.Ability.Id == Ensage.AbilityId.item_refresher)
                             {
                                 var casted = await currentAbility.UseAbility(_target, token);
                                 if (casted)
                                 {
                                     Log.Info($"using: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
-                                    IncComboStage(currentCombo);
+                                    if (currentAbility.Ability.Id == Ensage.AbilityId.item_refresher)
+                                    {
+                                        currentCombo.CurrentAbility -= 2;
+                                        //DecComboStage(currentCombo, 2);
+                                    }
+                                    else
+                                    {
+                                        IncComboStage(currentCombo);
+                                    }
+                                    
                                 }
                                 else
                                 {
                                     Log.Info($"not casted: [{currentCombo.CurrentAbility}]" +
                                              currentAbility.Ability.Name);
                                 }
+                            }
+                            else
+                            {
+                                //Log.Error($"something is wrong {currentAbility.Name}");
                             }
                         }
                         else
@@ -240,6 +254,15 @@ namespace InvokerAnnihilationCrappa
                 currentCombo.CurrentAbility = 0;
             else
                 currentCombo.CurrentAbility++;
+        }
+        private void DecComboStage(Combo currentCombo, int power)
+        {
+            if (power > 1)
+                DecComboStage(currentCombo, power - 1);
+            if (currentCombo.CurrentAbility - 1 <= currentCombo.AbilityCount)
+                currentCombo.CurrentAbility = currentCombo.AbilityCount;
+            else
+                currentCombo.CurrentAbility--;
         }
     }
 }

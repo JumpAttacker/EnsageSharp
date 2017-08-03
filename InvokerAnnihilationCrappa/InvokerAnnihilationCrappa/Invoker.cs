@@ -11,6 +11,7 @@ using Ensage.SDK.TargetSelector;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Threading.Tasks;
 using Ensage.SDK.Input;
 using Ensage.SDK.Orbwalker;
@@ -311,7 +312,8 @@ namespace InvokerAnnihilationCrappa
                 case NotifyCollectionChangedAction.Add:
                     foreach (InventoryItem argsNewItem in args.NewItems)
                     {
-                        if (argsNewItem.Id == AbilityId.item_cyclone)
+                        var id = argsNewItem.Id;
+                        if (id == AbilityId.item_cyclone)
                         {
                             _eulCombo1 = new Combo(this, new[]
                             {
@@ -328,6 +330,31 @@ namespace InvokerAnnihilationCrappa
                             Config.ComboPanel.Combos.Add(_eulCombo1);
                             Config.ComboPanel.Combos.Add(_eulCombo2);
                             Config.ComboPanel.Combos.Add(_eulCombo3);
+                            
+                            var refr = Owner.Inventory.Items.FirstOrDefault(x => x.Id == AbilityId.item_refresher);
+                            if (refr != null)
+                            {
+                                var list = new List<Combo>
+                                {
+                                    _eulCombo1,
+                                    _eulCombo2,
+                                    _eulCombo3
+                                };
+                                var refresher = new AbilityInfo(refr);
+                                foreach (var combo in list)
+                                {
+                                    combo.AddToCombo(refresher);
+                                }
+                            }
+                            //TODO: check for eul
+                        }
+                        else if (id == AbilityId.item_refresher)
+                        {
+                            var refresher = new AbilityInfo(argsNewItem.Item);
+                            foreach (var combo in Config.ComboPanel.Combos)
+                            {
+                                combo.AddToCombo(refresher);
+                            }
                         }
                     }
                     break;
@@ -337,18 +364,36 @@ namespace InvokerAnnihilationCrappa
                         foreach (InventoryItem argsNewItem in args.OldItems)
                         {
                             Log.Debug("REMOVE -> " + argsNewItem.Id);
-                            if (argsNewItem.Id == AbilityId.item_cyclone)
+                            var id = argsNewItem.Id;
+                            if (Config.ComboPanel.Combos != null)
                             {
-                                if (_eulCombo1 != null && Config.ComboPanel.Combos != null)
+                                if (id == AbilityId.item_cyclone)
                                 {
-                                    Config.ComboPanel.Combos.Remove(_eulCombo1.Dispose());
-                                    Config.ComboPanel.Combos.Remove(_eulCombo2.Dispose());
-                                    Config.ComboPanel.Combos.Remove(_eulCombo3.Dispose());
+                                    if (_eulCombo1 != null)
+                                    {
+                                        Config.ComboPanel.Combos.Remove(_eulCombo1.Dispose());
+                                        Config.ComboPanel.Combos.Remove(_eulCombo2.Dispose());
+                                        Config.ComboPanel.Combos.Remove(_eulCombo3.Dispose());
+                                    }
+                                    else
+                                    {
+                                        Log.Debug("null ex (2)");
+                                    }
                                 }
-                                else
+                                else if (id == AbilityId.item_refresher)
                                 {
-                                    Log.Debug("null ex");
+                                    foreach (var combo in Config.ComboPanel.Combos)
+                                    {
+                                        var finder =
+                                            combo.AbilityInfos.Find(x => x.Ability.Id == AbilityId.item_refresher);
+                                        if (finder != null)
+                                            combo.RemoveFromCombo(finder);
+                                    }
                                 }
+                            }
+                            else
+                            {
+                                Log.Debug("null ex");
                             }
                         }
                     }

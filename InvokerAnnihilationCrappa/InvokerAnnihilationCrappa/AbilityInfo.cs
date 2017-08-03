@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.SDK.Helpers;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
@@ -26,6 +28,7 @@ namespace InvokerAnnihilationCrappa
             One = one;
             Two = two;
             Three = three;
+            Name = Ability.Name;
             Log.Info($"[{final.Name}] -> [{one.Name}] | [{two.Name}] | [{three.Name}]");
         }
 
@@ -35,10 +38,11 @@ namespace InvokerAnnihilationCrappa
         }
 
         private Invoker Me { get; set; }
-
+        public string Name { get; set; }
         public AbilityInfo(Ability itemAbility)
         {
             Ability = itemAbility;
+            Name = Ability.Name;
             Log.Info($"[{Ability.Name}] -> item");
         }
 
@@ -132,7 +136,13 @@ namespace InvokerAnnihilationCrappa
                     }
                     break;
                 case AbilityId.invoker_forge_spirit:
-                    Ability.UseAbility();
+                    var forges =
+                        EntityManager<Unit>.Entities.Any(
+                            x =>
+                                x.IsValid && x.Team==Me.Owner.Team && x.ClassId == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit &&
+                                UnitExtensions.HealthPercent(x) > .55f);
+                    if (!forges)
+                        Ability.UseAbility();
                     break;
                 case AbilityId.invoker_ice_wall:
                     if (Me.Config.AutoIceWall)
@@ -181,6 +191,9 @@ namespace InvokerAnnihilationCrappa
                     }
                     Ability.UseAbility(target);
                     await WaitForCombo(target);
+                    break;
+                case AbilityId.item_refresher:
+                    Ability.UseAbility();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

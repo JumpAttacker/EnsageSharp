@@ -142,7 +142,7 @@ namespace InvokerAnnihilationCrappa.Features
                         ? Textures.GetItemTexture(ability.StoredName())
                         : Textures.GetSpellTexture(ability.StoredName());
                     Drawing.DrawRect(pos, isItem ? new Vector2(iconSize.X * 1.5f, iconSize.Y) : iconSize, texture);
-                    var cd = ability.Cooldown;
+                    var cd = Math.Min(98, ability.Cooldown);
                     if (cd > 0)
                     {
                         var text = ((int) (cd + 1)).ToString(CultureInfo.InvariantCulture);
