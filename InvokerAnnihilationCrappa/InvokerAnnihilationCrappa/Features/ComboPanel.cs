@@ -138,7 +138,7 @@ namespace InvokerAnnihilationCrappa.Features
                 foreach (var info in combo.AbilityInfos)
                 {
                     var ability = info.Ability;
-                    if (ability==null)
+                    if (ability==null || !ability.IsValid)
                         continue;
                     var isItem = info.Ability is Item;
                     if (!_main.AbilitiesInCombo.Value.IsEnabled(info.Name) && !isItem)
