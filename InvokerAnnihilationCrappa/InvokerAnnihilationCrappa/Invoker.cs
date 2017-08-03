@@ -385,7 +385,7 @@ namespace InvokerAnnihilationCrappa
                                     foreach (var combo in Config.ComboPanel.Combos)
                                     {
                                         var finder =
-                                            combo.AbilityInfos.Find(x => x.Ability.Id == AbilityId.item_refresher);
+                                            combo.AbilityInfos.Find(x => x.Name == AbilityId.item_refresher.ToString());
                                         if (finder != null)
                                             combo.RemoveFromCombo(finder);
                                     }

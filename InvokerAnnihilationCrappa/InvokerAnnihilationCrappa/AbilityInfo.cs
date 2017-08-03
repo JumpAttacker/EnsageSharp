@@ -100,14 +100,26 @@ namespace InvokerAnnihilationCrappa
                     }
                     else
                     {
-                        if (target.HasModifier("modifier_invoker_cold_snap"))
+                        //var blastModifier = target.FindModifier("modifier_invoker_deafening_blast_knockback");
+                        //if (blastModifier == null)
+                        //{
+                        if (
+                            target.HasModifiers(
+                                new[] {"modifier_invoker_cold_snap", "modifier_invoker_deafening_blast_knockback"},
+                                false))
                         {
-                            Ability.UseAbility(target.Position);
+                            Ability.UseAbility(target.NetworkPosition);
                         }
                         else if (!Ability.CastSkillShot(target))
                         {
                             return false;
                         }
+                        /*}
+                        else
+                        {
+                            var remTime = blastModifier.RemainingTime;
+                            var newPost
+                        }*/
                     }
                     break;
                 case AbilityId.invoker_sun_strike:

@@ -138,15 +138,17 @@ namespace InvokerAnnihilationCrappa.Features
                 foreach (var info in combo.AbilityInfos)
                 {
                     var ability = info.Ability;
+                    if (ability==null)
+                        continue;
                     var isItem = info.Ability is Item;
-                    if (!_main.AbilitiesInCombo.Value.IsEnabled(ability.Name) && !isItem)
+                    if (!_main.AbilitiesInCombo.Value.IsEnabled(info.Name) && !isItem)
                     {
                         count--;
                         continue;
                     }
                     var texture = isItem
-                        ? Textures.GetItemTexture(ability.StoredName())
-                        : Textures.GetSpellTexture(ability.StoredName());
+                        ? Textures.GetItemTexture(info.Name)
+                        : Textures.GetSpellTexture(info.Name);
                     Drawing.DrawRect(pos, isItem ? new Vector2(iconSize.X * 1.5f, iconSize.Y) : iconSize, texture);
                     var cd = Math.Min(98, ability.Cooldown);
                     if (cd > 0)

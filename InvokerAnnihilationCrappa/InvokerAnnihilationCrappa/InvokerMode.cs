@@ -86,7 +86,7 @@ namespace InvokerAnnihilationCrappa
                 {
                     Orbwalker.Move(Game.MousePosition);
                 }
-                else if (!Me.Config.ExtraDelayAfterSpells)
+                else //if (!Me.Config.ExtraDelayAfterSpells)
                 {
                     Orbwalker.OrbwalkTo(_target);
                 }
@@ -122,6 +122,7 @@ namespace InvokerAnnihilationCrappa
             
             if (_target != null)
             {
+                
                 var currentCombo = Me.Config.ComboPanel.Combos.First(x => x.Id == Me.SelectedCombo);
                 if (currentCombo.CurrentAbility < currentCombo.AbilityCount)
                 {
@@ -159,8 +160,9 @@ namespace InvokerAnnihilationCrappa
                                     }
 
                                     if (Me.Config.ExtraDelayAfterSpells)
-                                        await Task.Delay((int) turnTime, token);
-
+                                        await Task.Delay((int)turnTime, token);
+                                    else
+                                        await Task.Delay((int) Game.Ping, token);
                                 }
                                 else
                                 {
