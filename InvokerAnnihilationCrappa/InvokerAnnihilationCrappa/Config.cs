@@ -24,8 +24,12 @@ namespace InvokerAnnihilationCrappa
             //Ensage.SDK.Orbwalker.Modes.Farm
             SmartInvoke = Factory.Item("Smart invoke", true);
             SmartInvoke.Item.SetTooltip("will check for spheres before invoke");
+
             ExpInvoke = Factory.Item("Experemental invoke", false);
-            ExpInvoke.Item.SetTooltip("Enable this if ur invoker cant use invoke properly and disable [SmartInvoke]");
+            ExpInvoke.Item.SetTooltip("Enable this if your hero cant use invoke properly and disable [SmartInvoke]");
+
+            ExtraDelayAfterSpells = Factory.Item("Extra delay after each ability in combo", false);
+            ExtraDelayAfterSpells.Item.SetTooltip("Enable this if your hero sometimes not use abilities");
 
             AutoIceWall = Factory.Item("Dummy IceWall", true);
             AutoIceWall.Item.SetTooltip("Hero will run to the enemy");
@@ -54,6 +58,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<bool> ExtraDelayAfterSpells { get; set; }
 
         public MenuItem<bool> ExpInvoke { get; set; }
 

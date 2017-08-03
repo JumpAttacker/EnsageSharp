@@ -83,9 +83,13 @@ namespace InvokerAnnihilationCrappa
                     return;
                 //TODO: attack here
                 if (_target.IsAttackImmune() || _target.IsInvul())
+                {
                     Orbwalker.Move(Game.MousePosition);
-                else
+                }
+                else if (!Me.Config.ExtraDelayAfterSpells)
+                {
                     Orbwalker.OrbwalkTo(_target);
+                }
             }
         }
         public void UpdateConfig(Config config)
@@ -141,7 +145,9 @@ namespace InvokerAnnihilationCrappa
                                 var casted = await currentAbility.UseAbility(_target, token);
                                 if (casted)
                                 {
-                                    Log.Info($"using: [{currentCombo.CurrentAbility}]" + currentAbility.Ability.Name);
+                                    var turnTime = Owner.GetTurnTime(_target.NetworkPosition) * 1000 + Game.Ping +
+                                                   25;
+                                    Log.Info($"using: [{currentCombo.CurrentAbility}] ({(int)turnTime} ms)" + currentAbility.Ability.Name);
                                     if (currentAbility.Ability.Id == Ensage.AbilityId.item_refresher)
                                     {
                                         currentCombo.CurrentAbility -= 2;
@@ -151,7 +157,10 @@ namespace InvokerAnnihilationCrappa
                                     {
                                         IncComboStage(currentCombo);
                                     }
-                                    
+
+                                    if (Me.Config.ExtraDelayAfterSpells)
+                                        await Task.Delay((int) turnTime, token);
+
                                 }
                                 else
                                 {
@@ -189,7 +198,7 @@ namespace InvokerAnnihilationCrappa
                 }
                 else
                 {
-                    
+                    Orbwalker.OrbwalkTo(_target);
                     var others =
                         EntityManager<Unit>.Entities.Where(
                             x =>
