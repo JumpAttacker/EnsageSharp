@@ -461,6 +461,13 @@ namespace InvokerAnnihilationCrappa
                     return false;
                 }
             }
+            else if (Config.ExpInvoke)
+            {
+                Owner.Stop();
+                info.One.UseAbility(true);
+                info.Two.UseAbility(true);
+                info.Three.UseAbility(true);
+            }
             else
             {
                 info.One.UseAbility();
