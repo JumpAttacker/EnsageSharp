@@ -21,6 +21,8 @@ namespace InvokerAnnihilationCrappa.Features
             var panel = main.Factory.Menu("Prepare");
             Enable = panel.Item("Combo key with CTRL (need to hold)", true);
             CustomKey = panel.Item("Cusom key (need to hold)", new KeyBind('0'));
+            Smart = panel.Item("Smart more", false);
+            Smart.Item.SetTooltip("will prepare 1st & 3rd abilities instead of 1st & 2nd");
 
             if (Enable)
             {
@@ -38,6 +40,8 @@ namespace InvokerAnnihilationCrappa.Features
                 //UpdateManager.BeginInvoke(Callback);
             };
         }
+
+        public MenuItem<bool> Smart { get; set; }
 
         private void Tost()
         {
@@ -89,6 +93,12 @@ namespace InvokerAnnihilationCrappa.Features
                 abilities.First(
                     x =>
                         !(x.Ability is Item) && _main.AbilitiesInCombo.Value.IsEnabled(x.Ability.Name) && !one.Equals(x));
+            var three =
+                abilities.First(
+                    x =>
+                        !(x.Ability is Item) && _main.AbilitiesInCombo.Value.IsEnabled(x.Ability.Name) && !one.Equals(x) && !two.Equals(x));
+            if (Smart && three != null)
+                two = three;
             var empty1 = _main.Invoker.Owner.Spellbook.Spell4;
             var empty2 = _main.Invoker.Owner.Spellbook.Spell5;
             var ability1Invoked = one.Ability.Equals(empty1) || one.Ability.Equals(empty2);
@@ -125,6 +135,12 @@ namespace InvokerAnnihilationCrappa.Features
                 abilities.First(
                     x =>
                         !(x.Ability is Item) && _main.AbilitiesInCombo.Value.IsEnabled(x.Ability.Name) && !one.Equals(x));
+            var three =
+                abilities.First(
+                    x =>
+                        !(x.Ability is Item) && _main.AbilitiesInCombo.Value.IsEnabled(x.Ability.Name) && !one.Equals(x) && !two.Equals(x));
+            if (Smart && three != null)
+                two = three;
             var empty1 = _main.Invoker.Owner.Spellbook.Spell4;
             var empty2 = _main.Invoker.Owner.Spellbook.Spell5;
             var ability1Invoked = one.Ability.Equals(empty1) || one.Ability.Equals(empty2);
