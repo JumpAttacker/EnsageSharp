@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
@@ -57,10 +58,21 @@ namespace Techies_Annihilation.Features
                             if (heroHealth <= 0)
                             {
                                 HeroSleeper.Sleep(300 + listForDetonation.Count*30, hero);
-                                foreach (var manager in listForDetonation)
+                                if (MenuManager.IsSuperDetonate)
                                 {
-                                    manager.Detonate();
+                                    foreach (var manager in Bombs.Where(x=> x.IsRemoteMine && x.Active && x.CanHit(hero)))
+                                    {
+                                        manager.Detonate();
+                                    }
                                 }
+                                else
+                                {
+                                    foreach (var manager in listForDetonation)
+                                    {
+                                        manager.Detonate();
+                                    }
+                                }
+                                
                                 break;
                             }
                         }
