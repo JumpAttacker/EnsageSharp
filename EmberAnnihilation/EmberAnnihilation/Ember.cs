@@ -45,6 +45,7 @@ namespace EmberAnnihilation
         protected override void OnActivate()
         {
             Config = new Config();
+            Selector.Activate();
             Config.FistAndComboKey.Item.ValueChanged += FistAndComboKeyChanged;
             Config.RemntantCombo.Item.ValueChanged += RemnantActivator;
             Config.PussyKey.Item.ValueChanged += PussyAction;
@@ -78,6 +79,7 @@ namespace EmberAnnihilation
 
         protected override void OnDeactivate()
         {
+            Selector.Deactivate();
             Config?.Dispose();
         }
 
