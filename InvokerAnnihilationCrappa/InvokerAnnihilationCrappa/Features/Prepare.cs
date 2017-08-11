@@ -104,7 +104,18 @@ namespace InvokerAnnihilationCrappa.Features
             var ability1Invoked = one.Ability.Equals(empty1) || one.Ability.Equals(empty2);
             var ability2Invoked = two.Ability.Equals(empty1) || two.Ability.Equals(empty2);
             if (ability1Invoked && ability2Invoked)
+            {
+                if (!Smart) return;
+                if (one.Ability.Equals(empty1))
+                {
+                    _main.Invoker.Invoke(two);
+                }
+                else if (two.Ability.Equals(empty2))
+                {
+                    _main.Invoker.Invoke(one);
+                }
                 return;
+            }
             if (ability1Invoked)
             {
                 _main.Invoker.Invoke(one.Ability.Equals(empty2) ? one : two);
