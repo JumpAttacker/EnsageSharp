@@ -34,6 +34,8 @@ namespace InvokerAnnihilationCrappa
             AutoIceWall = Factory.Item("Dummy IceWall", true);
             AutoIceWall.Item.SetTooltip("Hero will run to the enemy");
 
+            SmartMove = Factory.Item("Move to target if ability out of range", true);
+
             AbilityPanel = new AbilityPanel(this);
             ComboPanel = new ComboPanel(this);
             SmartSphere = new SmartSphere(this);
@@ -58,6 +60,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<bool> SmartMove { get; set; }
 
         public MenuItem<bool> ExtraDelayAfterSpells { get; set; }
 

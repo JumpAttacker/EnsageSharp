@@ -173,6 +173,10 @@ namespace InvokerAnnihilationCrappa
                             else
                             {
                                 //Log.Error($"something is wrong {currentAbility.Name}");
+                                if (Me.Config.SmartMove && !currentAbility.Ability.CanHit(_target))
+                                {
+                                    Owner.Move(_target.Position);
+                                }
                             }
                         }
                         else
