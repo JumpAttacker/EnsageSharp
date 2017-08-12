@@ -41,6 +41,8 @@ namespace Techies_Annihilation.Features
                 var listForDetonation = new List<BombManager>();
                 var heroHealth = hero.Health+hero.HealthRegeneration;
                 var reduction = RemoteMine.GetDamageReduction(hero);
+                var refraction = hero.FindModifier("modifier_templar_assassin_refraction_absorb");
+                var blockCount = refraction?.StackCount;
                 foreach (var element in Bombs)
                 {
                     if (element.IsRemoteMine && element.Active)
@@ -53,7 +55,14 @@ namespace Techies_Annihilation.Features
                             {
                                 continue;
                             }
-                            heroHealth -= DamageHelpers.GetSpellDamage(element.Damage, spellAmp, reduction);
+                            if (blockCount > 0)
+                            {
+                                blockCount--;
+                            }
+                            else
+                            {
+                                heroHealth -= DamageHelpers.GetSpellDamage(element.Damage, spellAmp, reduction);
+                            }
                             listForDetonation.Add(element);
                             if (heroHealth <= 0)
                             {
