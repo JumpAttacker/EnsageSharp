@@ -80,20 +80,17 @@ namespace OverlayInformation.Features
                     continue;
                 if (VisibleBar)
                 {
-                    if (heroCont.IsAlly)
+                    var isVisible = hero.IsVisibleToEnemies;
+                    if (isVisible)
                     {
-                        var isVisible = hero.IsVisibleToEnemies;
-                        if (isVisible)
+                        if (AllyVisibleBarType.Value.SelectedIndex == 1)
                         {
-                            if (AllyVisibleBarType.Value.SelectedIndex == 1)
-                            {
-                                //pos = Game.MouseScreenPosition;
+                            //pos = Game.MouseScreenPosition;
                                 
-                                var rectangle = new RectangleF(pos.X, pos.Y - size.Y, size.X, size.Y);
-                                Config.Main.D11Context.RenderTarget.FillRectangle(rectangle, clr);
-                                /*Config.Main.Renderer.DrawRectangle(rectangle,
-                                    System.Drawing.Color.FromArgb(255, 255, 0, 255),10);*/
-                            }
+                            var rectangle = new RectangleF(pos.X, pos.Y - size.Y, size.X, size.Y);
+                            Config.Main.D11Context.RenderTarget.FillRectangle(rectangle, clr);
+                            /*Config.Main.Renderer.DrawRectangle(rectangle,
+                                System.Drawing.Color.FromArgb(255, 255, 0, 255),10);*/
                         }
                     }
                 }

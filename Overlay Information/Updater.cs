@@ -16,6 +16,9 @@ namespace OverlayInformation
         public List<HeroContainer> Heroes { get; }
         public List<HeroContainer> AllyHeroes { get; }
         public List<HeroContainer> EnemyHeroes { get; }
+        public List<CourContainer> EnemyCouriers { get; set; }
+        public List<CourContainer> AllyCouriers { get; set; }
+        public List<CourContainer> Couriers { get; set; }
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public Updater(OverlayInformation overlayInformation)
         {
@@ -23,6 +26,11 @@ namespace OverlayInformation
             Heroes = new List<HeroContainer>();
             AllyHeroes = new List<HeroContainer>();
             EnemyHeroes = new List<HeroContainer>();
+
+            Couriers = new List<CourContainer>();
+            AllyCouriers = new List<CourContainer>();
+            EnemyCouriers = new List<CourContainer>();
+
             foreach (var entity in ObjectManager.GetDormantEntities<Hero>())
             {
                 OnNewHero(null, entity);
@@ -45,12 +53,42 @@ namespace OverlayInformation
             EntityManager<Courier>.EntityAdded += OnNewCour;
         }
 
+        
+
         private void OnNewCour(object sender, Courier courier)
         {
-            if (courier.Team==Main.Owner.Team)
-                return;
+            //if (courier.Team==Main.Owner.Team)
+            //    return;
 
             ////TODO: cour esp
+            if (Couriers.Any(x=>x.Cour.Equals(courier)))
+            {
+                Log.Error($"Cant init New Hero -> {courier.GetDisplayName()} [{courier.Handle}]");
+                return;
+            }
+            var myTeam = Main.Context.Value.Owner.Team;
+            var targetTeam = courier.Team;
+            var isAlly = myTeam == targetTeam;
+            var newHero = new CourContainer(courier, isAlly, Main);
+            try
+            {
+                Couriers.Add(newHero);
+
+                if (isAlly)
+                {
+                    AllyCouriers.Add(newHero);
+                }
+                else
+                {
+                    EnemyCouriers.Add(newHero);
+                }
+
+                Log.Info($"New courier -> {courier.GetDisplayName()} [{courier.Handle}] [{(isAlly ? "Ally" : "Enemy")}]");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         private void OnNewHero(object sender, Hero hero)

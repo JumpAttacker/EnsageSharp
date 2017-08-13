@@ -148,8 +148,9 @@ namespace OverlayInformation.Features
             {
                 text = $"Aegis Timer: {4 - AegisMinutes}:{59 - AegisSeconds:0.}";
                 if (Aegis != null)
-                    DrawTextWithIcon(textPos + new Vector2(1, TextSize.Value.Value), textSize, text, textClr,
-                        Color.YellowGreen, Textures.GetHeroTexture(Aegis.Owner.Name));
+                    if (Aegis.Owner != null)
+                        DrawTextWithIcon(textPos + new Vector2(1, TextSize.Value.Value), textSize, text, textClr,
+                            Color.YellowGreen, Textures.GetHeroTexture(Aegis.Owner.Name));
                 else
                 {
                     DrawText(textPos + new Vector2(1, TextSize.Value.Value), textSize, text, textClr,

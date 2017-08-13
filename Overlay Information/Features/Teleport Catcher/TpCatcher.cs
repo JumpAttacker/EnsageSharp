@@ -62,16 +62,16 @@ namespace OverlayInformation.Features.Teleport_Catcher
                 Id = Player == null ? 0 : Player.Id;
                 var vecClr = tpCatcher.ColorList[Id] * 255;
                 _color = Color.FromArgb((int)vecClr.X, (int)vecClr.Y, (int)vecClr.Z);
+                Player = TryToGetPlayer();
                 if (!isStart)
                 {
-                    Player = TryToGetPlayer();
-                    Program.GenerateTpCatcherSideMessage(Hero?.Name, AbilityId.item_tpscroll.ToString(),
-                        5000);
+                    
+                    
                     //TryToGetnPlayerExp();
                 }
                 else
                 {
-                    UpdateManager.Subscribe(Callback);
+                    //UpdateManager.Subscribe(Callback);
                 }
                 
             }
@@ -161,6 +161,11 @@ namespace OverlayInformation.Features.Teleport_Catcher
                                     //Log.Debug("Cant find closest Tower or Shrine");
                                 }
                             }
+                            Program.GenerateTpCatcherSideMessage(Hero?.Name,
+                                HasTravelBoots
+                                    ? AbilityId.item_travel_boots.ToString()
+                                    : AbilityId.item_tpscroll.ToString(),
+                                5000);
                         }
                         Id = Player == null ? 0 : Player.Id;
                         var vecClr = _main.ColorList[Id] * 255;
@@ -323,7 +328,7 @@ namespace OverlayInformation.Features.Teleport_Catcher
                     var isStart = name.Contains("teleport_start");
                     var effect = args.ParticleEffect;
                     var a = effect.GetControlPoint(0);
-                    var b = effect.GetControlPoint(6);
+                    var b = effect.GetControlPoint(2);
                     var tp = new TeleportEffect(effect, a, b, isStart, this);
                     Effects.Add(tp);
                 });

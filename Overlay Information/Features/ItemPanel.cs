@@ -75,7 +75,7 @@ namespace OverlayInformation.Features
                 pos += new Vector2(stageSize.X, 0);
                 for (var i = 0; i < 6; i++)
                 {
-                    Item item = null;
+                    AbilityHolder item = null;
                     try
                     {
                         item = heroC.Items[i];
@@ -90,7 +90,7 @@ namespace OverlayInformation.Features
                     }
                     else
                     {
-                        var bottletype = item as Bottle;
+                        var bottletype = item.Item as Bottle;
                         if (bottletype != null && bottletype.StoredRune != RuneType.None)
                         {
                             var itemTexture =

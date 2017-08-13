@@ -25,8 +25,10 @@ namespace OverlayInformation
         public Updater Updater;
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public Hero Owner;
+
         [ImportingConstructor]
-        public OverlayInformation([Import] Lazy<IServiceContext> context, [Import] ID3D11Context d11Context, [Import] BrushCache brushCache)
+        public OverlayInformation([Import] Lazy<IServiceContext> context, [Import] ID3D11Context d11Context,
+            [Import] BrushCache brushCache)
         {
             Context = context;
             D11Context = d11Context;

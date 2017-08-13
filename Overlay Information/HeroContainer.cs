@@ -15,6 +15,36 @@ using PlaySharp.Toolkit.Logging;
 
 namespace OverlayInformation
 {
+    public class Holder : IDisposable
+    {
+        public List<AbilityHolder> Holders;
+
+        public Holder()
+        {
+            Holders = new List<AbilityHolder>();
+            UpdateManager.Subscribe(Flush, 5000);
+        }
+
+        private void Flush()
+        {
+            var temp = Holders.Where(x => x.IsValid);
+            Holders = temp.ToList();
+        }
+
+        public AbilityHolder GetOrCreate(Ability ability)
+        {
+            var find = Holders.Find(x => x.IsValid && x.Ability.Equals(ability));
+            if (find != null) return find;
+            find = new AbilityHolder(ability);
+            Holders.Add(find);
+            return find;
+        }
+
+        public void Dispose()
+        {
+            UpdateManager.Unsubscribe(Flush);
+        }
+    }
     public class AbilityHolder
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -29,13 +59,17 @@ namespace OverlayInformation
         public bool IsHidden;
         public bool IsValid => Ability!=null && Ability.IsValid;
         public int MaximumLevel { get; set; }
-
+        public AbilitySlot AbilitySlot { get; set; }
+        public string Name { get; set; }
+        public Item Item;
+        public uint Cost;
         public AbilityHolder(Ability ability)
         {
             Ability = ability;
             Handle = ability.Handle;
+            Name = ability.Name;
             MaximumLevel = Ability.MaximumLevel;
-            Owner = (Hero) ability.Owner;
+            Owner = (Hero)ability.Owner;
             Id = Ability.Id;
             AbilityState = ability.AbilityState;
             Texture = Ability is Item
@@ -44,6 +78,12 @@ namespace OverlayInformation
             Cooldown = Ability.Cooldown;
             IsUltimate = ability.AbilityType == AbilityType.Ultimate;
             IsHidden = ability.IsHidden;
+            AbilitySlot = ability.AbilitySlot;
+            Item = ability as Item;
+            if (Item != null)
+            {
+                Cost = Item.Cost;
+            }
             UpdateManager.BeginInvoke(async () =>
             {
                 while (ability.IsValid)
@@ -51,10 +91,42 @@ namespace OverlayInformation
                     AbilityState = ability.AbilityState;
                     Cooldown = Ability.Cooldown;
                     IsHidden = ability.IsHidden;
-                    await Task.Delay(250);
+                    AbilitySlot = ability.AbilitySlot;
+                    await Task.Delay(300);
                 }
                 //Log.Debug($"[{Owner.Name}] end for -> {Id}");
             });
+        }
+    }
+
+    public class CourContainer : IDisposable
+    {
+        public Courier Cour { get; }
+        public bool IsAlly { get; }
+        public OverlayInformation Main { get; }
+
+        public CourContainer(Courier cour, bool isAlly, OverlayInformation main)
+        {
+            Cour = cour;
+            IsAlly = isAlly;
+            Main = main;
+            Items = new List<Item>();
+            UpdateManager.Subscribe(UpdateItems, 500);
+        }
+
+        private void UpdateItems()
+        {
+            Items = Cour.Inventory.Items.ToList();
+        }
+
+        public List<Item> Items { get; set; }
+
+        public Holder HolderHelper { get; set; }
+
+        public void Dispose()
+        {
+            HolderHelper?.Dispose();
+            UpdateManager.Unsubscribe(UpdateItems);
         }
     }
     public class HeroContainer
@@ -66,10 +138,9 @@ namespace OverlayInformation
         public Hero Hero { get; }
         //public Ability Ultimate;
         public AbilityHolder Ultimate;
-        public List<Ability> Abilities;
         public List<AbilityHolder> Abilities2;
-        public List<Item> Items;
-        public List<Item> DangItems;
+        public List<AbilityHolder> Items;
+        public List<AbilityHolder> DangItems;
         public float LastTimeUnderVision;
         public float Health;
         public float MaxHealth;
@@ -96,28 +167,27 @@ namespace OverlayInformation
         //private readonly InventoryManager _manager;
         public float TimeInFog;
         public AbilityState AbilityState { get; set; }
+        public Holder HolderHelper;
 
+        public List<Ability> GetAllAbilities => Hero.Spellbook.Spells.Where(
+                x => x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate)
+            .ToList();
         public HeroContainer(Hero hero, bool isAlly, OverlayInformation main)
         {
             Id = hero.Player == null ? 0 : hero.Player.Id;
-            
+            HolderHelper = new Holder();
             IsAlly = isAlly;
             Main = main;
             IsOwner = hero.Equals(ObjectManager.LocalHero);
             Hero = hero;
             //Ultimate = hero.Spellbook.Spells.First(x => x.AbilityType == AbilityType.Ultimate);
-            Abilities =
-                hero.Spellbook.Spells.Where(
-                        x => (x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate)
-                        /* && !x.IsHidden*/)
-                    .ToList();
             LastTimeUnderVision = Game.RawGameTime;
-            Items = new List<Item>();
-            DangItems = new List<Item>();
+            Items = new List<AbilityHolder>();
+            DangItems = new List<AbilityHolder>();
             Abilities2 = new List<AbilityHolder>();
-            foreach (var ability in Abilities)
+            foreach (var ability in GetAllAbilities)
             {
-                var holder = new AbilityHolder(ability);
+                var holder = HolderHelper.GetOrCreate(ability);//new AbilityHolder(ability);
                 Abilities2.Add(holder);
                 if (holder.IsUltimate)
                     Ultimate = holder;
@@ -156,7 +226,7 @@ namespace OverlayInformation
 
             UpdateManager.Subscribe(UpdateItems, 500);
             UpdateManager.Subscribe(UpdateInfo, 250);
-            UpdateManager.Subscribe(AbilityUpdater, 1000);
+            
 
             var dividedWeStand = hero.Spellbook.SpellR as DividedWeStand;
             if (dividedWeStand != null && hero.ClassId == ClassId.CDOTA_Unit_Hero_Meepo && dividedWeStand.UnitIndex > 0)
@@ -165,10 +235,10 @@ namespace OverlayInformation
             }
 
             var classId = hero.ClassId;
-            if (classId == ClassId.CDOTA_Unit_Hero_Rubick || classId == ClassId.CDOTA_Unit_Hero_DoomBringer ||
-                classId == ClassId.CDOTA_Unit_Hero_Invoker)
+            if (classId == ClassId.CDOTA_Unit_Hero_Rubick || classId == ClassId.CDOTA_Unit_Hero_DoomBringer/* ||
+                classId == ClassId.CDOTA_Unit_Hero_Invoker*/)
             {
-                //UpdateManager.Subscribe(AbilityUpdater, 500);
+                UpdateManager.Subscribe(AbilityUpdater, 750);
             }
 
             /*Main.Context.Value.AbilityDetector.AbilityCasted += (sender, args) =>
@@ -204,7 +274,12 @@ namespace OverlayInformation
             if (!Hero.IsAlive || !Hero.IsVisible)
                 return;
             DangItems.Clear();
-            Items = HeroInventory.Items.ToList();
+            var items=new List<AbilityHolder>();
+            foreach (var item in HeroInventory.Items)
+            {
+                items.Add(HolderHelper.GetOrCreate(item));
+            }
+            //Items = HeroInventory.Items.ToList();
             Networth = 0;
             var tmpAgh = Hero.HasAghanimsScepter();
 
@@ -213,7 +288,7 @@ namespace OverlayInformation
                 RefreshAbilities2();
             }
             AghanimState = tmpAgh;
-            foreach (var item in Items)
+            foreach (var item in items)
             {
                 Networth += item.Cost;
                 if (!Main.Config.HeroOverlay.ItemDangItems) continue;
@@ -239,7 +314,7 @@ namespace OverlayInformation
                 RefreshAbilities2();
         }
 
-        private void ManagerOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
+        /*private void ManagerOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
         {
 
             if (args.Action == NotifyCollectionChangedAction.Add)
@@ -262,14 +337,8 @@ namespace OverlayInformation
                     Items.Remove(iitem.Item);
                 }
             }
-        }
+        }*/
 
-        public void RefreshAbilities()
-        {
-            Abilities =
-                Hero.Spellbook.Spells.Where(
-                    x => (x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate) && !x.IsHidden).ToList();
-        }
         public void RefreshAbilities2()
         {
             var abilities =
@@ -279,7 +348,8 @@ namespace OverlayInformation
                         Abilities2.Find(y => y.Handle == x.Handle) == null);
             foreach (var ability in abilities)
             {
-                Abilities2.Add(new AbilityHolder(ability));
+                Abilities2.Add(HolderHelper.GetOrCreate(ability));
+                //Abilities2.Add(new AbilityHolder(ability));
                 //Log.Error($"added new ability -> {ability.Name} ({ability.Owner.Name})");
             }
             Abilities2.RemoveAll(x => !x.IsValid/* || x.IsHidden*/);
@@ -291,6 +361,7 @@ namespace OverlayInformation
             UpdateManager.Unsubscribe(AbilityUpdater);
             UpdateManager.Unsubscribe(UpdateItems);
             UpdateManager.Unsubscribe(UpdateInfo);
+            HolderHelper.Dispose();
         }
     }
 }

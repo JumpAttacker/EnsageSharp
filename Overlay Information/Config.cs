@@ -17,6 +17,7 @@ namespace OverlayInformation
             Main = overlayInformation;
             TopPanel = new TopPanel(this);
             HeroOverlay = new HeroOverlay(this);
+            CourEsp = new CourEsp(this);
             ItemPanel = new ItemPanel(this);
             NetworthPanel = new NetworthPanel(this);
             ShrineHelper = new ShrineHelper(this);
@@ -26,6 +27,8 @@ namespace OverlayInformation
             ShowMeMore = new ShowMeMore(this);
             RoshanTimer = new RoshanTimer(this);
         }
+
+        public CourEsp CourEsp { get; set; }
 
         public RoshanTimer RoshanTimer { get; set; }
 

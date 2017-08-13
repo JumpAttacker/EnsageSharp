@@ -3,6 +3,7 @@ using Ensage;
 using Ensage.Common;
 using log4net;
 using PlaySharp.Toolkit.Logging;
+using SharpDX;
 
 namespace OverlayInformation.Features.Teleport_Catcher
 {
@@ -13,11 +14,13 @@ namespace OverlayInformation.Features.Teleport_Catcher
         public bool IsAlive => Unit.IsAlive;
         public int TpCounter { get; private set; }
         public Team Team;
+        public Vector3 Position;
         public TowerOrShrine(Unit unit)
         {
             Unit = unit;
             TpCounter = 0;
             Team = unit.Team;
+            Position = unit.Position;
             //Log.Debug($"new. {unit.Name} {unit.ClassId} isAlly: {IsAlly}");
         }
 

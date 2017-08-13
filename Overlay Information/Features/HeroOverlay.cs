@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common.Menu;
@@ -121,8 +120,8 @@ namespace OverlayInformation.Features
                     //IEnumerable<Ability> abilities = heroCont.Abilities;
                     //var enumerable = abilities as Ability[] ?? abilities.ToArray();
                     //var abilityCount = abilities.Count();
-                    var abilities = heroCont.Abilities2.Where(x => x.IsValid &&  !x.IsHidden);
-                    var abilityCount = abilities.Count();
+                    var abilities = heroCont.Abilities2.Where(x => x.IsValid && !x.IsHidden).ToList();
+                    var abilityCount = abilities.Count;
                     //var extraAbilitites = abilityCount - 4;
                     pos += new Vector2((size.X - tempSize * abilityCount) / 2f, 0);
                     /*if (extraAbilitites > 0)
@@ -142,7 +141,7 @@ namespace OverlayInformation.Features
 
                     try
                     {
-                        foreach (var ability in abilities.OrderBy(x=>x.Ability.AbilitySlot))
+                        foreach (var ability in abilities.OrderBy(x=>x.AbilitySlot))
                         {
                             pos = DrawAbilityState(pos, ability, abilitySize);
                         }
@@ -218,7 +217,7 @@ namespace OverlayInformation.Features
         {
             var abilityState = ability.AbilityState;
             var bottletype = ability as Bottle;
-            var itemSize= new Vector2(maxSize.X * 1.5f, maxSize.Y);
+            var itemSize = new Vector2(maxSize.X * 1.5f, maxSize.Y);
             if (bottletype != null && bottletype.StoredRune != RuneType.None)
             {
                 var itemTexture =
@@ -242,8 +241,50 @@ namespace OverlayInformation.Features
                     }
                     break;
                 case AbilityState.NotEnoughMana:
-                    var mana = ability.ManaCost - ((Hero) ability.Owner).Mana;
-                    var manaText = ((int) mana).ToString();
+                    var mana = ability.ManaCost - ((Hero)ability.Owner).Mana;
+                    var manaText = ((int)mana).ToString();
+                    DrawAbilityMana(manaText, pos, maxSize);
+                    break;
+                case AbilityState.OnCooldown:
+                    var cooldown = Math.Min(99, ability.Cooldown + 1);
+                    var cdText = ((int)cooldown).ToString();
+                    DrawItemCooldown(cdText, pos, maxSize);
+                    break;
+            }
+
+            Drawing.DrawRect(pos, new Vector2(maxSize.X, maxSize.Y), color, true);
+            return pos + new Vector2(maxSize.X - 1, 0);
+        }
+        public Vector2 DrawItemState(Vector2 pos, AbilityHolder ability, Vector2 maxSize, Color color)
+        {
+            var abilityState = ability.AbilityState;
+            var bottletype = ability.Ability as Bottle;
+            var itemSize = new Vector2(maxSize.X * 1.5f, maxSize.Y);
+            if (bottletype != null && bottletype.StoredRune != RuneType.None)
+            {
+                var itemTexture =
+                    Textures.GetTexture(
+                        $"materials/ensage_ui/items/{ability.Name.Replace("item_", "") + "_" + bottletype.StoredRune}.vmat");
+                Drawing.DrawRect(pos, itemSize, itemTexture);
+            }
+            else
+            {
+                Drawing.DrawRect(pos, itemSize, Textures.GetItemTexture(ability.Name));
+            }
+            //Drawing.DrawRect(pos, new Vector2(maxSize.X * 70 / 100f, maxSize.Y / 2f), Color.White, true);
+            switch (abilityState)
+            {
+                case AbilityState.Ready:
+                    if (ItemDrawCharges)
+                    {
+                        var chrages = ability.Item.CurrentCharges;
+                        if (chrages > 0)
+                            DrawItemCharge(chrages, pos, maxSize);
+                    }
+                    break;
+                case AbilityState.NotEnoughMana:
+                    var mana = ability.Ability.ManaCost - ((Hero)ability.Owner).Mana;
+                    var manaText = ((int)mana).ToString();
                     DrawAbilityMana(manaText, pos, maxSize);
                     break;
                 case AbilityState.OnCooldown:
