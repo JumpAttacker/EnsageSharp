@@ -1,168 +1,98 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Ensage;
-using Ensage.Common.Extensions;
-using Ensage.Common.Objects;
-using Ensage.Common.Objects.UtilityObjects;
+using Ensage.SDK.Extensions;
+using Ensage.SDK.Helpers;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 
 namespace OverlayInformation
 {
-    internal abstract class Updater
+    public class Updater
     {
-        public abstract class HeroList
+        private OverlayInformation Main { get; }
+        public List<HeroContainer> Heroes { get; }
+        public List<HeroContainer> AllyHeroes { get; }
+        public List<HeroContainer> EnemyHeroes { get; }
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public Updater(OverlayInformation overlayInformation)
         {
-            private static readonly Sleeper AbilityUpdate = new Sleeper();
-            //private static readonly Sleeper ItemUpdate = new Sleeper();
-            private static readonly Sleeper HeroUpdate = new Sleeper();
-
-            public static void Update(EventArgs args)
+            Main = overlayInformation;
+            Heroes = new List<HeroContainer>();
+            AllyHeroes = new List<HeroContainer>();
+            EnemyHeroes = new List<HeroContainer>();
+            foreach (var entity in ObjectManager.GetDormantEntities<Hero>())
             {
-                if (!Checker.IsActive()) return;
-                if (!HeroUpdate.Sleeping)
-                {
-                    HeroUpdate.Sleep(2000);
-                    if (Members.Heroes.Count < 10)
-                    {
-                        Members.Heroes = Heroes.All.Where(x => x != null && x.IsValid && !x.IsIllusion).ToList();
-                        Members.AllyHeroes = Members.Heroes.Where(x => x.Team == Members.MyHero.Team).ToList();
-                        Members.EnemyHeroes =
-                            Members.Heroes.Where(x => x.Team == Members.MyHero.GetEnemyTeam()).ToList();
-                        //Printer.Print("STATUS:[all] " + Members.Heroes.Count+ " [enemy] " + Members.EnemyHeroes.Count + " [ally] " + Members.AllyHeroes.Count);
-                        if (!Members.Apparition &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_AncientApparition))
-                        {
-                            Members.Apparition = true;
-                        }
-                        if (Members.PAisHere == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_PhantomAssassin))
-                        {
-                            Members.PAisHere = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_PhantomAssassin);
-                        }
-                        if (!Members.BaraIsHere &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_SpiritBreaker))
-                        {
-                            Members.BaraIsHere = true;
-                        }
-                        if (Members.Mirana == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Mirana))
-                        {
-                            Members.Mirana = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Mirana);
-                        }
-                        if (Members.Windrunner == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner))
-                        {
-                            Members.Windrunner = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Windrunner);
-                        }
-                        if (Members.Invoker == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Invoker))
-                        {
-                            Members.Invoker = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Invoker);
-                        }
-                        if (Members.Kunkka == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka))
-                        {
-                            Members.Kunkka = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Kunkka);
-                        }
-                        if (Members.Lina == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Lina))
-                        {
-                            Members.Lina = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Lina);
-                        }
-                        if (Members.Leshrac == null &&
-                            Members.EnemyHeroes.Any(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac))
-                        {
-                            Members.Leshrac = Members.EnemyHeroes.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Unit_Hero_Leshrac);
-                        }
-                    }
-                }
-                
-                if (!AbilityUpdate.Sleeping)
-                {
-                    AbilityUpdate.Sleep(1000);
-                    foreach (var hero in /*Members.Heroes */Manager.HeroManager.GetViableHeroes())
-                    {
-                        /*if ((hero.ClassID==ClassID.CDOTA_Unit_Hero_DoomBringer || hero.ClassID==ClassID.CDOTA_Unit_Hero_Rubick) && !hero.IsVisible)
-                            continue;*/
-                        try
-                        {
-                            if (!Members.AbilityDictionary.ContainsKey(hero.StoredName()))
-                                Members.AbilityDictionary.Add(hero.StoredName(),
-                                    hero.Spellbook.Spells.Where(
-                                        x =>
-                                            x!=null && x.IsValid && x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
-                                            x.AbilitySlot.ToString() != "-1")
-                                        .ToList());
-                            if (
-                                !Members.AbilityDictionary.ContainsValue(
-                                    hero.Spellbook.Spells.Where(x => x.AbilitySlot.ToString() != "-1").ToList()))
-                            {
-                                Members.AbilityDictionary.Remove(hero.StoredName());
-                                Members.AbilityDictionary.Add(hero.StoredName(), hero.Spellbook.Spells.Where(
-                                    x =>
-                                        x!=null && x.IsValid && x.AbilityType != AbilityType.Attribute && x.AbilityType != AbilityType.Hidden &&
-                                            x.AbilitySlot.ToString() != "-1")
-                                        .ToList());
-
-                            }
-                            if (!Members.ItemDictionary.ContainsValue(
-                                    hero.Inventory.Items.Where(x => x != null && x.IsValid).ToList()))
-                            {
-                                Members.ItemDictionary.Remove(hero.StoredName());
-                                Members.ItemDictionary.Add(hero.StoredName(),
-                                    hero.Inventory.Items.Where(x => x != null && x.IsValid).ToList());
-                            }
-                            if (Members.Menu.Item("itempanel.Stash.Enable").GetValue<bool>() &&
-                                !Members.StashItemDictionary.ContainsValue(
-                                    hero.Inventory.StashItems.Where(x => x != null && x.IsValid).ToList()))
-                            {
-                                Members.StashItemDictionary.Remove(hero.StoredName());
-                                Members.StashItemDictionary.Add(hero.StoredName(),
-                                    hero.Inventory.StashItems.Where(x => x != null && x.IsValid).ToList());
-                            }
-
-                        }
-                        catch (Exception)
-                        {
-                            Printer.Print("[UPDATER.ITEMS/ABILITY: ] " + hero.StoredName());
-                        }
-                        
-                    }
-                }
+                OnNewHero(null, entity);
             }
-        }
-
-        public abstract class PlayerList
-        {
-            private static readonly Sleeper Sleeper = new Sleeper();
-
-            public static void Update(EventArgs args)
+            foreach (var entity in ObjectManager.GetEntities<Hero>())
             {
-                if (!Checker.IsActive()) return;
-                if (Sleeper.Sleeping) return;
-                Sleeper.Sleep(2000);
-                if (Members.Players.Count(x => x != null && x.IsValid && x.Hero.IsValid) < 10)
-                {
-                    Members.Players = Players.All.Where(x => x != null && x.IsValid && x.Hero!=null && x.Hero.IsValid).ToList();
-                    Members.AllyPlayers = Members.Players.Where(x => x.Team == Members.MyHero.Team).ToList();
-                    Members.EnemyPlayers = Members.Players.Where(x => x.Team == Members.MyHero.GetEnemyTeam()).ToList();
-                }
+                OnNewHero(null, entity);
             }
 
+            foreach (var entity in ObjectManager.GetDormantEntities<Courier>())
+            {
+                OnNewCour(null, entity);
+            }
+            foreach (var entity in ObjectManager.GetEntities<Courier>())
+            {
+                OnNewCour(null, entity);
+            }
+
+            EntityManager<Hero>.EntityAdded += OnNewHero;
+            EntityManager<Courier>.EntityAdded += OnNewCour;
         }
 
-        public abstract class BaseList
+        private void OnNewCour(object sender, Courier courier)
         {
-            private static readonly Sleeper Sleeper = new Sleeper();
+            if (courier.Team==Main.Owner.Team)
+                return;
 
-            public static void Update(EventArgs args)
+            ////TODO: cour esp
+        }
+
+        private void OnNewHero(object sender, Hero hero)
+        {
+            if (hero.IsIllusion)
+                return;
+            if (Heroes.Any(x=>x.Hero.Equals(hero)))
             {
-                if (!Checker.IsActive()) return;
-                if (Sleeper.Sleeping) return;
-                Sleeper.Sleep(100);
-                Members.BaseList =
-                    ObjectManager.GetEntities<Unit>()
-                        .Where(x => x.ClassID == ClassID.CDOTA_BaseNPC && x.Team == Members.MyHero.GetEnemyTeam())
-                        .ToList();
+                Log.Error($"Cant init New Hero -> {hero.GetDisplayName()} [{hero.Handle}]");
+                return;
+            }
+            var myTeam = Main.Context.Value.Owner.Team;
+            var targetTeam = hero.Team;
+            var isAlly = myTeam == targetTeam;
+            var newHero = new HeroContainer(hero, isAlly, Main);
+            try
+            {
+                Heroes.Add(newHero);
+
+                if (isAlly)
+                {
+                    AllyHeroes.Add(newHero);
+                }
+                else
+                {
+                    EnemyHeroes.Add(newHero);
+                }
+
+                Log.Info($"New Hero -> {hero.GetDisplayName()} [{hero.Handle}] [{(isAlly ? "Ally" : "Enemy")}]");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            
+        }
+
+        public void OnDeactivate()
+        {
+            foreach (var container in Heroes)
+            {
+                container.Flush();
             }
         }
     }
