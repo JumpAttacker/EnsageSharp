@@ -5,7 +5,6 @@ using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
-using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Inventory;
 using Ensage.SDK.Service;
@@ -17,12 +16,10 @@ namespace ArcAnnihilation
         public Hero Me;
         public Item Midas;
         public UnitBase Base;
-        private readonly Sleeper _sleeper;
         public AutoMidas(UnitBase me)
         {
             Base = me;
             Me = me.Hero;
-            _sleeper = new Sleeper();
             var manager = new InventoryManager(new EnsageServiceContext(Me));
             Printer.Print("trying to init new midas manager for " + me);
             var working = true;
@@ -41,7 +38,7 @@ namespace ArcAnnihilation
                         {
                             Midas = iitem.Item;
                             UpdateManager.Subscribe(MidasChecker, 100);
-                            Printer.Both($"[{me}] Midas on!");
+                            Printer.Both($"[{me}] Midas on! (main -> {me is MainHero})");
                         }
                     }
                 }
@@ -55,7 +52,7 @@ namespace ArcAnnihilation
                             {
                                 UpdateManager.Unsubscribe(MidasChecker);
                                 Midas = null;
-                                Printer.Both($"[{me}] Midas off!");
+                                Printer.Both($"[{me}] Midas off! (main -> {me is MainHero})");
                             }
                         }
                     }
@@ -69,15 +66,18 @@ namespace ArcAnnihilation
                 return;
             if (!Me.IsAlive || Me.IsInvisible())
                 return;
-            if (Midas != null && Midas.IsValid && Midas.CanBeCasted() && !_sleeper.Sleeping)
+            if (Midas != null && Midas.IsValid && Midas.CanBeCasted())
             {
                 var creep =
-                    EntityManager<Creep>.Entities.Where(x => x.IsValid && x.IsAlive && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient)
+                    EntityManager<Unit>.Entities.Where(
+                            x =>
+                                x.IsValid && x.IsAlive && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient &&
+                                !x.IsMagicImmune())
                         .OrderByDescending(x => x.Health).FirstOrDefault();
                 if (creep != null)
                 {
                     Midas.UseAbility(creep);
-                    _sleeper.Sleep(500);
+                    Printer.Both($"Use midas -> {creep.Name} | (main -> {Base is MainHero})");
                 }
             }
         }

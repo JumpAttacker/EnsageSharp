@@ -169,7 +169,7 @@ namespace ArcAnnihilation
         public static bool SmartFlux => GetBool("FluxSettings.Smart");
         public static float OrbWalkingRange => GetSlider("OrbWalking.Range");
         public static bool OrbWalkerGoBeyond => GetBool("OrbWalking.OrbWalkerGoBeyond");
-
+        public static float GetBlinkExtraDelay => GetSlider("Blink.ExtraDelay");
         public static bool InAnyCombo(ulong key)
             =>
                 GetKeyId("Combo.Key") == key || GetKeyId("Combo.Tempest.Key") == key ||
@@ -265,6 +265,8 @@ namespace ArcAnnihilation
                 .SetTooltip("blink dist(1200 by def) + this value");
             blink.AddItem(
                 new MenuItem("Blink.MinRange", "Min range for blink").SetValue(new Slider(400, 0, 600)));
+            blink.AddItem(
+                new MenuItem("Blink.ExtraDelay", "Extra delay after blink").SetValue(new Slider(1, 1, 200)));
 
             var tempest = new Menu("Tempest", "tempest");
             var spellTempest = new Menu("Spells:", "TempestSpells");

@@ -65,7 +65,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     Printer.Log($"cant use {ability.Name} to {Core.Target.Name}");
                     continue;
                 }
-                var canHit = (ability.GetItemId() == ItemId.item_blink
+                var canHit = (ability.Id == AbilityId.item_blink
                                  ? unitBase.Hero.Distance2D(Core.Target) - MenuManager.GetBlinkExtraRange <
                                    ability.TravelDistance()
                                  : ability.CanHit(Core.Target)) || _afterBlink.Sleeping;
@@ -93,7 +93,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 }
                 else if (ability.IsAbilityBehavior(AbilityBehavior.UnitTarget))
                 {
-                    if (ability.GetItemId() == ItemId.item_hurricane_pike)
+                    if (ability.Id == AbilityId.item_hurricane_pike)
                     {
                         ability.UseAbility(unitBase.Hero);
                     }
@@ -106,18 +106,18 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                                        .CanBeCasted();
                         var isDisable = ability.IsDisable();
                         if ((Core.Target.IsLinkensProtected() || amWithAghUnderLinken) &&
-                            (isDisable || ability.IsDagon() || ability.GetItemId() == ItemId.item_ethereal_blade))
+                            (isDisable || ability.IsDagon() || ability.Id == AbilityId.item_ethereal_blade))
                         {
                             counter++;
                             continue;
                         }
-                        if (ability.GetItemId() == ItemId.item_ethereal_blade &&
+                        if (ability.Id == AbilityId.item_ethereal_blade &&
                             unitBase.GetItems()
                                 .Any(
                                     x =>
-                                        (x.GetItemId() == ItemId.item_dagon || x.GetItemId() == ItemId.item_dagon_2 ||
-                                         x.GetItemId() == ItemId.item_dagon_3 || x.GetItemId() == ItemId.item_dagon_4 ||
-                                         x.GetItemId() == ItemId.item_dagon_5) && x.CanBeCasted()))
+                                        (x.Id == AbilityId.item_dagon || x.Id == AbilityId.item_dagon_2 ||
+                                         x.Id == AbilityId.item_dagon_3 || x.Id == AbilityId.item_dagon_4 ||
+                                         x.Id == AbilityId.item_dagon_5) && x.CanBeCasted()))
                         {
                             ability.UseAbility(Core.Target);
                             await Core.Target.WaitGainModifierAsync("modifier_item_ethereal_blade_ethereal", 2,
@@ -134,13 +134,13 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                 counter++;
                                 continue;
                             }
-                            if (ability.GetItemId() == ItemId.item_sheepstick && GlobalHexSleeper.Sleeping)
+                            if (ability.Id == AbilityId.item_sheepstick && GlobalHexSleeper.Sleeping)
                             {
                                 counter++;
                                 continue;
                             }
-                            if ((ability.GetItemId() == ItemId.item_orchid ||
-                                 ability.GetItemId() == ItemId.item_bloodthorn) && GlobalOrchidSleeper.Sleeping)
+                            if ((ability.Id == AbilityId.item_orchid ||
+                                 ability.Id == AbilityId.item_bloodthorn) && GlobalOrchidSleeper.Sleeping)
                             {
                                 counter++;
                                 continue;
@@ -182,7 +182,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 }
                 else
                 {
-                    if (ability.GetItemId() == ItemId.item_blink)
+                    if (ability.Id == AbilityId.item_blink)
                     {
                         _afterBlink.Sleep(1000);
                         var pos = (Core.Target.NetworkPosition - unitBase.Hero.NetworkPosition).Normalized();
@@ -195,18 +195,18 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             continue;
                         }
                         ability.UseAbility(pos);
-                        await Task.Delay(200, Core.ComboToken.Token);
+                        await Task.Delay((int) MenuManager.GetBlinkExtraDelay, Core.ComboToken.Token);
                     }
                     else
                     {
                         ability.UseAbility(Core.Target.Position);
                     }
                 }
-                delayTime = ability.GetAbilityDelay();
+                delayTime = ability.GetAbilityDelay(Core.Target);
                 Printer.Both(
                     $"[{unitBase}][item] {ability.Name} ({delayTime}) [After Blink: {_afterBlink.Sleeping}] [{ability.TravelDistance()}]");
                 await Await.Delay(delayTime, Core.ComboToken.Token);
-                await Task.Delay(150, Core.ComboToken.Token);
+                //await Task.Delay(150, Core.ComboToken.Token);
             }
             Printer.Log("now we can use abilities -> " + (unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter));
             return unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter;
