@@ -274,12 +274,17 @@ namespace OverlayInformation
             if (!Hero.IsAlive || !Hero.IsVisible)
                 return;
             DangItems.Clear();
-            var items=new List<AbilityHolder>();
+            Items = new List<AbilityHolder>();
             foreach (var item in HeroInventory.Items)
             {
-                items.Add(HolderHelper.GetOrCreate(item));
+                var localHolder = HolderHelper.GetOrCreate(item);
+                Items.Add(localHolder);
+                Networth += item.Cost;
+                if (!Main.Config.HeroOverlay.ItemDangItems) continue;
+                if (DangeItemList.Contains(item.Id))
+                    DangItems.Add(localHolder);
             }
-            //Items = HeroInventory.Items.ToList();
+
             Networth = 0;
             var tmpAgh = Hero.HasAghanimsScepter();
 
@@ -288,20 +293,6 @@ namespace OverlayInformation
                 RefreshAbilities2();
             }
             AghanimState = tmpAgh;
-            foreach (var item in items)
-            {
-                Networth += item.Cost;
-                if (!Main.Config.HeroOverlay.ItemDangItems) continue;
-                try
-                {
-                    if (DangeItemList.Contains(item.Id))
-                        DangItems.Add(item);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("GEGE -> " + e);
-                }
-            }
         }
 
         public int Id { get; set; }

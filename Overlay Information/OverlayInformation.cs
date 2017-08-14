@@ -5,6 +5,7 @@ using Ensage;
 using Ensage.SDK.Inventory;
 using Ensage.SDK.Renderer;
 using Ensage.SDK.Renderer.DX11;
+using Ensage.SDK.Renderer.DX9;
 using Ensage.SDK.Renderer.Particle;
 using Ensage.SDK.Service;
 using Ensage.SDK.Service.Metadata;
@@ -18,6 +19,7 @@ namespace OverlayInformation
     {
         public Lazy<IServiceContext> Context { get; set; }
         public ID3D11Context D11Context { get; }
+        public ID3D9Context D9Context { get; set; }
         public BrushCache BrushCache { get; }
         public IInventoryManager InventoryManager { get; set; }
         public IRendererManager Renderer { get; set; }
@@ -27,12 +29,19 @@ namespace OverlayInformation
         public Hero Owner;
 
         [ImportingConstructor]
-        public OverlayInformation([Import] Lazy<IServiceContext> context, [Import] ID3D11Context d11Context,
-            [Import] BrushCache brushCache)
+        public OverlayInformation([Import] Lazy<IServiceContext> context, [Import] Lazy<ID3D11Context> d11Context,
+            [Import] Lazy<BrushCache> brushCache, [Import] Lazy<ID3D9Context> d9Context)
         {
             Context = context;
-            D11Context = d11Context;
-            BrushCache = brushCache;
+            if (Drawing.RenderMode == RenderMode.Dx11)
+            {
+                D11Context = d11Context.Value;
+                BrushCache = brushCache.Value;
+            }
+            else
+            {
+                D9Context = d9Context.Value;
+            }
         }
 
         public Config Config;

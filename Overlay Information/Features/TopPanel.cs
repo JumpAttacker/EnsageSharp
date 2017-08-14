@@ -6,6 +6,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.SDK.Menu;
 using SharpDX;
+using SharpDX.Direct2D1;
 
 namespace OverlayInformation.Features
 {
@@ -41,13 +42,23 @@ namespace OverlayInformation.Features
             _size = new Vector2(size[0], size[1]);
 
             config.Main.Renderer.Draw += RendererOnDraw;
+            IsDx11 = Drawing.RenderMode == RenderMode.Dx11;
+            if (IsDx11)
+            {
+                Clr =
+                    Config.Main.BrushCache.GetOrCreate(System.Drawing.Color.FromArgb(RectangleA, RectangleR, RectangleG,
+                        RectangleB));
+            }
         }
+
+        public bool IsDx11 { get; set; }
+
+        public SolidColorBrush Clr { get; set; }
 
         public MenuItem<Slider> RectangleA { get; set; }
         public MenuItem<Slider> RectangleR { get; set; }
         public MenuItem<Slider> RectangleG { get; set; }
         public MenuItem<Slider> RectangleB { get; set; }
-
 
         public MenuItem<StringList> AllyVisibleBarType { get; set; }
 
@@ -69,9 +80,7 @@ namespace OverlayInformation.Features
         {
             var heroes = Config.Main.Updater.AllyHeroes;
             var size = HudInfo.GetTopPanelSize();
-            var clr =
-                Config.Main.BrushCache.GetOrCreate(System.Drawing.Color.FromArgb(RectangleA, RectangleR, RectangleG,
-                    RectangleB));
+                
             foreach (var heroCont in heroes)
             {
                 var hero = heroCont.Hero;
@@ -88,7 +97,17 @@ namespace OverlayInformation.Features
                             //pos = Game.MouseScreenPosition;
                                 
                             var rectangle = new RectangleF(pos.X, pos.Y - size.Y, size.X, size.Y);
-                            Config.Main.D11Context.RenderTarget.FillRectangle(rectangle, clr);
+                            if (IsDx11)
+                            {
+                                Config.Main.D11Context.RenderTarget.FillRectangle(rectangle, Clr);
+                            }
+                            else
+                            {
+                                //Config.Main.D9Context.Device.G.FillRectangle(rectangle, clr);
+                                Config.Main.Renderer.DrawRectangle(rectangle,
+                                    System.Drawing.Color.FromArgb(RectangleA, RectangleR, RectangleG,
+                                        RectangleB), 5);
+                            }
                             /*Config.Main.Renderer.DrawRectangle(rectangle,
                                 System.Drawing.Color.FromArgb(255, 255, 0, 255),10);*/
                         }
