@@ -44,7 +44,7 @@ namespace InvokerAnnihilationCrappa.Features
             {
                 Drawing.OnDraw += DrawingOnOnDraw;
             }
-            LoadMovable();
+            LoadMovable(_main.Invoker.Input.Value);
             Enable.Item.ValueChanged += (sender, args) =>
             {
                 if (args.GetNewValue<bool>())
@@ -160,7 +160,6 @@ namespace InvokerAnnihilationCrappa.Features
 
         public void OnDeactivate()
         {
-            UnloadMovable();
             if (Enable)
                 Drawing.OnDraw -= DrawingOnOnDraw;
         }

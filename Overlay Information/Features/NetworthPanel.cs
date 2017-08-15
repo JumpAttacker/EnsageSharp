@@ -62,7 +62,7 @@ namespace OverlayInformation.Features
                     Drawing.OnDraw -= DrawGlobalPanel;
             };
 
-            LoadMovable();
+            LoadMovable(config.Main.Context.Value.Input);
         }
 
         public MenuItem<bool> DrawPercent { get; set; }

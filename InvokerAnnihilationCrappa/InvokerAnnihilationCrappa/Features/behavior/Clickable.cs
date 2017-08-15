@@ -1,6 +1,10 @@
+using System;
+using System.Windows.Forms;
 using Ensage;
 using Ensage.Common;
+using Ensage.SDK.Input;
 using SharpDX;
+using MouseEventArgs = Ensage.SDK.Input.MouseEventArgs;
 
 namespace InvokerAnnihilationCrappa.Features.behavior
 {
@@ -11,19 +15,35 @@ namespace InvokerAnnihilationCrappa.Features.behavior
         public bool LoadedClickable;
         public delegate void Ui();
         public event Ui OnClick;
-        public void LoadClickable()
+        private IInputManager _inputManager;
+        public void LoadClickable(IInputManager input)
         {
             if (LoadedClickable)
                 return;
             LoadedClickable = true;
-            Game.OnWndProc += Game_OnWndProc;
+            _inputManager = input;
+            _inputManager.MouseClick += InputManagerOnMouseClick;
+            //Game.OnWndProc += Game_OnWndProc;
         }
+
+        private void InputManagerOnMouseClick(object sender, MouseEventArgs mouseEventArgs)
+        {
+            if ((mouseEventArgs.Buttons & MouseButtons.Left) != 0)
+            {
+                if (Utils.IsUnderRectangle(Game.MouseScreenPosition, _position.X, _position.Y, _size.X, _size.Y))
+                {
+                    OnClick?.Invoke();
+                }
+            }
+        }
+
         public void UnloadClickable()
         {
             if (!LoadedClickable)
                 return;
             LoadedClickable = false;
-            Game.OnWndProc -= Game_OnWndProc;
+            _inputManager.MouseClick -= InputManagerOnMouseClick;
+            //Game.OnWndProc -= Game_OnWndProc;
         }
 
         public void Update(Vector2 pos, Vector2 size)

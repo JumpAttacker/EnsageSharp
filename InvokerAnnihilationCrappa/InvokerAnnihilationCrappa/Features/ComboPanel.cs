@@ -48,7 +48,7 @@ namespace InvokerAnnihilationCrappa.Features
             {
                 Drawing.OnDraw += DrawingOnOnDraw;
             }
-            LoadMovable();
+            LoadMovable(_main.Invoker.Input.Value);
             Combos = new List<Combo>
             {
                 new Combo(_main.Invoker,
@@ -185,7 +185,6 @@ namespace InvokerAnnihilationCrappa.Features
 
         public void OnDeactivate()
         {
-            UnloadMovable();
             if (Enable)
                 Drawing.OnDraw -= DrawingOnOnDraw;
         }

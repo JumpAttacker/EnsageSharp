@@ -29,7 +29,7 @@ namespace OverlayInformation.Features
             PosX = panel.Item("Position -> X", new Slider(20, 1, 2500));
             PosY = panel.Item("Position -> Y", new Slider(500, 1, 2500));
             TextSize = panel.Item("Text Size", new Slider(17, 5, 30));
-            LoadMovable();
+            LoadMovable(config.Main.Context.Value.Input);
             Game.OnFireEvent += Game_OnGameEvent;
 
 

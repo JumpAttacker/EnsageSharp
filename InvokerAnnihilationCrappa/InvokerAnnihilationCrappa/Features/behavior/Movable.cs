@@ -1,6 +1,8 @@
+using System.Windows.Forms;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.SDK.Input;
 using SharpDX;
 
 namespace InvokerAnnihilationCrappa.Features.behavior
@@ -9,45 +11,20 @@ namespace InvokerAnnihilationCrappa.Features.behavior
     {
         private Sleeper _sleeper;
         private Vector2 _globalDif;
-        private bool _isClicked = false;
-        private bool _movableLoaded = false;
-        public void LoadMovable()
+        private bool _movableLoaded;
+        private IInputManager _inputManager;
+        public void LoadMovable(IInputManager valueInput)
         {
             if (_movableLoaded)
                 return;
             _movableLoaded = true;
             _sleeper = new Sleeper();
-            Game.OnWndProc += Game_OnWndProc;
-        }
-        public void UnloadMovable()
-        {
-            if (!_movableLoaded)
-                return;
-            _movableLoaded = false;
-            Game.OnWndProc -= Game_OnWndProc;
+            _inputManager = valueInput;
         }
 
-        private void Game_OnWndProc(WndEventArgs args)
-        {
-            if (Game.IsChatOpen)
-            {
-                return;
-            }
-            switch (args.Msg)
-            {
-                case (uint)Ensage.Common.Utils.WindowsMessages.WM_LBUTTONUP:
-                    _isClicked = false;
-                    break;
-                case (uint)Ensage.Common.Utils.WindowsMessages.WM_LBUTTONDOWN:
-                    _isClicked = true;
-                    break;
-            }
-        }
 
         public bool CanMoveWindow(ref Vector2 startPos, Vector2 size, bool drawMovablePosition = false)
         {
-            if (!_movableLoaded)
-                return false;
             if (drawMovablePosition)
             {
                 Drawing.DrawRect(startPos, size, new Color(155, 155, 155, 155));
@@ -56,7 +33,7 @@ namespace InvokerAnnihilationCrappa.Features.behavior
             var mPos = Game.MouseScreenPosition;
             if (Utils.IsUnderRectangle(mPos, startPos.X, startPos.Y, size.X, size.Y))
             {
-                if (_isClicked)
+                if ((_inputManager.ActiveButtons & MouseButtons.Left) != 0)
                 {
                     if (!_sleeper.Sleeping)
                     {

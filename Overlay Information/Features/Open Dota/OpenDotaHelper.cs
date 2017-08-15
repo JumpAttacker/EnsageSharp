@@ -35,7 +35,7 @@ namespace OverlayInformation.Features.Open_Dota
             SizeY = panel.Item("Size Y", new Slider(14, 1));
             TempSize = panel.Item("Temp Size", new Slider(14, 1));
             _playerInfoList = new List<PlayerInfo>();
-            LoadMovable();
+            LoadMovable(config.Main.Context.Value.Input);
             if (Enable)
             {
                 UpdateManager.BeginInvoke(Loading, 500);

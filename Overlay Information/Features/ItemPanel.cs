@@ -37,7 +37,7 @@ namespace OverlayInformation.Features
                     Drawing.OnDraw -= DrawingOnOnDraw;
             };
 
-            LoadMovable();
+            LoadMovable(config.Main.Context.Value.Input);
         }
 
         public MenuItem<Slider> SizeX { get; set; }

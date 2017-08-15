@@ -20,7 +20,7 @@ namespace InvokerAnnihilationCrappa
             Id = _counter++;
             AbilityCount = abilityInfo.Length;
             CurrentAbility = 0;
-            LoadClickable();
+            LoadClickable(invoker.Input.Value);
             OnClick += () =>
             {
                 if (invoker.Config.ComboPanel.CanChangeByClicking)
