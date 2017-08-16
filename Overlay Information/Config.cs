@@ -13,7 +13,7 @@ namespace OverlayInformation
         {
             Factory = MenuFactory.Create("Overlay Information");
             Factory.Target.SetFontColor(Color.YellowGreen);
-            DebugMessages = Factory.Item("Debug Messages", false);
+
             Main = overlayInformation;
             TopPanel = new TopPanel(this);
             HeroOverlay = new HeroOverlay(this);

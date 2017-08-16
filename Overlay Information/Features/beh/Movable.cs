@@ -1,11 +1,9 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Input;
 using SharpDX;
-using MouseEventArgs = Ensage.SDK.Input.MouseEventArgs;
 
 namespace OverlayInformation.Features.beh
 {

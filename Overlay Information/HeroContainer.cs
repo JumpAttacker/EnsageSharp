@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using Ensage.Abilities;
 using Ensage.Common.Objects;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
-using Ensage.SDK.Inventory;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 
@@ -168,12 +166,13 @@ namespace OverlayInformation
         public float TimeInFog;
         public AbilityState AbilityState { get; set; }
         public Holder HolderHelper;
-
+        public string Name { get; set; }
         public List<Ability> GetAllAbilities => Hero.Spellbook.Spells.Where(
                 x => x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate)
             .ToList();
         public HeroContainer(Hero hero, bool isAlly, OverlayInformation main)
         {
+            Name = hero.Name;
             Id = hero.Player == null ? 0 : hero.Player.Id;
             HolderHelper = new Holder();
             IsAlly = isAlly;
@@ -223,7 +222,8 @@ namespace OverlayInformation
                     }
                 }
             };*/
-
+            UpdateInfo();
+            UpdateItems();
             UpdateManager.Subscribe(UpdateItems, 500);
             UpdateManager.Subscribe(UpdateInfo, 250);
             
@@ -252,7 +252,6 @@ namespace OverlayInformation
         }
 
 
-
         private void UpdateInfo()
         {
             IsVisible = Hero.IsVisible;
@@ -275,6 +274,7 @@ namespace OverlayInformation
                 return;
             DangItems.Clear();
             Items = new List<AbilityHolder>();
+            Networth = 0;
             foreach (var item in HeroInventory.Items)
             {
                 var localHolder = HolderHelper.GetOrCreate(item);
@@ -284,8 +284,6 @@ namespace OverlayInformation
                 if (DangeItemList.Contains(item.Id))
                     DangItems.Add(localHolder);
             }
-
-            Networth = 0;
             var tmpAgh = Hero.HasAghanimsScepter();
 
             if (!AghanimState && tmpAgh || AghanimState && !tmpAgh)

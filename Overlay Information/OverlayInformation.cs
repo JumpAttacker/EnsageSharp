@@ -1,7 +1,9 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Reflection;
+using System.Windows.Input;
 using Ensage;
+using Ensage.SDK.Input;
 using Ensage.SDK.Inventory;
 using Ensage.SDK.Renderer;
 using Ensage.SDK.Renderer.DX11;
@@ -57,13 +59,44 @@ namespace OverlayInformation
             Log.Info("Config loaded");
             /*InventoryManager.Value.Activate();
             Log.Info("InventoryManager loaded");*/
+
+            InitLocalCheats();
         }
 
+        private void InitLocalCheats()
+        {
+            Config.DebugMessages = Config.Factory.Item("Debug Messages", false);
+            if (Config.DebugMessages)
+            {
+                Context.Value.Input.RegisterHotkey("tap", Key.Tab, RefreshKey);
+            }
+
+            Config.DebugMessages.Item.ValueChanged += (sender, args) =>
+            {
+                if (args.GetNewValue<bool>())
+                {
+                    Context.Value.Input.RegisterHotkey("tap", Key.Tab, RefreshKey);
+                }
+                else
+                {
+                    Context.Value.Input.UnregisterHotkey("tap");
+                }
+            };
+        }
+
+        private void RefreshKey(KeyEventArgs keyEventArgs)
+        {
+            Game.ExecuteCommand("dota_hero_refresh");
+        }
 
         protected override void OnDeactivate()
         {
+            if (Config.DebugMessages)
+            {
+                Context.Value.Input.UnregisterHotkey("tap");
+            }
             //InventoryManager.Value.Deactivate();
-            
+
             Config?.Dispose();
 
             Updater.OnDeactivate();
