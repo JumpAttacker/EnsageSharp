@@ -144,6 +144,8 @@ namespace OverlayInformation.Features
             if (Enable)
                 foreach (var shrine in Shrines)
                 {
+                    if (shrine.Unit == null || !shrine.Unit.IsValid)
+                        continue;
                     var v = shrine.Unit;
                     var pos = HUDInfo.GetHPbarPosition(v);
                     if (pos.IsZero)
@@ -194,6 +196,8 @@ namespace OverlayInformation.Features
             var myPos = me.Position;
             foreach (var shrine in Shrines)
             {
+                if (shrine.Unit == null || !shrine.Unit.IsValid)
+                    continue;
                 //var inRange = me.IsInRange(shrine, 700);
                 var inRange = myPos.Distance2D(shrine.Position) <= 700;
 

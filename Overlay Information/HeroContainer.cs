@@ -226,7 +226,7 @@ namespace OverlayInformation
             UpdateItems();
             UpdateManager.Subscribe(UpdateItems, 500);
             UpdateManager.Subscribe(UpdateInfo, 250);
-            
+            UpdateManager.Subscribe(FlushChecker,1000);
 
             var dividedWeStand = hero.Spellbook.SpellR as DividedWeStand;
             if (dividedWeStand != null && hero.ClassId == ClassId.CDOTA_Unit_Hero_Meepo && dividedWeStand.UnitIndex > 0)
@@ -251,9 +251,19 @@ namespace OverlayInformation
             };*/
         }
 
+        private void FlushChecker()
+        {
+            if (Hero == null || !Hero.IsValid)
+            {
+                Log.Error($"CUSTOM FLUSH FOR {Name} {Id}");
+                Flush();
+            }
+        }
 
         private void UpdateInfo()
         {
+            if (Hero == null || !Hero.IsValid)
+                return;
             IsVisible = Hero.IsVisible;
             if (IsVisible)
                 LastTimeUnderVision = Game.RawGameTime;
@@ -270,6 +280,8 @@ namespace OverlayInformation
         }
         private void UpdateItems()
         {
+            if (Hero == null || !Hero.IsValid)
+                return;
             if (!Hero.IsAlive || !Hero.IsVisible)
                 return;
             DangItems.Clear();
