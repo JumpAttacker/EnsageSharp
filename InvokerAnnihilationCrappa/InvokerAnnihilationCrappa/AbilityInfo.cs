@@ -7,6 +7,7 @@ using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Helpers;
+using InvokerAnnihilationCrappa.Features.behavior;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
@@ -14,7 +15,7 @@ using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace InvokerAnnihilationCrappa
 {
-    public class AbilityInfo
+    public class AbilityInfo : Clickable
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public Ability Ability { get; }
@@ -30,11 +31,21 @@ namespace InvokerAnnihilationCrappa
             Three = three;
             Name = Ability.Name;
             Log.Info($"[{final.Name}] -> [{one.Name}] | [{two.Name}] | [{three.Name}]");
+            
         }
 
         public void LoadInvoker(Invoker invo)
         {
             Me = invo;
+            LoadClickable(invo.Input.Value);
+
+            OnClick += () =>
+            {
+                if (invo.Config.AbilityPanel.InvokeByClicking)
+                {
+                    invo.Invoke(this);
+                }
+            };
         }
 
         private Invoker Me { get; set; }

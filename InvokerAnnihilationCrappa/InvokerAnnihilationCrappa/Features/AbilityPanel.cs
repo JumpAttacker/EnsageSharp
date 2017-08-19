@@ -25,6 +25,7 @@ namespace InvokerAnnihilationCrappa.Features
             var panel = main.Factory.Menu("Ability Panel");
             Enable = panel.Item("Enable", true);
             Movable = panel.Item("Movable", false);
+            InvokeByClicking = panel.Item("Invoke by click", false);
             OderBy = panel.Item("Sort by cooldown", false);
             Size = panel.Item("Size", new Slider(5, 0, 100));
             PosX = panel.Item("Position X", new Slider(500, 0, 2000));
@@ -53,6 +54,8 @@ namespace InvokerAnnihilationCrappa.Features
                     Drawing.OnDraw -= DrawingOnOnDraw;
             };
         }
+
+        public MenuItem<bool> InvokeByClicking { get; set; }
 
         public MenuItem<bool> QcastRecaster { get; set; }
 
@@ -122,6 +125,7 @@ namespace InvokerAnnihilationCrappa.Features
             {
                 var ability = info.Ability;
                 Drawing.DrawRect(pos, iconSize, Textures.GetSpellTexture(ability.StoredName()));
+                info.Update(pos, iconSize);
                 var miniIconSize = iconSize / 3;
                 var miniIconPos = pos + new Vector2(0, iconSize.Y);
                 Drawing.DrawRect(miniIconPos, miniIconSize, Textures.GetSpellTexture(info.One.StoredName()));
