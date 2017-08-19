@@ -4,6 +4,7 @@ using ArcAnnihilation.Units;
 using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Inventory;
@@ -20,7 +21,8 @@ namespace ArcAnnihilation
         {
             Base = me;
             Me = me.Hero;
-            var manager = new InventoryManager(new EnsageServiceContext(Me));
+            UpdateManager.Subscribe(MidasChecker, 100);
+            /*var manager = new InventoryManager(new EnsageServiceContext(Me));
             Printer.Print("trying to init new midas manager for " + me);
             var working = true;
             manager.CollectionChanged += (sender, args) =>
@@ -50,14 +52,14 @@ namespace ArcAnnihilation
                         {
                             if (iitem.Id == AbilityId.item_hand_of_midas)
                             {
-                                UpdateManager.Unsubscribe(MidasChecker);
+                                //UpdateManager.Unsubscribe(MidasChecker);
                                 Midas = null;
                                 Printer.Both($"[{me}] Midas off! (main -> {me is MainHero})");
                             }
                         }
                     }
                 }
-            };
+            };*/
         }
 
         private void MidasChecker()
@@ -66,10 +68,15 @@ namespace ArcAnnihilation
                 return;
             if (!Me.IsAlive || Me.IsInvisible())
                 return;
-            if (Midas != null && Midas.IsValid && Midas.CanBeCasted())
+            if (Midas == null || !Midas.IsValid)
+            {
+                Midas = Me.GetItemById(ItemId.item_hand_of_midas);
+                return;
+            }
+            if (Midas.CanBeCasted())
             {
                 var creep =
-                    EntityManager<Unit>.Entities.Where(
+                    EntityManager<Creep>.Entities.Where(
                             x =>
                                 x.IsValid && x.IsAlive && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient &&
                                 !x.IsMagicImmune())
@@ -77,7 +84,6 @@ namespace ArcAnnihilation
                 if (creep != null)
                 {
                     Midas.UseAbility(creep);
-                    Printer.Both($"Use midas -> {creep.Name} | (main -> {Base is MainHero})");
                 }
             }
         }
