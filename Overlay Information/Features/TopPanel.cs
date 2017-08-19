@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using Ensage;
 using Ensage.Common.Menu;
@@ -48,7 +49,19 @@ namespace OverlayInformation.Features
                 Clr =
                     Config.Main.BrushCache.GetOrCreate(System.Drawing.Color.FromArgb(RectangleA, RectangleR, RectangleG,
                         RectangleB));
+                RectangleA.PropertyChanged += OnChangeClr;
+                RectangleR.PropertyChanged += OnChangeClr;
+                RectangleG.PropertyChanged += OnChangeClr;
+                RectangleB.PropertyChanged += OnChangeClr;
+
             }
+        }
+
+        private void OnChangeClr(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            Clr =
+                Config.Main.BrushCache.GetOrCreate(System.Drawing.Color.FromArgb(RectangleA, RectangleR, RectangleG,
+                    RectangleB));
         }
 
         public bool IsDx11 { get; set; }
