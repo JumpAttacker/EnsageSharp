@@ -178,6 +178,8 @@ namespace OverlayInformation.Features
             var itemSize = new Vector2(stageSize.X / .7f, stageSize.Y);
             var orderIndex = (Orders)OrderBy.Value.SelectedIndex;
             var heroes = GetHeroes(orderIndex);
+            if (heroes==null || heroes.Count==0)
+                return;
             var maxNetworth = heroes.Max(x => x.Networth);
             foreach (var heroC in heroes)
             {

@@ -127,6 +127,7 @@ namespace OverlayInformation
             UpdateManager.Unsubscribe(UpdateItems);
         }
     }
+
     public class HeroContainer
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

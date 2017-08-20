@@ -71,6 +71,8 @@ namespace OverlayInformation.Features.Open_Dota
 
         private async void Loading()
         {
+            if (Game.GameState != GameState.PreGame)
+                return;
             _playerInfoList.Clear();
             for (uint i = 0; i < Game.MaximumClients; i++)
             {
@@ -305,11 +307,13 @@ namespace OverlayInformation.Features.Open_Dota
         {
             var textSize = Drawing.MeasureText(text, "Arial",
                 new Vector2(TempSize), FontFlags.AntiAlias | FontFlags.StrikeOut);
+            Drawing.DrawRect(pos, textSize, new Color(155, 155, 155, 155));
             Drawing.DrawText(
                     text, "Arial",
                     pos, new Vector2(TempSize),
                     Color.White,
                     FontFlags.AntiAlias | FontFlags.StrikeOut);
+            
             Drawing.DrawRect(pos, textSize, Color.White, true);
             return textSize;
         }

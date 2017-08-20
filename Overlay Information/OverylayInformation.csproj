@@ -104,6 +104,7 @@
     <Compile Include="Features\Open Dota\OpenDotaHelper.cs" />
     <Compile Include="Features\Open Dota\PlayerInfo.cs" />
     <Compile Include="Features\RoshanTimer.cs" />
+    <Compile Include="Features\ShowIllusions.cs" />
     <Compile Include="Features\ShowMeMore.cs" />
     <Compile Include="Features\ShrineHelper.cs" />
     <Compile Include="Features\Teleport Catcher\TowerOrShrine.cs" />

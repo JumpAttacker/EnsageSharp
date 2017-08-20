@@ -26,7 +26,10 @@ namespace OverlayInformation
             OpenDotaHelper = new OpenDotaHelper(this);
             ShowMeMore = new ShowMeMore(this);
             RoshanTimer = new RoshanTimer(this);
+            ShowIllusions = new ShowIllusions(this);
         }
+
+        public ShowIllusions ShowIllusions { get; set; }
 
         public CourEsp CourEsp { get; set; }
 
@@ -66,6 +69,7 @@ namespace OverlayInformation
             OpenDotaHelper.OnDeactivate();
             ShowMeMore.Dispose();
             RoshanTimer.Dispose();
+            ShowIllusions.Dispose();
             Factory?.Dispose();
         }
     }
