@@ -43,6 +43,7 @@ namespace InvokerAnnihilationCrappa
             AutoGhostWalk = new AutoGhostWalk(this);
             Prepare = new Prepare(this);
             ExortForFarmMode = new ExortForFarmMode(this);
+            CustomCombos = new CustomCombos(this);
 
             var panel = Factory.Menu("Abilities");
             var dict = invoker.AbilityInfos.Select(x => x.Ability.Name).ToDictionary(result => result, result => true);
@@ -60,6 +61,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public CustomCombos CustomCombos { get; set; }
 
         public MenuItem<bool> SmartMove { get; set; }
 
