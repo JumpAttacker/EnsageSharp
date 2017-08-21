@@ -19,17 +19,19 @@ namespace InvokerAnnihilationCrappa.Features
         {
             Main = config;
             var menu = panel.Menu(name);
-            ComboEnable = menu.Item($"Enable {name}", false);
-            Combo = menu.Item($"{name}.", new PriorityChanger(list));
+            Enable = menu.Item($"Enable {name}", false);
+            PriorityMenu = menu.Item("Priority", $"{name}.", new PriorityChanger(list));
+            var dict = list.ToDictionary(x => x, y => true);
+            ToggleMenu = menu.Item($"Toggle", $"{name} toggle", new AbilityToggler(dict));
 
-            if (ComboEnable)
+            if (Enable)
             {
                 Update();
             }
 
-            ComboEnable.PropertyChanged += (sender, args) =>
+            Enable.PropertyChanged += (sender, args) =>
             {
-                if (ComboEnable)
+                if (Enable)
                 {
                     Update();
                 }
@@ -39,21 +41,34 @@ namespace InvokerAnnihilationCrappa.Features
                 }
             };
 
-            Combo.PropertyChanged += (sender, args) =>
+            PriorityMenu.PropertyChanged += (sender, args) =>
             {
-                if (!ComboEnable)
+                if (!Enable)
+                    return;
+                Dispose();
+                Update();
+            };
+
+            ToggleMenu.PropertyChanged += (sender, args) =>
+            {
+                if (!Enable)
                     return;
                 Dispose();
                 Update();
             };
         }
 
+        public MenuItem<AbilityToggler> ToggleMenu { get; set; }
         public Combo CCombo { get; set; }
+        public MenuItem<PriorityChanger> PriorityMenu { get; set; }
+        public MenuItem<bool> Enable { get; set; }
 
         public void Update()
         {
             var infos = new List<AbilityInfo>();
-            foreach (var source in Combo.Value.Dictionary.OrderByDescending(x => x.Value))
+            foreach (
+                var source in
+                PriorityMenu.Value.Dictionary.Where(z => ToggleMenu.Value.IsEnabled(z.Key)).OrderByDescending(x => x.Value))
             {
                 var abilityName = source.Key;
                 var find = Main.Invoker.AbilityInfos.Find(x => x.Name == abilityName);
@@ -79,10 +94,6 @@ namespace InvokerAnnihilationCrappa.Features
 
             Main.ComboPanel.Combos.Add(CCombo);
         }
-
-        public MenuItem<PriorityChanger> Combo { get; set; }
-
-        public MenuItem<bool> ComboEnable { get; set; }
 
         public void Dispose()
         {
