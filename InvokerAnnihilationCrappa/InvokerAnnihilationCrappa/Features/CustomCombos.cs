@@ -13,12 +13,10 @@ namespace InvokerAnnihilationCrappa.Features
 {
     public class LittleCustomCombo : IDisposable
     {
-        private readonly List<string> _list;
         public Config Main { get; }
 
         public LittleCustomCombo(string name, MenuFactory panel, List<string> list, Config config)
         {
-            _list = list;
             Main = config;
             var menu = panel.Menu(name);
             ComboEnable = menu.Item($"Enable {name}", false);
@@ -93,7 +91,7 @@ namespace InvokerAnnihilationCrappa.Features
             CCombo.Dispose();
         }
     }
-    public class CustomCombos : Movable
+    public class CustomCombos
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Config _main;
@@ -114,25 +112,5 @@ namespace InvokerAnnihilationCrappa.Features
             _combos.Add(new LittleCustomCombo("4", panel,list.ToList(), config));
             _combos.Add(new LittleCustomCombo("5", panel,list.ToList(), config));
         }
-
-        public MenuItem<bool> Combo5Enable { get; set; }
-
-        public MenuItem<bool> Combo4Enable { get; set; }
-
-        public MenuItem<bool> Combo3Enable { get; set; }
-
-        public MenuItem<bool> Combo2Enable { get; set; }
-
-        public MenuItem<bool> Combo1Enable { get; set; }
-
-        public MenuItem<PriorityChanger> Combo1 { get; set; }
-
-        public MenuItem<PriorityChanger> Combo2 { get; set; }
-
-        public MenuItem<PriorityChanger> Combo3 { get; set; }
-
-        public MenuItem<PriorityChanger> Combo4 { get; set; }
-
-        public MenuItem<PriorityChanger> Combo5 { get; set; }
     }
 }
