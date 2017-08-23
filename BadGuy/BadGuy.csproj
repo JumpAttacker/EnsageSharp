@@ -89,6 +89,7 @@
     <Compile Include="Configs\Config.cs" />
     <Compile Include="Configs\CourierConfig.cs" />
     <Compile Include="Configs\DrawingConfig.cs" />
+    <Compile Include="Configs\Snatcher.cs" />
     <Compile Include="Features\CourierAction.cs" />
     <Compile Include="Features\DrawingAction.cs" />
     <Compile Include="Features\HeroFeeder.cs" />

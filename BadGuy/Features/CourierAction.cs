@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using BadGuy.Configs;
 using Ensage;
@@ -33,10 +34,43 @@ namespace BadGuy.Features
                         if (fount != null)
                             cour.Move(fount.Position);
                         break;
-                    case (int) CourierConfig.OrderType.MoveItemsToStash:
+                    case (int)CourierConfig.OrderType.MoveItemsToStash:
                         cour.GetAbilityById(AbilityId.courier_return_stash_items).UseAbility();
                         break;
+                    case (int)CourierConfig.OrderType.BlockForSelectedHero:
+                        var state = cour.State;
+                        var stateissuer = cour.StateIssuer;
+                        
+                        if (stateissuer!=null)
+                            switch (state)
+                            {
+                                case CourierState.Init:
+                                    break;
+                                case CourierState.Idle:
+                                    break;
+                                case CourierState.AtBase:
+                                    break;
+                                case CourierState.Move:
+                                    MutePlayer(cour, stateissuer);
+                                    break;
+                                case CourierState.Deliver:
+                                    MutePlayer(cour, stateissuer);
+                                    break;
+                                case CourierState.BackToBase:
+                                    break;
+                                case CourierState.Dead:
+                                    break;
+                            }
+                        break;
                 }
+            }
+        }
+
+        private static void MutePlayer(Courier cour, Hero hero)
+        {
+            if (BadGuy.Config.Courier.MutedHeroes.Value.IsEnabled(hero.Name))
+            {
+                cour.GetAbilityById(AbilityId.courier_return_to_base).UseAbility();
             }
         }
     }

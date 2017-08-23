@@ -11,6 +11,7 @@ namespace BadGuy.Configs
         public DrawingConfig Drawing;
         public LaughConfig Laugh;
         public PingerConfig Pinger;
+        public Snatcher Snatcher;
 
         public Config()
         {
@@ -20,8 +21,8 @@ namespace BadGuy.Configs
             Drawing = new DrawingConfig(Factory);
             Laugh = new LaughConfig(Factory);
             Pinger = new PingerConfig(Factory);
+            //Snatcher = new Snatcher(Factory);
         }
-
         public void Dispose()
         {
             HeroFeeder?.Dispose();
@@ -29,6 +30,7 @@ namespace BadGuy.Configs
             Drawing?.Dispose();
             Pinger?.Dispose();
             Laugh?.Dispose();
+            Snatcher?.Dispose();
             Factory?.Dispose();
         }
     }

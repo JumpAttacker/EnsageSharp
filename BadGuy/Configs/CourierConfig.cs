@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using BadGuy.Features;
 using Ensage.Common.Menu;
+using Ensage.Common.Menu.MenuItems;
 using Ensage.SDK.Handlers;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Menu;
@@ -11,7 +13,7 @@ namespace BadGuy.Configs
     {
         public enum OrderType
         {
-            BlockingOnBase, GoToEnemyBase, MoveItemsToStash, GiveItemsToMainHero
+            BlockingOnBase, GoToEnemyBase, MoveItemsToStash, GiveItemsToMainHero, BlockForSelectedHero
         }
         public CourierConfig(MenuFactory main)
         {
@@ -19,11 +21,16 @@ namespace BadGuy.Configs
             Enable = courier.Item("Enable", false);
             Type = courier.Item("Order Type",
                 new StringList("blocking on base", "go to the enemy base", "move items to stash",
-                    "give items to main hero"));
+                    "give items to main hero", "block for selected hero"));
             Rate = courier.Item("Rate", new Slider(50, 5, 500));
+            MutedHeroes = courier.Item("Muted:", new HeroToggler(new Dictionary<string, bool>(), useAllyHeroes: true));
             _updateHandler = UpdateManager.Subscribe(CourierAction.Updater, 0, Enable.Value);
             Enable.Item.ValueChanged += ItemOnValueChanged;
         }
+
+        public MenuItem<HeroToggler> MutedHeroes { get; set; }
+
+
         private readonly IUpdateHandler _updateHandler;
         private void ItemOnValueChanged(object sender, OnValueChangeEventArgs args)
         {
