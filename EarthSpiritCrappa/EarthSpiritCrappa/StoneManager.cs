@@ -22,7 +22,6 @@ namespace EarthSpiritCrappa
             {
                 if (unit.ClassId == ClassId.CDOTA_Unit_Earth_Spirit_Stone)
                 {
-                    Console.WriteLine($"{Game.RawGameTime} new");
                     Stones.Add(unit);
                 }
             };

@@ -106,6 +106,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbilityRanger.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EarthSpiritCrappa.cs" />
     <Compile Include="LittleCombos\Mainer.cs" />

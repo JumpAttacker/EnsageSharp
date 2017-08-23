@@ -6,6 +6,7 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Menu;
+using SharpDX;
 
 namespace EarthSpiritCrappa
 {
@@ -44,7 +45,41 @@ namespace EarthSpiritCrappa
                 {AbilityId.item_lotus_orb.ToString(), true},
             };
             ItemsInCombo = _factory.Item("Items:", new AbilityToggler(dict2));
+            var ranges = _factory.Menu("Draw Ability Range");
+            //DicrClrs=new Dictionary<>();
+            SmashRange = ranges.Item("Smash range", false);
+            PutColorSelector(SmashRange, ranges);
+            GripRange = ranges.Item("Grip range", false);
+            PutColorSelector(GripRange, ranges);
+            BlinkRange = ranges.Item("Blink range", false);
+            PutColorSelector(BlinkRange, ranges);
         }
+
+        private void PutColorSelector(MenuItem<bool> menu, MenuFactory ranges)
+        {
+            return;
+            var r = ranges.Item("Red", menu.Item.Name + " Red", new Slider(255, 0, 255));
+            var g=ranges.Item("Green", menu.Item.Name + "Green", new Slider(255, 0, 255));
+            var b = ranges.Item("Blue", menu.Item.Name + "Blue", new Slider(255, 0, 255));
+            r.Item.SetFontColor(Color.Red);
+            g.Item.SetFontColor(Color.Green);
+            b.Item.SetFontColor(Color.Blue);
+        }
+
+        public Color GetColor(MenuItem<bool> menu)
+        {
+            /*var r = _factory.Target.Item(menu.Item.Name + " Red").GetValue<Slider>().Value;
+
+            var g = _factory.Target.Item(menu.Item.Name + " Green").GetValue<Slider>().Value;
+            var b = _factory.Target.Item(menu.Item.Name + " Blue").GetValue<Slider>().Value;*/
+            return new Color(255, 255, 255);
+        }
+
+        public MenuItem<bool> BlinkRange { get; set; }
+
+        public MenuItem<bool> GripRange { get; set; }
+
+        public MenuItem<bool> SmashRange { get; set; }
 
         public MenuItem<AbilityToggler> AbilitiesInCombo { get; set; }
         public MenuItem<AbilityToggler> ItemsInCombo { get; set; }

@@ -84,7 +84,11 @@ namespace EarthSpiritCrappa
             RollCombo = new RollingCombo(this);
             GripCombo = new PullCombo(this);
 
+            AbilityRange = new AbilityRanger(this);
+
         }
+
+        public AbilityRanger AbilityRange { get; set; }
 
         public PullCombo GripCombo { get; set; }
 
@@ -121,6 +125,7 @@ namespace EarthSpiritCrappa
         {
             Context.Inventory.Detach(this);
             Context.Inventory.Deactivate();
+            AbilityRange.Dispose();
             Mode.Deactivate();
             Config?.Dispose();
         }

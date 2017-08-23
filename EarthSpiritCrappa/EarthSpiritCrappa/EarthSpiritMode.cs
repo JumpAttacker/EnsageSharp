@@ -63,11 +63,34 @@ namespace EarthSpiritCrappa
                         {
                             /*var turnTime = UnitExtensions.GetTurnTime(Owner,
                                 _target.NetworkPosition) * 1000 + Game.Ping;*/
-                            await CreateStone(_target.NetworkPosition, token);
+                            var created = await CreateStone(_target.NetworkPosition, token);
+                            var enchant = Main.EnchantRemnant;
+                            if (created)
+                            {
+                                Log.Info("stone should be created.");
+                                stone = Main.StoneManager.FindStone(Owner.NetworkPosition, 160f);
+                            }
+                            else if (IsAbilityEnable(enchant))
+                            {
+                                Log.Info("stone not created. (cd or disabled). Try to find target for enchant");
+                                var anyHero =
+                                    EntityManager<Hero>.Entities.Where(
+                                            x => x.IsValid && x.IsAlive && x.IsVisible && x.IsInRange(Owner, 200) &&
+                                                 !x.Equals(Owner) && !x.Equals(_target) && !x.IsMagicImmune())
+                                        .OrderByDescending(x => x.Team != Owner.Team)
+                                        .FirstOrDefault();
+                                
+                                if (anyHero != null && AbilityExtensions.CanBeCasted(enchant))
+                                {
+                                    enchant.UseAbility(anyHero);
+                                    stone = anyHero;
+                                    await Task.Delay(350 + GetDelay, token);
+                                }
+                            }
                             //Game.PrintMessage($"{turnTime}");
                             //await Await.Delay((int) turnTime, token);
                             //await Await.Delay(GetDelay, token);
-                            stone = Main.StoneManager.FindStone(Owner.NetworkPosition, 160f);
+                            
                             Log.Info($"({GetDelay}) stone -> {stone != null}");
                         }
                         if (stone != null)
