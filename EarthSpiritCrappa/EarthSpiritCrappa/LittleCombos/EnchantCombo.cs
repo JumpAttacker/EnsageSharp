@@ -49,7 +49,7 @@ namespace EarthSpiritCrappa.LittleCombos
                     {
                         enchant.UseAbility(target);
                         var delay = enchant.GetCastDelay(Owner, target, true);
-                        Log.Error($"delay (enchant) -> {delay}");
+                        Log.Info($"delay (enchant) -> {delay}");
                         await Task.Delay((int) delay+100, arg);
                     }
                     else
@@ -80,7 +80,7 @@ namespace EarthSpiritCrappa.LittleCombos
                         {
                             grip.UseAbility(target.NetworkPosition);
                             var delay = grip.GetCastDelay(Owner, target, true);
-                            Log.Error($"delay (grip) -> {delay} {grip.Name}");
+                            Log.Info($"delay (grip) -> {delay} {grip.Name}");
                             await Task.Delay((int) delay, arg);
                         }
                     }
@@ -91,7 +91,7 @@ namespace EarthSpiritCrappa.LittleCombos
                         {
                             push.UseAbility(Game.MousePosition);
                             var delay = push.GetCastDelay(Owner, target, true);
-                            Log.Error($"delay (push) -> {delay} {push.Name}");
+                            Log.Info($"delay (push) -> {delay} {push.Name}");
                             await Task.Delay((int) delay, arg);
                             Cancel();
                         }
@@ -99,7 +99,7 @@ namespace EarthSpiritCrappa.LittleCombos
                 }
                 else
                 {
-                    Log.Error("skip cuz not find modifier");
+                    Log.Info("skip cuz not find modifier");
                 }
 
                 await Task.Delay(1, arg);
