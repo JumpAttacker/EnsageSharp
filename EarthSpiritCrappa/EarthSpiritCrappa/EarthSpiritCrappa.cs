@@ -83,10 +83,13 @@ namespace EarthSpiritCrappa
             PushCombo = new PushCombo(this);
             RollCombo = new RollingCombo(this);
             GripCombo = new PullCombo(this);
+            EnchantCombo = new EnchantCombo(this);
 
             AbilityRange = new AbilityRanger(this);
 
         }
+
+        public EnchantCombo EnchantCombo { get; set; }
 
         public AbilityRanger AbilityRange { get; set; }
 

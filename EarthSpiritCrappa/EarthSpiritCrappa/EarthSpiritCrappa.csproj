@@ -109,6 +109,7 @@
     <Compile Include="AbilityRanger.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EarthSpiritCrappa.cs" />
+    <Compile Include="LittleCombos\EnchantCombo.cs" />
     <Compile Include="LittleCombos\Mainer.cs" />
     <Compile Include="LittleCombos\PullCombo.cs" />
     <Compile Include="LittleCombos\RollingCombo.cs" />

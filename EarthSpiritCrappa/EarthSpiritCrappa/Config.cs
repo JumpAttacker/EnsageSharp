@@ -23,6 +23,7 @@ namespace EarthSpiritCrappa
             PushKey = _factory.Item("Smash key", new KeyBind('0'));
             RollingKey = _factory.Item("Rolling key", new KeyBind('0'));
             PullKey = _factory.Item("Grip key", new KeyBind('0'));
+            EnchantKey = _factory.Item("Enchant Key", new KeyBind('0'));
             EnablePrediction = _factory.Item("Use prediction", false);
 
             var abilities =
@@ -54,6 +55,8 @@ namespace EarthSpiritCrappa
             BlinkRange = ranges.Item("Blink range", false);
             PutColorSelector(BlinkRange, ranges);
         }
+
+        public MenuItem<KeyBind> EnchantKey { get; set; }
 
         private void PutColorSelector(MenuItem<bool> menu, MenuFactory ranges)
         {

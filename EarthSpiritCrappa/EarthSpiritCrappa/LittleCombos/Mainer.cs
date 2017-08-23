@@ -1,10 +1,8 @@
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Ensage;
 using Ensage.SDK.Handlers;
 using Ensage.SDK.Helpers;
-using log4net;
-using PlaySharp.Toolkit.Logging;
 
 namespace EarthSpiritCrappa.LittleCombos
 {
@@ -12,9 +10,11 @@ namespace EarthSpiritCrappa.LittleCombos
     {
         
         public EarthSpiritCrappa Main { get; }
+        public Hero Owner;
         protected Mainer(EarthSpiritCrappa main)
         {
             Main = main;
+            Owner = main.Owner;
         }
 
         public void Execute()
