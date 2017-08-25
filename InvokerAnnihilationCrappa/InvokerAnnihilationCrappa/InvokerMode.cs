@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.SharpDX;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Orbwalker.Modes;
 using Ensage.SDK.Service;
@@ -39,6 +40,14 @@ namespace InvokerAnnihilationCrappa
         {
             UpdateManager.Subscribe(TargetUpdater, 25);
             UpdateManager.Subscribe(IndicatorUpdater);
+            /*Drawing.OnDraw += args =>
+            {
+                if (!Orbwalker.OrbwalkingPoint.IsZero)
+                {
+                    var pos = Drawing.WorldToScreen(Orbwalker.OrbwalkingPoint);
+                    Drawing.DrawCircle(pos, 15, 15, Color.Aqua);
+                }
+            };*/
         }
 
 
@@ -204,7 +213,23 @@ namespace InvokerAnnihilationCrappa
                 }
                 else
                 {
-                    Orbwalker.OrbwalkTo(_target);
+                    var distance = Owner.Distance2D(_target);
+                    if (distance < Me.Config.MinDisInOrbwalk)
+                    {
+                        //var myPos = Owner.Position;
+                        var targetPos = _target.Position;
+                        var pos = (targetPos - Game.MousePosition).Normalized();
+                        pos *= Me.Config.MinDisInOrbwalk;
+                        pos = targetPos - pos;
+                        Orbwalker.OrbwalkingPoint = pos;
+                        Orbwalker.OrbwalkTo(null);
+                    }
+                    else
+                    {
+                        Orbwalker.OrbwalkingPoint = Vector3.Zero;
+                        Orbwalker.OrbwalkTo(_target);
+                    }
+                    
                     var others =
                         EntityManager<Unit>.Entities.Where(
                             x =>

@@ -17,18 +17,19 @@ namespace InvokerAnnihilationCrappa
             Invoker = invoker;
             Factory = MenuFactory.Create("Invoker Crappahilation");
             ComboKey = Factory.Item("Combo Key", new KeyBind('G'));
+            MinDisInOrbwalk = Factory.Item("Min distance in orbwalk", new Slider(1, 1, 600));
             InvokeTime = Factory.Item("Time between spheres in combo", new Slider(1, 1, 200));
             AfterInvokeDelay = Factory.Item("Delay after Invoke", new Slider(1, 1, 500));
             SsExtraDelay = Factory.Item("Sun Strike Extra Delay", new Slider(15, 0, 25));
             SsExtraDelay.Item.SetTooltip("dec this value if you cant hit target by ss");
             //Ensage.SDK.Orbwalker.Modes.Farm
-            SmartInvoke = Factory.Item("Smart invoke", true);
+            SmartInvoke = Factory.Item("Smart invoke", false);
             SmartInvoke.Item.SetTooltip("will check for spheres before invoke");
 
-            ExpInvoke = Factory.Item("Experemental invoke", false);
+            ExpInvoke = Factory.Item("Experemental invoke", true);
             ExpInvoke.Item.SetTooltip("Enable this if your hero cant use invoke properly and disable [SmartInvoke]");
 
-            ExtraDelayAfterSpells = Factory.Item("Extra delay after each ability in combo", false);
+            ExtraDelayAfterSpells = Factory.Item("Extra delay after each ability in combo", true);
             ExtraDelayAfterSpells.Item.SetTooltip("Enable this if your hero sometimes not use abilities");
 
             AutoIceWall = Factory.Item("Dummy IceWall", true);
@@ -61,6 +62,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<Slider> MinDisInOrbwalk { get; set; }
 
         public CustomCombos CustomCombos { get; set; }
 
