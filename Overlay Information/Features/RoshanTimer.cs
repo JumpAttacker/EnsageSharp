@@ -31,7 +31,7 @@ namespace OverlayInformation.Features
             TextSize = panel.Item("Text Size", new Slider(17, 5, 30));
             LoadMovable(config.Main.Context.Value.Input);
             Game.OnFireEvent += Game_OnGameEvent;
-
+            AegisEvent = false;
 
             Roshan = ObjectManager.GetEntities<Unit>().FirstOrDefault(x => x.Name == "npc_dota_roshan" && x.IsAlive) ??
                      ObjectManager.GetDormantEntities<Unit>().FirstOrDefault(x => x.Name == "npc_dota_roshan" && x.IsAlive);
@@ -87,7 +87,7 @@ namespace OverlayInformation.Features
                     Aegis = EntityManager<Item>.Entities.FirstOrDefault(x => x.Name == "item_aegis");
                 if (Aegis != null && !AegisWasFound)
                 {
-                    Log.Debug($"Aegis found! {Aegis.Owner.Name}");
+                    Log.Debug($"Aegis found! {Aegis?.Owner?.Name}");
                     AegisWasFound = true;
                 }
                 if (4 - AegisMinutes < 0 || (AegisWasFound && (Aegis == null || !Aegis.IsValid)))
@@ -146,16 +146,24 @@ namespace OverlayInformation.Features
             DrawText(textPos, textSize, endText, textClr, outLineClr, true);
             if (AegisEvent)
             {
-                text = $"Aegis Timer: {4 - AegisMinutes}:{59 - AegisSeconds:0.}";
-                if (Aegis != null)
-                    if (Aegis.Owner != null)
-                        DrawTextWithIcon(textPos + new Vector2(1, TextSize.Value.Value), textSize, text, textClr,
-                            Color.YellowGreen, Textures.GetHeroTexture(Aegis.Owner.Name));
-                else
+                try
                 {
-                    DrawText(textPos + new Vector2(1, TextSize.Value.Value), textSize, text, textClr,
-                        Color.YellowGreen);
+                    text = $"Aegis Timer: {4 - AegisMinutes}:{59 - AegisSeconds:0.}";
+                    if (Aegis != null)
+                        if (Aegis.Owner != null)
+                            DrawTextWithIcon(textPos + new Vector2(1, TextSize.Value.Value), textSize, text, textClr,
+                                Color.YellowGreen, Textures.GetHeroTexture(Aegis.Owner.Name));
+                        else
+                        {
+                            DrawText(textPos + new Vector2(1, TextSize.Value.Value), textSize, text, textClr,
+                                Color.YellowGreen);
+                        }
                 }
+                catch (Exception e)
+                {
+
+                }
+                
                 //DrawText(textPos + new Vector2(0, TextSize.Value.Value), textSize, text, textClr, Color.YellowGreen);
                 /*Drawing.DrawText(text, new Vector2(PosX, PosY + TextSize.Value.Value), new Vector2(TextSize), Color.YellowGreen,
                     FontFlags.DropShadow | FontFlags.AntiAlias);*/

@@ -300,6 +300,7 @@ namespace OverlayInformation.Features.Teleport_Catcher
 
         private void RenderOnDraw(object sender, EventArgs eventArgs)
         {
+            if (Effects==null || !Effects.Any()) return;
             foreach (var tpEffect in Effects)//.Where(x=>!x.IsAlly))
             {
                 if (tpEffect.Player==null)

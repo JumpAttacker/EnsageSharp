@@ -138,6 +138,14 @@ namespace OverlayInformation
                     Log.Error($"Cant init New Hero -> {hero.GetDisplayName()} [{hero.Handle}]");
                     return;
                 }
+                if (hero.ClassId == ClassId.CDOTA_Unit_Hero_MonkeyKing)
+                {
+                    if (!hero.Spellbook.Spells.Any())
+                    {
+                        Log.Error($"Monkey king bugisoft (ubishit) -> [{hero.Handle}]");
+                        return;
+                    }
+                }
                 var myTeam = Main.Context.Value.Owner.Team;
                 var targetTeam = hero.Team;
                 var isAlly = myTeam == targetTeam;
