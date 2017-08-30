@@ -21,6 +21,7 @@ namespace SfAnnihilation
         public static bool DrawRazeRange => Menu.Item("Drawing.RazeRange.Enable").GetValue<bool>();
         public static bool DrawBkbStatus => Menu.Item("Drawing.BkbStatusInEulCombo.Enable").GetValue<bool>();
         public static float DrawBkbStatusSize => Menu.Item("Drawing.BkbStatusInEulCombo.Size").GetValue<Slider>().Value;
+        public static float InvisRange => Menu.Item("sb.range").GetValue<Slider>().Value;
 
         public static Vector2 DrawBkbStatusPosition
             =>
@@ -48,6 +49,8 @@ namespace SfAnnihilation
             aim.AddItem(new MenuItem("aim.OnlyKillSteal", "Only for KillStealing").SetValue(true));
             var shadowBladeCombo = new Menu("ShadowBlade combo", "ShadowBlade combo");
             shadowBladeCombo.AddItem(new MenuItem("sb.Key", "SB Key").SetValue(new KeyBind('0')));
+            shadowBladeCombo.AddItem(
+                new MenuItem("sb.range", "Safe range for ultimate").SetValue(new Slider(200, 1, 500)));
             var eulsettings = new Menu("Eul Settings", "Eul Settings");
             eulsettings.AddItem(new MenuItem("eul.Key", "Eul Key").SetValue(new KeyBind('G')));
             eulsettings.AddItem(new MenuItem("eul.bkb.Key", "Eul Bkb toggle Key").SetValue(new KeyBind('H', KeyBindType.Toggle)));

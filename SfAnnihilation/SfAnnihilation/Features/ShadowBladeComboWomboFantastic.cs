@@ -67,12 +67,12 @@ namespace SfAnnihilation.Features
                 }
 
                 var distance = _target.Distance2D(_me);
-                if (distance > 35)
+                if (distance > 35 || _target.IsMoving)
                 {
                     if (_ultimate.IsInAbilityPhase)
                         _me.Stop();
                     _me.Move(_target.NetworkPosition);
-                    await Task.Delay(75, arg);
+                    await Task.Delay(35, arg);
                 }
                 else
                 {
@@ -85,7 +85,7 @@ namespace SfAnnihilation.Features
                     {
                         _ultimate.UseAbility();
                         await Task.Delay(350, arg);
-                        if (!_me.IsInRange(_target, 250))
+                        if (!_me.IsInRange(_target, MenuManager.InvisRange))
                         {
                             _me.Stop();
                             await Task.Delay(25, arg);
