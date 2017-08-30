@@ -19,6 +19,11 @@ namespace SfAnnihilation.Features
         {
             _me = ObjectManager.LocalHero;
             _ultimate = Ensage.SDK.Extensions.UnitExtensions.GetAbilityById(_me, AbilityId.nevermore_requiem);
+            /*UpdateManager.Subscribe(() =>
+            {
+                if (_target != null)
+                    Game.PrintMessage($"Dist-> {_target.Distance2D(_me)}");
+            },10);*/
             MenuManager.Menu.Item("sb.Key").ValueChanged += (sender, args) =>
             {
                 var newOne = args.GetNewValue<KeyBind>().Active;
@@ -67,11 +72,15 @@ namespace SfAnnihilation.Features
                     if (_ultimate.IsInAbilityPhase)
                         _me.Stop();
                     _me.Move(_target.NetworkPosition);
-                    await Task.Delay(50, arg);
+                    await Task.Delay(75, arg);
                 }
                 else
                 {
-                    
+                    if (!_target.IsMoving)
+                    {
+                        _me.Move(_target.NetworkPosition);
+                        await Task.Delay(150, arg);
+                    }
                     if (_ultimate.CanBeCasted())
                     {
                         _ultimate.UseAbility();
