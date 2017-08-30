@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -56,7 +57,15 @@ namespace InvokerAnnihilationCrappa.Features
             var inAction = _main.Invoker.Mode.CanExecute;
             if (!inAction)
             {
-                Invoke2();
+                try
+                {
+                    Invoke2();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+                
             }
         }
 
