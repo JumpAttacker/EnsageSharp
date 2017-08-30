@@ -2,6 +2,7 @@
 using System.Linq;
 using ArcAnnihilation.Panels;
 using ArcAnnihilation.Utils;
+using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Menu;
 using SharpDX;
@@ -206,11 +207,24 @@ namespace ArcAnnihilation
             settings.AddItem(
                     new MenuItem("OrbWalking.OrbWalkerGoBeyond", "[Orbwalking] Go beyond of selected range").SetValue(true))
                 .SetTooltip("only for Tempest");
-            settings.AddItem(
+            var mf=settings.AddItem(
                 new MenuItem("MagneticField.InFront", "Use Magnetic Field in front of ur hero").SetValue(true));
+            var toggle = settings.AddItem(
+                new MenuItem("MagneticField.InFront.ToggleKey", "Toggle for magnetic field setting").SetValue(
+                    new KeyBind('0')));
+            toggle.ValueChanged += (sender, args) =>
+            {
+                var newOne = args.GetNewValue<KeyBind>().Active;
+                var oldOne = args.GetOldValue<KeyBind>().Active;
+                if (newOne != oldOne && newOne)
+                {
+                    var newValue = !mf.GetValue<bool>();
+                    mf.SetValue(newValue);
+                    Game.PrintMessage($"MF: in front -> {newValue}");
+                }
+            };
             settings.AddItem(
                 new MenuItem("AutoMidas.Enable", "Auto midas").SetValue(true));
-
             var usages = new Menu("Using in combo", "usages");
             var fluxSettings = new Menu("FluxSettings", "FluxSettings", false, AbilityId.arc_warden_flux.ToString());
             fluxSettings.AddItem(new MenuItem("FluxSettings.Smart", "Smart flux").SetValue(false))

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using Ensage;
-using Ensage.Common;
+﻿using Ensage;
 using Ensage.Common.Objects.UtilityObjects;
 using SfAnnihilation.Features;
-using SharpDX;
 
 namespace SfAnnihilation.Utils
 {

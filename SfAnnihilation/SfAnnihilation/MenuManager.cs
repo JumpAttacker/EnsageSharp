@@ -11,6 +11,7 @@ namespace SfAnnihilation
         public static bool EulComboIsActive => Menu.Item("eul.Key").GetValue<KeyBind>().Active;
         public static bool ComboIsActive => Menu.Item("combo.Key").GetValue<KeyBind>().Active;
         public static bool AimIsActive => Menu.Item("aim.Key").GetValue<KeyBind>().Active;
+        public static bool ShadowBladeKey => Menu.Item("sb.Key").GetValue<KeyBind>().Active;
         public static bool BkbIsEulCombo => Menu.Item("eul.bkb.Key").GetValue<KeyBind>().Active;
         public static bool DebugInGame => Menu.Item("Dev.Text.enable").GetValue<bool>();
         public static bool DebugInConsole => Menu.Item("Dev.Text2.enable").GetValue<bool>();
@@ -38,15 +39,17 @@ namespace SfAnnihilation
             Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var settings = new Menu("Settings", "Settings");
             var combo = new Menu("Combo", "Combo");
-            combo.AddItem(new MenuItem("combo.Key", "Combo Key").SetValue(new KeyBind('F', KeyBindType.Press)));
+            combo.AddItem(new MenuItem("combo.Key", "Combo Key").SetValue(new KeyBind('F')));
             combo.AddItem(new MenuItem("combo.Raze", "Use ShadowRaze in combo").SetValue(true));
             combo.AddItem(new MenuItem("combo.orbwalking.followTarget", "OrbWalking: follow Target?").SetValue(true))
                 .SetTooltip("or mouse");
             var aim = new Menu("Raze Aim Settings", "Raze Aim Settings");
             aim.AddItem(new MenuItem("aim.Key", "aim Key").SetValue(new KeyBind('Q', KeyBindType.Toggle)));
             aim.AddItem(new MenuItem("aim.OnlyKillSteal", "Only for KillStealing").SetValue(true));
+            var shadowBladeCombo = new Menu("ShadowBlade combo", "ShadowBlade combo");
+            shadowBladeCombo.AddItem(new MenuItem("sb.Key", "SB Key").SetValue(new KeyBind('0')));
             var eulsettings = new Menu("Eul Settings", "Eul Settings");
-            eulsettings.AddItem(new MenuItem("eul.Key", "Eul Key").SetValue(new KeyBind('G', KeyBindType.Press)));
+            eulsettings.AddItem(new MenuItem("eul.Key", "Eul Key").SetValue(new KeyBind('G')));
             eulsettings.AddItem(new MenuItem("eul.bkb.Key", "Eul Bkb toggle Key").SetValue(new KeyBind('H', KeyBindType.Toggle)));
             eulsettings.AddItem(new MenuItem("eul.ExtraTime", "Extra Time").SetValue(new Slider(-40, -100, 10)));
             var drawing = new Menu("Drawing", "Drawing");
@@ -79,6 +82,7 @@ namespace SfAnnihilation
             Menu.AddSubMenu(settings);
             settings.AddSubMenu(combo);
             settings.AddSubMenu(eulsettings);
+            settings.AddSubMenu(shadowBladeCombo);
             settings.AddSubMenu(aim);
             settings.AddSubMenu(drawing);
             drawing.AddSubMenu(drawingBkb);

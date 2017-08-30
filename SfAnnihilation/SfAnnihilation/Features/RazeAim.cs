@@ -1,13 +1,11 @@
 using System;
 using System.Linq;
 using Ensage;
-using Ensage.Common;
 using Ensage.Common.AbilityInfo;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using SfAnnihilation.Utils;
-using SharpDX;
 
 namespace SfAnnihilation.Features
 {

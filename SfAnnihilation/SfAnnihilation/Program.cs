@@ -23,6 +23,7 @@ namespace SfAnnihilation
                     Game.OnUpdate += RazeDrawing.OnUpdate;
                     Drawing.OnDraw += InfoDrawing.OnDraw;
                     GameDispatcher.OnIngameUpdate += EulCombo.TestCombo;
+                    ShadowBladeComboWomboFantastic.Init();
                 });
             };
         }

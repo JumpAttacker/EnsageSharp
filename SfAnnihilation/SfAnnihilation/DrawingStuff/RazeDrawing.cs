@@ -5,7 +5,6 @@ using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using SfAnnihilation.Features;
-using SfAnnihilation.Utils;
 using SharpDX;
 
 namespace SfAnnihilation.DrawingStuff

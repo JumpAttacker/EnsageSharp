@@ -87,6 +87,7 @@
     <Compile Include="DrawingStuff\InfoDrawing.cs" />
     <Compile Include="Features\Core.cs" />
     <Compile Include="Features\EulCombo.cs" />
+    <Compile Include="Features\ShadowBladeComboWomboFantastic.cs" />
     <Compile Include="Utils\Helper.cs" />
     <Compile Include="MenuManager.cs" />
     <Compile Include="Utils\Printer.cs" />
