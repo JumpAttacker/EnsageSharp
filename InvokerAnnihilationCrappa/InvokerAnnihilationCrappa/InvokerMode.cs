@@ -156,8 +156,17 @@ namespace InvokerAnnihilationCrappa
                                 var casted = await currentAbility.UseAbility(_target, token);
                                 if (casted)
                                 {
-                                    var turnTime = Owner.GetTurnTime(_target.NetworkPosition) * 1000 + Game.Ping +
-                                                   25;
+                                    double tempShit = 0;
+                                    try
+                                    {
+                                        tempShit = Owner.GetTurnTime(_target.NetworkPosition) * 1000 + Game.Ping + 25;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Log.Error("shit happened");
+                                        return;
+                                    }
+                                    var turnTime = tempShit;
                                     Log.Info($"using: [{currentCombo.CurrentAbility}] ({(int)turnTime} ms)" + currentAbility.Ability.Name);
                                     if (currentAbility.Ability.Id == Ensage.AbilityId.item_refresher)
                                     {
