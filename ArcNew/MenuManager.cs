@@ -82,6 +82,7 @@ namespace ArcAnnihilation
         public static bool CloneCombo => GetKey("Combo.Tempest.Key");
         public static bool SparkSpam => GetKey("Combo.Sparks.Key");
         public static bool OrbWalkType => GetBool("OrbWalking.Type");
+        public static bool BlinkUseExtraRange => GetBool("Blink.ExtraRange.Use");
 
         public static bool MagneticField => GetBool("MagneticField.InFront");
         public static bool CustomComboPriorityHero => GetBool("customOrderHero");
@@ -277,6 +278,8 @@ namespace ArcAnnihilation
             blink.AddItem(
                     new MenuItem("Blink.ExtraRange", "Extra range").SetValue(new Slider(50, 0, 600)))
                 .SetTooltip("blink dist(1200 by def) + this value");
+            blink.AddItem(
+                    new MenuItem("Blink.ExtraRange.Use", "Use extra range").SetValue(true));
             blink.AddItem(
                 new MenuItem("Blink.MinRange", "Min range for blink").SetValue(new Slider(400, 0, 600)));
             blink.AddItem(

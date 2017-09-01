@@ -67,7 +67,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 }
                 var canHit = (ability.Id == AbilityId.item_blink
                                  ? unitBase.Hero.Distance2D(Core.Target) - MenuManager.GetBlinkExtraRange <
-                                   ability.TravelDistance()
+                                   (MenuManager.BlinkUseExtraRange ? ability.TravelDistance() : 50000)
                                  : ability.CanHit(Core.Target)) || _afterBlink.Sleeping;
                 var isNoTarget = ability.IsAbilityBehavior(AbilityBehavior.NoTarget) &&
                                  (unitBase.Hero.Distance2D(Core.Target) <= 750 || ability.IsInvis());
