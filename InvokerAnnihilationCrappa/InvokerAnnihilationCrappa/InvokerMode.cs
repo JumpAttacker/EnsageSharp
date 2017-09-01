@@ -76,6 +76,7 @@ namespace InvokerAnnihilationCrappa
                     Me.TargetManager.Value.Activate();
                     Log.Info("re Enable _targetManager");
                 }
+                Cancel();
                 _target = null;
                 Me.ParticleManager.Value.Remove("Invo_target");
                 Me.ParticleManager.Value.Remove("Invo_line");
@@ -206,6 +207,10 @@ namespace InvokerAnnihilationCrappa
                 {
                     Log.Info("end of combo. Set current ability stage to 0");
                     currentCombo.CurrentAbility = 0;
+                }
+                if (_target == null)
+                {
+                    return;
                 }
                 if (_target.IsAttackImmune() || _target.IsInvul())
                 {
