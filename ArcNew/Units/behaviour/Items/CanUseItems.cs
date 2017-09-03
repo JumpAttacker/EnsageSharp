@@ -88,7 +88,17 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 if (ability.IsAbilityBehavior(AbilityBehavior.NoTarget))
                 {
                     if (ability.IsInvis())
+                    {
+                        if ((bool) unitBase.Hero.GetItemById(ItemId.item_blink)?.CanBeCasted())
+                        {
+                            if (MenuManager.SilverEdgeBlocker)
+                            {
+                                counter++;
+                                continue;
+                            }
+                        }
                         _afterInvis.Sleep(500);
+                    }
                     ability.UseAbility();
                 }
                 else if (ability.IsAbilityBehavior(AbilityBehavior.UnitTarget))
@@ -162,7 +172,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             }
                             else
                             {
-                                if (ability.IsSilence())
+                                if (ability.IsSilence()) //TODO: check only for real silence
                                 {
                                     if (Core.Target.IsSilenced())
                                     {

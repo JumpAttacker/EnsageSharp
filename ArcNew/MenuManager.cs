@@ -88,6 +88,7 @@ namespace ArcAnnihilation
         public static bool CustomComboPriorityHero => GetBool("customOrderHero");
         public static bool IsInfoPanelEnabled => GetBool("InfoPanel.Enable");
         public static bool CustomComboPriorityTempest => GetBool("customOrderTempest");
+        public static bool SilverEdgeBlocker => GetBool("Blink.BlockSilver");
         public static float GetItemPanelSize => GetSlider("ItemPanelSize");
         public static bool AutoPushingTargetting => GetBool("AutoPushing.AutoTargetting");
         public static float GetInfoPanelSize => GetSlider("InfoPanel.Size");
@@ -280,6 +281,8 @@ namespace ArcAnnihilation
                 .SetTooltip("blink dist(1200 by def) + this value");
             blink.AddItem(
                     new MenuItem("Blink.ExtraRange.Use", "Use extra range").SetValue(true));
+            blink.AddItem(
+                    new MenuItem("Blink.BlockSilver", "Dont use silver edge if dagger can be casted").SetValue(true));
             blink.AddItem(
                 new MenuItem("Blink.MinRange", "Min range for blink").SetValue(new Slider(400, 0, 600)));
             blink.AddItem(
