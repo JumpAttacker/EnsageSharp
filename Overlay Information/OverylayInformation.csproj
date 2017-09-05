@@ -45,7 +45,8 @@
     <Reference Include="Ensage.Common">
       <HintPath>C:\En\References\Ensage.Common.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage.SDK">
+    <Reference Include="Ensage.SDK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2a0bb906a796e43b, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\En\References\Ensage.SDK.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">

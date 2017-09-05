@@ -132,6 +132,7 @@ namespace OverlayInformation.Features.Teleport_Catcher
                     var player = ObjectManager.GetPlayerById(id);
                     if (player == null || !player.IsValid)
                     {
+
                         //Log.Error($"Id was found ({id}), but cant find player");
                         return null;
                     }

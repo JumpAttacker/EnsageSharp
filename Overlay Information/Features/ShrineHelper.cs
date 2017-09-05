@@ -221,7 +221,7 @@ namespace OverlayInformation.Features
         private void ValueOnDraw(object sender, EventArgs eventArgs)
         {
             var removeList = _underVision;
-            foreach (var b in _underVision)
+            foreach (var b in _underVision.ToList())
             {
                 if (!b.Value) continue;
                 var me = b.Key;

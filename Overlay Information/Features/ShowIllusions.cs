@@ -105,8 +105,9 @@ namespace OverlayInformation.Features
             {
                 var size = new Vector3(IllusionSize, ClrA, 0);
                 Particle.AddOrUpdate(x, "showIllusion" + x.Handle, ShowIllusionList[GetId], ParticleAttachment.AbsOrigin,
-                    false,
-                    1, size, 2, GetColor);
+                    RestartType.FullRestart,
+                    1, size, 2, GetColor );
+
             }
         }
 
