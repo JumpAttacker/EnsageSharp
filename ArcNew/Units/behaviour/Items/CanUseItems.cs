@@ -89,7 +89,8 @@ namespace ArcAnnihilation.Units.behaviour.Items
                 {
                     if (ability.IsInvis())
                     {
-                        if ((bool) unitBase.Hero.GetItemById(ItemId.item_blink)?.CanBeCasted())
+                        var blink = unitBase.Hero.GetItemById(ItemId.item_blink);
+                        if (blink != null && blink.CanBeCasted())
                         {
                             if (MenuManager.SilverEdgeBlocker)
                             {
