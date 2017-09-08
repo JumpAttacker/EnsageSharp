@@ -40,14 +40,14 @@ namespace InvokerAnnihilationCrappa
         {
             UpdateManager.Subscribe(TargetUpdater, 25);
             UpdateManager.Subscribe(IndicatorUpdater);
-            /*Drawing.OnDraw += args =>
+            Drawing.OnDraw += args =>
             {
-                if (!Orbwalker.OrbwalkingPoint.IsZero)
+                if (Me.Config.DrawMinDistanceInOrbwalk && !Orbwalker.OrbwalkingPoint.IsZero)
                 {
                     var pos = Drawing.WorldToScreen(Orbwalker.OrbwalkingPoint);
                     Drawing.DrawCircle(pos, 15, 15, Color.Aqua);
                 }
-            };*/
+            };
         }
 
 
@@ -92,13 +92,36 @@ namespace InvokerAnnihilationCrappa
                 if (Me.BlockerSleeper.Sleeping)
                     return;
                 //TODO: attack here
-                if (_target.IsAttackImmune() || _target.IsInvul())
+                var distance = Owner.Distance2D(_target);
+                if (distance < Me.Config.MinDisInOrbwalk)
                 {
-                    Orbwalker.Move(Game.MousePosition);
+                    //var myPos = Owner.Position;
+                    var targetPos = _target.Position;
+                    var pos = (targetPos - Game.MousePosition).Normalized();
+                    pos *= Me.Config.MinDisInOrbwalk;
+                    pos = targetPos - pos;
+                    Orbwalker.OrbwalkingPoint = pos;
+                    if (Orbwalker.CanAttack(_target))
+                    {
+                        Orbwalker.OrbwalkTo(_target);
+                    }
+                    else
+                    {
+                        Orbwalker.OrbwalkTo(null);
+                    }
+                   
                 }
-                else //if (!Me.Config.ExtraDelayAfterSpells)
+                else
                 {
-                    Orbwalker.OrbwalkTo(_target);
+                    Orbwalker.OrbwalkingPoint = Vector3.Zero;
+                    if (_target.IsAttackImmune() || _target.IsInvul())
+                    {
+                        Orbwalker.Move(Game.MousePosition);
+                    }
+                    else //if (!Me.Config.ExtraDelayAfterSpells)
+                    {
+                        Orbwalker.OrbwalkTo(_target);
+                    }
                 }
             }
         }

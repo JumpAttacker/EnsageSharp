@@ -18,6 +18,7 @@ namespace InvokerAnnihilationCrappa
             Factory = MenuFactory.Create("Invoker Crappahilation");
             ComboKey = Factory.Item("Combo Key", new KeyBind('G'));
             MinDisInOrbwalk = Factory.Item("Min distance in orbwalk", new Slider(1, 1, 600));
+            DrawMinDistanceInOrbwalk = Factory.Item("Draw this range", true);
             InvokeTime = Factory.Item("Time between spheres in combo", new Slider(1, 1, 200));
             AfterInvokeDelay = Factory.Item("Delay after Invoke", new Slider(1, 1, 500));
             SsExtraDelay = Factory.Item("Sun Strike Extra Delay", new Slider(15, 0, 25));
@@ -62,6 +63,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<bool> DrawMinDistanceInOrbwalk { get; set; }
 
         public MenuItem<Slider> MinDisInOrbwalk { get; set; }
 
