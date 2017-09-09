@@ -127,9 +127,9 @@ namespace OverlayInformation
 
         private void OnNewHero(object sender, Hero hero)
         {
-            DelayAction.Add(100, () =>
+            DelayAction.Add(350, () =>
             {
-                if (hero==null || !hero.IsValid)
+                if (hero == null || !hero.IsValid)
                     return;
                 if (hero.IsIllusion)
                     return;

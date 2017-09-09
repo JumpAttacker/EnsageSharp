@@ -110,6 +110,15 @@ namespace OverlayInformation
             Main = main;
             Items = new List<Item>();
             UpdateManager.Subscribe(UpdateItems, 500);
+            UpdateManager.Subscribe(FlushChecker, 1000);
+        }
+
+        private void FlushChecker()
+        {
+            if (Cour == null || !Cour.IsValid)
+            {
+                Dispose();
+            }
         }
 
         private void UpdateItems()
@@ -125,6 +134,7 @@ namespace OverlayInformation
         {
             HolderHelper?.Dispose();
             UpdateManager.Unsubscribe(UpdateItems);
+            UpdateManager.Unsubscribe(FlushChecker);
         }
     }
 
@@ -256,7 +266,18 @@ namespace OverlayInformation
         {
             if (Hero == null || !Hero.IsValid)
             {
-                Log.Error($"CUSTOM FLUSH FOR {Name} {Id}");
+                if (Game.GameState == GameState.GameInProgress)
+                {
+                    var player = ObjectManager.GetPlayerById((uint) Id);
+                    Log.Error(
+                        $"CUSTOM FLUSH FOR {Name} id -> [{Id}] -> player -> [{(player != null ? player.Name : "null")}]");
+                }
+                Flush();
+            }
+            else if (Hero.IsIllusion)
+            {
+                Log.Error(
+                    $"Flush cuz illusion {Name} id -> [{Id}]");
                 Flush();
             }
         }

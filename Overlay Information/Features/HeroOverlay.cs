@@ -146,9 +146,9 @@ namespace OverlayInformation.Features
                             pos = DrawAbilityState(pos, ability, abilitySize);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
-
+                        // ignored
                     }
                 }
 
@@ -191,7 +191,7 @@ namespace OverlayInformation.Features
                             Drawing.DrawRect(pos, maxSize, new Color(255, 255, 0, 50));
                         break;
                     case AbilityState.NotEnoughMana:
-                        var mana = ability.Ability.ManaCost - (ability.Owner as Hero).Mana;
+                        var mana = ability.Ability.ManaCost - ability.Owner.Mana;
                         var manaText = ((int)mana).ToString();
                         DrawAbilityMana(manaText, pos, maxSize);
                         break;
@@ -283,7 +283,7 @@ namespace OverlayInformation.Features
                     }
                     break;
                 case AbilityState.NotEnoughMana:
-                    var mana = ability.Ability.ManaCost - ((Hero)ability.Owner).Mana;
+                    var mana = ability.Ability.ManaCost - ability.Owner.Mana;
                     var manaText = ((int)mana).ToString();
                     DrawAbilityMana(manaText, pos, maxSize);
                     break;
@@ -312,7 +312,7 @@ namespace OverlayInformation.Features
                             Drawing.DrawRect(pos, maxSize, new Color(255, 255, 0, 50));
                         break;
                     case AbilityState.NotEnoughMana:
-                        var mana = ability.ManaCost - (ability.Owner as Hero).Mana;
+                        var mana = ability.ManaCost - ((Hero) ability.Owner).Mana;
                         var manaText = ((int)mana).ToString();
                         DrawAbilityMana(manaText, pos, maxSize);
                         break;
