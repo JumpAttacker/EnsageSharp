@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Helpers;
@@ -11,6 +12,7 @@ using InvokerAnnihilationCrappa.Features.behavior;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
+using AbilityId = Ensage.AbilityId;
 using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace InvokerAnnihilationCrappa
@@ -220,8 +222,8 @@ namespace InvokerAnnihilationCrappa
                         return true;
                     }
                     Ability.UseAbility(target);
-                    Log.Warn($"Eul -> casted. w8 for modifier");
-                    await WaitForCombo(target);
+                    Log.Warn($"Eul -> casted ({target.HeroId}). w8 for modifier");
+                    await WaitForCombo(target, Ability);
                     Log.Warn($"Eul -> modifier was found");
                     break;
                 case AbilityId.item_refresher:
@@ -233,7 +235,7 @@ namespace InvokerAnnihilationCrappa
             return true;
         }
 
-        private async Task WaitForCombo(Hero target)
+        private async Task WaitForCombo(Hero target, Ability ability)
         {
             while (!target.HasModifiers(new[]
             {
@@ -241,6 +243,16 @@ namespace InvokerAnnihilationCrappa
                 "modifier_shadow_demon_disruption", "modifier_invoker_tornado"
             }, false))
             {
+                if (ability.CanBeCasted())
+                {
+                    var eul = (ability.Owner as Hero).GetItemById(ItemId.item_cyclone);
+                    if (eul != null && eul.CanBeCasted() && eul.CanHit(target))
+                    {
+                        eul.UseAbility(target);
+                        Log.Warn($"Eul -> Extra using");
+                        await Task.Delay(50);
+                    }
+                }
                 await Task.Delay(100);
             }
         }
