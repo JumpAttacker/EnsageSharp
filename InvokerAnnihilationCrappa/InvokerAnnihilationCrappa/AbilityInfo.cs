@@ -213,12 +213,16 @@ namespace InvokerAnnihilationCrappa
                         return false;
                     break;
                 case AbilityId.item_cyclone:
+                    Log.Warn($"Eul -> start (modifiers: {comboModifiers}) (isStunned: {isStunned})");
                     if (comboModifiers && isStunned)
                     {
+                        Log.Warn($"Eul -> Under shit");
                         return true;
                     }
                     Ability.UseAbility(target);
+                    Log.Warn($"Eul -> casted. w8 for modifier");
                     await WaitForCombo(target);
+                    Log.Warn($"Eul -> modifier was found");
                     break;
                 case AbilityId.item_refresher:
                     Ability.UseAbility();

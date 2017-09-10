@@ -184,7 +184,7 @@ namespace InvokerAnnihilationCrappa
                                         Log.Debug("target == null -> exit");
                                         return;
                                     }
-                                    double tempShit = 0;
+                                    double tempShit;
                                     try
                                     {
                                         tempShit = Owner.GetTurnTime(_target.NetworkPosition) * 1000 + Game.Ping + 25;
