@@ -149,13 +149,18 @@ namespace InvokerAnnihilationCrappa
                             var delayTime = (int) ((time - timeForCast) * 1000);
                             Log.Warn($"[SS] delay time: {delayTime} rem time: {time} Time for cast: {timeForCast}");
                             await Task.Delay(Math.Max(delayTime, 1), token);
+                            Log.Debug($"[SS] after delay -> try to use ability");
                             Ability.UseAbility(target.Position);
                         }
                     }
                     else
                     {
                         if (!Ability.CastSkillShot(target))
+                        {
+                            Log.Debug($"[SS] SkillShot not casted");
                             return false;
+                        }
+                        Log.Debug($"[SS] SkillShot casted");
                     }
                     break;
                 case AbilityId.invoker_forge_spirit:

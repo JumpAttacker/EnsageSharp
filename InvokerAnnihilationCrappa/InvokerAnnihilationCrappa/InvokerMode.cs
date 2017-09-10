@@ -101,7 +101,7 @@ namespace InvokerAnnihilationCrappa
                     pos *= Me.Config.MinDisInOrbwalk;
                     pos = targetPos - pos;
                     Orbwalker.OrbwalkingPoint = pos;
-                    if (Orbwalker.CanAttack(_target))
+                    if (Orbwalker.CanAttack(_target) && !_target.IsAttackImmune() && !_target.IsInvul())
                     {
                         Orbwalker.OrbwalkTo(_target);
                     }
@@ -179,18 +179,23 @@ namespace InvokerAnnihilationCrappa
                                 var casted = await currentAbility.UseAbility(_target, token);
                                 if (casted)
                                 {
+                                    if (_target == null)
+                                    {
+                                        Log.Debug("target == null -> exit");
+                                        return;
+                                    }
                                     double tempShit = 0;
                                     try
                                     {
                                         tempShit = Owner.GetTurnTime(_target.NetworkPosition) * 1000 + Game.Ping + 25;
                                     }
-                                    catch (Exception e)
+                                    catch (Exception)
                                     {
-                                        Log.Error("shit happened");
+                                        Log.Debug("shit happened");
                                         return;
                                     }
                                     var turnTime = tempShit;
-                                    Log.Info($"using: [{currentCombo.CurrentAbility}] ({(int)turnTime} ms)" + currentAbility.Ability.Name);
+                                    Log.Info($"using: [{currentCombo.CurrentAbility}] ({(int)turnTime} ms)" + currentAbility.Ability.Id);
                                     if (currentAbility.Ability.Id == Ensage.AbilityId.item_refresher)
                                     {
                                         currentCombo.CurrentAbility -= 2;
@@ -202,7 +207,7 @@ namespace InvokerAnnihilationCrappa
                                     }
 
                                     if (Me.Config.ExtraDelayAfterSpells)
-                                        await Task.Delay((int)turnTime, token);
+                                        await Task.Delay((int) turnTime, token);
                                     else
                                         await Task.Delay((int) Game.Ping, token);
                                 }
