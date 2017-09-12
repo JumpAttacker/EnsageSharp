@@ -170,6 +170,7 @@ namespace ArcAnnihilation
         public static bool IsAutoPushPanelEnable => GetBool("AutoPushLaneSelector.Enable");
         public static bool IsItemPanelEnable => GetBool("itemPanel.Enable");
         public static bool SmartFlux => GetBool("FluxSettings.Smart");
+        public static bool SmartSpark => GetBool("SparkSettings.Smart");
         public static float OrbWalkingRange => GetSlider("OrbWalking.Range");
         public static bool OrbWalkerGoBeyond => GetBool("OrbWalking.OrbWalkerGoBeyond");
         public static float GetBlinkExtraDelay => GetSlider("Blink.ExtraDelay");
@@ -228,6 +229,9 @@ namespace ArcAnnihilation
             settings.AddItem(
                 new MenuItem("AutoMidas.Enable", "Auto midas").SetValue(true));
             var usages = new Menu("Using in combo", "usages");
+            var sparkSettings = new Menu("SparkSettings", "SparkSettings", false, AbilityId.arc_warden_spark_wraith.ToString());
+            sparkSettings.AddItem(new MenuItem("SparkSettings.Smart", "Smart spark").SetValue(false))
+                .SetTooltip("Use only if target is out of attack range");
             var fluxSettings = new Menu("FluxSettings", "FluxSettings", false, AbilityId.arc_warden_flux.ToString());
             fluxSettings.AddItem(new MenuItem("FluxSettings.Smart", "Smart flux").SetValue(false))
                 .SetTooltip("Use only if there are no allies around the enemy");
@@ -327,6 +331,7 @@ namespace ArcAnnihilation
             usages.AddSubMenu(tempest);
             usages.AddSubMenu(blink);
             usages.AddSubMenu(fluxSettings);
+            usages.AddSubMenu(sparkSettings);
 
             mainHero.AddSubMenu(spellHero);
             mainHero.AddSubMenu(itemHero);

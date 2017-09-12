@@ -6,6 +6,7 @@ using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Helpers;
+using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace ArcAnnihilation.Units.behaviour.Abilities
 {
@@ -59,6 +60,10 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
                 unitBase.AbilityChecker.IsAbilityEnabled(spark.GetAbilityId()) && spark.CanBeCasted() &&
                 !Prediction.IsTurning(Core.Target) && unitBase.Hero.IsVisibleToEnemies)
             {
+                if (UnitExtensions.IsInAttackRange(unitBase.Hero, Core.Target) && MenuManager.SmartSpark)
+                {
+                    return;
+                }
                 var delay = spark.GetAbilityDelay();
                 var predVector3 = Prediction.PredictedXYZ(Core.Target, 2000 + delay);
                 spark.UseAbility(predVector3);
