@@ -97,7 +97,7 @@ namespace EmberAnnihilation
         }
         private void AutoChains(object sender, OnValueChangeEventArgs args)
         {
-            var newValue = args.GetNewValue<KeyBind>().Active;
+            var newValue = args.GetNewValue<bool>();
             if (newValue)
                 UpdateManager.BeginInvoke(AutoChainer);
         }
