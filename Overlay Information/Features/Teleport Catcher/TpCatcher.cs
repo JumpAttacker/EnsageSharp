@@ -189,6 +189,7 @@ namespace OverlayInformation.Features.Teleport_Catcher
         public Config Config { get; }
         public List<TeleportEffect> Effects;
         public List<TowerOrShrine> TowerOrShrines;
+        private readonly MenuItem<Slider> _fontSize;
 
         public TpCatcher(Config config)
         {
@@ -196,6 +197,8 @@ namespace OverlayInformation.Features.Teleport_Catcher
             var panel = Config.Factory.Menu("Tp Catcher");
             Enable = panel.Item("Enable", true);
             Notification = panel.Item("Notification", true);
+            DrawNames = panel.Item("Draw name on minimap", false);
+            _fontSize = panel.Item("Font size", new Slider(10,1,25));
             ExtraTime = panel.Item("Extra drawing time for tp (ms)", new Slider(0,0,5000));
             Render = config.Main.Renderer;
             
@@ -246,6 +249,8 @@ namespace OverlayInformation.Features.Teleport_Catcher
                 }
             };
         }
+
+        public MenuItem<bool> DrawNames { get; set; }
 
         public MenuItem<bool> Notification { get; set; }
 
@@ -311,9 +316,9 @@ namespace OverlayInformation.Features.Teleport_Catcher
 
                 /*Render.DrawRectangle(new RectangleF(200, 200, 200, 200), color, 100);
                 Render.DrawCircle(new Vector2(500,500), 50, color);*/
-
-                Render.DrawCircle(tpEffect.StartPos.WorldToMinimap(), 10, tpEffect._color);
-
+                var pos = tpEffect.StartPos.WorldToMinimap();
+                Render.DrawCircle(pos, 10, tpEffect._color);
+                Render.DrawText(pos - new Vector2(_fontSize, 0), tpEffect.Hero.GetRealName(), tpEffect._color, _fontSize);
                 //Render.DrawCircle(tpEffect.StartPos.WorldToMinimap(), 5, tpEffect.IsAlly ? Color.RoyalBlue : Color.Red);
             }
         }
