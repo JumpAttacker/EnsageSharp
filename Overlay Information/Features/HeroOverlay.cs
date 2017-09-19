@@ -17,6 +17,11 @@ namespace OverlayInformation.Features
         {
             Config = config;
             var panel = Config.Factory.Menu("Hero Overlay");
+            EnableForMainHero = panel.Item("Enable for main hero", true);
+            ExtraPositionX = panel.Item("Extra position X", new Slider(0, -50, 50));
+            ExtraPositionY = panel.Item("Extra position Y", new Slider(0, -50, 50));
+            ExtraSizeX = panel.Item("Extra size X", new Slider(0, -50, 50));
+            ExtraSizeY = panel.Item("Extra size Y", new Slider(0, -50, 50));
             var manaBars = panel.Menu("ManaBars");
             
             ManaBars = manaBars.Item("Enable", true);
@@ -42,6 +47,14 @@ namespace OverlayInformation.Features
             Drawing.OnDraw += DrawingOnOnDraw;
             HealthBarSize = new Vector2(HudInfo.GetHPBarSizeX(), HudInfo.GetHpBarSizeY());
         }
+
+        public MenuItem<bool> EnableForMainHero { get; set; }
+
+        public MenuItem<Slider> ExtraSizeX { get; set; }
+        public MenuItem<Slider> ExtraSizeY { get; set; }
+
+        public MenuItem<Slider> ExtraPositionX { get; set; }
+        public MenuItem<Slider> ExtraPositionY { get; set; }
 
         public MenuItem<bool> ItemDrawCharges { get; set; }
 
@@ -81,16 +94,19 @@ namespace OverlayInformation.Features
             var itemBorderWhite = ItemBorderClr.Value.SelectedIndex == 0;
             foreach (var heroCont in heroes)
             {
+                if (!EnableForMainHero && heroCont.IsOwner)
+                    continue;
                 var hero = heroCont.Hero;
                 if (!hero.IsAlive)
                     continue;
                 if (!hero.IsVisible)
                     continue;
-                var pos = HudInfo.GetHPbarPosition(hero);
+                var pos = HudInfo.GetHPbarPosition(hero) + new Vector2(ExtraPositionX, ExtraPositionY);
                 if (pos.IsZero)
                     continue;
                 var copy = pos;
-                var size = new Vector2(HudInfo.GetHPBarSizeX(hero), HudInfo.GetHpBarSizeY(hero));
+                var size = new Vector2(HudInfo.GetHPBarSizeX(hero) + ExtraSizeX,
+                    HudInfo.GetHpBarSizeY(hero) + ExtraSizeY);
                 if (heroCont.IsOwner)
                 {
                     pos += new Vector2(-1, size.Y);
