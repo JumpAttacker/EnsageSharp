@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Windows.Forms;
 using Ensage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -17,13 +18,19 @@ namespace OverlayInformation.Features
         {
             Config = config;
             var panel = Config.Factory.Menu("Hero Overlay");
+
             EnableForMainHero = panel.Item("Enable for main hero", true);
             ExtraPositionX = panel.Item("Extra position X", new Slider(0, -50, 50));
             ExtraPositionY = panel.Item("Extra position Y", new Slider(0, -50, 50));
             ExtraSizeX = panel.Item("Extra size X", new Slider(0, -50, 50));
             ExtraSizeY = panel.Item("Extra size Y", new Slider(0, -50, 50));
+
+            var healthBars = panel.Menu("HealthBar");
+            HealthBar = healthBars.Item("Enable", true);
+            DrawMaxHealth = healthBars.Item("Draw max health", true);
+            HealthBarTextSize = healthBars.Item("Size", new Slider(12, 5, 20));
+
             var manaBars = panel.Menu("ManaBars");
-            
             ManaBars = manaBars.Item("Enable", true);
             ManaBarsForAlly = manaBars.Item("Enable for ally", true);
             ManaBarsForEnemy = manaBars.Item("Enable for enemy", true);
@@ -47,6 +54,12 @@ namespace OverlayInformation.Features
             Drawing.OnDraw += DrawingOnOnDraw;
             HealthBarSize = new Vector2(HudInfo.GetHPBarSizeX(), HudInfo.GetHpBarSizeY());
         }
+
+        public MenuItem<bool> DrawMaxHealth { get; set; }
+
+        public MenuItem<Slider> HealthBarTextSize { get; set; }
+
+        public MenuItem<bool> HealthBar { get; set; }
 
         public MenuItem<bool> EnableForMainHero { get; set; }
 
@@ -101,12 +114,21 @@ namespace OverlayInformation.Features
                     continue;
                 if (!hero.IsVisible)
                     continue;
-                var pos = HudInfo.GetHPbarPosition(hero) + new Vector2(ExtraPositionX, ExtraPositionY);
+                var hpBarPos = HudInfo.GetHPbarPosition(hero);
+                var pos = hpBarPos + new Vector2(ExtraPositionX, ExtraPositionY);
                 if (pos.IsZero)
                     continue;
                 var copy = pos;
                 var size = new Vector2(HudInfo.GetHPBarSizeX(hero) + ExtraSizeX,
                     HudInfo.GetHpBarSizeY(hero) + ExtraSizeY);
+                if (HealthBar)
+                {
+                    if (!heroCont.IsAlly)
+                    {
+                        var health = DrawMaxHealth ? $"{hero.Health}/{heroCont.MaxHealth}" : $"{hero.Health}";
+                        DrawingHelper.DrawHealthBar(pos, size, health, HealthBarTextSize);
+                    }
+                }
                 if (heroCont.IsOwner)
                 {
                     pos += new Vector2(-1, size.Y);
@@ -116,6 +138,7 @@ namespace OverlayInformation.Features
                 {
                     pos += new Vector2(0, size.Y - 2);
                 }
+                
                 if (ManaBars)
                 {
                     if (heroCont.IsAlly && ManaBarsForAlly || !heroCont.IsAlly && ManaBarsForEnemy)

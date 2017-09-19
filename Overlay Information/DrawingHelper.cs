@@ -73,14 +73,14 @@ namespace OverlayInformation
             return pos + new Vector2(0, maxSize.Y);
         }
 
-        public static Vector2 DrawManaBar(Vector2 pos, float value, Vector2 maxSize, Color clrOn, Color clrOff, string text, MenuItem<bool> manaBarsNumbers,float size)
+        public static Vector2 DrawManaBar(Vector2 pos, float value, Vector2 maxSize, Color clrOn, Color clrOff, string text, MenuItem<bool> manaBarsNumbers, float size)
         {
 
             var textSize = Drawing.MeasureText(text, "Arial",
-                                new Vector2((float)(maxSize.Y * size/10f), 0), FontFlags.AntiAlias | FontFlags.StrikeOut);
+                                new Vector2((float)(maxSize.Y * size / 10f), 0), FontFlags.AntiAlias | FontFlags.StrikeOut);
             var textPos = pos +
                           new Vector2(maxSize.X / 2 - textSize.X / 2, maxSize.Y / 2 - textSize.Y / 2);
-            
+
 
             Drawing.DrawRect(pos, maxSize, clrOff);
             Drawing.DrawRect(pos, new Vector2(value, maxSize.Y), clrOn);
@@ -90,6 +90,24 @@ namespace OverlayInformation
                     textPos, new Vector2(textSize.Y, 0),
                     Color.White,
                     FontFlags.AntiAlias | FontFlags.StrikeOut);
+
+            Drawing.DrawRect(pos, maxSize, Color.Black, true);
+            return pos + new Vector2(0, maxSize.Y);
+        }
+
+        public static Vector2 DrawHealthBar(Vector2 pos, Vector2 maxSize, string text, float size)
+        {
+
+            var textSize = Drawing.MeasureText(text, "Arial",
+                new Vector2((float) (maxSize.Y * size / 10f), 0), FontFlags.AntiAlias | FontFlags.StrikeOut);
+            var textPos = pos +
+                          new Vector2(maxSize.X / 2 - textSize.X / 2, maxSize.Y / 2 - textSize.Y / 2);
+
+            Drawing.DrawText(
+                text, "Arial",
+                textPos, new Vector2(textSize.Y, 0),
+                Color.White,
+                FontFlags.AntiAlias | FontFlags.StrikeOut);
 
             Drawing.DrawRect(pos, maxSize, Color.Black, true);
             return pos + new Vector2(0, maxSize.Y);
