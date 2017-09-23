@@ -228,7 +228,7 @@ namespace Wisp_Annihilation
         private void ParticleUpdater()
         {
             ParticleManager.Value.AddOrUpdate(Owner, "attackRange" + Owner.Handle,
-                        "materials/ensage_ui/particles/range_display_mod.vpcf", ParticleAttachment.AbsOriginFollow, true, 1,
+                        "materials/ensage_ui/particles/range_display_mod.vpcf", ParticleAttachment.AbsOriginFollow, RestartType.None, 1,
                         CurrentRange * 1.1f, 2, Color.LimeGreen);
         }
 
