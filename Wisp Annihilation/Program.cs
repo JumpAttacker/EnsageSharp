@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Enums;
@@ -9,6 +10,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Menu.MenuItems;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.SDK.Helpers;
 using SharpDX;
 
 namespace Wisp_Annihilation
@@ -69,7 +71,7 @@ namespace Wisp_Annihilation
             devolper.AddItem(new MenuItem("Dev.Text.enable", "Debug messages").SetValue(false));
             settings.AddSubMenu(autoSaver);
             settings.AddSubMenu(autoTether);
-            settings.AddSubMenu(relocateTpAbuse);
+            //settings.AddSubMenu(relocateTpAbuse);
             Members.Menu.AddSubMenu(settings);
             Members.Menu.AddSubMenu(devolper);
             _loaded = false;
@@ -127,7 +129,34 @@ namespace Wisp_Annihilation
             Game.OnIngameUpdate += RelocateTpAbuseAction;
             Drawing.OnDraw += Drawing_OnDraw;
             Entity.OnParticleEffectAdded += EntityOnOnParticleEffectAdded;
-            Unit.OnModifierRemoved += HeroOnOnModifierRemoved;
+            /*Unit.OnModifierRemoved += HeroOnOnModifierRemoved;
+            Unit.OnModifierAdded += (sender, args) =>
+            {
+                var mod = args.Modifier;
+                if (mod.Name == "modifier_teleporting" && mod.TextureName == "wisp_relocate")
+                {
+                    _tpStartingTime = Game.RawGameTime;
+                    UpdateManager.BeginInvoke(async () =>
+                    {
+                        var remTime = mod.RemainingTime;
+                        var ping = (int) Game.Ping;
+                        var time = 12000 + (int) (remTime * 1000f) - 3000 - ping;
+                        Printer.Print($"Time to w8 -> {time} (remTime -> {remTime}) (ping -> {ping}) (extra -> {GetDelayValue})");
+                        await Task.Delay((int) (time + GetDelayValue));
+
+                        var tp = Members.MyHero.GetItemById(ItemId.item_tpscroll) ??
+                                 Members.MyHero.GetItemById(ItemId.item_recipe_travel_boots) ??
+                                 Members.MyHero.GetItemById(ItemId.item_recipe_travel_boots_2);
+                        if (tp != null && tp.CanBeCasted())
+                        {
+                            tp.UseAbility(_fountain.Position);
+                        }
+                    });
+                }
+            };*/
+            _fountain = ObjectManager.GetEntities<Unit>()
+                .FirstOrDefault(
+                    x => x != null && x.Team == ObjectManager.LocalHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
         }
         private static List<Tracker> _trackList = new List<Tracker>();
         private static void EntityOnOnParticleEffectAdded(Entity sender, ParticleEffectAddedEventArgs args)
@@ -179,6 +208,7 @@ namespace Wisp_Annihilation
         }
         private static void RelocateTpAbuseAction(EventArgs args)
         {
+            return;
             if (!RelocateTpAbuse)
                 return;
             if (!_gotcha)
