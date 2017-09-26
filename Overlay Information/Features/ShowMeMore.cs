@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Menu;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Menu;
@@ -22,7 +23,15 @@ namespace OverlayInformation.Features
             Config = config;
             Particle = config.Main.Context.Value.Particle;
             var panel = Config.Factory.Menu("Show Me More");
+            var baraPanel = panel.Menu("Spirit Breaker's charge");
             Enable = panel.Item("Enable", true);
+            SpiritBreaker = baraPanel.Item("Fill background", true);
+            SpiritBreaker.Item.SetTooltip("only for ur main hero");
+            SpiritBreakerClrR = baraPanel.Item("Red", new Slider(255, 0, 255));
+            SpiritBreakerClrG = baraPanel.Item("Green", new Slider(0, 0, 255));
+            SpiritBreakerClrB = baraPanel.Item("Blue", new Slider(0, 0, 255));
+            SpiritBreakerClrA = baraPanel.Item("Alpha", new Slider(40, 0, 255));
+
             if (Enable)
             {
                 Load();
@@ -41,9 +50,22 @@ namespace OverlayInformation.Features
             };
         }
 
+        public MenuItem<Slider> SpiritBreakerClrR { get; set; }
+        public MenuItem<Slider> SpiritBreakerClrG { get; set; }
+        public MenuItem<Slider> SpiritBreakerClrB { get; set; }
+        public MenuItem<Slider> SpiritBreakerClrA { get; set; }
+
+        public MenuItem<bool> SpiritBreaker { get; set; }
+        public bool ChargeOnMainHero;
         private void DrawingOnOnDraw(EventArgs args)
         {
-            
+            if (SpiritBreaker)
+            {
+                Drawing.DrawRect(Vector2.Zero, new Vector2(Drawing.Width, Drawing.Height),
+                    new Color(
+                        SpiritBreakerClrR.Value.Value, SpiritBreakerClrG.Value.Value,
+                        SpiritBreakerClrB.Value.Value, SpiritBreakerClrA.Value.Value));
+            }
         }
 
 
@@ -65,10 +87,18 @@ namespace OverlayInformation.Features
                         Program.GenerateSideMessage(sender.Name, AbilityId.spirit_breaker_charge_of_darkness.ToString());
                     }
                     var effect = new ParticleEffect(effectName, sender, ParticleAttachment.OverheadFollow);
+                    var wasLocal = false;
+                    if (sender.Equals(ObjectManager.LocalHero))
+                    {
+                        wasLocal = true;
+                        Drawing.OnDraw += DrawingOnOnDraw;
+                    }
                     while (mod.IsValid)
                     {
                         await Task.Delay(100);
                     }
+                    if (wasLocal)
+                        Drawing.OnDraw -= DrawingOnOnDraw;
                     effect.Dispose();
                 }
             }
@@ -140,15 +170,11 @@ namespace OverlayInformation.Features
                         var kunkka =
                             Config.Main.Updater.Heroes.Find(y => y.Hero.ClassId == ClassId.CDOTA_Unit_Hero_Kunkka);
                         var range = 225;
-                        if (kunkka != null)
+                        if (
+                                kunkka?.Hero.GetAbilityById(AbilityId.special_bonus_unique_kunkka).Level > 0)
+                            //(kunkka.Hero.GetAbilityById(AbilityId.special_bonus_unique_kunkka).Level > 0)
                         {
-                            if (
-                                    Ensage.SDK.Extensions.UnitExtensions.GetAbilityById(kunkka.Hero,
-                                        AbilityId.special_bonus_unique_kunkka).Level > 0)
-                                //(kunkka.Hero.GetAbilityById(AbilityId.special_bonus_unique_kunkka).Level > 0)
-                            {
-                                range += 200;
-                            }
+                            range += 200;
                         }
                         DrawRange(x, range, 1.6f);
                     }
@@ -197,14 +223,14 @@ namespace OverlayInformation.Features
             EntityManager<Unit>.EntityAdded += EntityAdded;
             Entity.OnParticleEffectAdded += OnNewParticle;
             Unit.OnModifierAdded += OnNewModifier;
-            Drawing.OnDraw += DrawingOnOnDraw;
+            //Drawing.OnDraw += DrawingOnOnDraw;
         }
         private void UnLoad()
         {
             EntityManager<Unit>.EntityAdded -= EntityAdded;
             Entity.OnParticleEffectAdded -= OnNewParticle;
             Unit.OnModifierAdded -= OnNewModifier;
-            Drawing.OnDraw -= DrawingOnOnDraw;
+            //Drawing.OnDraw -= DrawingOnOnDraw;
         }
 
         public MenuItem<bool> Enable { get; set; }
