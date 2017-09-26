@@ -89,6 +89,7 @@
     <Compile Include="Configs\Config.cs" />
     <Compile Include="Configs\CourierConfig.cs" />
     <Compile Include="Configs\DrawingConfig.cs" />
+    <Compile Include="Configs\TauntConfig.cs" />
     <Compile Include="Configs\Snatcher.cs" />
     <Compile Include="Features\CourierAction.cs" />
     <Compile Include="Features\DrawingAction.cs" />
@@ -96,6 +97,7 @@
     <Compile Include="Configs\HeroFeederConfig.cs" />
     <Compile Include="Configs\LaughConfig.cs" />
     <Compile Include="Configs\PingerConfig.cs" />
+    <Compile Include="Features\Taunt.cs" />
     <Compile Include="Features\Laugh.cs" />
     <Compile Include="Features\Pinger.cs" />
     <Compile Include="Helpers.cs" />
