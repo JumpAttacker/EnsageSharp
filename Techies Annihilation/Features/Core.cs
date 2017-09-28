@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Ensage;
+using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
@@ -29,6 +31,15 @@ namespace Techies_Annihilation.Features
         public static float GetSuicideDamage => Suicide.GetAbilityData("damage", Suicide.Level);
 
         public static MultiSleeper HeroSleeper=new MultiSleeper();
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        private static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+        private enum MouseEvent
+        {
+            MouseeventfLeftdown = 0x02,
+            MouseeventfLeftup = 0x04,
+        }
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetCursorPos(int x, int y);
         public static void OnUpdate(EventArgs args)
         {
             if (!MenuManager.IsEnable)
@@ -66,6 +77,16 @@ namespace Techies_Annihilation.Features
                             listForDetonation.Add(element);
                             if (heroHealth <= 0)
                             {
+                                if (MenuManager.IsCameraMovingEnable)
+                                {
+                                    var pos = hero.Position.WorldToMinimap();
+                                    SetCursorPos((int) pos.X, (int) pos.Y);
+                                    UpdateManager.BeginInvoke(() =>
+                                    {
+                                        mouse_event((int)MouseEvent.MouseeventfLeftdown, 0, 0, 0, 0);
+                                        mouse_event((int)MouseEvent.MouseeventfLeftup, 0, 0, 0, 0);
+                                    }, 100);
+                                }
                                 HeroSleeper.Sleep(300 + listForDetonation.Count*30, hero);
                                 if (MenuManager.IsSuperDetonate)
                                 {
