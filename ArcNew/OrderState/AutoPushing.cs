@@ -183,8 +183,11 @@ namespace ArcAnnihilation.OrderState
                         if (target != null)
                         {
                             Printer.Log($"[AutoPushing][Spark][{target.Name}]->{target.Position.PrintVector()}", true);
-                            Core.TempestHero.Spark.UseAbility(target.Position);
-                            _sleeper.Sleep(500);
+                            if (!target.Position.IsZero)
+                            {
+                                Core.TempestHero.Spark.UseAbility(target.Position);
+                                _sleeper.Sleep(500);
+                            }
                         }
                     }
 

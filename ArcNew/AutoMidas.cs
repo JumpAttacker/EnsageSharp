@@ -1,14 +1,9 @@
-using System.Collections.Specialized;
 using System.Linq;
 using ArcAnnihilation.Units;
-using ArcAnnihilation.Utils;
 using Ensage;
-using Ensage.Common;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.SDK.Helpers;
-using Ensage.SDK.Inventory;
-using Ensage.SDK.Service;
 
 namespace ArcAnnihilation
 {
@@ -22,6 +17,18 @@ namespace ArcAnnihilation
             Base = me;
             Me = me.Hero;
             UpdateManager.Subscribe(MidasChecker, 100);
+
+            /*Drawing.OnDraw += args =>
+            {
+                if (MenuManager.DebugInGame || MenuManager.DebugInConsole)
+                {
+                    if (Midas != null)
+                        Drawing.DrawText($"Midas {(Midas.CanBeCasted() ? "On" : "Off")}", new Vector2(200, 10),
+                            Color.White,
+                            FontFlags.None);
+                }
+            };*/
+
             /*var manager = new InventoryManager(new EnsageServiceContext(Me));
             Printer.Print("trying to init new midas manager for " + me);
             var working = true;
@@ -79,11 +86,13 @@ namespace ArcAnnihilation
                     EntityManager<Creep>.Entities.Where(
                             x =>
                                 x.IsValid && x.IsAlive && x.Team != Me.Team && Midas.CanHit(x) && !x.IsAncient &&
-                                !x.IsMagicImmune())
+                                !x.IsMagicImmune() && x.IsSpawned)
                         .OrderByDescending(x => x.Health).FirstOrDefault();
                 if (creep != null)
                 {
                     Midas.UseAbility(creep);
+                    /*Printer.Log(
+                        $"AutoMidas -> {creep.Name} ({creep.Health}/{creep.MaximumHealth}) (id: {creep.Handle})");*/
                 }
             }
         }
