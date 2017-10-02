@@ -106,14 +106,14 @@ namespace ArcAnnihilation.OrderState
                 TopLane = new Lane("Top", _radiantTopLanes);
             }*/
             _sleeper = new Sleeper();
-            for (int i = 0; i < TopPath.Count-1; i++)
+            /*for (int i = 0; i < TopPath.Count-1; i++)
             {
                 Console.WriteLine($"Dist[{i}] {TopPath[i].Distance2D(TopPath[i + 1])}");
             }
             Drawing.OnDraw += args =>
             {
                 Map.Top.Draw(Color.White);
-            };
+            };*/
         }
 
         public List<Vector3> TopPath { get; set; }
