@@ -100,6 +100,20 @@ namespace ArcAnnihilation.Utils
                 switch (Mode)
                 {
                     case OrbwalkingMode.Pushing:
+                        if (MenuManager.TowerPriority)
+                        {
+                            var tower =
+                                ObjectManager.GetEntitiesFast<Tower>()
+                                    .FirstOrDefault(
+                                        unit =>
+                                            unit.IsValid && unit.IsAlive && unit.Team != Owner.Team &&
+                                            Owner.IsValidOrbwalkingTarget(unit));
+
+                            if (tower != null)
+                            {
+                                return tower;
+                            }
+                        }
                         var barracks =
                             ObjectManager.GetEntitiesFast<Building>()
                                 .FirstOrDefault(unit => unit.IsValid && unit.IsAlive && unit.Team != Owner.Team && !(unit is Tower) && Owner.IsValidOrbwalkingTarget(unit));
@@ -127,14 +141,19 @@ namespace ArcAnnihilation.Utils
                         {
                             return creep;
                         }
-
-                        var tower =
-                            ObjectManager.GetEntitiesFast<Tower>()
-                                .FirstOrDefault(unit => unit.IsValid && unit.IsAlive && unit.Team != Owner.Team && Owner.IsValidOrbwalkingTarget(unit));
-
-                        if (tower != null)
+                        if (!MenuManager.TowerPriority)
                         {
-                            return tower;
+                            var tower =
+                                ObjectManager.GetEntitiesFast<Tower>()
+                                    .FirstOrDefault(
+                                        unit =>
+                                            unit.IsValid && unit.IsAlive && unit.Team != Owner.Team &&
+                                            Owner.IsValidOrbwalkingTarget(unit));
+
+                            if (tower != null)
+                            {
+                                return tower;
+                            }
                         }
                         var others =
                             ObjectManager.GetEntitiesFast<Unit>()

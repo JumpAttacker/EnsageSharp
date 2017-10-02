@@ -38,11 +38,9 @@ namespace ArcAnnihilation.Panels
             }
             if (isAutoPushing != null && !PushLaneSelector.GetInstance().Loaded)
             {
-                var lane = isAutoPushing.ClosestLane;
-                if (lane==null)
-                    return;
-                
-                DrawText($"Pushing: [{lane.Name}]", tSize, startPos);
+                var lane = isAutoPushing.CurrentLane;
+
+                DrawText($"Pushing: [{lane}]", tSize, startPos);
             }
             else if (isDefaultCombo != null)
             {

@@ -77,8 +77,8 @@ namespace ArcAnnihilation.Units
 
         private async Task Attack(CancellationToken cancellationToken)
         {
-            if (this.Orbwalker.CanAttack(Core.Target))
-                this.Necr.Attack(Core.Target);
+            if (Orbwalker.CanAttack(Core.Target))
+                Necr.Attack(Core.Target);
             await Await.Delay(250,cancellationToken);
         }
     }

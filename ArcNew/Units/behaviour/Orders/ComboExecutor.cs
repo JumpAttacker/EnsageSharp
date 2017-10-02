@@ -12,18 +12,18 @@ namespace ArcAnnihilation.Units.behaviour.Orders
 
         public void Execute()
         {
-            if (this.Handler == null)
+            if (Handler == null)
             {
-                this.Handler = UpdateManager.Run(this.ExecuteAsync,false);
+                Handler = UpdateManager.Run(ExecuteAsync,false);
             }
-            this.Handler.RunAsync();
+            Handler.RunAsync();
         }
 
         public abstract Task ExecuteAsync(CancellationToken token = default(CancellationToken));
 
         public void Cancel()
         {
-            this.Handler?.Cancel();
+            Handler?.Cancel();
         }
 
         public bool CanExecute => OrderManager.CanBeExecuted;

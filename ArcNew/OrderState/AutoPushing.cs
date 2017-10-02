@@ -75,17 +75,22 @@ namespace ArcAnnihilation.OrderState
 
         #endregion
 
-        public Vector3 ClosestPosition { get; set; }
+        /*public Vector3 ClosestPosition { get; set; }
         public readonly Lane BotLane;
         public readonly Lane MidLane;
-        public readonly Lane TopLane;
+        public readonly Lane TopLane;*/
         public override bool CanBeExecuted => MenuManager.AutoPushingCombo.GetValue<KeyBind>().Active;
         private readonly Sleeper _sleeper;
-        public Lane ClosestLane;
-
+        //public Lane ClosestLane;
+        public Map Map;
         public AutoPushing()
         {
-            if (ObjectManager.LocalHero.Team == Team.Radiant)
+            Map = new Map();
+            var isRadiant = ObjectManager.LocalHero.Team == Team.Radiant;
+            TopPath = isRadiant ? Map.RadiantTopRoute : Map.DireTopRoute;
+            MidPath = isRadiant ? Map.RadiantMiddleRoute : Map.DireMiddleRoute;
+            BothPath = isRadiant ? Map.RadiantBottomRoute : Map.DireBottomRoute;
+            /*if (ObjectManager.LocalHero.Team == Team.Radiant)
             {
                 BotLane = new Lane("Bot", _radiantBotLanes);
                 MidLane = new Lane("Mid", _radiantMidLanes);
@@ -99,12 +104,327 @@ namespace ArcAnnihilation.OrderState
                 BotLane = new Lane("Bot", _radiantBotLanes);
                 MidLane = new Lane("Mid", _radiantMidLanes);
                 TopLane = new Lane("Top", _radiantTopLanes);
-            }
+            }*/
             _sleeper = new Sleeper();
+            for (int i = 0; i < TopPath.Count-1; i++)
+            {
+                Console.WriteLine($"Dist[{i}] {TopPath[i].Distance2D(TopPath[i + 1])}");
+            }
+            Drawing.OnDraw += args =>
+            {
+                Map.Top.Draw(Color.White);
+            };
         }
 
+        public List<Vector3> TopPath { get; set; }
+        public List<Vector3> MidPath { get; set; }
+        public List<Vector3> BothPath { get; set; }
 
         public override void Execute()
+        {
+            if (Core.TempestHero != null && Core.TempestHero.Hero.IsAlive)
+            {
+                if (Ensage.SDK.Extensions.UnitExtensions.IsChanneling(Core.TempestHero.Hero))
+                    return;
+                if (_sleeper.Sleeping)
+                    return;
+                _sleeper.Sleep(150);
+                var currentLane = GetLane(Core.TempestHero.Hero);
+                CurrentLane = currentLane;
+                var target = Core.TempestHero.Orbwalker.GetTarget();
+                if (target==null || target.Position.IsZero || !target.IsAlive)
+                {
+                    var path = FindOrGetNeededPath(Core.TempestHero.Hero);
+                    var lastPoint = path[path.Count - 1];
+                    var closest = path.Where(
+                            x =>
+                                x.Distance2D(lastPoint) < Core.TempestHero.Hero.Position.Distance2D(lastPoint) - 300)
+                        .OrderBy(pos => CheckForDist(pos, Core.TempestHero.Hero))
+                        .FirstOrDefault();
+                    Core.TempestHero.Hero.Move(closest);
+
+                    if (MenuManager.UseTravels)
+                    {
+                        var travels = Core.TempestHero.Hero.GetItemById(AbilityId.item_travel_boots) ??
+                                      Core.TempestHero.Hero.GetItemById(AbilityId.item_travel_boots_2);
+                        if (travels != null && travels.CanBeCasted())
+                        {
+                            var temp = path.ToList();
+                            temp.Reverse();
+
+                            if (MenuManager.CheckForCreeps)
+                            {
+                                var enemyCreeps =
+                                    EntityManager<Creep>.Entities.Where(
+                                        x =>
+                                            x.IsValid && x.IsVisible && x.IsAlive &&
+                                            x.Team != ObjectManager.LocalHero.Team &&
+                                            Map.GetLane(x) == currentLane);
+                                Creep creepForTravels = null;
+
+                                var allyCreeps =
+                                    EntityManager<Creep>.Entities.Where(
+                                        allyCreep => allyCreep.IsValid && allyCreep.IsAlive &&
+                                                     allyCreep.Team == ObjectManager.LocalHero.Team &&
+                                                     Map.GetLane(allyCreep) == currentLane &&
+                                                     allyCreep.HealthPercent() > 0.75).ToList();
+                                foreach (var point in temp)
+                                {
+                                    creepForTravels = allyCreeps.FirstOrDefault(
+                                        allyCreep =>
+                                            point.IsInRange(allyCreep.Position, 1500) &&
+                                            enemyCreeps.Any(z => z.IsInRange(allyCreep, 1500)));
+                                    if (creepForTravels != null)
+                                        break;
+                                }
+                                if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero) > 1500)
+                                {
+                                    travels.UseAbility(creepForTravels);
+                                    _sleeper.Sleep(500);
+                                }
+                            }
+                            else
+                            {
+                                var finalPos = temp.First();
+                                var ally =
+                                    EntityManager<Creep>.Entities.Where(
+                                            allyCreep => allyCreep.IsValid && allyCreep.IsAlive &&
+                                                         allyCreep.Team == ObjectManager.LocalHero.Team &&
+                                                         Map.GetLane(allyCreep) == currentLane &&
+                                                         allyCreep.HealthPercent() > 0.75)
+                                        .OrderBy(y => Ensage.SDK.Extensions.EntityExtensions.Distance2D(y, finalPos))
+                                        .FirstOrDefault();
+
+                                if (ally != null && ally.Distance2D(Core.TempestHero.Hero) > 1500)
+                                {
+                                    travels.UseAbility(ally);
+                                    _sleeper.Sleep(500);
+                                }
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        foreach (var illusion in IllusionManager.GetIllusions)
+                        {
+                            illusion.Hero.Move(closest);
+                        }
+                        foreach (var necro in NecronomiconManager.GetNecronomicons)
+                        {
+                            necro.Necr.Move(closest);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Printer.Both("kek " + e.Message);
+                    }
+                }
+                else
+                {
+                    if (Core.TempestHero.Spark.CanBeCasted())
+                    {
+                        Printer.Log($"[AutoPushing][Spark][{target.Name}]->{target.Position.PrintVector()}", true);
+                        if (!target.Position.IsZero)
+                        {
+                            Core.TempestHero.Spark.UseAbility(target.Position);
+                            _sleeper.Sleep(500);
+                        }
+                    }
+
+                    var itemForPushing = Core.TempestHero.Hero.GetItemById(ItemId.item_mjollnir);
+                    if (itemForPushing != null && itemForPushing.CanBeCasted())
+                    {
+                        var allyCreep =
+                            EntityManager<Creep>.Entities
+                                .FirstOrDefault(
+                                    x =>
+                                         x.IsAlive && x.Team == ObjectManager.LocalHero.Team &&
+                                        x.IsInRange(Core.TempestHero.Hero, 500) && x.HealthPercent() <= 0.92 &&
+                                        x.IsMelee);
+                        if (allyCreep != null)
+                        {
+                            itemForPushing.UseAbility(allyCreep);
+                            _sleeper.Sleep(500);
+                        }
+                    }
+                    itemForPushing = Core.TempestHero.Hero.GetItemById(ItemId.item_manta);
+
+                    if (itemForPushing != null && itemForPushing.CanBeCasted())
+                    {
+                        itemForPushing.UseAbility();
+                        _sleeper.Sleep(500);
+                    }
+
+                    itemForPushing = Core.TempestHero.Hero.GetItemById(ItemId.item_necronomicon) ??
+                                     Core.TempestHero.Hero.GetItemById(ItemId.item_necronomicon_2) ??
+                                     Core.TempestHero.Hero.GetItemById(ItemId.item_necronomicon_3);
+                    if (itemForPushing != null && itemForPushing.CanBeCasted())
+                    {
+                        itemForPushing.UseAbility();
+                        _sleeper.Sleep(500);
+                    }
+                    if (Core.TempestHero.Orbwalker.GetTarget() is Tower)
+                    {
+                        var field = Core.TempestHero.MagneticField;
+                        if (field.CanBeCasted())
+                        {
+                            var pos =
+                            (Core.TempestHero.Orbwalker.GetTarget().NetworkPosition -
+                             Core.TempestHero.Hero.NetworkPosition).Normalized();
+                            pos *= (280 + 150);
+                            pos = Core.TempestHero.Orbwalker.GetTarget().NetworkPosition - pos;
+                            field.UseAbility(pos);
+                            _sleeper.Sleep(1000);
+                        }
+                    }
+                }
+                if (MenuManager.AutoPushingTargetting)
+                {
+                    var enemyHero =
+                        Heroes.GetByTeam(ObjectManager.LocalHero.GetEnemyTeam())
+                            .FirstOrDefault(x => Core.TempestHero.Hero.IsValidOrbwalkingTarget(x));
+                    if (enemyHero != null)
+                    {
+                        //OrderManager.ChangeOrder(OrderManager.Orders.SparkSpamTempest);
+                        Core.Target = enemyHero;
+                        MenuManager.TempestCombo.SetValue(new KeyBind(MenuManager.TempestCombo.GetValue<KeyBind>().Key,
+                            KeyBindType.Toggle, true));
+                        Core.Target = enemyHero;
+                    }
+                }
+            }
+            else
+            {
+                var illusions = IllusionManager.GetIllusions.Where(x => x.Orbwalker.GetTarget() == null).ToList();
+                var necros = NecronomiconManager.GetNecronomicons.Where(x => x.Orbwalker.GetTarget() == null).ToList();
+                var any = illusions.Any() || necros.Any();
+                if (any)
+                {
+                    foreach (var illusion in illusions)
+                    {
+                        var path = FindOrGetNeededPath(illusion.Hero);
+                        var lastPoint = path[path.Count - 1];
+                        var closest = path.Where(
+                                x =>
+                                    x.Distance2D(lastPoint) < Core.TempestHero.Hero.Position.Distance2D(lastPoint) - 300)
+                            .OrderBy(pos => CheckForDist(pos, Core.TempestHero.Hero))
+                            .FirstOrDefault();
+                        illusion.Hero.Move(closest);
+                    }
+                    foreach (var necro in necros)
+                    {
+                        var path = FindOrGetNeededPath(necro.Necr);
+                        var lastPoint = path[path.Count - 1];
+                        var closest = path.Where(
+                                x =>
+                                    x.Distance2D(lastPoint) < Core.TempestHero.Hero.Position.Distance2D(lastPoint) - 300)
+                            .OrderBy(pos => CheckForDist(pos, Core.TempestHero.Hero))
+                            .FirstOrDefault();
+                        necro.Necr.Move(closest);
+                    }
+                    _sleeper.Sleep(500);
+                }
+            }
+        }
+
+        public MapArea CurrentLane { get; set; }
+
+        private MapArea GetLane(Hero hero)
+        {
+            if (PushLaneSelector.GetInstance().Loaded)
+            {
+                var selected = PushLaneSelector.GetInstance().GetSelectedLane;
+                if (!string.IsNullOrEmpty(selected))
+                {
+                    selected = selected.Substring(5);
+                    if (selected != "Pushing")
+                    {
+                        if (selected.Equals("Top"))
+                        {
+                            return MapArea.Top;
+                        }
+                        if (selected.Equals("Mid"))
+                        {
+                            return MapArea.Middle;
+                        }
+                        if (selected.Equals("Bot"))
+                        {
+                            return MapArea.Bottom;
+                        }
+                    }
+                }
+            }
+            var lane = Map.GetLane(hero);
+            switch (lane)
+            {
+                case MapArea.Top:
+                    return MapArea.Top;
+                case MapArea.Middle:
+                    return MapArea.Middle;
+                case MapArea.Bottom:
+                    return MapArea.Bottom;
+                case MapArea.DireTopJungle:
+                    return MapArea.Top;
+                case MapArea.RadiantBottomJungle:
+                    return MapArea.Bottom;
+                case MapArea.RadiantTopJungle:
+                    return MapArea.Top;
+                case MapArea.DireBottomJungle:
+                    return MapArea.Bottom;
+                default:
+                    return MapArea.Middle;
+            }
+        }
+
+        private List<Vector3> FindOrGetNeededPath(Unit hero)
+        {
+            if (PushLaneSelector.GetInstance().Loaded)
+            {
+                var selected = PushLaneSelector.GetInstance().GetSelectedLane;
+                if (!string.IsNullOrEmpty(selected))
+                {
+                    selected = selected.Substring(5);
+                    if (selected != "Pushing")
+                    {
+                        if (selected.Equals("Top"))
+                        {
+                            return TopPath;
+                        }
+                        if (selected.Equals("Mid"))
+                        {
+                            return MidPath;
+                        }
+                        if (selected.Equals("Bot"))
+                        {
+                            return BothPath;
+                        }
+                    }
+                }
+            }
+            var currentLane = Map.GetLane(hero);
+            switch (currentLane)
+            {
+                case MapArea.Top:
+                    return TopPath;
+                case MapArea.Middle:
+                    return MidPath;
+                case MapArea.Bottom:
+                    return BothPath;
+                case MapArea.DireTopJungle:
+                    return TopPath;
+                case MapArea.RadiantBottomJungle:
+                    return BothPath;
+                case MapArea.RadiantTopJungle:
+                    return TopPath;
+                case MapArea.DireBottomJungle:
+                    return BothPath;
+                default:
+                    return MidPath;
+            }
+        }
+
+        /*public override void Execute()
         {
             if (Core.TempestHero != null && Core.TempestHero.Hero.IsAlive)
             {
@@ -272,9 +592,9 @@ namespace ArcAnnihilation.OrderState
                     necro.Necr.Move(pushPos);
                 }
             }
-        }
+        }*/
 
-        private Lane GetClosestLane(Unit hero)
+        /*private Lane GetClosestLane(Unit hero)
         {
             if (PushLaneSelector.GetInstance().Loaded)
             {
@@ -320,7 +640,7 @@ namespace ArcAnnihilation.OrderState
                 return MidLane;
             }
             return BotLane;
-        }
+        }*/
 
         private float CheckForDist(Vector3 pos, Unit hero)
         {

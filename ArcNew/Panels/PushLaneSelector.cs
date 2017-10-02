@@ -23,14 +23,14 @@ namespace ArcAnnihilation.Panels
 
             public Button(string text, Vector2 position, Vector2 size)
             {
-                this.Text = text;
-                this.Position = position;
-                this.Size = size;
+                Text = text;
+                Position = position;
+                Size = size;
             }
             public Button(string text, bool active=false)
             {
-                this.Text = text;
-                this.Active = active;
+                Text = text;
+                Active = active;
             }
         }
         private static PushLaneSelector _panel;
@@ -62,9 +62,9 @@ namespace ArcAnnihilation.Panels
             var size = MenuManager.GetPushLaneSelectorSize;
             var text = _buttons[0].Text;
             var order = OrderManager.CurrentOrder as AutoPushing;
-            if (_buttons[0].Active && order?.ClosestLane != null)
+            if (_buttons[0].Active && order?.CurrentLane != null)
             {
-                text += $" {order.ClosestLane.Name}";
+                text += $" {order.CurrentLane}";
             }
             var textSize = Drawing.MeasureText($"{text}", "Arial",
                 new Vector2(size), FontFlags.None);

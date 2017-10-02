@@ -3,6 +3,7 @@ using System.ComponentModel.Composition;
 using System.Reflection;
 using System.Windows.Input;
 using Ensage;
+using Ensage.SDK.Helpers;
 using Ensage.SDK.Input;
 using Ensage.SDK.Inventory;
 using Ensage.SDK.Renderer;
@@ -87,6 +88,10 @@ namespace OverlayInformation
         private void RefreshKey(KeyEventArgs keyEventArgs)
         {
             Game.ExecuteCommand("dota_hero_refresh");
+            foreach (var player in EntityManager<Player>.Entities)
+            {
+                Log.Info($"{player.Name} BuyBack status -> {player.BuybackCooldownTime}");
+            }
         }
 
         protected override void OnDeactivate()

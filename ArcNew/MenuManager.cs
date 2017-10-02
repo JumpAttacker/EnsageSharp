@@ -171,8 +171,10 @@ namespace ArcAnnihilation
         public static bool IsItemPanelEnable => GetBool("itemPanel.Enable");
         public static bool SmartFlux => GetBool("FluxSettings.Smart");
         public static bool SmartSpark => GetBool("SparkSettings.Smart");
+        public static bool CheckForCreeps => GetBool("AutoPushing.CheckForEnemyCreeps");
         public static float OrbWalkingRange => GetSlider("OrbWalking.Range");
         public static bool OrbWalkerGoBeyond => GetBool("OrbWalking.OrbWalkerGoBeyond");
+        public static bool TowerPriority => GetBool("AutoPushing.TowerPriority");
         public static float GetBlinkExtraDelay => GetSlider("Blink.ExtraDelay");
         public static bool InAnyCombo(ulong key)
             =>
@@ -261,6 +263,8 @@ namespace ArcAnnihilation
                 new MenuItem("PushLaneSelector.Y", "Pos Y").SetValue(new Slider(350, 0, 2000)));
             var autoPushingSettings = new Menu("AutoPushing Settings", "AutoPushingSettings");
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.Travels", "Enable travel boots").SetValue(true));
+            autoPushingSettings.AddItem(new MenuItem("AutoPushing.TowerPriority", "Tower priority > creep priority").SetValue(true));
+            autoPushingSettings.AddItem(new MenuItem("AutoPushing.CheckForEnemyCreeps", "[Travels] Check for enemy creeps").SetValue(true));
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.AutoTargetting", "Do tempest combo").SetValue(true))
                 .SetTooltip("if you find any target in attack range");
 

@@ -20,6 +20,7 @@ namespace OverlayInformation.Features
             var panel = Config.Factory.Menu("Hero Overlay");
 
             EnableForMainHero = panel.Item("Enable for main hero", true);
+            EnableForAllyHeroes = panel.Item("Enable for ally heroes", true);
             ExtraPositionX = panel.Item("Extra position X", new Slider(0, -50, 50));
             ExtraPositionY = panel.Item("Extra position Y", new Slider(0, -50, 50));
             ExtraSizeX = panel.Item("Extra size X", new Slider(0, -50, 50));
@@ -54,6 +55,8 @@ namespace OverlayInformation.Features
             Drawing.OnDraw += DrawingOnOnDraw;
             HealthBarSize = new Vector2(HudInfo.GetHPBarSizeX(), HudInfo.GetHpBarSizeY());
         }
+
+        public MenuItem<bool> EnableForAllyHeroes { get; set; }
 
         public MenuItem<bool> DrawMaxHealth { get; set; }
 
@@ -109,6 +112,8 @@ namespace OverlayInformation.Features
             {
                 if (!EnableForMainHero && heroCont.IsOwner)
                     continue;
+                if (!EnableForAllyHeroes && heroCont.IsAlly)
+                    continue;
                 var hero = heroCont.Hero;
                 if (!hero.IsAlive)
                     continue;
@@ -148,6 +153,10 @@ namespace OverlayInformation.Features
                             new Color(0, 155, 255, 255),
                             new Color(0, 0, 0, 255), ((int)mana).ToString(), ManaBarsNumbers,
                             ManaBarsSize.Value.Value);
+                    }
+                    else if (heroCont.IsAlly && !ManaBarsForAlly)
+                    {
+                        pos += new Vector2(0, size.Y/2);
                     }
                 }
 

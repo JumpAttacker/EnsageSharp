@@ -143,8 +143,16 @@ namespace OverlayInformation.Features.Teleport_Catcher
                         Hero = hero;
                         if (!IsStart)
                         {
-                            HasTravelBoots = hero.HasItem(ClassId.CDOTA_Item_BootsOfTravel) ||
-                                              hero.HasItem(ClassId.CDOTA_Item_BootsOfTravel_2);
+                            try
+                            {
+                                HasTravelBoots = hero.HasItem(ClassId.CDOTA_Item_BootsOfTravel) ||
+                                                 hero.HasItem(ClassId.CDOTA_Item_BootsOfTravel_2);
+                            }
+                            catch (Exception)
+                            {
+                                HasTravelBoots = false;
+                            }
+                            
                             if (!HasTravelBoots)
                             {
                                 var closest =
