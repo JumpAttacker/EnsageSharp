@@ -42,7 +42,7 @@ namespace InvokerAnnihilationCrappa
             UpdateManager.Subscribe(IndicatorUpdater);
             Drawing.OnDraw += args =>
             {
-                if (Me.Config.DrawMinDistanceInOrbwalk && !Orbwalker.OrbwalkingPoint.IsZero)
+                if (Me.Config.DrawMinDistanceInOrbwalk && !Orbwalker.OrbwalkingPoint.IsZero && CanExecute)
                 {
                     var pos = Drawing.WorldToScreen(Orbwalker.OrbwalkingPoint);
                     Drawing.DrawCircle(pos, 15, 15, Color.Aqua);
@@ -96,10 +96,18 @@ namespace InvokerAnnihilationCrappa
                 if (distance < Me.Config.MinDisInOrbwalk)
                 {
                     //var myPos = Owner.Position;
-                    var targetPos = _target.Position;
-                    var pos = (targetPos - Game.MousePosition).Normalized();
+
+                    /*var pos = (targetPos - Game.MousePosition).Normalized();
                     pos *= Me.Config.MinDisInOrbwalk;
                     pos = targetPos - pos;
+                    Orbwalker.OrbwalkingPoint = pos;*/
+                    var mousePos = Game.MousePosition;
+                    var targetPos = new Vector3(_target.Position.X, _target.Position.Y, mousePos.Z);
+                    var ownerPosExtral = new Vector3(Owner.Position.X, Owner.Position.Y, mousePos.Z);
+                    var ownerDis = Math.Min(Owner.Distance2D(mousePos), 300);
+                    var ownerPos = ownerPosExtral.Extend(mousePos, ownerDis);
+                    var pos = targetPos.Extend(ownerPos, Me.Config.MinDisInOrbwalk);
+
                     Orbwalker.OrbwalkingPoint = pos;
                     if (Orbwalker.CanAttack(_target) && !_target.IsAttackImmune() && !_target.IsInvul())
                     {
@@ -259,10 +267,19 @@ namespace InvokerAnnihilationCrappa
                     if (distance < Me.Config.MinDisInOrbwalk)
                     {
                         //var myPos = Owner.Position;
-                        var targetPos = _target.Position;
-                        var pos = (targetPos - Game.MousePosition).Normalized();
+                        /*var pos = (targetPos - Game.MousePosition).Normalized();
                         pos *= Me.Config.MinDisInOrbwalk;
                         pos = targetPos - pos;
+                        Orbwalker.OrbwalkingPoint = pos;
+                        Orbwalker.OrbwalkTo(null);*/
+
+                        var mousePos = Game.MousePosition;
+                        var targetPos = new Vector3(_target.Position.X, _target.Position.Y, mousePos.Z);
+                        var ownerPosExtral = new Vector3(Owner.Position.X, Owner.Position.Y, mousePos.Z);
+                        var ownerDis = Math.Min(Owner.Distance2D(mousePos), 300);
+                        var ownerPos = ownerPosExtral.Extend(mousePos, ownerDis);
+                        var pos = targetPos.Extend(ownerPos, Me.Config.MinDisInOrbwalk);
+
                         Orbwalker.OrbwalkingPoint = pos;
                         Orbwalker.OrbwalkTo(null);
                     }
