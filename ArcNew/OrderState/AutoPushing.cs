@@ -151,7 +151,11 @@ namespace ArcAnnihilation.OrderState
                         {
                             var temp = path.ToList();
                             temp.Reverse();
-
+                            var towers = EntityManager<Tower>.Entities.Where(
+                                x =>
+                                    x.IsValid && x.IsVisible && x.IsAlive &&
+                                    x.Team == ObjectManager.LocalHero.Team &&
+                                    Map.GetLane(x) == currentLane);
                             if (MenuManager.CheckForCreeps)
                             {
                                 var enemyCreeps =
@@ -194,10 +198,34 @@ namespace ArcAnnihilation.OrderState
                                                          allyCreep.HealthPercent() > 0.75)
                                         .OrderBy(y => Ensage.SDK.Extensions.EntityExtensions.Distance2D(y, finalPos))
                                         .FirstOrDefault();
+                                var allyTwr =
+                                    EntityManager<Tower>.Entities.Where(
+                                            allyCreep => allyCreep.IsValid && allyCreep.IsAlive &&
+                                                         allyCreep.Team == ObjectManager.LocalHero.Team &&
+                                                         Map.GetLane(allyCreep) == currentLane &&
+                                                         allyCreep.HealthPercent() > 0.1)
+                                        .OrderBy(y => Ensage.SDK.Extensions.EntityExtensions.Distance2D(y, finalPos))
+                                        .FirstOrDefault();
 
-                                if (ally != null && ally.Distance2D(Core.TempestHero.Hero) > 1500)
+                                Unit tpTarget = null;
+                                if (ally != null && allyTwr != null)
                                 {
-                                    travels.UseAbility(ally);
+                                    var dist1 = finalPos.Distance2D(ally);
+                                    var dist2 = finalPos.Distance2D(allyTwr);
+                                    
+                                    if (dist1 > dist2)
+                                    {
+                                        tpTarget = allyTwr;
+                                    }
+                                    else
+                                    {
+                                        tpTarget = ally;
+                                    }
+                                }
+
+                                if (tpTarget != null && tpTarget.Distance2D(Core.TempestHero.Hero) > 1500)
+                                {
+                                    travels.UseAbility(tpTarget.Position);
                                     _sleeper.Sleep(500);
                                 }
                             }
