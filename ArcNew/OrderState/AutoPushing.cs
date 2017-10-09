@@ -17,68 +17,8 @@ using AbilityId = Ensage.AbilityId;
 
 namespace ArcAnnihilation.OrderState
 {
-    public class Lane
-    {
-        public string Name;
-        public List<Vector3> Points;
-        public Vector3 ClosestPosition;
-
-        public Lane(string name, List<Vector3> points)
-        {
-            Name = name;
-            Points = points;
-            ClosestPosition = Vector3.Zero;
-        }
-    }
-
     public class AutoPushing : Order
     {
-        #region lanes
-
-        private readonly List<Vector3> _radiantTopLanes = new List<Vector3>
-        {
-            new Vector3(-6545,-2815,256),
-            new Vector3(-6369,-661,384),
-            new Vector3(-6318.565f,1398.681f,384.0001f),
-            new Vector3(-6295.22f,2728.575f,384),
-            new Vector3(-6249.306f,4836.18f,384),
-            new Vector3(-5555.483f,5896.666f,384),
-            new Vector3(-2762.254f,6007.369f,384),
-            new Vector3(-687.4045f,6022.142f,384.0001f),
-            new Vector3(1427.135f,5954.591f,384),
-            new Vector3(3409.737f,5780.926f,384)
-        };
-        private readonly List<Vector3> _radiantMidLanes = new List<Vector3>
-        {
-            new Vector3(-4390,-3877,384),
-            new Vector3(-2016,-1663,256),
-            new Vector3(368,432,256),
-            new Vector3(2724,2070,255),
-            new Vector3(4430,3836,384)
-        };
-
-        private readonly List<Vector3> _radiantBotLanes = new List<Vector3>
-        {
-            new Vector3(-4026, -6105, 384),
-            new Vector3(-2141, -6183, 256),
-            new Vector3(9, -6291, 384),
-            new Vector3(2184, -6320, 384),
-            new Vector3(4220, -6126, 384),
-            new Vector3(5732, -5547, 384),
-            new Vector3(6313, -4135, 384),
-            new Vector3(6260, -2527, 384),
-            new Vector3(6295, -965, 383),
-            new Vector3(6337, 492, 384),
-            new Vector3(6402, 1906, 256),
-            new Vector3(6366, 3378, 383)
-        };
-
-        #endregion
-
-        /*public Vector3 ClosestPosition { get; set; }
-        public readonly Lane BotLane;
-        public readonly Lane MidLane;
-        public readonly Lane TopLane;*/
         public override bool CanBeExecuted => MenuManager.AutoPushingCombo.GetValue<KeyBind>().Active;
         private readonly Sleeper _sleeper;
         //public Lane ClosestLane;
@@ -90,30 +30,7 @@ namespace ArcAnnihilation.OrderState
             TopPath = isRadiant ? Map.RadiantTopRoute : Map.DireTopRoute;
             MidPath = isRadiant ? Map.RadiantMiddleRoute : Map.DireMiddleRoute;
             BothPath = isRadiant ? Map.RadiantBottomRoute : Map.DireBottomRoute;
-            /*if (ObjectManager.LocalHero.Team == Team.Radiant)
-            {
-                BotLane = new Lane("Bot", _radiantBotLanes);
-                MidLane = new Lane("Mid", _radiantMidLanes);
-                TopLane = new Lane("Top", _radiantTopLanes);
-            }
-            else
-            {
-                _radiantBotLanes.Reverse();
-                _radiantMidLanes.Reverse();
-                _radiantTopLanes.Reverse();
-                BotLane = new Lane("Bot", _radiantBotLanes);
-                MidLane = new Lane("Mid", _radiantMidLanes);
-                TopLane = new Lane("Top", _radiantTopLanes);
-            }*/
             _sleeper = new Sleeper();
-            /*for (int i = 0; i < TopPath.Count-1; i++)
-            {
-                Console.WriteLine($"Dist[{i}] {TopPath[i].Distance2D(TopPath[i + 1])}");
-            }
-            Drawing.OnDraw += args =>
-            {
-                Map.Top.Draw(Color.White);
-            };*/
         }
 
         public List<Vector3> TopPath { get; set; }
@@ -122,6 +39,8 @@ namespace ArcAnnihilation.OrderState
 
         public override void Execute()
         {
+            if (Ensage.SDK.Extensions.UnitExtensions.HasModifier(Core.TempestHero.Hero, "modifier_teleporting"))
+                return;
             if (Core.TempestHero != null && Core.TempestHero.Hero.IsAlive)
             {
                 if (Ensage.SDK.Extensions.UnitExtensions.IsChanneling(Core.TempestHero.Hero))
@@ -151,11 +70,6 @@ namespace ArcAnnihilation.OrderState
                         {
                             var temp = path.ToList();
                             temp.Reverse();
-                            var towers = EntityManager<Tower>.Entities.Where(
-                                x =>
-                                    x.IsValid && x.IsVisible && x.IsAlive &&
-                                    x.Team == ObjectManager.LocalHero.Team &&
-                                    Map.GetLane(x) == currentLane);
                             if (MenuManager.CheckForCreeps)
                             {
                                 var enemyCreeps =
@@ -184,7 +98,8 @@ namespace ArcAnnihilation.OrderState
                                 if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero) > 1500)
                                 {
                                     travels.UseAbility(creepForTravels);
-                                    _sleeper.Sleep(500);
+                                    _sleeper.Sleep(1000);
+                                    return;
                                 }
                             }
                             else
@@ -226,7 +141,8 @@ namespace ArcAnnihilation.OrderState
                                 if (tpTarget != null && tpTarget.Distance2D(Core.TempestHero.Hero) > 1500)
                                 {
                                     travels.UseAbility(tpTarget.Position);
-                                    _sleeper.Sleep(500);
+                                    _sleeper.Sleep(1000);
+                                    return;
                                 }
                             }
                         }
