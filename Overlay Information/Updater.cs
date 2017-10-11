@@ -146,10 +146,16 @@ namespace OverlayInformation
                         return;
                     }
                 }
+                
                 var myTeam = Main.Context.Value.Owner.Team;
                 var targetTeam = hero.Team;
                 var isAlly = myTeam == targetTeam;
+                
                 var newHero = new HeroContainer(hero, isAlly, Main);
+                if (hero.ClassId == ClassId.CDOTA_Unit_Hero_PhantomAssassin && !isAlly)
+                {
+                    Main.Config.ShowMeMore.InitPhantomAssiasin(newHero);
+                }
                 try
                 {
                     Heroes.Add(newHero);

@@ -88,10 +88,6 @@ namespace OverlayInformation
         private void RefreshKey(KeyEventArgs keyEventArgs)
         {
             Game.ExecuteCommand("dota_hero_refresh");
-            foreach (var player in EntityManager<Player>.Entities)
-            {
-                Log.Info($"{player.Name} BuyBack status -> {player.BuybackCooldownTime}");
-            }
         }
 
         protected override void OnDeactivate()

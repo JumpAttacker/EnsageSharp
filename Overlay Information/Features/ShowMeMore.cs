@@ -67,7 +67,18 @@ namespace OverlayInformation.Features
                         SpiritBreakerClrB.Value.Value, SpiritBreakerClrA.Value.Value));
             }
         }
+        public void InitPhantomAssiasin(HeroContainer newHero)
+        {
+            var render = Config.Main.Renderer;
+            render.Draw += (sender, args) =>
+            {
+                if (newHero.Hero.HasModifier("modifier_phantom_assassin_blur_active"))
+                {
+                    render.DrawText(newHero.Hero.Position.WorldToMinimap()-new Vector2(7,15), "P", System.Drawing.Color.White, 15);
 
+                }
+            };
+        }
 
         private async void OnNewModifier(Unit sender, ModifierChangedEventArgs args)
         {
@@ -138,6 +149,20 @@ namespace OverlayInformation.Features
                     rangeEffect.SetControlPoint(2, new Vector3(139, 0, 255));
                     //EmpRanger.Add(effect, rangeEffect);
                     await Task.Delay(2900);
+                    rangeEffect.Dispose();
+                });
+            }
+            if (name == "particles/units/heroes/hero_ancient_apparition/ancient_apparition_cold_feet.vpcf")
+            {
+                DelayAction.Add(10, async () =>
+                {
+                    var effect = args.ParticleEffect;
+                    var a = effect.GetControlPoint(0);
+                    var rangeEffect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf", a);
+                    var range = 740;
+                    rangeEffect.SetControlPoint(1, new Vector3(range, 255, 0));
+                    rangeEffect.SetControlPoint(2, new Vector3(0, 155, 255));
+                    await Task.Delay(4000);
                     rangeEffect.Dispose();
                 });
             }
@@ -223,14 +248,14 @@ namespace OverlayInformation.Features
             EntityManager<Unit>.EntityAdded += EntityAdded;
             Entity.OnParticleEffectAdded += OnNewParticle;
             Unit.OnModifierAdded += OnNewModifier;
-            //Drawing.OnDraw += DrawingOnOnDraw;
+            
         }
+
         private void UnLoad()
         {
             EntityManager<Unit>.EntityAdded -= EntityAdded;
             Entity.OnParticleEffectAdded -= OnNewParticle;
             Unit.OnModifierAdded -= OnNewModifier;
-            //Drawing.OnDraw -= DrawingOnOnDraw;
         }
 
         public MenuItem<bool> Enable { get; set; }
