@@ -95,7 +95,9 @@ namespace ArcAnnihilation.OrderState
                                     if (creepForTravels != null)
                                         break;
                                 }
-                                if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero) > 1500)
+                                if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero) > 1500 &&
+                                    path[path.Count].Distance2D(Core.TempestHero.Hero) <
+                                    creepForTravels.Distance2D(Core.TempestHero.Hero))
                                 {
                                     travels.UseAbility(creepForTravels);
                                     _sleeper.Sleep(1000);
@@ -138,7 +140,9 @@ namespace ArcAnnihilation.OrderState
                                     }
                                 }
 
-                                if (tpTarget != null && tpTarget.Distance2D(Core.TempestHero.Hero) > 1500)
+                                if (tpTarget != null && tpTarget.Distance2D(Core.TempestHero.Hero) > 1500 &&
+                                    path[path.Count].Distance2D(Core.TempestHero.Hero) <
+                                    tpTarget.Distance2D(Core.TempestHero.Hero))
                                 {
                                     travels.UseAbility(tpTarget.Position);
                                     _sleeper.Sleep(1000);

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ArcAnnihilation.OrderState;
 using ArcAnnihilation.Utils;
+using Ensage.Common.Extensions;
 
 namespace ArcAnnihilation
 {
@@ -36,25 +37,13 @@ namespace ArcAnnihilation
                 Printer.Both($"[Order][Error] {setOrder}");
                 return;
             }
-            if (CurrentOrder is AutoPushing)
+            if (setOrder is TempestCombo && MenuManager.AutoSummonOnTempestCombog ||
+                setOrder is AutoPushing && MenuManager.AutoSummonOnPusing)
             {
-                /*if (_changed)
+                if (Core.MainHero.TempestDouble.CanBeCasted())
                 {
-                    _changed = false;
-                    var reqh = Game.GetConsoleVar("dota_player_teleport_requires_halt");
-                    reqh?.SetValue(0);
-                }*/
-            }
-            else if (setOrder is AutoPushing)
-            {
-                /*var reqh = Game.GetConsoleVar("dota_player_teleport_requires_halt");
-                Game.PrintMessage((reqh!=null).ToString());
-                if (Game.GetConsoleVar("dota_player_teleport_requires_halt").GetInt() == 0)
-                {
-                    
-                    reqh.SetValue(1);
-                    _changed = true;
-                }*/
+                    Core.MainHero.TempestDouble.UseAbility();
+                }
             }
             Printer.Both(CurrentOrder != null
                 ? $"[Order] changed from {CurrentOrder} to {setOrder}"

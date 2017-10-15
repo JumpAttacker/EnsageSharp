@@ -175,6 +175,8 @@ namespace ArcAnnihilation
         public static float OrbWalkingRange => GetSlider("OrbWalking.Range");
         public static bool OrbWalkerGoBeyond => GetBool("OrbWalking.OrbWalkerGoBeyond");
         public static bool TowerPriority => GetBool("AutoPushing.TowerPriority");
+        public static bool AutoSummonOnPusing => GetBool("AutoSummoning.Pushing");
+        public static bool AutoSummonOnTempestCombog => GetBool("AutoSummoning.TempestCombo");
         public static float GetBlinkExtraDelay => GetSlider("Blink.ExtraDelay");
         public static bool InAnyCombo(ulong key)
             =>
@@ -210,8 +212,13 @@ namespace ArcAnnihilation
             settings.AddItem(
                 new MenuItem("OrbWalking.Range", "[Orbwalking] min range").SetValue(new Slider(50, 10, 1000)));
             settings.AddItem(
-                    new MenuItem("OrbWalking.OrbWalkerGoBeyond", "[Orbwalking] Go beyond of selected range").SetValue(true))
+                    new MenuItem("OrbWalking.OrbWalkerGoBeyond", "[Orbwalking] Go beyond of selected range").SetValue(
+                        true))
                 .SetTooltip("only for Tempest");
+            settings.AddItem(
+                new MenuItem("AutoSummoning.Pushing", "Cast ultimate on autopusing").SetValue(false));
+            settings.AddItem(
+                new MenuItem("AutoSummoning.TempestCombo", "Cast ultimate on tempest combo").SetValue(false));
             var mf=settings.AddItem(
                 new MenuItem("MagneticField.InFront", "Use Magnetic Field in front of ur hero").SetValue(true));
             var toggle = settings.AddItem(
