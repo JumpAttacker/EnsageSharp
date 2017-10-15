@@ -49,7 +49,6 @@ namespace ArcAnnihilation
                 ? $"[Order] changed from {CurrentOrder} to {setOrder}"
                 : $"[Order][Init] {setOrder}");
             CurrentOrder = setOrder;
-
             //dota_player_teleport_requires_halt
             /*var reqh = Game.GetConsoleVar("dota_player_teleport_requires_halt");
             if (reqh.GetInt() == 0)

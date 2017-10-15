@@ -39,10 +39,10 @@ namespace ArcAnnihilation.OrderState
 
         public override void Execute()
         {
-            if (Ensage.SDK.Extensions.UnitExtensions.HasModifier(Core.TempestHero.Hero, "modifier_teleporting"))
-                return;
             if (Core.TempestHero != null && Core.TempestHero.Hero.IsAlive)
             {
+                if (Ensage.SDK.Extensions.UnitExtensions.HasModifier(Core.TempestHero.Hero, "modifier_teleporting"))
+                    return;
                 if (Ensage.SDK.Extensions.UnitExtensions.IsChanneling(Core.TempestHero.Hero))
                     return;
                 if (_sleeper.Sleeping)
@@ -61,7 +61,6 @@ namespace ArcAnnihilation.OrderState
                         .OrderBy(pos => CheckForDist(pos, Core.TempestHero.Hero))
                         .FirstOrDefault();
                     Core.TempestHero.Hero.Move(closest);
-
                     if (MenuManager.UseTravels)
                     {
                         var travels = Core.TempestHero.Hero.GetItemById(AbilityId.item_travel_boots) ??
@@ -95,13 +94,18 @@ namespace ArcAnnihilation.OrderState
                                     if (creepForTravels != null)
                                         break;
                                 }
-                                if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero) > 1500 &&
-                                    path[path.Count].Distance2D(Core.TempestHero.Hero) <
-                                    creepForTravels.Distance2D(Core.TempestHero.Hero))
+                                if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero) > 1500)
                                 {
-                                    travels.UseAbility(creepForTravels);
-                                    _sleeper.Sleep(1000);
-                                    return;
+                                    var point = path[path.Count - 1];
+                                    var distance1 = point.Distance2D(creepForTravels);
+                                    var distance2 = point.Distance2D(Core.TempestHero.Hero);
+
+                                    if (distance1 < distance2)
+                                    {
+                                        travels.UseAbility(creepForTravels);
+                                        _sleeper.Sleep(1000);
+                                        return;
+                                    }
                                 }
                             }
                             else
@@ -140,13 +144,18 @@ namespace ArcAnnihilation.OrderState
                                     }
                                 }
 
-                                if (tpTarget != null && tpTarget.Distance2D(Core.TempestHero.Hero) > 1500 &&
-                                    path[path.Count].Distance2D(Core.TempestHero.Hero) <
-                                    tpTarget.Distance2D(Core.TempestHero.Hero))
+                                if (tpTarget != null && tpTarget.Distance2D(Core.TempestHero.Hero) > 1500)
                                 {
-                                    travels.UseAbility(tpTarget.Position);
-                                    _sleeper.Sleep(1000);
-                                    return;
+                                    var point = path[path.Count - 1];
+                                    var distance1 = point.Distance2D(tpTarget);
+                                    var distance2 = point.Distance2D(Core.TempestHero.Hero);
+                                    
+                                    if (distance1 < distance2)
+                                    {
+                                        travels.UseAbility(tpTarget.Position);
+                                        _sleeper.Sleep(1000);
+                                        return;
+                                    }
                                 }
                             }
                         }
