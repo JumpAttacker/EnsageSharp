@@ -162,7 +162,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                     Core.Target.IsUnitState(UnitState.Hexed))
                                 {
                                     var time = Ensage.Common.Utils.DisableDuration(Core.Target);
-                                    if (time >= 0.35f)
+                                    if (time >= 0.35f + Game.Ping/1000)
                                     {
                                         counter++;
                                         continue;
@@ -175,7 +175,10 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             {
                                 if (ability.IsSilence()) //TODO: check only for real silence
                                 {
-                                    if (Core.Target.IsSilenced())
+                                    if (
+                                        Core.Target.HasModifiers(
+                                            new[] {"modifier_orchid_malevolence_debuff", "modifier_bloodthorn_debuff"},
+                                            false)) //(Core.Target.IsSilenced())
                                     {
                                         counter++;
                                         continue;
