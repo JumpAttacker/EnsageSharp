@@ -292,14 +292,14 @@ namespace ArcAnnihilation
             var blink = new Menu("Blink Settings", "Blink Settings", textureName: "item_blink",
                 showTextWithTexture: true);
             blink.AddItem(
-                    new MenuItem("Blink.ExtraRange", "Extra range").SetValue(new Slider(50, 0, 600)))
+                    new MenuItem("Blink.ExtraRange", "Extra range").SetValue(new Slider(50, 0, 1200)))
                 .SetTooltip("blink dist(1200 by def) + this value");
             blink.AddItem(
                     new MenuItem("Blink.ExtraRange.Use", "Use extra range").SetValue(true));
             blink.AddItem(
                     new MenuItem("Blink.BlockSilver", "Dont use silver edge if dagger can be casted").SetValue(true));
             blink.AddItem(
-                new MenuItem("Blink.MinRange", "Min range for blink").SetValue(new Slider(400, 0, 600)));
+                new MenuItem("Blink.MinRange", "Min range for blink").SetValue(new Slider(400, 0, 1000)));
             blink.AddItem(
                 new MenuItem("Blink.ExtraDelay", "Extra delay after blink").SetValue(new Slider(1, 1, 200)));
 
