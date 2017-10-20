@@ -36,7 +36,7 @@ namespace ArcAnnihilation.OrderState
         public List<Vector3> TopPath { get; set; }
         public List<Vector3> MidPath { get; set; }
         public List<Vector3> BothPath { get; set; }
-
+        public string Status;
         public override void Execute()
         {
             if (Core.TempestHero != null && Core.TempestHero.Hero.IsAlive)
@@ -61,6 +61,7 @@ namespace ArcAnnihilation.OrderState
                         .OrderBy(pos => CheckForDist(pos, Core.TempestHero.Hero))
                         .FirstOrDefault();
                     Core.TempestHero.Hero.Move(closest);
+                    Status = "Moving";
                     if (MenuManager.UseTravels)
                     {
                         var travels = Core.TempestHero.Hero.GetItemById(AbilityId.item_travel_boots) ??
@@ -100,9 +101,10 @@ namespace ArcAnnihilation.OrderState
                                     var distance1 = point.Distance2D(creepForTravels);
                                     var distance2 = point.Distance2D(Core.TempestHero.Hero);
 
-                                    if (distance1 < distance2)
+                                    if (distance1 < distance2 || Map.GetLane(Core.TempestHero.Hero) != currentLane)
                                     {
                                         travels.UseAbility(creepForTravels);
+                                        Status = "Doing Tp";
                                         _sleeper.Sleep(1000);
                                         return;
                                     }
@@ -150,10 +152,11 @@ namespace ArcAnnihilation.OrderState
                                     var distance1 = point.Distance2D(tpTarget);
                                     var distance2 = point.Distance2D(Core.TempestHero.Hero);
                                     
-                                    if (distance1 < distance2)
+                                    if (distance1 < distance2 || Map.GetLane(Core.TempestHero.Hero) != currentLane)
                                     {
                                         travels.UseAbility(tpTarget.Position);
                                         _sleeper.Sleep(1000);
+                                        Status = "Doing Tp";
                                         return;
                                     }
                                 }
@@ -179,13 +182,16 @@ namespace ArcAnnihilation.OrderState
                 }
                 else
                 {
+                    Status = $"Pushing{(target is Tower ? " Tower" : "")}";
                     if (Core.TempestHero.Spark.CanBeCasted())
                     {
-                        Printer.Log($"[AutoPushing][Spark][{target.Name}]->{target.Position.PrintVector()}", true);
+                        Printer.Log($"[AutoPushing][Spark][{target.Name} ({target.ClassId})]->{target.Position.PrintVector()}", true);
                         if (!target.Position.IsZero)
                         {
                             Core.TempestHero.Spark.UseAbility(target.Position);
+                            Status = "Casting spark";
                             _sleeper.Sleep(500);
+                            return;
                         }
                     }
 
@@ -253,6 +259,7 @@ namespace ArcAnnihilation.OrderState
             }
             else
             {
+                Status = "Tempest is dead";
                 var illusions = IllusionManager.GetIllusions.Where(x => x.Orbwalker.GetTarget() == null).ToList();
                 var necros = NecronomiconManager.GetNecronomicons.Where(x => x.Orbwalker.GetTarget() == null).ToList();
                 var any = illusions.Any() || necros.Any();
@@ -602,6 +609,11 @@ namespace ArcAnnihilation.OrderState
         private float CheckForDist(Vector3 pos, Unit hero)
         {
             return pos.Distance2D(hero.Position);
+        }
+
+        public string GetStatus()
+        {
+            return Status;
         }
     }
 }

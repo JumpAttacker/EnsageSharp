@@ -40,7 +40,9 @@ namespace ArcAnnihilation.Panels
             {
                 var lane = isAutoPushing.CurrentLane;
 
-                DrawText($"Pushing: [{lane}]", tSize, startPos);
+                var size = DrawText($"Pushing: [{lane}]", tSize, startPos);
+                startPos += new Vector2(0, size.Y);
+                DrawText($"Status: [{isAutoPushing.GetStatus()}]", tSize, startPos);
             }
             else if (isDefaultCombo != null)
             {
