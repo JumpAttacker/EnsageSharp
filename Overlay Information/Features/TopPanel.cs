@@ -27,6 +27,7 @@ namespace OverlayInformation.Features
 
 
             UltimateBar = panel.Item("Ultimate bar", true);
+            UltimateBarSize = panel.Item("Ultimate bar size", new Slider(100, 1, 200));
             UltimateIcon = panel.Item("Ultimate icon", true);
             VisibleBar = panel.Item("Visible status", true);
             AllyVisibleBarType = panel.Item("Ally Visible status type", new StringList("text", "rectangle"));
@@ -56,6 +57,8 @@ namespace OverlayInformation.Features
 
             }
         }
+
+        public MenuItem<Slider> UltimateBarSize { get; set; }
 
         private void OnChangeClr(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
         {
@@ -133,6 +136,7 @@ namespace OverlayInformation.Features
         {
             var heroes = Config.Main.Updater.Heroes;
             var size = new Vector2(_size.X, SizeY);
+            var ultimateBarSize = new Vector2(UltimateBarSize / 100f * _size.X);
             foreach (var heroCont in heroes)
             {
                 var hero = heroCont.Hero;
@@ -186,12 +190,12 @@ namespace OverlayInformation.Features
                                     break;
                                 var cd = Math.Min(99, (int) (cdCalc + 1));
                                 pos = DrawingHelper.DrawBar(pos, cd.ToString(CultureInfo.InvariantCulture),
-                                    new Vector2(size.X, size.X), ultimate.Texture, Color.White);
+                                    ultimateBarSize, ultimate.Texture, Color.White);
                                 break;
                             case AbilityState.NotEnoughMana:
                                 var mana = Math.Min(99, (int) (ultimate.Ability.ManaCost - heroCont.Mana));
                                 pos = DrawingHelper.DrawBar(pos, mana.ToString(CultureInfo.InvariantCulture),
-                                    new Vector2(size.X, size.X), ultimate.Texture, Color.White,
+                                    ultimateBarSize, ultimate.Texture, Color.White,
                                     new Color(100, 100, 255, 100));
                                 break;
                         }

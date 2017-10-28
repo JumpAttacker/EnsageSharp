@@ -245,8 +245,8 @@ namespace OverlayInformation
                 DontDraw = true;
             }
 
-            var classId = hero.ClassId;
-            if (classId == ClassId.CDOTA_Unit_Hero_Rubick || classId == ClassId.CDOTA_Unit_Hero_DoomBringer/* ||
+            ClassId = hero.ClassId;
+            if (ClassId == ClassId.CDOTA_Unit_Hero_Rubick || ClassId == ClassId.CDOTA_Unit_Hero_DoomBringer/* ||
                 classId == ClassId.CDOTA_Unit_Hero_Invoker*/)
             {
                 UpdateManager.Subscribe(AbilityUpdater, 750);
@@ -261,6 +261,8 @@ namespace OverlayInformation
                 Game.PrintMessage(args.Ability.Ability.Name);
             };*/
         }
+
+        public ClassId ClassId { get; set; }
 
         private void FlushChecker()
         {
@@ -381,9 +383,15 @@ namespace OverlayInformation
         public void Flush()
         {
             //_manager.Deactivate();
-            UpdateManager.Unsubscribe(AbilityUpdater);
+            if (ClassId == ClassId.CDOTA_Unit_Hero_Rubick || ClassId == ClassId.CDOTA_Unit_Hero_DoomBringer/* ||
+                classId == ClassId.CDOTA_Unit_Hero_Invoker*/)
+            {
+                UpdateManager.Unsubscribe(AbilityUpdater);
+            }
+            
             UpdateManager.Unsubscribe(UpdateItems);
             UpdateManager.Unsubscribe(UpdateInfo);
+            UpdateManager.Unsubscribe(FlushChecker);
             HolderHelper.Dispose();
         }
     }
