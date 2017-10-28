@@ -87,7 +87,10 @@ namespace MonkeyKingEulCombo
                     }
                 }
             }
-            Orbwalker.OrbwalkTo(Target);
+            if (Orbwalker.Settings.Attack)
+                Orbwalker.OrbwalkTo(Target);
+            else
+                Orbwalker.Move(Game.MousePosition);
         }
 
         public void Load()
