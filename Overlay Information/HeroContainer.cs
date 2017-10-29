@@ -128,11 +128,8 @@ namespace OverlayInformation
 
         public List<Item> Items { get; set; }
 
-        public Holder HolderHelper { get; set; }
-
         public void Dispose()
         {
-            HolderHelper?.Dispose();
             UpdateManager.Unsubscribe(UpdateItems);
             UpdateManager.Unsubscribe(FlushChecker);
         }

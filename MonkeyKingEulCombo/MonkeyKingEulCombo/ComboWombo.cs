@@ -58,10 +58,13 @@ namespace MonkeyKingEulCombo
                     if (Eul.CanBeCasted && Eul.CanHit(Target))
                     {
                         Eul.UseAbility(Target);
-                        await Task.Delay(Eul.GetHitTime(Target), token);
+                        var hitTime = Eul.GetHitTime(Target);
+                        Log.Info($"[Using] -> Eul (delay for hit -> {hitTime}ms)");
+                        await Task.Delay(hitTime, token);
                         if (Ultimate.CanBeCasted())
                         {
                             Ultimate.UseAbility(Target.Position);
+                            Log.Info($"[Using] -> Ultimate");
                             await Task.Delay(530, token);
                         }
 
@@ -73,6 +76,7 @@ namespace MonkeyKingEulCombo
                             if (time <= timing + Game.Ping / 1000)
                             {
                                 Stun.UseAbility(Target.Position);
+                                Log.Info($"[Using] -> Stun (1)");
                             }
                             else
                             {
@@ -82,6 +86,7 @@ namespace MonkeyKingEulCombo
                                 await Task.Delay(Math.Max(delayTime, 1), token);
                                 Log.Debug("after delay -> try to use ability");
                                 Stun.UseAbility(Target.Position);
+                                Log.Info($"[Using] -> Stun");
                             }
                         }
                     }

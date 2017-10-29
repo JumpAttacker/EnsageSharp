@@ -42,7 +42,7 @@ namespace OverlayInformation.Features
             Drawing.OnDraw += DrawingOnOnDraw;
             var size = HudInfo.GetTopPanelSize(Config.Main.Context.Value.Owner as Hero);
             _size = new Vector2(size[0], size[1]);
-
+              
             config.Main.Renderer.Draw += RendererOnDraw;
             IsDx11 = Drawing.RenderMode == RenderMode.Dx11;
             if (IsDx11)
@@ -254,6 +254,7 @@ namespace OverlayInformation.Features
         {
             _topPanelPosition.Clear();
             Drawing.OnDraw -= DrawingOnOnDraw;
+            Config.Main.Renderer.Draw -= RendererOnDraw;
         }
     }
 }

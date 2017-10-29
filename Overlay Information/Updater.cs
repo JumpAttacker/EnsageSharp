@@ -54,8 +54,9 @@ namespace OverlayInformation
             EntityManager<Courier>.EntityAdded += OnNewCour;
 
             EntityManager<Hero>.EntityRemoved += OnHeroRemoved;
+            EntityManager<Courier>.EntityRemoved += OnCourRemoved;
 
-            UpdateManager.Subscribe(() =>
+            /*UpdateManager.Subscribe(() =>
             {
                 foreach (var container in Heroes)
                 {
@@ -73,7 +74,7 @@ namespace OverlayInformation
                         Log.Error(new string('-', Console.BufferWidth));
                     }
                 }
-            }, 5);
+            }, 5);*/
         }
 
         private void OnHeroRemoved(object sender, Hero e)
@@ -86,7 +87,18 @@ namespace OverlayInformation
                     AllyHeroes.Remove(founder);
                 else
                     EnemyHeroes.Remove(founder);
-                Log.Error($"ON REMOVED -> {e.Name}");
+            }
+        }
+        private void OnCourRemoved(object sender, Courier e)
+        {
+            var founder = Couriers.Find(x => x.Cour.Equals(e));
+            if (founder != null)
+            {
+                Couriers.Remove(founder);
+                if (founder.IsAlly)
+                    AllyCouriers.Remove(founder);
+                else
+                    EnemyCouriers.Remove(founder);
             }
         }
 
@@ -184,6 +196,16 @@ namespace OverlayInformation
             {
                 container.Flush();
             }
+            
+            foreach (var container in Couriers)
+            {
+                container.Dispose();
+            }
+
+            AllyHeroes.Clear();
+            EnemyHeroes.Clear();
+            AllyCouriers.Clear();
+            EnemyCouriers.Clear();
         }
     }
 }
