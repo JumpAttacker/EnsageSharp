@@ -9,6 +9,7 @@ using Ensage.Common.Extensions;
 using Ensage.SDK.Helpers;
 using SharpDX;
 using AbilityId = Ensage.Common.Enums.AbilityId;
+using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace ArcAnnihilation.Utils
 {
@@ -74,7 +75,26 @@ namespace ArcAnnihilation.Utils
         public static bool TargetFinder()
         {
             if (Core.Target != null && Core.Target.IsValid && Core.Target.IsAlive)
+            {
+                if (Core.Target.ClassId == ClassId.CDOTA_Unit_Hero_Phoenix)
+                {
+                    if (!Core.Target.IsVisible)
+                    {
+                        var egg =
+                            EntityManager<Unit>.Entities.FirstOrDefault(
+                                x =>
+                                    UnitExtensions.IsInRange(x, Core.Target, 150) && x.Name == "npc_dota_phoenix_sun" &&
+                                    x.IsAlive && x.Team == Core.MainHero.Hero.GetEnemyTeam());
+                        if (egg != null)
+                        {
+                            Core.Target = egg;
+                            Printer.Both(
+                                $"[TargetFinder] new target: phoenix to egg {Core.Target.Name} | {Core.Target.Handle}");
+                        }
+                    }
+                }
                 return true;
+            }
             var mousePos = Game.MousePosition;
             Core.Target = TargetSelector.ClosestToMouse(Core.MainHero.Hero, 500);
             var tempTarget =

@@ -343,6 +343,8 @@ namespace OverlayInformation.Features.Teleport_Catcher
                     var isStart = name.Contains("teleport_start");
                     var effect = args.ParticleEffect;
                     var a = effect.GetControlPoint(0);
+                    if (a.IsZero)
+                        return;
                     var b = effect.GetControlPoint(2);
                     var tp = new TeleportEffect(effect, a, b, isStart, this);
                     Effects.Add(tp);
