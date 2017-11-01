@@ -30,10 +30,13 @@ namespace WindRunnerAnnihilation
         private static bool _lastStateAction;
         private static List<Unit> _creeps = new List<Unit>();
         //private static readonly Dictionary<string, ParticleEffect> Effects = new Dictionary<string, ParticleEffect>();
+        
         private static ParticleEffect _bestPosEff;
         private static Hero _globalTarget;
         private static Vector2 _sizer = new Vector2(265, 300);
+        
         //============================================================
+        
         private static ulong _myKey = 'G';
         private static bool _timetochange;
         private static bool _showMenu = true;
