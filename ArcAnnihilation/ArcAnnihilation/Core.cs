@@ -76,6 +76,8 @@ namespace ArcAnnihilation
             {"item_necronomicon_2", 2},
             {"item_necronomicon_3", 2},
             {"item_mjollnir", 1},
+            {Ensage.AbilityId.item_diffusal_blade.ToString(), 5},
+            {Ensage.AbilityId.item_nullifier.ToString(), 5},
             //{ "item_hurricane_pike",1},
 
             {"item_sheepstick", 5},

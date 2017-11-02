@@ -182,9 +182,9 @@ namespace ArcAnnihilation
                     OrderManager.ChangeOrder(OrderManager.Orders.Idle);
                 }
                 _disableFunc = true;
-                MenuManager.DefaultCombo.SetValue(new KeyBind(MenuManager.DefaultCombo.GetValue<KeyBind>().Key, KeyBindType.Press));
+                MenuManager.DefaultCombo.SetValue(new KeyBind(MenuManager.DefaultCombo.GetValue<KeyBind>().Key));
                 MenuManager.TempestCombo.SetValue(new KeyBind(MenuManager.TempestCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
-                MenuManager.SparkSpamCombo.SetValue(new KeyBind(MenuManager.SparkSpamCombo.GetValue<KeyBind>().Key, KeyBindType.Press));
+                MenuManager.SparkSpamCombo.SetValue(new KeyBind(MenuManager.SparkSpamCombo.GetValue<KeyBind>().Key));
                 MenuManager.SparkSpamTempestOnlyCombo.SetValue(new KeyBind(MenuManager.SparkSpamTempestOnlyCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
                 MenuManager.AutoPushingCombo.SetValue(new KeyBind(MenuManager.AutoPushingCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
                 _disableFunc = false;

@@ -189,10 +189,10 @@ namespace ArcAnnihilation
             Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var settings = new Menu("Settings", "Settings");
 
-            DefaultCombo = new MenuItem("Combo.Key", "Main+Tempest Combo").SetValue(new KeyBind('0', KeyBindType.Press));
+            DefaultCombo = new MenuItem("Combo.Key", "Main+Tempest Combo").SetValue(new KeyBind('0'));
             TempestCombo =
                 new MenuItem("Combo.Tempest.Key", "Tempest Combo").SetValue(new KeyBind('0', KeyBindType.Toggle));
-            SparkSpamCombo = new MenuItem("Combo.Sparks.Key", "Spark Spam").SetValue(new KeyBind('0', KeyBindType.Press));
+            SparkSpamCombo = new MenuItem("Combo.Sparks.Key", "Spark Spam").SetValue(new KeyBind('0'));
             SparkSpamTempestOnlyCombo =
                 new MenuItem("Combo.Sparks.Tempest.Key", "[TempestOnly] Spark Spam").SetValue(new KeyBind('0',
                     KeyBindType.Toggle));
