@@ -25,7 +25,7 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
             var flux = unitBase.Flux;
             var magneticField = unitBase.MagneticField;
             var spark = unitBase.Spark;
-            if (!_multiSleeper.Sleeping(flux) && unitBase.AbilityChecker.IsAbilityEnabled(flux.GetAbilityId()) &&
+            if (!_multiSleeper.Sleeping(flux) && unitBase.AbilityChecker.IsAbilityEnabled(flux.Id) &&
                 flux.CanBeCasted() && flux.CanHit(Core.Target))
             {
                 if (Core.Target.IsLinkensProtected() || !MenuManager.SmartFlux || !EntityManager<Unit>.Entities.Any(
@@ -38,11 +38,12 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
                     Printer.Both("Flux usages " + flux.GetAbilityDelay());
                     _multiSleeper.Sleep(500, flux);
                     await Task.Delay(flux.GetAbilityDelay(), Core.ComboToken.Token);
+                    return;
                 }
             }
             var distance = unitBase.Hero.Distance2D(Core.Target);
             if (!_multiSleeper.Sleeping(magneticField) && magneticField != null &&
-                unitBase.AbilityChecker.IsAbilityEnabled(magneticField.GetAbilityId()) && magneticField.CanBeCasted() &&
+                unitBase.AbilityChecker.IsAbilityEnabled(magneticField.Id) && magneticField.CanBeCasted() &&
                 !unitBase.Hero.HasModifier("modifier_arc_warden_magnetic_field") && distance <= 600 &&
                 Core.Target.IsVisible)
             {
@@ -55,9 +56,10 @@ namespace ArcAnnihilation.Units.behaviour.Abilities
                 _multiSleeper.Sleep(500, magneticField);
                 Printer.Both("MagneticField usages");
                 await Task.Delay(magneticField.GetAbilityDelay(), Core.ComboToken.Token);
+                return;
             }
             if (!_multiSleeper.Sleeping(spark) && spark != null &&
-                unitBase.AbilityChecker.IsAbilityEnabled(spark.GetAbilityId()) && spark.CanBeCasted() &&
+                unitBase.AbilityChecker.IsAbilityEnabled(spark.Id) && spark.CanBeCasted() &&
                 !Prediction.IsTurning(Core.Target) && unitBase.Hero.IsVisibleToEnemies)
             {
                 if (UnitExtensions.IsInAttackRange(unitBase.Hero, Core.Target) && MenuManager.SmartSpark)

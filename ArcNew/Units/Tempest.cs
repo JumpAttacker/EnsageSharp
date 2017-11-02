@@ -65,9 +65,9 @@ namespace ArcAnnihilation.Units
 
         public override IEnumerable<Item> GetItems()
         {
-            var items = Hero.Inventory.Items.Where(x=>AbilityChecker.IsItemEnabled(x.GetItemId()));
+            var items = Hero.Inventory.Items.Where(x=>AbilityChecker.IsItemEnabled(x.Id));
             if (MenuManager.CustomComboPriorityTempest)
-                items = items.OrderBy(x => MenuManager.GetItemOrderTempest(x.GetItemId()));
+                items = items.OrderBy(x => MenuManager.GetItemOrderTempest(x.Id));
             return items;
         }
     }

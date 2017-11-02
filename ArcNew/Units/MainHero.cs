@@ -56,7 +56,7 @@ namespace ArcAnnihilation.Units
 
         public override async Task UseAbilities(CancellationToken cancellationToken)
         {
-            if (TempestDouble.CanBeCasted() && AbilityChecker.IsAbilityEnabled(TempestDouble.GetAbilityId()))
+            if (TempestDouble.CanBeCasted() && AbilityChecker.IsAbilityEnabled(TempestDouble.Id))
             {
                 if (TempestManager.Tempest == null || !TempestManager.Tempest.IsValid || !Core.TempestHero.IsAlive)
                 {
@@ -69,9 +69,14 @@ namespace ArcAnnihilation.Units
 
         public override IEnumerable<Item> GetItems()
         {
-            var items=Hero.Inventory.Items.Where(x=>AbilityChecker.IsItemEnabled(x.GetItemId()));
+            var items=Hero.Inventory.Items.Where(x=>AbilityChecker.IsItemEnabled(x.Id));
             if (MenuManager.CustomComboPriorityHero)
-                items = items.OrderBy(x => MenuManager.GetItemOrderHero(x.GetItemId()));
+                items = items.OrderBy(x => MenuManager.GetItemOrderHero(x.Id));
+            Console.WriteLine($"Dumb Items:");
+            foreach (var item in items)
+            {
+                Console.WriteLine($"Item -> {item.Id}");
+            }
             return items;
         }
     }

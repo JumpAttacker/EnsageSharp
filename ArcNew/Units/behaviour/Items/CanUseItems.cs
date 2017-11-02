@@ -117,7 +117,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                                        .CanBeCasted();
                         var isDisable = ability.IsDisable();
                         if ((Core.Target.IsLinkensProtected() || amWithAghUnderLinken) &&
-                            (isDisable || ability.IsDagon() || ability.Id == AbilityId.item_ethereal_blade))
+                            (isDisable || ability.IsDagon() || ability.Id == AbilityId.item_ethereal_blade || ability.Id == AbilityId.item_nullifier))
                         {
                             counter++;
                             continue;
@@ -140,7 +140,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                 Core.Target.HasModifiers(
                                     new[] {"modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses"}, false);
                             var lotusMid = Core.Target.HasModifier("modifier_item_lotus_orb_active");
-                            if ((slarkMod || lotusMid) && isDisable)
+                            if ((slarkMod || lotusMid) && isDisable && ability.Id!=AbilityId.item_sheepstick)
                             {
                                 counter++;
                                 continue;

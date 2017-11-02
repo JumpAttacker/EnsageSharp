@@ -8,7 +8,6 @@ using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.SDK.Helpers;
 using SharpDX;
-using AbilityId = Ensage.Common.Enums.AbilityId;
 using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace ArcAnnihilation.Utils
@@ -38,13 +37,13 @@ namespace ArcAnnihilation.Utils
             return (int)((ability.FindCastPoint() + Core.MainHero.Hero.GetTurnTime(targetPosition)) * 1000.0 + (Math.Abs(Game.Ping) < 5 ? 50 : Game.Ping));
         }
 
-        public static bool HasItem(this Unit unit, ItemId classId)
+        public static bool HasItem(this Unit unit, Ensage.AbilityId classId)
         {
-            return unit.Inventory.Items.Any(item => item.GetItemId() == classId);
+            return unit.Inventory.Items.Any(item => item.Id == classId);
         }
-        public static bool HasAbility(this Unit unit, AbilityId classId)
+        public static bool HasAbility(this Unit unit, Ensage.AbilityId classId)
         {
-            return unit.Spellbook.Spells.Any(item => item.GetAbilityId() == classId);
+            return unit.Spellbook.Spells.Any(item => item.Id == classId);
         }
 
         public static bool CanDie(this Hero hero,bool checkForAegis=false)
@@ -59,7 +58,7 @@ namespace ArcAnnihilation.Utils
                       (hero.ClassId != ClassId.CDOTA_Unit_Hero_Abaddon ||
                        !hero.GetAbilityById(Ensage.AbilityId.abaddon_borrowed_time).CanBeCasted());
             if (checkForAegis)
-                return mod && !hero.HasItem(ItemId.item_aegis);
+                return mod && !hero.HasItem(Ensage.AbilityId.item_aegis);
             return mod;
         }
 

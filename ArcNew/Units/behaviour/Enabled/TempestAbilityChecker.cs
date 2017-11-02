@@ -1,15 +1,13 @@
-using Ensage.Common.Enums;
-
 namespace ArcAnnihilation.Units.behaviour.Enabled
 {
     internal class TempestAbilityChecker : IAbilityChecker
     {
-        public bool IsItemEnabled(ItemId x)
+        public bool IsItemEnabled(Ensage.AbilityId x)
         {
             return MenuManager.IsItemEnabledTempest(x);
         }
 
-        public bool IsAbilityEnabled(AbilityId id)
+        public bool IsAbilityEnabled(Ensage.AbilityId id)
         {
             return MenuManager.IsAbilityEnabledTempest(id);
         }
