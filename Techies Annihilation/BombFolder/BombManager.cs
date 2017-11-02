@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
+using Ensage.SDK.Helpers;
 using SharpDX;
 using Techies_Annihilation.Features;
 using Techies_Annihilation.Utils;
@@ -40,6 +42,7 @@ namespace Techies_Annihilation.BombFolder
         }
 
         public float StatusStartTIme;
+        public bool effectLocked;
         public BombManager(Unit bomb, bool isRemoteMine)
         {
             Bomb = bomb;
@@ -59,6 +62,7 @@ namespace Techies_Annihilation.BombFolder
             BombPosition = bomb.Position;
             Active = bomb.NetworkActivity != NetworkActivity.Spawn;
             HeroManager = new Dictionary<uint, float>();
+            effectLocked = false;
             //Printer.Print($"Damage: {Damage} || Raduis: {Radius} || Activity: {bomb.NetworkActivity}");
             if (IsRemoteMine)
             {
@@ -80,6 +84,26 @@ namespace Techies_Annihilation.BombFolder
                     Stacker.Counter++;
                     //Printer.Print($"new [{Stacker.Counter}]");
                 }
+            }
+
+            UpdateManager.Subscribe(Updater, 1000);
+        }
+
+        private void Updater()
+        {
+            if (Bomb == null || !Bomb.IsValid)
+            {
+                UpdateManager.Unsubscribe(Updater);
+                return;
+            }
+            BombPosition = Bomb.Position;
+
+            if (Active && !effectLocked)
+            {
+                RangEffect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf", Bomb);
+                RangEffect.SetControlPoint(1, new Vector3(Radius, 255, 0));
+                RangEffect.SetControlPoint(2, new Vector3(255, 255, 255));
+                effectLocked = true;
             }
         }
 
