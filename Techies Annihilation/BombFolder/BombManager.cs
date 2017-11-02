@@ -100,6 +100,7 @@ namespace Techies_Annihilation.BombFolder
 
             if (Active && !effectLocked)
             {
+                RangEffect?.Dispose();
                 RangEffect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf", Bomb);
                 RangEffect.SetControlPoint(1, new Vector3(Radius, 255, 0));
                 RangEffect.SetControlPoint(2, new Vector3(255, 255, 255));
