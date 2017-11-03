@@ -72,11 +72,6 @@ namespace ArcAnnihilation.Units
             var items=Hero.Inventory.Items.Where(x=>AbilityChecker.IsItemEnabled(x.Id));
             if (MenuManager.CustomComboPriorityHero)
                 items = items.OrderBy(x => MenuManager.GetItemOrderHero(x.Id));
-            Console.WriteLine($"Dumb Items:");
-            foreach (var item in items)
-            {
-                Console.WriteLine($"Item -> {item.Id}");
-            }
             return items;
         }
     }
