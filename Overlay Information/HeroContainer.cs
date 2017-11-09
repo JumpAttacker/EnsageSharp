@@ -244,7 +244,7 @@ namespace OverlayInformation
 
             ClassId = hero.ClassId;
             if (ClassId == ClassId.CDOTA_Unit_Hero_Rubick || ClassId == ClassId.CDOTA_Unit_Hero_DoomBringer/* ||
-                classId == ClassId.CDOTA_Unit_Hero_Invoker*/)
+                classId == ClassId.CDOTA_Unit_Hero_Invoker*/ || ClassId == ClassId.CDOTA_Unit_Hero_Morphling)
             {
                 UpdateManager.Subscribe(AbilityUpdater, 750);
             }
@@ -273,7 +273,7 @@ namespace OverlayInformation
                 }
                 Flush();
             }
-            else if (Hero.IsIllusion)
+            else if (Hero.IsIllusion && !Hero.HasModifier("modifier_morphling_replicate"))
             {
                 Log.Error(
                     $"Flush cuz illusion {Name} id -> [{Id}]");
@@ -331,7 +331,7 @@ namespace OverlayInformation
         private void AbilityUpdater()
         {
             //var needToRefresh = Abilities.Any(x => x == null || !x.IsValid || x.IsHidden);
-            var needToRefresh = Abilities2.Any(x => x == null || !x.IsValid);
+            var needToRefresh = Abilities2.Any(x => x == null || !x.IsValid || x.IsHidden);
             if (needToRefresh)
                 RefreshAbilities2();
         }
@@ -380,12 +380,12 @@ namespace OverlayInformation
         public void Flush()
         {
             //_manager.Deactivate();
-            if (ClassId == ClassId.CDOTA_Unit_Hero_Rubick || ClassId == ClassId.CDOTA_Unit_Hero_DoomBringer/* ||
-                classId == ClassId.CDOTA_Unit_Hero_Invoker*/)
+            if (ClassId == ClassId.CDOTA_Unit_Hero_Rubick || ClassId == ClassId.CDOTA_Unit_Hero_DoomBringer /* ||
+                classId == ClassId.CDOTA_Unit_Hero_Invoker*/ || ClassId == ClassId.CDOTA_Unit_Hero_Morphling)
             {
                 UpdateManager.Unsubscribe(AbilityUpdater);
             }
-            
+
             UpdateManager.Unsubscribe(UpdateItems);
             UpdateManager.Unsubscribe(UpdateInfo);
             UpdateManager.Unsubscribe(FlushChecker);
