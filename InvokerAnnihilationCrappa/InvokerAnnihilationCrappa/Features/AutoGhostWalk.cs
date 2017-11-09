@@ -78,7 +78,14 @@ namespace InvokerAnnihilationCrappa.Features
             }
             else if (invis.Ability.AbilityState == AbilityState.Ready)
             {
-                await _main.Invoker.InvokeAsync(_main.Invoker.GhostWalk);
+                if (_main.SmartInvoke)
+                {
+                    await _main.Invoker.InvokeAsync(_main.Invoker.GhostWalk);
+                }
+                else
+                {
+                    _main.Invoker.Invoke(_main.Invoker.GhostWalk);
+                }
             }
         }
 

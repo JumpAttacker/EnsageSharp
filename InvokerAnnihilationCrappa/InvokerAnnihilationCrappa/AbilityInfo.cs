@@ -140,10 +140,19 @@ namespace InvokerAnnihilationCrappa
                         return false;
                     if (comboModifiers && isStunned)
                     {
-                        var timing = 1.7f;
+                        var cataclysm = Me.Config.Cataclysm &&
+                                        Me.Owner.GetAbilityById(AbilityId.special_bonus_unique_invoker_6)?.Level > 0;
+                        var timing = cataclysm ? 1.73f : 1.7f;
                         if (time <= timing + Game.Ping / 1000)
                         {
-                            Ability.UseAbility(target.Position);
+                            if (cataclysm)
+                            {
+                                Ability.UseAbility(Me.Owner);
+                            }
+                            else
+                            {
+                                Ability.UseAbility(target.Position);
+                            }
                         }
                         else
                         {
@@ -152,7 +161,14 @@ namespace InvokerAnnihilationCrappa
                             Log.Warn($"[SS] delay time: {delayTime} rem time: {time} Time for cast: {timeForCast}");
                             await Task.Delay(Math.Max(delayTime, 1), token);
                             Log.Debug($"[SS] after delay -> try to use ability");
-                            Ability.UseAbility(target.Position);
+                            if (cataclysm)
+                            {
+                                Ability.UseAbility(Me.Owner);
+                            }
+                            else
+                            {
+                                Ability.UseAbility(target.Position);
+                            }
                         }
                     }
                     else

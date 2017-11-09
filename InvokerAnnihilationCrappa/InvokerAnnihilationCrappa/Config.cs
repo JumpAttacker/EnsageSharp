@@ -37,6 +37,7 @@ namespace InvokerAnnihilationCrappa
             AutoIceWall.Item.SetTooltip("Hero will run to the enemy");
 
             SmartMove = Factory.Item("Move to target if ability out of range", true);
+            Cataclysm = Factory.Item("Use SS'cataclysm (talant) in combo", false);
 
             AbilityPanel = new AbilityPanel(this);
             ComboPanel = new ComboPanel(this);
@@ -63,6 +64,8 @@ namespace InvokerAnnihilationCrappa
             //Factory.Target.TextureName = "npc_dota_hero_invoker";
             //Factory.Target.ShowTextWithTexture = true;
         }
+
+        public MenuItem<bool> Cataclysm { get; set; }
 
         public MenuItem<bool> DrawMinDistanceInOrbwalk { get; set; }
 
