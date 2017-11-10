@@ -115,6 +115,7 @@ namespace ArcAnnihilation
                 var menu = sender as MenuItem;
                 if (menu==null)
                     return;
+                OrderManager.Orders.AutoPushing.ParticleManager.Remove("targetting_range");
                 if (menu.Equals(MenuManager.DefaultCombo))
                 {
                     OrderManager.ChangeOrder(OrderManager.Orders.DefaultCombo);
@@ -175,6 +176,7 @@ namespace ArcAnnihilation
                 }
                 else if (menu.Equals(MenuManager.AutoPushingCombo))
                 {
+                    OrderManager.Orders.AutoPushing.ParticleManager.Remove("targetting_range");
                     OrderManager.ChangeOrder(OrderManager.Orders.Idle);
                 }
                 else

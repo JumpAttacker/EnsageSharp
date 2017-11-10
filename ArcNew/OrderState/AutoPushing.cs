@@ -12,6 +12,7 @@ using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Extensions;
 using Ensage.SDK.Helpers;
+using Ensage.SDK.Renderer.Particle;
 using SharpDX;
 using AbilityId = Ensage.AbilityId;
 
@@ -20,6 +21,7 @@ namespace ArcAnnihilation.OrderState
     public class AutoPushing : Order
     {
         public override bool CanBeExecuted => MenuManager.AutoPushingCombo.GetValue<KeyBind>().Active;
+        public ParticleManager ParticleManager = new ParticleManager();
         private readonly Sleeper _sleeper;
         //public Lane ClosestLane;
         public Map Map;
@@ -246,7 +248,10 @@ namespace ArcAnnihilation.OrderState
                 {
                     var enemyHero =
                         Heroes.GetByTeam(ObjectManager.LocalHero.GetEnemyTeam())
-                            .FirstOrDefault(x => Core.TempestHero.Hero.IsValidOrbwalkingTarget(x));
+                            .FirstOrDefault(
+                                x => x.IsInRange(Core.TempestHero.Hero,
+                                    MenuManager
+                                        .AutoPushingTargettingRange) /*Core.TempestHero.Hero.IsValidOrbwalkingTarget(x)*/);
                     if (enemyHero != null)
                     {
                         //OrderManager.ChangeOrder(OrderManager.Orders.SparkSpamTempest);
@@ -254,6 +259,12 @@ namespace ArcAnnihilation.OrderState
                         MenuManager.TempestCombo.SetValue(new KeyBind(MenuManager.TempestCombo.GetValue<KeyBind>().Key,
                             KeyBindType.Toggle, true));
                         Core.Target = enemyHero;
+                        ParticleManager?.Remove("targetting_range");
+                    }
+                    else
+                    {
+                        ParticleManager.DrawRange(Core.TempestHero.Hero, "targetting_range",
+                            MenuManager.AutoPushingTargettingRange, Color.White);
                     }
                 }
             }

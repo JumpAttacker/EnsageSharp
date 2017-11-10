@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using ArcAnnihilation.OrderState;
 using ArcAnnihilation.Panels;
 using ArcAnnihilation.Utils;
 using Ensage;
@@ -172,6 +173,7 @@ namespace ArcAnnihilation
         public static bool SmartSpark => GetBool("SparkSettings.Smart");
         public static bool CheckForCreeps => GetBool("AutoPushing.CheckForEnemyCreeps");
         public static float OrbWalkingRange => GetSlider("OrbWalking.Range");
+        public static float AutoPushingTargettingRange => GetSlider("AutoPushing.AutoPushingTargettingRange");
         public static bool OrbWalkerGoBeyond => GetBool("OrbWalking.OrbWalkerGoBeyond");
         public static bool TowerPriority => GetBool("AutoPushing.TowerPriority");
         public static bool AutoSummonOnPusing => GetBool("AutoSummoning.Pushing");
@@ -273,6 +275,13 @@ namespace ArcAnnihilation
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.CheckForEnemyCreeps", "[Travels] Check for enemy creeps").SetValue(true));
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.AutoTargetting", "Do tempest combo").SetValue(true))
                 .SetTooltip("if you find any target in attack range");
+            autoPushingSettings.AddItem(new MenuItem("AutoPushing.AutoPushingTargettingRange", "Auto Targetting range")
+                .SetValue(new Slider(800, 200, 1600))).ValueChanged+= (sender, args) =>
+            {
+                if (OrderManager.CurrentOrder is AutoPushing)
+                    OrderManager.Orders.AutoPushing.ParticleManager.DrawRange(Core.TempestHero.Hero, "targetting_range",
+                        args.GetNewValue<Slider>().Value, Color.White);
+            };
 
             var infoPanel = new Menu("Info Panel", "InfoPanel");
             infoPanel.AddItem(new MenuItem("InfoPanel.Enable", "Enable").SetValue(true)).ValueChanged +=
