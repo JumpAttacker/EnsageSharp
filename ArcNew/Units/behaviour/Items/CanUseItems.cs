@@ -9,6 +9,7 @@ using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Common.Threading;
 using AbilityId = Ensage.AbilityId;
+using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace ArcAnnihilation.Units.behaviour.Items
 {
@@ -99,6 +100,11 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             }
                         }
                         _afterInvis.Sleep(500);
+                    }
+                    if (ability.Id == AbilityId.item_satanic && UnitExtensions.HealthPercent(unitBase.Hero)>0.7f)
+                    {
+                        counter++;
+                        continue;
                     }
                     ability.UseAbility();
                 }

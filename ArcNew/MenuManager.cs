@@ -53,6 +53,7 @@ namespace ArcAnnihilation
             {Ensage.AbilityId.item_medallion_of_courage.ToString(), 1},
             {Ensage.AbilityId.item_lotus_orb.ToString(), 1},
             {Ensage.AbilityId.item_phase_boots.ToString(), 1},
+            {Ensage.AbilityId.item_satanic.ToString(), 1},
             {"item_arcane_boots", 1},
             {"item_guardian_greaves", 1},
             {"item_shivas_guard", 1},
