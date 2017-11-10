@@ -263,8 +263,9 @@ namespace ArcAnnihilation.OrderState
                     }
                     else
                     {
-                        ParticleManager.DrawRange(Core.TempestHero.Hero, "targetting_range",
-                            MenuManager.AutoPushingTargettingRange, Color.White);
+                        if (MenuManager.DrawTargettingRange)
+                            ParticleManager.DrawRange(Core.TempestHero.Hero, "targetting_range",
+                                MenuManager.AutoPushingTargettingRange, Color.White);
                     }
                 }
             }

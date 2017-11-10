@@ -168,6 +168,7 @@ namespace ArcAnnihilation
         public static float GetBlinkExtraRange => GetSlider("Blink.ExtraRange");
         public static float GetBlinkMinRange => GetSlider("Blink.MinRange");
         public static bool IsAutoPushPanelEnable => GetBool("AutoPushLaneSelector.Enable");
+        public static bool DrawTargettingRange => GetBool("AutoPushing.DrawTargettingRange");
         public static bool IsItemPanelEnable => GetBool("itemPanel.Enable");
         public static bool SmartFlux => GetBool("FluxSettings.Smart");
         public static bool SmartSpark => GetBool("SparkSettings.Smart");
@@ -278,10 +279,12 @@ namespace ArcAnnihilation
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.AutoPushingTargettingRange", "Auto Targetting range")
                 .SetValue(new Slider(800, 200, 1600))).ValueChanged+= (sender, args) =>
             {
-                if (OrderManager.CurrentOrder is AutoPushing)
+                if (OrderManager.CurrentOrder is AutoPushing && DrawTargettingRange)
                     OrderManager.Orders.AutoPushing.ParticleManager.DrawRange(Core.TempestHero.Hero, "targetting_range",
                         args.GetNewValue<Slider>().Value, Color.White);
             };
+            autoPushingSettings.AddItem(new MenuItem("AutoPushing.DrawTargettingRange", "Draw Targetting range")
+                .SetValue(false));
 
             var infoPanel = new Menu("Info Panel", "InfoPanel");
             infoPanel.AddItem(new MenuItem("InfoPanel.Enable", "Enable").SetValue(true)).ValueChanged +=
