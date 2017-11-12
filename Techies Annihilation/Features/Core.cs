@@ -4,12 +4,14 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Helpers;
 using Techies_Annihilation.BombFolder;
 using Techies_Annihilation.Utils;
+using AbilityId = Ensage.AbilityId;
 
 namespace Techies_Annihilation.Features
 {
@@ -49,8 +51,18 @@ namespace Techies_Annihilation.Features
             {
                 if (HeroSleeper.Sleeping(hero) || !hero.IsAlive || !hero.IsVisible || !hero.CanDie(MenuManager.CheckForAegis))
                     continue;
+                if (hero.HasModifiers(new[] {"modifier_shredder_timber_chain", "modifier_storm_spirit_ball_lightning"},
+                    false))
+                    continue;
                 var listForDetonation = new List<BombManager>();
-                var heroHealth = hero.Health+hero.HealthRegeneration;
+                var heroHealth = hero.Health + hero.HealthRegeneration;
+                var rainrop = hero.GetItemById(ItemId.item_infused_raindrop);
+                if (rainrop != null && rainrop.CanBeCasted())
+                {
+                    var extraHealth = 90f;//rainrop.GetAbilityData("magic_damage_block");
+                    heroHealth += extraHealth;
+                }
+                //Console.WriteLine($"[{hero.GetRealName()}] Total Life -> {heroHealth}");
                 var reduction = RemoteMine.GetDamageReduction(hero);
                 var refraction = hero.FindModifier("modifier_templar_assassin_refraction_absorb");
                 var blockCount = refraction?.StackCount;

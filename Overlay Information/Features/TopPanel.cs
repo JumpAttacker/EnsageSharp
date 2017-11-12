@@ -100,6 +100,8 @@ namespace OverlayInformation.Features
             foreach (var heroCont in heroes)
             {
                 var hero = heroCont.Hero;
+                if (heroCont.DontDraw)
+                    continue;
                 var pos = GetTopPanelPosition(hero);
                 if (pos.IsZero)
                     continue;

@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Ensage;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Helpers;
 using Techies_Annihilation.Features;
+using AbilityId = Ensage.AbilityId;
 using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace Techies_Annihilation.BombFolder
@@ -96,6 +98,12 @@ namespace Techies_Annihilation.BombFolder
                         DamageContainers.Add(heroCont);
                     }
                     var heroHealth = hero.Health + hero.HealthRegeneration;
+                    var rainrop = hero.GetItemById(ItemId.item_infused_raindrop);
+                    if (rainrop != null && rainrop.CanBeCasted())
+                    {
+                        var extraHealth = 90f;//rainrop.GetAbilityData("magic_damage_block");
+                        heroHealth += extraHealth;
+                    }
                     var maxHeroHealth = hero.MaximumHealth;
                     var reduction = Core.LandMine.GetDamageReduction(hero);
                     var healthPerTickFromLand = DamageHelpers.GetSpellDamage(landDamage, 0, reduction);
