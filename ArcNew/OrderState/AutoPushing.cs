@@ -251,7 +251,7 @@ namespace ArcAnnihilation.OrderState
                     var enemyHero =
                         Heroes.GetByTeam(ObjectManager.LocalHero.GetEnemyTeam())
                             .FirstOrDefault(
-                                x => x.IsVisible && x.IsInRange(Core.TempestHero.Hero,
+                                x => x.IsVisible && x.IsAlive && x.IsInRange(Core.TempestHero.Hero,
                                     MenuManager
                                         .AutoPushingTargettingRange) /*Core.TempestHero.Hero.IsValidOrbwalkingTarget(x)*/);
                     if (enemyHero != null)
