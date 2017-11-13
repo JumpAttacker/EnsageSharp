@@ -31,13 +31,13 @@ namespace ArcAnnihilation.OrderState
             var isRadiant = ObjectManager.LocalHero.Team == Team.Radiant;
             TopPath = isRadiant ? Map.RadiantTopRoute : Map.DireTopRoute;
             MidPath = isRadiant ? Map.RadiantMiddleRoute : Map.DireMiddleRoute;
-            BothPath = isRadiant ? Map.RadiantBottomRoute : Map.DireBottomRoute;
+            BotPath = isRadiant ? Map.RadiantBottomRoute : Map.DireBottomRoute;
             _sleeper = new Sleeper();
         }
 
         public List<Vector3> TopPath { get; set; }
         public List<Vector3> MidPath { get; set; }
-        public List<Vector3> BothPath { get; set; }
+        public List<Vector3> BotPath { get; set; }
         public string Status;
         public override void Execute()
         {
@@ -70,6 +70,7 @@ namespace ArcAnnihilation.OrderState
                                       Core.TempestHero.Hero.GetItemById(AbilityId.item_travel_boots_2);
                         if (travels != null && travels.CanBeCasted())
                         {
+                            Status = "Moving [?TP]";
                             var temp = path.ToList();
                             temp.Reverse();
                             if (MenuManager.CheckForCreeps)
@@ -114,6 +115,7 @@ namespace ArcAnnihilation.OrderState
                             }
                             else
                             {
+                                
                                 var finalPos = temp.First();
                                 var ally =
                                     EntityManager<Creep>.Entities.Where(
@@ -308,30 +310,31 @@ namespace ArcAnnihilation.OrderState
 
         private MapArea GetLane(Hero hero)
         {
-            if (PushLaneSelector.GetInstance().Loaded)
-            {
-                var selected = PushLaneSelector.GetInstance().GetSelectedLane;
-                if (!string.IsNullOrEmpty(selected))
+            if (!MenuManager.IsSummmoningAndPushing)
+                if (PushLaneSelector.GetInstance().Loaded)
                 {
-                    selected = selected.Substring(5);
-                    if (selected != "Pushing")
+                    var selected = PushLaneSelector.GetInstance().GetSelectedLane;
+                    if (!string.IsNullOrEmpty(selected))
                     {
-                        if (selected.Equals("Top"))
+                        selected = selected.Substring(5);
+                        if (selected != "Pushing")
                         {
-                            return MapArea.Top;
-                        }
-                        if (selected.Equals("Mid"))
-                        {
-                            return MapArea.Middle;
-                        }
-                        if (selected.Equals("Bot"))
-                        {
-                            return MapArea.Bottom;
+                            if (selected.Equals("Top"))
+                            {
+                                return MapArea.Top;
+                            }
+                            if (selected.Equals("Mid"))
+                            {
+                                return MapArea.Middle;
+                            }
+                            if (selected.Equals("Bot"))
+                            {
+                                return MapArea.Bottom;
+                            }
                         }
                     }
                 }
-            }
-            var lane = Map.GetLane(hero);
+            var lane = MenuManager.IsSummmoningAndPushing ? GetLane(Game.MousePosition) : Map.GetLane(hero);
             switch (lane)
             {
                 case MapArea.Top:
@@ -355,49 +358,136 @@ namespace ArcAnnihilation.OrderState
 
         private List<Vector3> FindOrGetNeededPath(Unit hero)
         {
-            if (PushLaneSelector.GetInstance().Loaded)
-            {
-                var selected = PushLaneSelector.GetInstance().GetSelectedLane;
-                if (!string.IsNullOrEmpty(selected))
+            if (!MenuManager.IsSummmoningAndPushing)
+                if (PushLaneSelector.GetInstance().Loaded)
                 {
-                    selected = selected.Substring(5);
-                    if (selected != "Pushing")
+                    var selected = PushLaneSelector.GetInstance().GetSelectedLane;
+                    if (!string.IsNullOrEmpty(selected))
                     {
-                        if (selected.Equals("Top"))
+                        selected = selected.Substring(5);
+                        if (selected != "Pushing")
                         {
-                            return TopPath;
-                        }
-                        if (selected.Equals("Mid"))
-                        {
-                            return MidPath;
-                        }
-                        if (selected.Equals("Bot"))
-                        {
-                            return BothPath;
+                            if (selected.Equals("Top"))
+                            {
+                                return TopPath;
+                            }
+                            if (selected.Equals("Mid"))
+                            {
+                                return MidPath;
+                            }
+                            if (selected.Equals("Bot"))
+                            {
+                                return BotPath;
+                            }
                         }
                     }
                 }
-            }
-            var currentLane = Map.GetLane(hero);
-            switch (currentLane)
+            
+            if (!MenuManager.IsSummmoningAndPushing)
             {
-                case MapArea.Top:
-                    return TopPath;
-                case MapArea.Middle:
-                    return MidPath;
-                case MapArea.Bottom:
-                    return BothPath;
-                case MapArea.DireTopJungle:
-                    return TopPath;
-                case MapArea.RadiantBottomJungle:
-                    return BothPath;
-                case MapArea.RadiantTopJungle:
-                    return TopPath;
-                case MapArea.DireBottomJungle:
-                    return BothPath;
-                default:
-                    return MidPath;
+                var currentLane = Map.GetLane(hero);
+                switch (currentLane)
+                {
+                    case MapArea.Top:
+                        return TopPath;
+                    case MapArea.Middle:
+                        return MidPath;
+                    case MapArea.Bottom:
+                        return BotPath;
+                    case MapArea.DireTopJungle:
+                        return TopPath;
+                    case MapArea.RadiantBottomJungle:
+                        return BotPath;
+                    case MapArea.RadiantTopJungle:
+                        return TopPath;
+                    case MapArea.DireBottomJungle:
+                        return BotPath;
+                    default:
+                        return MidPath;
+                }
             }
+            else
+            {
+                var currentLane = GetLane(Game.MousePosition);
+
+                switch (currentLane)
+                {
+                    case MapArea.Top:
+                        PushLaneSelector.GetInstance().SetSelectedLane(PushLaneSelector.LanesType.OnlyTop);
+                        return TopPath;
+                    case MapArea.Middle:
+                        PushLaneSelector.GetInstance().SetSelectedLane(PushLaneSelector.LanesType.OnlyMid);
+                        return MidPath;
+                    case MapArea.Bottom:
+                        PushLaneSelector.GetInstance().SetSelectedLane(PushLaneSelector.LanesType.OnlyBot);
+                        return BotPath;
+                    case MapArea.DireTopJungle:
+                        PushLaneSelector.GetInstance().SetSelectedLane(PushLaneSelector.LanesType.OnlyTop);
+                        return TopPath;
+                    case MapArea.RadiantBottomJungle:
+                        PushLaneSelector.GetInstance().SetSelectedLane(PushLaneSelector.LanesType.OnlyBot);
+                        return BotPath;
+                    case MapArea.RadiantTopJungle:
+                        PushLaneSelector.GetInstance().SetSelectedLane(PushLaneSelector.LanesType.OnlyTop);
+                        return TopPath;
+                    case MapArea.DireBottomJungle:
+                        PushLaneSelector.GetInstance().SetSelectedLane(PushLaneSelector.LanesType.OnlyBot);
+                        return BotPath;
+                    default:
+                        PushLaneSelector.GetInstance().SetSelectedLane(PushLaneSelector.LanesType.OnlyMid);
+                        return MidPath;
+                }
+            }
+        }
+
+        public MapArea GetLane(Vector3 pos)
+        {
+            if (Map.Top.IsInside(pos))
+            {
+                return MapArea.Top;
+            }
+            if (Map.Middle.IsInside(pos))
+            {
+                return MapArea.Middle;
+            }
+            if (Map.Bottom.IsInside(pos))
+            {
+                return MapArea.Bottom;
+            }
+            if (Map.River.IsInside(pos))
+            {
+                return MapArea.River;
+            }
+            if (Map.RadiantBase.IsInside(pos))
+            {
+                return MapArea.RadiantBase;
+            }
+            if (Map.DireBase.IsInside(pos))
+            {
+                return MapArea.DireBase;
+            }
+            if (Map.Roshan.IsInside(pos))
+            {
+                return MapArea.RoshanPit;
+            }
+            if (Map.DireBottomJungle.IsInside(pos))
+            {
+                return MapArea.DireBottomJungle;
+            }
+            if (Map.DireTopJungle.IsInside(pos))
+            {
+                return MapArea.DireTopJungle;
+            }
+            if (Map.RadiantBottomJungle.IsInside(pos))
+            {
+                return MapArea.RadiantBottomJungle;
+            }
+            if (Map.RadiantTopJungle.IsInside(pos))
+            {
+                return MapArea.RadiantTopJungle;
+            }
+
+            return MapArea.Unknown;
         }
 
         /*public override void Execute()

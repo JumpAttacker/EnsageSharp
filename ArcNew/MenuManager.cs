@@ -20,6 +20,8 @@ namespace ArcAnnihilation
         public static MenuItem SparkSpamCombo;
         public static MenuItem SparkSpamTempestOnlyCombo;
         public static MenuItem AutoPushingCombo;
+        public static MenuItem SummonAndPushing;
+        public static MenuItem SummonAndCombo;
 
         private static readonly List<string> AbilityList = new List<string>
         {
@@ -180,6 +182,8 @@ namespace ArcAnnihilation
         public static bool TowerPriority => GetBool("AutoPushing.TowerPriority");
         public static bool AutoSummonOnPusing => GetBool("AutoSummoning.Pushing");
         public static bool AutoSummonOnTempestCombog => GetBool("AutoSummoning.TempestCombo");
+        public static bool IsSummmoningAndCombing => GetKey("Combo.SummonAndCombo.Key");
+        public static bool IsSummmoningAndPushing => GetKey("Combo.SummonAndPushing.Key");
         public static float GetBlinkExtraDelay => GetSlider("Blink.ExtraDelay");
         public static bool InAnyCombo(ulong key)
             =>
@@ -202,12 +206,22 @@ namespace ArcAnnihilation
                     KeyBindType.Toggle));
             AutoPushingCombo =
                 new MenuItem("Combo.AutoPushing.Key", "Auto Pushing").SetValue(new KeyBind('0', KeyBindType.Toggle));
+
+            SummonAndPushing =
+                new MenuItem("Combo.SummonAndPushing.Key", "Ult+pushing near mouse").SetValue(new KeyBind('0'));
+
+            SummonAndCombo =
+                new MenuItem("Combo.SummonAndCombo.Key", "Ult+tempest combo near mouse").SetValue(new KeyBind('0'));
+
+
             var keys = new Menu("Hotkeys", "Hotkeys");
             keys.AddItem(DefaultCombo).ValueChanged += Core.ComboStatusChanger;
             keys.AddItem(TempestCombo).ValueChanged += Core.ComboStatusChanger;
             keys.AddItem(SparkSpamCombo).ValueChanged += Core.ComboStatusChanger;
             keys.AddItem(SparkSpamTempestOnlyCombo).ValueChanged += Core.ComboStatusChanger;
             keys.AddItem(AutoPushingCombo).ValueChanged += Core.ComboStatusChanger;
+            keys.AddItem(SummonAndPushing).ValueChanged += Core.ComboStatusChanger;
+            keys.AddItem(SummonAndCombo).ValueChanged += Core.ComboStatusChanger;
             var autoPushingKeys = new Menu("Auto Pushing Hotkey", "Auto Pushing Hotkey");
             var panels = new Menu("Panels", "Panels");
             settings.AddItem(new MenuItem("OrbWalking.Type", "[Orbwalking] move to target").SetValue(false))

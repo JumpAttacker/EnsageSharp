@@ -57,10 +57,6 @@ namespace ArcAnnihilation.Manager
                             GetNecronomicons.Remove(target);
                             Printer.Both("removed necro: " + hero.Name);
                         }
-                        else
-                        {
-
-                        }
                     }
                 }
             };

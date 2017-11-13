@@ -1,7 +1,10 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ArcAnnihilation.OrderState;
 using ArcAnnihilation.Utils;
+using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
 
 namespace ArcAnnihilation
 {
@@ -30,15 +33,18 @@ namespace ArcAnnihilation
 
         public static bool CanBeExecuted => CurrentOrder.CanBeExecuted;
         private static bool _changed;
-        public static void ChangeOrder(Order setOrder)
+
+        public static async void ChangeOrder(Order setOrder)
         {
             if (CurrentOrder == setOrder)
             {
                 Printer.Both($"[Order][Error] {setOrder}");
                 return;
             }
-            if (setOrder is TempestCombo && MenuManager.AutoSummonOnTempestCombog ||
-                setOrder is AutoPushing && MenuManager.AutoSummonOnPusing)
+            await Task.Delay(5);
+            if (setOrder is TempestCombo &&
+                (MenuManager.AutoSummonOnTempestCombog || MenuManager.IsSummmoningAndCombing) ||
+                setOrder is AutoPushing && (MenuManager.AutoSummonOnPusing || MenuManager.IsSummmoningAndPushing))
             {
                 if (Core.MainHero.TempestDouble.CanBeCasted())
                 {

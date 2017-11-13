@@ -48,10 +48,6 @@ namespace ArcAnnihilation.Manager
                         GetIllusions.Remove(target);
                         Printer.Both("removed illusion: " + hero.Name);
                     }
-                    else
-                    {
-                        
-                    }
                 }
             };
         }

@@ -36,6 +36,35 @@ namespace ArcAnnihilation.Panels
         private static PushLaneSelector _panel;
         public bool Loaded;
         public string GetSelectedLane => _buttons.FirstOrDefault(x => x.Active)?.Text;
+        public enum LanesType
+        {
+            AutoPushing, OnlyTop, OnlyMid, OnlyBot
+        }
+        public void SetSelectedLane(LanesType type)
+        {
+            foreach (var button in _buttons)
+            {
+                button.Active = false;
+            }
+
+            switch (type)
+            {
+                case LanesType.AutoPushing:
+                    _buttons[0].Active = true;
+                    break;
+                case LanesType.OnlyTop:
+                    _buttons[1].Active = true;
+                    break;
+                case LanesType.OnlyMid:
+                    _buttons[2].Active = true;
+                    break;
+                case LanesType.OnlyBot:
+                    _buttons[3].Active = true;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
         private readonly Button[] _buttons;
         
         public PushLaneSelector()

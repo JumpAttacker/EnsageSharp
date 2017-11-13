@@ -12,6 +12,7 @@ using Ensage.Common.Threading;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Inventory;
 using Ensage.SDK.Service;
+using SharpDX;
 
 namespace ArcAnnihilation
 {
@@ -36,6 +37,10 @@ namespace ArcAnnihilation
 
         public static void Init()
         {
+            /*Drawing.OnDraw += args =>
+            {
+                Drawing.DrawText($"{OrderManager.Orders.AutoPushing.GetLane(Game.MousePosition)}", Drawing.WorldToScreen(Game.MousePosition)+new Vector2(50), Color.White, FontFlags.None);
+            };*/
             MainHero = new MainHero();
             MainHero.Init();
             AutoMidas.GetNewInstance(MainHero);
@@ -136,6 +141,18 @@ namespace ArcAnnihilation
                 {
                     OrderManager.ChangeOrder(OrderManager.Orders.AutoPushing);
                 }
+                else if (menu.Equals(MenuManager.SummonAndPushing))
+                {
+                    FlushHotkeys();
+                    MenuManager.AutoPushingCombo.SetValue(
+                        new KeyBind(MenuManager.AutoPushingCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle, true));
+                }
+                else if (menu.Equals(MenuManager.SummonAndCombo))
+                {
+                    FlushHotkeys();
+                    MenuManager.TempestCombo.SetValue(new KeyBind(MenuManager.TempestCombo.GetValue<KeyBind>().Key,
+                        KeyBindType.Toggle, true));
+                }
                 else
                 {
                     OrderManager.ChangeOrder(OrderManager.Orders.Idle);
@@ -148,6 +165,13 @@ namespace ArcAnnihilation
             }
             else
             {
+                var menu = sender as MenuItem;
+                if (menu == null)
+                    return;
+                if (menu.Equals(MenuManager.SummonAndPushing) || menu.Equals(MenuManager.SummonAndCombo))
+                {
+                    return;
+                }
                 if (ComboToken != null)
                 {
                     ComboToken?.Cancel();
@@ -155,9 +179,7 @@ namespace ArcAnnihilation
                     ComboToken = null;
                 }
                 Target = null;
-                var menu = sender as MenuItem;
-                if (menu == null)
-                    return;
+                
                 if (menu.Equals(MenuManager.DefaultCombo))
                 {
                     OrderManager.ChangeOrder(OrderManager.Orders.Idle);
@@ -183,14 +205,19 @@ namespace ArcAnnihilation
                 {
                     OrderManager.ChangeOrder(OrderManager.Orders.Idle);
                 }
-                _disableFunc = true;
-                MenuManager.DefaultCombo.SetValue(new KeyBind(MenuManager.DefaultCombo.GetValue<KeyBind>().Key));
-                MenuManager.TempestCombo.SetValue(new KeyBind(MenuManager.TempestCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
-                MenuManager.SparkSpamCombo.SetValue(new KeyBind(MenuManager.SparkSpamCombo.GetValue<KeyBind>().Key));
-                MenuManager.SparkSpamTempestOnlyCombo.SetValue(new KeyBind(MenuManager.SparkSpamTempestOnlyCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
-                MenuManager.AutoPushingCombo.SetValue(new KeyBind(MenuManager.AutoPushingCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
-                _disableFunc = false;
+                FlushHotkeys();
             }
+        }
+
+        public static void FlushHotkeys()
+        {
+            _disableFunc = true;
+            MenuManager.DefaultCombo.SetValue(new KeyBind(MenuManager.DefaultCombo.GetValue<KeyBind>().Key));
+            MenuManager.TempestCombo.SetValue(new KeyBind(MenuManager.TempestCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
+            MenuManager.SparkSpamCombo.SetValue(new KeyBind(MenuManager.SparkSpamCombo.GetValue<KeyBind>().Key));
+            MenuManager.SparkSpamTempestOnlyCombo.SetValue(new KeyBind(MenuManager.SparkSpamTempestOnlyCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
+            MenuManager.AutoPushingCombo.SetValue(new KeyBind(MenuManager.AutoPushingCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
+            _disableFunc = false;
         }
     }
 }
