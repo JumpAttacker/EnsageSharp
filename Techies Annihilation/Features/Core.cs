@@ -8,10 +8,12 @@ using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
+using Ensage.SDK.Abilities.Items;
 using Ensage.SDK.Helpers;
 using Techies_Annihilation.BombFolder;
 using Techies_Annihilation.Utils;
 using AbilityId = Ensage.AbilityId;
+using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace Techies_Annihilation.Features
 {
@@ -51,7 +53,7 @@ namespace Techies_Annihilation.Features
             {
                 if (HeroSleeper.Sleeping(hero) || !hero.IsAlive || !hero.IsVisible || !hero.CanDie(MenuManager.CheckForAegis))
                     continue;
-                if (hero.HasModifiers(new[] {"modifier_shredder_timber_chain", "modifier_storm_spirit_ball_lightning"},
+                if (hero.HasModifiers(new[] {"modifier_shredder_timber_chain", "modifier_storm_spirit_ball_lightning", "modifier_item_combo_breaker_buff" },
                     false))
                     continue;
                 var listForDetonation = new List<BombManager>();
@@ -66,6 +68,8 @@ namespace Techies_Annihilation.Features
                 var reduction = RemoteMine.GetDamageReduction(hero);
                 var refraction = hero.FindModifier("modifier_templar_assassin_refraction_absorb");
                 var blockCount = refraction?.StackCount;
+                var aeon = UnitExtensions.GetItemById(hero, AbilityId.item_combo_breaker);
+                var breakHealthForAeon = hero.MaximumHealth * .8f;
                 foreach (var element in Bombs)
                 {
                     if (element.IsRemoteMine && element.Active)
@@ -87,7 +91,9 @@ namespace Techies_Annihilation.Features
                                 heroHealth -= DamageHelpers.GetSpellDamage(element.Damage, spellAmp, reduction);
                             }
                             listForDetonation.Add(element);
-                            if (heroHealth <= 0)
+                            var aeuoByPass = aeon != null && aeon.CanBeCasted() && heroHealth < breakHealthForAeon;
+                            
+                            if (heroHealth <= 0 || aeuoByPass)
                             {
                                 if (MenuManager.IsCameraMovingEnable)
                                 {

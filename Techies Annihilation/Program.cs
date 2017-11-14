@@ -1,4 +1,6 @@
-﻿using Ensage;
+﻿using System;
+using System.Linq;
+using Ensage;
 using Ensage.Common;
 using Techies_Annihilation.BombFolder;
 using Techies_Annihilation.Features;
@@ -31,6 +33,10 @@ namespace Techies_Annihilation
                     BombDamageManager.Init();
                     Game.OnIngameUpdate += ForceStaff.OnUpdate;
                     Printer.Both("Techies loaded!", true);
+                    /*foreach (var item in me.Inventory.Items.ToList())
+                    {
+                        Console.WriteLine($"{item.Id} {item.Name}");
+                    }*/
                     /*foreach (var data in Core.Suicide.AbilitySpecialData)
                     {
                         Printer.Print($"{data.Name} -> {data.Value} -> {data.Count} -> {data.IsSpellDamageValue}");
