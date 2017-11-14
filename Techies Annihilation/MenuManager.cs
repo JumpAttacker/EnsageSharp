@@ -32,6 +32,7 @@ namespace Techies_Annihilation
         public static bool IsStackerEnabled => GetBool("Drawing.Stacker.Enable");
         public static bool IsSuperDetonate => GetBool("Settings.SuperDetonate.Enable");
         public static bool IsCameraMovingEnable => GetBool("Settings.MoveCamera.Enable");
+        public static int CameraMovingType => GetStringList("Settings.MoveCamera.Type");
         public static bool IsEnable => GetBool("Enable");
 
         public static void Init()
@@ -43,6 +44,9 @@ namespace Techies_Annihilation
             settings.AddItem(new MenuItem("Settings.ForceStaff.Enable", "Enable ForceStaff").SetValue(true));
             settings.AddItem(new MenuItem("Settings.SuperDetonate.Enable", "Detonate all in once").SetValue(false));
             settings.AddItem(new MenuItem("Settings.MoveCamera.Enable", "Move camera on mines").SetValue(false));
+            settings.AddItem(
+                new MenuItem("Settings.MoveCamera.Type", "Camera type").SetValue(new StringList("By console command",
+                    "By mouse")));
             delay.AddItem(new MenuItem("Settings.Delay.Enable", "Enable").SetValue(false));
             delay.AddItem(new MenuItem("Settings.Delay", "Delay bomb activation").SetValue(new Slider(150, 1, 500)));
             var draw = new Menu("Drawing", "Drawing");
@@ -93,6 +97,10 @@ namespace Techies_Annihilation
         private static bool GetBool(string item)
         {
             return Menu.Item(item).GetValue<bool>();
+        }
+        private static int GetStringList(string item)
+        {
+            return Menu.Item(item).GetValue<StringList>().SelectedIndex;
         }
     }
 }

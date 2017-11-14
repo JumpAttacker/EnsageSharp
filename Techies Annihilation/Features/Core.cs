@@ -97,13 +97,22 @@ namespace Techies_Annihilation.Features
                             {
                                 if (MenuManager.IsCameraMovingEnable)
                                 {
-                                    var pos = hero.Position.WorldToMinimap();
-                                    SetCursorPos((int) pos.X, (int) pos.Y);
-                                    UpdateManager.BeginInvoke(() =>
+                                    if (MenuManager.CameraMovingType==0)
                                     {
-                                        mouse_event((int)MouseEvent.MouseeventfLeftdown, 0, 0, 0, 0);
-                                        mouse_event((int)MouseEvent.MouseeventfLeftup, 0, 0, 0, 0);
-                                    }, 100);
+                                        var heroPos = hero.Position;
+                                        var consolePosition = $"{heroPos.X} {heroPos.Y}";
+                                        Game.ExecuteCommand($"dota_camera_set_lookatpos {consolePosition}");
+                                    }
+                                    else
+                                    {
+                                        var pos = hero.Position.WorldToMinimap();
+                                        SetCursorPos((int) pos.X, (int) pos.Y);
+                                        UpdateManager.BeginInvoke(() =>
+                                        {
+                                            mouse_event((int) MouseEvent.MouseeventfLeftdown, 0, 0, 0, 0);
+                                            mouse_event((int) MouseEvent.MouseeventfLeftup, 0, 0, 0, 0);
+                                        }, 100);
+                                    }
                                 }
                                 HeroSleeper.Sleep(300 + listForDetonation.Count*30, hero);
                                 if (MenuManager.IsSuperDetonate)
