@@ -8,7 +8,6 @@ using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Objects;
 using Ensage.Common.Objects.UtilityObjects;
-using Ensage.SDK.Abilities.Items;
 using Ensage.SDK.Helpers;
 using Techies_Annihilation.BombFolder;
 using Techies_Annihilation.Utils;
@@ -53,7 +52,13 @@ namespace Techies_Annihilation.Features
             {
                 if (HeroSleeper.Sleeping(hero) || !hero.IsAlive || !hero.IsVisible || !hero.CanDie(MenuManager.CheckForAegis))
                     continue;
-                if (hero.HasModifiers(new[] {"modifier_shredder_timber_chain", "modifier_storm_spirit_ball_lightning", "modifier_item_combo_breaker_buff" },
+                if (hero.HasModifiers(
+                    new[]
+                    {
+                        "modifier_shredder_timber_chain", "modifier_storm_spirit_ball_lightning",
+                        "modifier_item_combo_breaker_buff", "modifier_ember_spirit_sleight_of_fist_caster",
+                        "modifier_ember_spirit_sleight_of_fist_caster_invulnerability"
+                    },
                     false))
                     continue;
                 var listForDetonation = new List<BombManager>();
