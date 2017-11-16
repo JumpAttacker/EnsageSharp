@@ -273,7 +273,7 @@ namespace OverlayInformation
                 }
                 Flush();
             }
-            else if (Hero.IsIllusion && !Hero.HasModifier("modifier_morphling_replicate"))
+            else if (Hero.IsIllusion && !Hero.HasModifier("modifier_morphling_replicate") && Hero.IsAlive && Hero.IsVisible)
             {
                 Log.Error(
                     $"Flush cuz illusion {Name} id -> [{Id}]");
