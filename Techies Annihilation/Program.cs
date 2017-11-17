@@ -17,7 +17,7 @@ namespace Techies_Annihilation
                 DelayAction.Add(1000, () =>
                 {
                     var me = ObjectManager.LocalHero;
-                    if (me.ClassId != ClassId.CDOTA_Unit_Hero_Techies)
+                    if (me.HeroId != HeroId.npc_dota_hero_techies)
                         return;
                     MenuManager.Init();
 

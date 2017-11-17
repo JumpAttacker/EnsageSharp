@@ -117,7 +117,7 @@ namespace TinkerAnnihilation
 
         private static void Load()
         {
-            if (ObjectManager.LocalHero.ClassId != ClassId.CDOTA_Unit_Hero_Tinker)
+            if (ObjectManager.LocalHero.HeroId != HeroId.npc_dota_hero_tinker)
                 return;
             if (Members.MyHero == null || !Members.MyHero.IsValid)
             {

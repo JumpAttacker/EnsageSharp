@@ -10,7 +10,7 @@ namespace Legion_Annihilation
         {
             Events.OnLoad += (sender, args) =>
             {
-                if (ObjectManager.LocalHero.ClassId != Members.MyClassId)
+                if (ObjectManager.LocalHero.HeroId != Members.MyHeroId)
                     return;
                 MyLittleCore = new Core();
             };

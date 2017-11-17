@@ -11,7 +11,7 @@ namespace ArcAnnihilation
         {
             Events.OnLoad += (sender, args) =>
             {
-                if (ObjectManager.LocalHero.ClassId != ClassId.CDOTA_Unit_Hero_ArcWarden)
+                if (ObjectManager.LocalHero.HeroId != HeroId.npc_dota_hero_arc_warden)
                     return;
                 MenuManager.Init();
                 DelayAction.Add(100, () =>
