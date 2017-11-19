@@ -13,7 +13,7 @@ using Ensage.SDK.Service;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
 
 namespace InvokerAnnihilationCrappa
 {
@@ -78,6 +78,7 @@ namespace InvokerAnnihilationCrappa
                 }
                 Cancel();
                 _target = null;
+                Orbwalker.OrbwalkingPoint = Vector3.Zero;
                 Me.ParticleManager.Value.Remove("Invo_target");
                 Me.ParticleManager.Value.Remove("Invo_line");
             }
@@ -86,7 +87,7 @@ namespace InvokerAnnihilationCrappa
                 if (Me.Config.AutoIceWall)
                 {
                     var currentCombo = Me.Config.ComboPanel.Combos.First(x => x.Id == Me.SelectedCombo);
-                    if (currentCombo.AbilityInfos[currentCombo.CurrentAbility].Ability.GetAbilityId() == AbilityId.invoker_ice_wall)
+                    if (currentCombo.AbilityInfos[currentCombo.CurrentAbility].Ability.Id == AbilityId.invoker_ice_wall)
                         return;
                 }
                 if (Me.BlockerSleeper.Sleeping)
@@ -177,12 +178,12 @@ namespace InvokerAnnihilationCrappa
                                 await Me.InvokeAsync(currentAbility);
                             }
                             else if (currentAbility.Ability.CanHit(_target) ||
-                                     currentAbility.Ability.GetAbilityId() == AbilityId.invoker_chaos_meteor &&
+                                     currentAbility.Ability.Id == AbilityId.invoker_chaos_meteor &&
                                      _target.HasModifier("modifier_invoker_cold_snap")
                                      /*Ensage.SDK.Extensions.EntityExtensions.Distance2D(Me.Owner, _target) <=
                                      currentAbility.Ability.CastRange*/||
-                                     currentAbility.Ability.GetAbilityId() == AbilityId.invoker_ice_wall ||
-                                     currentAbility.Ability.Id == Ensage.AbilityId.item_refresher)
+                                     currentAbility.Ability.Id == AbilityId.invoker_ice_wall ||
+                                     currentAbility.Ability.Id == AbilityId.item_refresher)
                             {
                                 var casted = await currentAbility.UseAbility(_target, token);
                                 if (casted)
@@ -204,9 +205,21 @@ namespace InvokerAnnihilationCrappa
                                     }
                                     var turnTime = tempShit;
                                     Log.Info($"using: [{currentCombo.CurrentAbility}] ({(int)turnTime} ms)" + currentAbility.Ability.Id);
-                                    if (currentAbility.Ability.Id == Ensage.AbilityId.item_refresher)
+                                    if (currentAbility.Ability.Id == AbilityId.item_refresher)
                                     {
-                                        currentCombo.CurrentAbility -= 2;
+                                        
+                                        var ssInCombo = currentCombo.AbilityInfos.FirstOrDefault(x =>
+                                            x.Ability.Id == AbilityId.invoker_sun_strike);
+                                        if (ssInCombo != null && Me.Config.Cataclysm)
+                                        {
+                                            var index = currentCombo.AbilityInfos.FindIndex(x => x.Ability.Id == AbilityId.invoker_sun_strike);
+                                            var after3 = Math.Min(index == -1 ? 3 : index + 1, currentCombo.AbilityInfos.Count);
+                                            currentCombo.CurrentAbility = after3 - 1 ;
+                                        }
+                                        else
+                                        {
+                                            currentCombo.CurrentAbility -= 2;
+                                        }
                                         //DecComboStage(currentCombo, 2);
                                     }
                                     else
