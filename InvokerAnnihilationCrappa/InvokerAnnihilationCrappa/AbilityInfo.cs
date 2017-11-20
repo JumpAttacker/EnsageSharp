@@ -141,7 +141,7 @@ namespace InvokerAnnihilationCrappa
                     if (comboModifiers && isStunned)
                     {
                         var cataclysm = Me.Config.Cataclysm &&
-                                        Me.Owner.GetAbilityById(AbilityId.special_bonus_unique_invoker_6)?.Level > 0;
+                                        Me.Owner.GetAbilityById(AbilityId.special_bonus_unique_invoker_4)?.Level > 0;
                         var timing = cataclysm ? 1.73f : 1.7f;
                         if (time <= timing + Game.Ping / 1000)
                         {
@@ -159,8 +159,8 @@ namespace InvokerAnnihilationCrappa
                             var timeForCast = timing + Me.Config.SsExtraDelay/ 100f + Game.Ping / 1000;
                             var delayTime = (int) ((time - timeForCast) * 1000);
                             Log.Warn($"[SS] delay time: {delayTime} rem time: {time} Time for cast: {timeForCast}");
-                            await Task.Delay(Math.Max(delayTime, 1), token);
-                            Log.Debug($"[SS] after delay -> try to use ability");
+                            await Task.Delay(Math.Max(delayTime, 30), token);
+                            Log.Debug($"[SS] after delay -> try to use ability. cataclysm -> {cataclysm}");
                             if (cataclysm)
                             {
                                 Ability.UseAbility(Me.Owner);
@@ -173,12 +173,22 @@ namespace InvokerAnnihilationCrappa
                     }
                     else
                     {
-                        if (!Ability.CastSkillShot(target))
+                        var cataclysm = Me.Config.Cataclysm &&
+                                        Me.Owner.GetAbilityById(AbilityId.special_bonus_unique_invoker_4)?.Level > 0;
+                        if (cataclysm)
                         {
-                            Log.Debug($"[SS] SkillShot not casted");
-                            return false;
+                            Ability.UseAbility(Me.Owner);
+                            Log.Debug($"[SS] cataclysm casted");
                         }
-                        Log.Debug($"[SS] SkillShot casted");
+                        else
+                        {
+                            if (!Ability.CastSkillShot(target))
+                            {
+                                Log.Debug($"[SS] SkillShot not casted");
+                                return false;
+                            }
+                            Log.Debug($"[SS] SkillShot casted");
+                        }
                     }
                     break;
                 case AbilityId.invoker_forge_spirit:

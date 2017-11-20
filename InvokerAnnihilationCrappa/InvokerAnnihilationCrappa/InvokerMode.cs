@@ -203,7 +203,7 @@ namespace InvokerAnnihilationCrappa
                                         Log.Debug("shit happened");
                                         return;
                                     }
-                                    var turnTime = tempShit;
+                                    var turnTime = Math.Max(Game.Ping + 50, tempShit);
                                     Log.Info($"using: [{currentCombo.CurrentAbility}] ({(int)turnTime} ms)" + currentAbility.Ability.Id);
                                     if (currentAbility.Ability.Id == AbilityId.item_refresher)
                                     {
