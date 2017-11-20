@@ -8,6 +8,7 @@ namespace SfAnnihilation
 {
     internal class Program
     {
+
         private static void Main()
         {
             Events.OnLoad += (sender, args) =>

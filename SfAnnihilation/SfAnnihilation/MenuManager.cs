@@ -15,7 +15,7 @@ namespace SfAnnihilation
         public static bool BkbIsEulCombo => Menu.Item("eul.bkb.Key").GetValue<KeyBind>().Active;
         public static bool DebugInGame => Menu.Item("Dev.Text.enable").GetValue<bool>();
         public static bool DebugInConsole => Menu.Item("Dev.Text2.enable").GetValue<bool>();
-        public static bool OrbWalkType => Menu.Item("combo.orbwalking.followTarget").GetValue<bool>();
+        //public static bool OrbWalkType => Menu.Item("combo.orbwalking.followTarget").GetValue<bool>();
         public static bool AimKillStealOnly => Menu.Item("aim.OnlyKillSteal").GetValue<bool>();
         public static bool UseRazeInCombo => Menu.Item("combo.Raze").GetValue<bool>();
         public static bool DrawRazeRange => Menu.Item("Drawing.RazeRange.Enable").GetValue<bool>();
@@ -42,8 +42,8 @@ namespace SfAnnihilation
             var combo = new Menu("Combo", "Combo");
             combo.AddItem(new MenuItem("combo.Key", "Combo Key").SetValue(new KeyBind('F')));
             combo.AddItem(new MenuItem("combo.Raze", "Use ShadowRaze in combo").SetValue(true));
-            combo.AddItem(new MenuItem("combo.orbwalking.followTarget", "OrbWalking: follow Target?").SetValue(true))
-                .SetTooltip("or mouse");
+            /*combo.AddItem(new MenuItem("combo.orbwalking.followTarget", "OrbWalking: follow Target?").SetValue(true))
+                .SetTooltip("or mouse");*/
             var aim = new Menu("Raze Aim Settings", "Raze Aim Settings");
             aim.AddItem(new MenuItem("aim.Key", "aim Key").SetValue(new KeyBind('Q', KeyBindType.Toggle)));
             aim.AddItem(new MenuItem("aim.OnlyKillSteal", "Only for KillStealing").SetValue(true));
