@@ -36,6 +36,12 @@ namespace SfAnnihilation.Features
             {
                 damage += modifier.StackCount * ExtraDamagePerStack;
             }
+            var extra = Ensage.SDK.Extensions.UnitExtensions.GetAbilityById(Me,
+                AbilityId.special_bonus_unique_nevermore_2);
+            if (extra?.Level > 0)
+            {
+                damage += 150;
+            }
             damage *= 1 - target.MagicDamageResist;
             return damage > health;
         }
