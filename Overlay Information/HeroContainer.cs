@@ -176,7 +176,7 @@ namespace OverlayInformation
         public Holder HolderHelper;
         public string Name { get; set; }
         public List<Ability> GetAllAbilities => Hero.Spellbook.Spells.Where(
-                x => x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate)
+                x => x.Name != "generic_hidden" && (x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate))
             .ToList();
         public HeroContainer(Hero hero, bool isAlly, OverlayInformation main)
         {
