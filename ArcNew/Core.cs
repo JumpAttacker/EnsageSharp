@@ -44,9 +44,17 @@ namespace ArcAnnihilation
             MainHero = new MainHero();
             MainHero.Init();
             AutoMidas.GetNewInstance(MainHero);
-            GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate;
+            DelayAction.Add(100,() => GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate);
+
             UpdateManager.Subscribe(TempestUpdater,500);
-            var manager = new InventoryManager(new EnsageServiceContext(MainHero.Hero));
+            var manager = Program.GetContext.Inventory;
+            foreach (var item in manager.Inventory.Items)
+            {
+                if (MenuManager.Items.ContainsKey(item.Id.ToString()))
+                {
+                    MenuManager.AddNewItem(item.Id);
+                }
+            }
             manager.CollectionChanged += (sender, args) =>
             {
                 if (args.Action == NotifyCollectionChangedAction.Add)

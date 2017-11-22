@@ -6,7 +6,7 @@ using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common.Menu;
 using SharpDX;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
 
 namespace ArcAnnihilation
 {
@@ -44,18 +44,18 @@ namespace ArcAnnihilation
             {"item_blink", 5},
             {"item_orchid", 4},
             {"item_manta", 1},
-            {Ensage.AbilityId.item_abyssal_blade.ToString(), 5},
-            {Ensage.AbilityId.item_nullifier.ToString(), 5},
-            {Ensage.AbilityId.item_diffusal_blade.ToString(), 5},
-            {Ensage.AbilityId.item_black_king_bar.ToString(), 5},
-            {Ensage.AbilityId.item_silver_edge.ToString(), 8},
-            {Ensage.AbilityId.item_invis_sword.ToString(), 8},
-            {Ensage.AbilityId.item_rod_of_atos.ToString(), 1},
-            {Ensage.AbilityId.item_solar_crest.ToString(), 1},
-            {Ensage.AbilityId.item_medallion_of_courage.ToString(), 1},
-            {Ensage.AbilityId.item_lotus_orb.ToString(), 1},
-            {Ensage.AbilityId.item_phase_boots.ToString(), 1},
-            {Ensage.AbilityId.item_satanic.ToString(), 1},
+            {AbilityId.item_abyssal_blade.ToString(), 5},
+            {AbilityId.item_nullifier.ToString(), 5},
+            {AbilityId.item_diffusal_blade.ToString(), 5},
+            {AbilityId.item_black_king_bar.ToString(), 5},
+            {AbilityId.item_silver_edge.ToString(), 8},
+            {AbilityId.item_invis_sword.ToString(), 8},
+            {AbilityId.item_rod_of_atos.ToString(), 1},
+            {AbilityId.item_solar_crest.ToString(), 1},
+            {AbilityId.item_medallion_of_courage.ToString(), 1},
+            {AbilityId.item_lotus_orb.ToString(), 1},
+            {AbilityId.item_phase_boots.ToString(), 1},
+            {AbilityId.item_satanic.ToString(), 1},
             {"item_arcane_boots", 1},
             {"item_guardian_greaves", 1},
             {"item_shivas_guard", 1},
@@ -97,8 +97,8 @@ namespace ArcAnnihilation
         public static float GetInfoPanelSize => GetSlider("InfoPanel.Size");
         public static float GetPushLaneSelectorSize => GetSlider("PushLaneSelector.Size");
         public static bool UseTravels => GetBool("AutoPushing.Travels");
-        public static bool IsAbilityEnabledTempest(Ensage.AbilityId id) => GetToggle("spellTempest", id.ToString());
-        public static bool IsAbilityEnabled(Ensage.AbilityId id) => GetToggle("spellHero", id.ToString());
+        public static bool IsAbilityEnabledTempest(AbilityId id) => GetToggle("spellTempest", id.ToString());
+        public static bool IsAbilityEnabled(AbilityId id) => GetToggle("spellHero", id.ToString());
 
         /*public static bool IsItemEnabledTempest(ItemId id) =>
             GetToggle("itemTempestEnable",
@@ -109,8 +109,8 @@ namespace ArcAnnihilation
                         ? ItemId.item_dagon.ToString()
                         : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());*/
 
-        public static bool IsItemEnabledTempest(Ensage.AbilityId id) => GetToggle("itemTempestEnable", id.ToString());
-        public static bool IsItemEnabled(Ensage.AbilityId id) => GetToggle("itemHeroEnable", id.ToString());
+        public static bool IsItemEnabledTempest(AbilityId id) => GetToggle("itemTempestEnable", id.ToString());
+        public static bool IsItemEnabled(AbilityId id) => GetToggle("itemHeroEnable", id.ToString());
         /*public static bool IsItemEnabled(ItemId id) =>
             GetToggle("itemHeroEnable",
                 id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
@@ -128,8 +128,8 @@ namespace ArcAnnihilation
                     ? ItemId.item_dagon
                     : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);*/
 
-        public static uint GetItemOrderTempest(Ensage.AbilityId id) => GetPriority("itemTempest", id);
-        public static uint GetItemOrderHero(Ensage.AbilityId id) => GetPriority("itemHero", id);
+        public static uint GetItemOrderTempest(AbilityId id) => GetPriority("itemTempest", id);
+        public static uint GetItemOrderHero(AbilityId id) => GetPriority("itemHero", id);
         /*public static uint GetItemOrderTempest(ItemId id) => GetPriority("itemTempest",
             id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
                 ? ItemId.item_necronomicon
@@ -387,7 +387,7 @@ namespace ArcAnnihilation
             Menu.AddToMainMenu();
         }
 
-        public static void AddNewItem(Ensage.AbilityId item)
+        public static void AddNewItem(AbilityId item)
         {
             var name = item.ToString();
             Menu.Item("itemHeroEnable").GetValue<AbilityToggler>().Add(name);
@@ -396,7 +396,7 @@ namespace ArcAnnihilation
             Menu.Item("itemTempest").GetValue<PriorityChanger>().Add(name);
             Printer.Log($"Add new item -> {item}");
         }
-        public static void RemoveOldItem(Ensage.AbilityId item)
+        public static void RemoveOldItem(AbilityId item)
         {
             var name = item.ToString();
             Menu.Item("itemHeroEnable").GetValue<AbilityToggler>().Remove(name);
@@ -430,12 +430,12 @@ namespace ArcAnnihilation
             return Menu.Item(name).GetValue<AbilityToggler>().IsEnabled(item);
         }
 
-        private static bool GetToggle(string name, Ensage.AbilityId item)
+        private static bool GetToggle(string name, AbilityId item)
         {
             return Menu.Item(name).GetValue<AbilityToggler>().IsEnabled(item.ToString());
         }
 
-        private static uint GetPriority(string name, Ensage.AbilityId item)
+        private static uint GetPriority(string name, AbilityId item)
         {
             return Menu.Item(name).GetValue<PriorityChanger>().GetPriority(item.ToString());
         }
