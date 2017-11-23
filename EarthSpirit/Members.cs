@@ -11,7 +11,7 @@ namespace EarthAn
 
         public static Hero MyHero;
         public static Team MyTeam;
-        public static ClassId MyClassId = ClassId.CDOTA_Unit_Hero_EarthSpirit;
+        public static HeroId MyHeroId = HeroId.npc_dota_hero_earth_spirit;
 
         public static List<string> Items;
 

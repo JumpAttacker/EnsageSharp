@@ -141,7 +141,7 @@ namespace EarthAn
                 _loaded = true;
             };
             if (!_loaded && ObjectManager.LocalHero != null &&
-                ObjectManager.LocalHero.ClassId == Members.MyClassId && Game.IsInGame)
+                ObjectManager.LocalHero.HeroId == Members.MyHeroId && Game.IsInGame)
             {
                 Load();
                 _loaded = true;
@@ -162,7 +162,7 @@ namespace EarthAn
 
         private static void Load()
         {
-            if (ObjectManager.LocalHero.ClassId != Members.MyClassId)
+            if (ObjectManager.LocalHero.HeroId != Members.MyHeroId)
                 return;
             if (Members.MyHero == null || !Members.MyHero.IsValid)
             {
@@ -213,7 +213,7 @@ namespace EarthAn
             foreach (var item in enumerable.Where(item => !Members.Items.Contains(item.StoredName()) &&
                                                          (item.IsDisable() || item.IsNuke() || item.IsPurge() ||
                                                           item.IsHeal() || item.IsShield() || item.IsSilence() ||
-                                                          item.IsSlow() || item.IsSkillShot() || item.StoredName()== "item_heavens_halberd")))
+                                                          item.IsSlow() || item.IsSkillShot() || item.StoredName()== "item_heavens_halberd" || item.Id == AbilityId.item_nullifier)))
             {
                 Members.Items.Add(item.StoredName());
                 needToUpdate = true;

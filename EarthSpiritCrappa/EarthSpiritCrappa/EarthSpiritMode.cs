@@ -240,6 +240,13 @@ namespace EarthSpiritCrappa
                 halbert.UseAbility(_target);
                 await Task.Delay(halbert.GetCastDelay(), token);
             }
+
+            var nullifier = Main.Nullifier;
+            if (nullifier != null && IsItemEnable(nullifier.Item) && nullifier.CanHit(_target))
+            {
+                nullifier.UseAbility(_target);
+                await Task.Delay(nullifier.GetCastDelay(), token);
+            }
         }
 
         private bool IsAbilityEnable(Ability ability)

@@ -44,6 +44,7 @@ namespace EarthSpiritCrappa
                 {AbilityId.item_shivas_guard.ToString(), true},
                 {AbilityId.item_heavens_halberd.ToString(), true},
                 {AbilityId.item_lotus_orb.ToString(), true},
+                {AbilityId.item_nullifier.ToString(), true},
             };
             ItemsInCombo = _factory.Item("Items:", new AbilityToggler(dict2));
             var ranges = _factory.Menu("Draw Ability Range");

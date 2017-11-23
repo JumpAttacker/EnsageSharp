@@ -120,6 +120,8 @@ namespace EarthSpiritCrappa
         [ItemBinding]
         public item_heavens_halberd Halbert { get; set; }
         [ItemBinding]
+        public item_nullifier Nullifier { get; set; }
+        [ItemBinding]
         public item_lotus_orb Lotus { get; set; }
         [ItemBinding]
         public item_shivas_guard Shivas { get; set; }
