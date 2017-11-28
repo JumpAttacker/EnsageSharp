@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects.UtilityObjects;
+using PlaySharp.Toolkit.Extensions;
 using SharpDX;
 
 namespace TemplarAnnihilation
@@ -18,6 +21,14 @@ namespace TemplarAnnihilation
             Members.Menu.AddItem(new MenuItem("Enable", "Enable").SetValue(true));
             var settings = new Menu("Settings", "Settings");
             settings.AddItem(new MenuItem("Combo.key", "Combo").SetValue(new KeyBind('0')));
+            var dict = new List<AbilityId>
+            {
+                AbilityId.templar_assassin_refraction,
+                AbilityId.templar_assassin_meld,
+                AbilityId.templar_assassin_psionic_trap,
+                AbilityId.item_blink,
+            };
+            settings.AddItem(new MenuItem("Abilities", "").SetValue(new AbilityToggler(dict.ToDictionary(x => x.ToString(), y => true))));
             settings.AddItem(new MenuItem("Range.Enable", "Psi Baldes Helper").SetValue(true)).ValueChanged +=
                 (sender, args) =>
                 {

@@ -58,6 +58,9 @@ namespace TemplarAnnihilation
         private bool Initialized { get; set; }
         private MultiSleeper _sleeper;
 
+        private bool IsAbilityEnabled(AbilityId id) =>
+            Members.Menu.Item("Abilities").GetValue<AbilityToggler>().IsEnabled(id.ToString());
+
         public static Orbwalker GetNewOrbwalker(Unit me)
         {
             return new Orbwalker(me);
@@ -188,7 +191,7 @@ namespace TemplarAnnihilation
                 {
                     var blink = Owner.GetItemById(AbilityId.item_blink);
                     var tempPos = new Vector3();
-                    if (blink != null && blink.CanBeCasted() && blink.CanHit(tempTarget, ref tempPos) &&
+                    if (blink != null && blink.CanBeCasted() && IsAbilityEnabled(blink.Id) && blink.CanHit(tempTarget, ref tempPos) &&
                         !_sleeper.Sleeping(blink))
                     {
                         blink.UseAbility(tempPos);
@@ -198,29 +201,33 @@ namespace TemplarAnnihilation
                     {
                         var trap = UnitExtensions.GetAbilityById(ObjectManager.LocalHero,
                             AbilityId.templar_assassin_psionic_trap);
-                        var trapNearTarget =
-                            EntityManager<Unit>.Entities.FirstOrDefault(
-                                x =>
-                                    x.IsValid && x.Name == "npc_dota_templar_assassin_psionic_trap" &&
-                                    Ensage.SDK.Extensions.EntityExtensions.Distance2D(tempTarget, x.Position) <= 400);
-                        if (trapNearTarget != null)
+                        if (IsAbilityEnabled(trap.Id))
                         {
-                            if (!_sleeper.Sleeping(trap + "activate"))
+                            var trapNearTarget =
+                                EntityManager<Unit>.Entities.FirstOrDefault(
+                                    x =>
+                                        x.IsValid && x.Name == "npc_dota_templar_assassin_psionic_trap" &&
+                                        Ensage.SDK.Extensions.EntityExtensions.Distance2D(tempTarget, x.Position) <=
+                                        400);
+                            if (trapNearTarget != null)
                             {
-                                var activator = trapNearTarget.Spellbook.Spell1;
-                                if (activator.CanBeCasted())
+                                if (!_sleeper.Sleeping(trap + "activate"))
                                 {
-                                    activator.UseAbility();
+                                    var activator = trapNearTarget.Spellbook.Spell1;
+                                    if (activator.CanBeCasted())
+                                    {
+                                        activator.UseAbility();
+                                    }
+                                    _sleeper.Sleep(300, trap + "activate");
                                 }
-                                _sleeper.Sleep(300, trap + "activate");
                             }
-                        }
-                        else if (trap.CanBeCasted())
-                        {
-                            if (!_sleeper.Sleeping(trap + "place"))
+                            else if (trap.CanBeCasted())
                             {
-                                trap.UseAbility(tempTarget.Position);
-                                _sleeper.Sleep(300, trap + "place");
+                                if (!_sleeper.Sleeping(trap + "place"))
+                                {
+                                    trap.UseAbility(tempTarget.Position);
+                                    _sleeper.Sleep(300, trap + "place");
+                                }
                             }
                         }
                     }
@@ -237,13 +244,13 @@ namespace TemplarAnnihilation
             {
                 LastTarget = target;
                 var refraction = UnitExtensions.GetAbilityById(ObjectManager.LocalHero, AbilityId.templar_assassin_refraction);
-                if (refraction.CanBeCasted() && !_sleeper.Sleeping(refraction))
+                if (refraction.CanBeCasted() && IsAbilityEnabled(refraction.Id) && !_sleeper.Sleeping(refraction))
                 {
                     refraction.UseAbility();
                     _sleeper.Sleep(300, refraction);
                 }
                 var meld = UnitExtensions.GetAbilityById(ObjectManager.LocalHero, AbilityId.templar_assassin_meld);
-                if (meld.CanBeCasted() && !_sleeper.Sleeping(meld))
+                if (meld.CanBeCasted() && IsAbilityEnabled(meld.Id) && !_sleeper.Sleeping(meld))
                 {
                     meld.UseAbility();
                     _sleeper.Sleep(300,meld);
