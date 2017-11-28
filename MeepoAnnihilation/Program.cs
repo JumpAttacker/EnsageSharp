@@ -86,7 +86,8 @@ namespace MeepoAnnihilation
             {
                 InitMenu();
                 MyHero = ObjectManager.LocalHero;
-                if (MyHero.ClassId!=ClassId.CDOTA_Unit_Hero_Meepo) return;
+                if (MyHero.HeroId != HeroId.npc_dota_hero_meepo)
+                    return;
                 Game.PrintMessage(
                     "<font face='Comic Sans MS, cursive'><font color='#00aaff'>" + Menu.DisplayName + " By Jumpering" +
                     " loaded!</font> <font color='#aa0000'>v" + Assembly.GetExecutingAssembly().GetName().Version);
