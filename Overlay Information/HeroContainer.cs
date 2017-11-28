@@ -237,14 +237,14 @@ namespace OverlayInformation
             UpdateManager.Subscribe(FlushChecker,1000);
 
             var dividedWeStand = hero.Spellbook.SpellR as DividedWeStand;
-            if (dividedWeStand != null && hero.ClassId == ClassId.CDOTA_Unit_Hero_Meepo && dividedWeStand.UnitIndex > 0)
+            if (dividedWeStand != null && hero.HeroId == HeroId.npc_dota_hero_meepo && dividedWeStand.UnitIndex > 0)
             {
                 DontDraw = true;
             }
 
-            ClassId = hero.ClassId;
-            if (ClassId == ClassId.CDOTA_Unit_Hero_Rubick || ClassId == ClassId.CDOTA_Unit_Hero_DoomBringer/* ||
-                classId == ClassId.CDOTA_Unit_Hero_Invoker*/ || ClassId == ClassId.CDOTA_Unit_Hero_Morphling)
+            HeroId = hero.HeroId;
+            if (HeroId == HeroId.npc_dota_hero_rubick || HeroId == HeroId.npc_dota_hero_doom_bringer/* ||
+                classId == ClassId.CDOTA_Unit_Hero_Invoker*/ || HeroId == HeroId.npc_dota_hero_morphling)
             {
                 UpdateManager.Subscribe(AbilityUpdater, 750);
             }
@@ -259,7 +259,7 @@ namespace OverlayInformation
             };*/
         }
 
-        public ClassId ClassId { get; set; }
+        public HeroId HeroId { get; set; }
 
         private void FlushChecker()
         {
@@ -333,7 +333,10 @@ namespace OverlayInformation
             //var needToRefresh = Abilities.Any(x => x == null || !x.IsValid || x.IsHidden);
             var needToRefresh = Abilities2.Any(x => x == null || !x.IsValid || x.IsHidden);
             if (needToRefresh)
+            {
+                //Game.PrintMessage($"need to rrefresh for {this.HeroId}");
                 RefreshAbilities2();
+            }
         }
 
         /*private void ManagerOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
@@ -372,7 +375,8 @@ namespace OverlayInformation
             {
                 Abilities2.Add(HolderHelper.GetOrCreate(ability));
                 //Abilities2.Add(new AbilityHolder(ability));
-                //Log.Error($"added new ability -> {ability.Name} ({ability.Owner.Name})");
+                Log.Info($"added new ability -> {ability.Name} ({ability.Owner.Name})");
+                //Game.PrintMessage($"added new ability -> {ability.Name} ({ability.Owner.Name})");
             }
             Abilities2.RemoveAll(x => !x.IsValid/* || x.IsHidden*/);
         }
@@ -380,8 +384,8 @@ namespace OverlayInformation
         public void Flush()
         {
             //_manager.Deactivate();
-            if (ClassId == ClassId.CDOTA_Unit_Hero_Rubick || ClassId == ClassId.CDOTA_Unit_Hero_DoomBringer /* ||
-                classId == ClassId.CDOTA_Unit_Hero_Invoker*/ || ClassId == ClassId.CDOTA_Unit_Hero_Morphling)
+            if (HeroId == HeroId.npc_dota_hero_rubick || HeroId == HeroId.npc_dota_hero_doom_bringer /* ||
+                classId == ClassId.CDOTA_Unit_Hero_Invoker*/ || HeroId == HeroId.npc_dota_hero_morphling)
             {
                 UpdateManager.Unsubscribe(AbilityUpdater);
             }

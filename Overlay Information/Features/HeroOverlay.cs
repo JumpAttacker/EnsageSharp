@@ -6,6 +6,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.Items;
 using Ensage.SDK.Menu;
+using Ensage.SDK.Renderer.Particle;
 using SharpDX;
 
 namespace OverlayInformation.Features
@@ -103,7 +104,6 @@ namespace OverlayInformation.Features
         public MenuItem<bool> ManaBars { get; set; }
 
         public Vector2 HealthBarSize { get; set; }
-
         private void DrawingOnOnDraw(EventArgs args)
         {
             var heroes = Config.Main.Updater.Heroes;
@@ -219,6 +219,20 @@ namespace OverlayInformation.Features
                     {
                         if (ability == null || !ability.IsValid)
                             continue;
+                        var id = ability.Id;
+                        if (id == AbilityId.item_sphere)
+                        {
+                            if (ability.AbilityState == AbilityState.Ready)
+                            {
+                                Config.Main.ParticleManager.AddOrUpdate(hero, $"sphere {heroCont.Id}",
+                                    "particles/items_fx/immunity_sphere_buff.vpcf", ParticleAttachment.RootboneFollow,
+                                    RestartType.None);
+                            }
+                            else
+                            {
+                                Config.Main.ParticleManager.Remove($"sphere {heroCont.Id}");
+                            }
+                        }
                         pos = DrawItemState(pos, ability, abilitySize, itemBorderWhite ? Color.White : Color.Black);
                     }
                 }
