@@ -75,6 +75,16 @@ namespace Techies_Annihilation.Features
                 var blockCount = refraction?.StackCount;
                 var aeon = UnitExtensions.GetItemById(hero, AbilityId.item_combo_breaker);
                 var breakHealthForAeon = hero.MaximumHealth * .8f;
+                float treshold = 0;
+                if (hero.HeroId == HeroId.npc_dota_hero_medusa)
+                {
+                    var shield = hero.GetAbilityById(AbilityId.medusa_mana_shield);
+                    if (shield.IsToggled)
+                    {
+                        treshold = shield.GetAbilityData("damage_per_mana");
+                    }
+                }
+                var startManaCalc = hero.Mana;
                 foreach (var element in Bombs)
                 {
                     if (element.IsRemoteMine && element.Active)
@@ -93,7 +103,9 @@ namespace Techies_Annihilation.Features
                             }
                             else
                             {
-                                heroHealth -= DamageHelpers.GetSpellDamage(element.Damage, spellAmp, reduction);
+                                var damage = DamageHelpers.GetSpellDamage(element.Damage, spellAmp, reduction);
+                                BombDamageManager.CalcDamageForDusa(ref damage, ref startManaCalc, treshold);
+                                heroHealth -= damage;
                             }
                             listForDetonation.Add(element);
                             var aeuoByPass = aeon != null && aeon.CanBeCasted() && heroHealth < breakHealthForAeon;

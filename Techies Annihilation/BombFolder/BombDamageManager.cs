@@ -105,10 +105,22 @@ namespace Techies_Annihilation.BombFolder
                         heroHealth += extraHealth;
                     }
                     var maxHeroHealth = hero.MaximumHealth;
+                    
                     var reduction = Core.LandMine.GetDamageReduction(hero);
                     var healthPerTickFromLand = DamageHelpers.GetSpellDamage(landDamage, 0, reduction);
                     var healthPerTickFromRemote = DamageHelpers.GetSpellDamage(remoteDamage, 0, reduction);
                     var healthPerSucide = DamageHelpers.GetSpellDamage(suicideDamage, spellAmp, reduction);
+                    if (hero.HeroId == HeroId.npc_dota_hero_medusa)
+                    {
+                        var shield = hero.GetAbilityById(AbilityId.medusa_mana_shield);
+                        if (shield.IsToggled)
+                        {
+                            var treshold = shield.GetAbilityData("damage_per_mana");
+                            CalcDamageForDusa(ref healthPerTickFromLand, hero, treshold);
+                            CalcDamageForDusa(ref healthPerTickFromRemote, hero, treshold);
+                            CalcDamageForDusa(ref healthPerSucide, hero, treshold);
+                        }
+                    }
                     //Utils.Printer.Print($"to {hero.GetRealName()} -> {suicideDamage} [res: {reduction}] [amp: {spellAmp}] [defDmg: {healthPerSucide}] [extra400: {Core.ExtraDamageFromSuicide}]");
                     heroCont.CurrentLandMines = (int) Math.Ceiling(heroHealth/healthPerTickFromLand);
                     heroCont.MaxLandMines = (int)Math.Ceiling(maxHeroHealth/healthPerTickFromLand);
@@ -118,6 +130,37 @@ namespace Techies_Annihilation.BombFolder
                     heroCont.CanKillWithSuicide = heroCont.HealthAfterSuicide <= 0;
                 }
             };
+        }
+
+        public static void CalcDamageForDusa(ref float dmg, Hero hero, float treshold)
+        {
+            float burst;
+            if (hero.Mana >= dmg * .6 / treshold)
+            {
+                burst = 0.6f;
+            }
+            else
+            {
+                burst = hero.Mana * treshold / dmg;
+            }
+            dmg *= 1 - burst;
+        }
+
+        public static void CalcDamageForDusa(ref float dmg, ref float mana, float treshold)
+        {
+            float burst;
+            if (mana >= dmg * .6 / treshold)
+            {
+                burst = 0.6f;
+            }
+            else
+            {
+                burst = mana * treshold / dmg;
+            }
+            var dmgWas = dmg;
+            dmg *= 1 - burst;
+            var blocked = dmgWas - dmg;
+            mana = Math.Abs(mana - mana * blocked / treshold);
         }
     }
 }
