@@ -76,7 +76,8 @@ namespace Techies_Annihilation.Features
                 var aeon = UnitExtensions.GetItemById(hero, AbilityId.item_combo_breaker);
                 var breakHealthForAeon = hero.MaximumHealth * .8f;
                 float treshold = 0;
-                if (hero.HeroId == HeroId.npc_dota_hero_medusa)
+                var heroid = hero.HeroId;
+                if (heroid == HeroId.npc_dota_hero_medusa)
                 {
                     var shield = hero.GetAbilityById(AbilityId.medusa_mana_shield);
                     if (shield.IsToggled)
@@ -104,7 +105,8 @@ namespace Techies_Annihilation.Features
                             else
                             {
                                 var damage = DamageHelpers.GetSpellDamage(element.Damage, spellAmp, reduction);
-                                BombDamageManager.CalcDamageForDusa(ref damage, ref startManaCalc, treshold);
+                                if (heroid == HeroId.npc_dota_hero_medusa)
+                                    BombDamageManager.CalcDamageForDusa(ref damage, ref startManaCalc, treshold);
                                 heroHealth -= damage;
                             }
                             listForDetonation.Add(element);
