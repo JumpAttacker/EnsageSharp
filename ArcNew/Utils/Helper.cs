@@ -94,8 +94,13 @@ namespace ArcAnnihilation.Utils
                 }
                 return true;
             }
+            //modifier_morphling_replicate
             var mousePos = Game.MousePosition;
-            Core.Target = TargetSelector.ClosestToMouse(Core.MainHero.Hero, 500);
+            Core.Target = EntityManager<Hero>.Entities.Where(x =>
+                    x.Team != Core.MainHero.Hero.Team && x.IsAlive && x.IsVisible &&
+                    (!x.IsIllusion || x.HasModifier("modifier_morphling_replicate")))
+                .OrderBy(x => x.Distance2D(mousePos)).FirstOrDefault();
+            //TargetSelector.ClosestToMouse(Core.MainHero.Hero, 500);
             var tempTarget =
                 EntityManager<Unit>.Entities.FirstOrDefault(
                     x =>
