@@ -97,7 +97,7 @@ namespace ArcAnnihilation.Utils
             //modifier_morphling_replicate
             var mousePos = Game.MousePosition;
             Core.Target = EntityManager<Hero>.Entities.Where(x =>
-                    x.Team != Core.MainHero.Hero.Team && x.IsAlive && x.IsVisible &&
+                    x.Team != Core.MainHero.Hero.Team && x.IsAlive && x.IsVisible && x.Distance2D(mousePos) <= 500 &&
                     (!x.IsIllusion || x.HasModifier("modifier_morphling_replicate")))
                 .OrderBy(x => x.Distance2D(mousePos)).FirstOrDefault();
             //TargetSelector.ClosestToMouse(Core.MainHero.Hero, 500);
