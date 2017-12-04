@@ -19,6 +19,12 @@ namespace OverlayInformation.Features
             var panel = Config.Factory.Menu("Item panel");
 
             Enable = panel.Item("Enable", true);
+
+            DrawOnlyAntiInvisItems = panel.Item("Draw only anti invis items", false);
+            DrawOnlyAntiInvisItems.Item.SetTooltip("like gem, dust, sentry");
+
+            HighLightAntiInvisItems = panel.Item("Highlight anti invis items", true);
+
             Cooldown = panel.Item("Draw cooldown", true);
             SizeX = panel.Item("Size X", new Slider(28, 1));
             SizeY = panel.Item("Size Y", new Slider(14, 1));
@@ -39,6 +45,10 @@ namespace OverlayInformation.Features
 
             LoadMovable(config.Main.Context.Value.Input);
         }
+
+        public MenuItem<bool> HighLightAntiInvisItems { get; set; }
+
+        public MenuItem<bool> DrawOnlyAntiInvisItems { get; set; }
 
         public MenuItem<Slider> SizeX { get; set; }
         public MenuItem<Slider> SizeY { get; set; }
@@ -90,6 +100,17 @@ namespace OverlayInformation.Features
                     }
                     else
                     {
+                        if (DrawOnlyAntiInvisItems)
+                        {
+                            if (item.Id != AbilityId.item_dust && item.Id != AbilityId.item_gem &&
+                                item.Id != AbilityId.item_ward_sentry && item.Id != AbilityId.item_ward_dispenser)
+                            {
+                                Drawing.DrawRect(pos, itemSize, emptyTexture);
+                                Drawing.DrawRect(pos, stageSize, Color.White, true);
+                                pos += new Vector2(stageSize.X, 0);
+                                continue;
+                            }
+                        }
                         var bottletype = item.Item as Bottle;
                         if (bottletype != null && bottletype.StoredRune != RuneType.None)
                         {
@@ -110,8 +131,24 @@ namespace OverlayInformation.Features
                             DrawItemCooldown(cdText, pos, stageSize);
                         }
                     }
-                    
-                    Drawing.DrawRect(pos, stageSize, Color.White, true);
+                    if (HighLightAntiInvisItems && !DrawOnlyAntiInvisItems && item != null )
+                    {
+                        if (item.Id == AbilityId.item_dust || item.Id == AbilityId.item_gem ||
+                            item.Id == AbilityId.item_ward_sentry || item.Id == AbilityId.item_ward_dispenser)
+                        {
+                            Drawing.DrawRect(pos, stageSize, Color.Red, true);
+                            Drawing.DrawRect(pos + new Vector2(1), stageSize - new Vector2(2), Color.Red, true);
+                        }
+                        else
+                        {
+                            Drawing.DrawRect(pos, stageSize, Color.White, true);
+                        }
+                    }
+                    else
+                    {
+                        Drawing.DrawRect(pos, stageSize, Color.White, true);
+                    }
+
                     pos += new Vector2(stageSize.X, 0);
                 }
                 pos = new Vector2(startPos.X, startPos.Y + itemSize.Y);

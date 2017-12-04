@@ -55,7 +55,7 @@ namespace OverlayInformation
         public float Cooldown;
         public bool IsUltimate;
         public bool IsHidden;
-        public bool IsValid => Ability!=null && Ability.IsValid;
+        public bool IsValid => Ability != null && Ability.IsValid;
         public int MaximumLevel { get; set; }
         public AbilitySlot AbilitySlot { get; set; }
         public string Name { get; set; }
