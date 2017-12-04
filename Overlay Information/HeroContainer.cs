@@ -147,6 +147,7 @@ namespace OverlayInformation
         public List<AbilityHolder> Abilities2;
         public List<AbilityHolder> Items;
         public List<AbilityHolder> DangItems;
+        public List<AbilityHolder> InvisBreakerItems;
         public float LastTimeUnderVision;
         public float Health;
         public float MaxHealth;
@@ -168,6 +169,13 @@ namespace OverlayInformation
             AbilityId.item_black_king_bar,
             AbilityId.item_glimmer_cape,
             AbilityId.item_invis_sword
+        };
+        private static readonly List<AbilityId> InvisBreakerList = new List<AbilityId>
+        {
+            AbilityId.item_gem,
+            AbilityId.item_dust,
+            AbilityId.item_ward_sentry,
+            AbilityId.item_ward_dispenser,
         };
 
         //private readonly InventoryManager _manager;
@@ -191,6 +199,7 @@ namespace OverlayInformation
             LastTimeUnderVision = Game.RawGameTime;
             Items = new List<AbilityHolder>();
             DangItems = new List<AbilityHolder>();
+            InvisBreakerItems = new List<AbilityHolder>();
             Abilities2 = new List<AbilityHolder>();
             foreach (var ability in GetAllAbilities)
             {
@@ -306,6 +315,7 @@ namespace OverlayInformation
             if (!Hero.IsAlive || !Hero.IsVisible)
                 return;
             DangItems.Clear();
+            InvisBreakerItems.Clear();
             Items = new List<AbilityHolder>();
             Networth = 0;
             foreach (var item in HeroInventory.Items)
@@ -313,9 +323,16 @@ namespace OverlayInformation
                 var localHolder = HolderHelper.GetOrCreate(item);
                 Items.Add(localHolder);
                 Networth += item.Cost;
-                if (!Main.Config.HeroOverlay.ItemDangItems) continue;
-                if (DangeItemList.Contains(item.Id))
-                    DangItems.Add(localHolder);
+                if (Main.Config.HeroOverlay.ItemDangItems)
+                {
+                    if (DangeItemList.Contains(item.Id))
+                        DangItems.Add(localHolder);
+                }
+                else if (Main.Config.HeroOverlay.ItemInvisBreakItems)
+                {
+                    if (InvisBreakerList.Contains(item.Id))
+                        InvisBreakerItems.Add(localHolder);
+                }
             }
             var tmpAgh = Hero.HasAghanimsScepter();
 

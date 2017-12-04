@@ -49,6 +49,8 @@ namespace OverlayInformation.Features
             ItemOverlay = itemOverlay.Item("Enable", true);
             ItemDrawCharges = itemOverlay.Item("Draw charges", true);
             ItemDangItems = itemOverlay.Item("Danger items only", false);
+            ItemInvisBreakItems = itemOverlay.Item("Invis Breaker items only", false);
+            ItemInvisBreakItems.Item.SetTooltip("gem, dust, sentry");
             ItemTextSize = itemOverlay.Item("Cooldown/ManaCost text size", new Slider(10, 2, 10));
             ItemSize = itemOverlay.Item("Size", new Slider(7, 1, 20));
             ItemBorderClr = itemOverlay.Item("Border color", new StringList("white", "black"));
@@ -56,6 +58,8 @@ namespace OverlayInformation.Features
             Drawing.OnDraw += DrawingOnOnDraw;
             HealthBarSize = new Vector2(HudInfo.GetHPBarSizeX(), HudInfo.GetHpBarSizeY());
         }
+
+        public MenuItem<bool> ItemInvisBreakItems { get; set; }
 
         public MenuItem<bool> EnableForAllyHeroes { get; set; }
 
@@ -204,7 +208,11 @@ namespace OverlayInformation.Features
                 {
                     var tempSize = size.X * ItemSize / 30f;
                     var abilitySize = new Vector2(tempSize);
-                    var abilities = ItemDangItems ? heroCont.DangItems : heroCont.Items;
+                    var abilities = ItemDangItems
+                        ? heroCont.DangItems
+                        : ItemInvisBreakItems
+                            ? heroCont.InvisBreakerItems
+                            : heroCont.Items;
                     var abilityCount = abilities.Count;
                     //var extraAbilitites = abilityCount - 4;
                     pos = copy;
