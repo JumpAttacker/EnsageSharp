@@ -1,5 +1,11 @@
-﻿using Ensage.Common.Menu;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Resources;
+using Ensage.Common.Menu;
 using SharpDX;
+using Techies_Annihilation.BombFolder;
+using Techies_Annihilation.Features;
 
 namespace Techies_Annihilation
 {
@@ -60,9 +66,16 @@ namespace Techies_Annihilation
             landMineIndicator.AddItem(
                 new MenuItem("Drawing.LandMineStatus.Bar.Size", "Indicator size").SetValue(new Slider(13, 5, 30)));
             landMineIndicator.AddItem(new MenuItem("Drawing.LandMineStatus.Dig.Size", "Text size").SetValue(new Slider(100,50,150)));
-            /*draw.AddItem(new MenuItem("Drawing.Range.LandMine", "Range for LandMine").SetValue(true));
-            draw.AddItem(new MenuItem("Drawing.Range.StaticTrap", "Range for StaticTrap").SetValue(true));
-            draw.AddItem(new MenuItem("Drawing.Range.RemoteMine", "Range for RemoteMine").SetValue(true));*/
+            var range = new Menu("Range", "Range");
+            var landMineRange =
+                range.AddItem(new MenuItem("Drawing.Range.LandMine", "Range for LandMine").SetValue(true));
+
+            var staticTrapRange =
+                range.AddItem(new MenuItem("Drawing.Range.StaticTrap", "Range for StaticTrap").SetValue(true));
+
+            var remotaMineRange =
+                range.AddItem(new MenuItem("Drawing.Range.RemoteMine", "Range for RemoteMine").SetValue(true));
+
             var topPanel = new Menu("TopPanel", "TopPanel");
             topPanel.AddItem(
                 new MenuItem("TopPanel.Extra.X", "Extra Position X").SetValue(new Slider(0, -150, 150)));
@@ -83,9 +96,46 @@ namespace Techies_Annihilation
             draw.AddSubMenu(topPanel);
             draw.AddSubMenu(landMineIndicator);
             draw.AddSubMenu(stacker);
+            draw.AddSubMenu(range);
             
             Menu.AddSubMenu(devolper);
             Menu.AddToMainMenu();
+
+            landMineRange.ValueChanged += RangeOnChange;
+            staticTrapRange.ValueChanged += RangeOnChange;
+            remotaMineRange.ValueChanged += RangeOnChange;
+        }
+
+        public static bool DrawRangeForLandMine => GetBool("Drawing.Range.LandMine");
+        public static bool DrawRangeForStaticTrap => GetBool("Drawing.Range.StaticTrap");
+        public static bool DrawRangeForRemoteMine => GetBool("Drawing.Range.RemoteMine");
+
+        private static void RangeOnChange(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
+        {
+            var menu = sender as MenuItem;
+            if (menu==null)
+                return;
+            if (onValueChangeEventArgs.GetNewValue<bool>())
+                return;
+            List<BombManager> list = new List<BombManager>();
+            switch (menu.Name)
+            {
+                case "Drawing.Range.LandMine":
+                    list = Core.Bombs.Where(x => !x.IsRemoteMine && x.Bomb.MaximumHealth == 1).ToList();
+                    break;
+                case "Drawing.Range.StaticTrap":
+                    list = Core.Bombs.Where(x => !x.IsRemoteMine && x.Bomb.MaximumHealth == 100).ToList();
+                    break;
+                case "Drawing.Range.RemoteMine":
+                    list = Core.Bombs.Where(x => x.IsRemoteMine).ToList();
+                    break;
+                default:
+                    break;
+            }
+            foreach (var bombManager in list)
+            {
+                bombManager.RangEffect?.Dispose();
+            }
         }
 
         private static float GetSlider(string item)

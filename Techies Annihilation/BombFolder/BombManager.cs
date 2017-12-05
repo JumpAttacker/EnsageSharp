@@ -50,15 +50,20 @@ namespace Techies_Annihilation.BombFolder
             Damage = isRemoteMine
                 ? Core.RemoteMine.GetAbilityData("damage", Core.RemoteMine.Level) + (Core.Me.AghanimState() ? 150 : 0)
                 : Core.LandMine.GetAbilityData("damage", Core.LandMine.Level);
-            Radius= isRemoteMine
+            Radius = isRemoteMine
                 ? Core.RemoteMine.GetAbilityData("radius")
                 : Core.LandMine.GetAbilityData("radius");
-            RangEffect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf", Bomb.Position);
-            RangEffect.SetControlPoint(1, new Vector3(Radius, 255, 0));
-            RangEffect.SetControlPoint(2,
-                bomb.NetworkActivity != NetworkActivity.Spawn
-                    ? new Vector3(255, 255, 255)
-                    : new Vector3(100, 100, 100));
+            if (isRemoteMine && MenuManager.DrawRangeForRemoteMine ||
+                !isRemoteMine && MenuManager.DrawRangeForLandMine && bomb.MaximumHealth == 1 ||
+                !isRemoteMine && MenuManager.DrawRangeForStaticTrap && bomb.MaximumHealth == 100)
+            {
+                RangEffect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf", Bomb.Position);
+                RangEffect.SetControlPoint(1, new Vector3(Radius, 255, 0));
+                RangEffect.SetControlPoint(2,
+                    bomb.NetworkActivity != NetworkActivity.Spawn
+                        ? new Vector3(255, 255, 255)
+                        : new Vector3(100, 100, 100));
+            }
             BombPosition = bomb.Position;
             Active = bomb.NetworkActivity != NetworkActivity.Spawn;
             HeroManager = new Dictionary<uint, float>();
@@ -101,9 +106,14 @@ namespace Techies_Annihilation.BombFolder
             if (Active && !effectLocked)
             {
                 RangEffect?.Dispose();
-                RangEffect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf", Bomb);
-                RangEffect.SetControlPoint(1, new Vector3(Radius, 255, 0));
-                RangEffect.SetControlPoint(2, new Vector3(255, 255, 255));
+                if (IsRemoteMine && MenuManager.DrawRangeForRemoteMine ||
+                    !IsRemoteMine && MenuManager.DrawRangeForLandMine && Bomb.MaximumHealth == 1 ||
+                    !IsRemoteMine && MenuManager.DrawRangeForStaticTrap && Bomb.MaximumHealth == 100)
+                {
+                    RangEffect = new ParticleEffect("materials/ensage_ui/particles/range_display_mod.vpcf", Bomb);
+                    RangEffect.SetControlPoint(1, new Vector3(Radius, 255, 0));
+                    RangEffect.SetControlPoint(2, new Vector3(255, 255, 255));
+                }
                 effectLocked = true;
             }
         }
