@@ -47,6 +47,8 @@ namespace Techies_Annihilation.Features
         {
             if (!MenuManager.IsEnable)
                 return;
+            if (!MenuManager.IsAutoDetonation)
+                return;
             var spellAmp = 0;//UnitExtensions.GetSpellAmplification(Me);
             foreach (var hero in Heroes.GetByTeam(EnemyTeam))      
             {

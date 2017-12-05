@@ -31,6 +31,7 @@ namespace Techies_Annihilation
         public static bool IsEnableDelayBlow => GetBool("Settings.Delay.Enable");
         public static bool IsStackerEnabled => GetBool("Drawing.Stacker.Enable");
         public static bool IsSuperDetonate => GetBool("Settings.SuperDetonate.Enable");
+        public static bool IsAutoDetonation => GetBool("Settings.AutoDetonation.Enable");
         public static bool IsCameraMovingEnable => GetBool("Settings.MoveCamera.Enable");
         public static int CameraMovingType => GetStringList("Settings.MoveCamera.Type");
         public static bool IsEnable => GetBool("Enable");
@@ -41,6 +42,7 @@ namespace Techies_Annihilation
             var settings = new Menu("Settings", "Settings");
             var delay = new Menu("Delay", "Delay");
             settings.AddItem(new MenuItem("Settings.Aegis.Enable", "Detonate in aegis").SetValue(true));
+            settings.AddItem(new MenuItem("Settings.AutoDetonation.Enable", "Auto Detonation").SetValue(true));
             settings.AddItem(new MenuItem("Settings.ForceStaff.Enable", "Enable ForceStaff").SetValue(true));
             settings.AddItem(new MenuItem("Settings.SuperDetonate.Enable", "Detonate all in once").SetValue(false));
             settings.AddItem(new MenuItem("Settings.MoveCamera.Enable", "Move camera on mines").SetValue(false));

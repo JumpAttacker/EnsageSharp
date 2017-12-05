@@ -43,10 +43,10 @@ namespace Techies_Annihilation.Features
             }
         }
 
-        public static double DigSize = MenuManager.GetLandMineIndicatorDigSize; //1
+        public static double DigSize => MenuManager.GetLandMineIndicatorDigSize; //1
 
-        public static float BarSize = MenuManager.GetLandMineBarSize; //10;
-        public static bool DrawDigs = MenuManager.LandMinesDrawDigs;
-        public static bool Enable = MenuManager.LandMineIndicatorEnable;
+        public static float BarSize => MenuManager.GetLandMineBarSize; //10;
+        public static bool DrawDigs => MenuManager.LandMinesDrawDigs;
+        public static bool Enable => MenuManager.LandMineIndicatorEnable;
     }
 }
