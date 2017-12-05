@@ -122,8 +122,13 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                                    Core.Target.GetAbilityById(AbilityId.antimage_spell_shield)
                                                        .CanBeCasted();
                         var isDisable = ability.IsDisable();
-                        if ((Core.Target.IsLinkensProtected() || amWithAghUnderLinken) &&
-                            (isDisable || ability.IsDagon() || ability.Id == AbilityId.item_ethereal_blade || ability.Id == AbilityId.item_nullifier))
+                        var isLinken = Core.Target.IsLinkensProtected();
+                        var retardedAm = isLinken && amWithAghUnderLinken;
+                        if (((isLinken || amWithAghUnderLinken) &&
+                             (isDisable || ability.IsDagon() || ability.Id == AbilityId.item_ethereal_blade ||
+                              ability.Id == AbilityId.item_nullifier)) ||
+                            (retardedAm && (ability.Id == AbilityId.item_orchid ||
+                             ability.Id == AbilityId.item_bloodthorn)))
                         {
                             counter++;
                             continue;
