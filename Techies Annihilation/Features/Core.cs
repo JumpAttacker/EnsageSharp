@@ -58,7 +58,7 @@ namespace Techies_Annihilation.Features
                     new[]
                     {
                         "modifier_shredder_timber_chain", "modifier_storm_spirit_ball_lightning",
-                        "modifier_item_combo_breaker_buff", "modifier_ember_spirit_sleight_of_fist_caster",
+                        "modifier_item_aeon_disk_buff", "modifier_ember_spirit_sleight_of_fist_caster",
                         "modifier_ember_spirit_sleight_of_fist_caster_invulnerability"
                     },
                     false))
@@ -75,7 +75,7 @@ namespace Techies_Annihilation.Features
                 var reduction = RemoteMine.GetDamageReduction(hero);
                 var refraction = hero.FindModifier("modifier_templar_assassin_refraction_absorb");
                 var blockCount = refraction?.StackCount;
-                var aeon = UnitExtensions.GetItemById(hero, AbilityId.item_combo_breaker);
+                var aeon = UnitExtensions.GetItemById(hero, AbilityId.item_aeon_disk);
                 var breakHealthForAeon = hero.MaximumHealth * .8f;
                 float treshold = 0;
                 var heroid = hero.HeroId;
