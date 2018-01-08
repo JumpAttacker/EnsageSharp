@@ -4,6 +4,7 @@ using Ensage.Common;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Input;
 using SharpDX;
+using MouseButtons = Ensage.SDK.Input.MouseButtons;
 
 namespace OverlayInformation.Features.beh
 {

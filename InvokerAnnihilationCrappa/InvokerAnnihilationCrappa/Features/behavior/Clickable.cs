@@ -4,6 +4,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.SDK.Input;
 using SharpDX;
+using MouseButtons = Ensage.SDK.Input.MouseButtons;
 using MouseEventArgs = Ensage.SDK.Input.MouseEventArgs;
 
 namespace InvokerAnnihilationCrappa.Features.behavior

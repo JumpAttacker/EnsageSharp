@@ -226,6 +226,17 @@ namespace InvokerAnnihilationCrappa
             Unit.OnModifierAdded += HeroOnOnModifierAdded;
             Unit.OnModifierRemoved += HeroOnOnModifierRemoved;
             SpCounter = new SphereCounter();
+            /*Player.OnExecuteOrder += (sender, args) =>
+            {
+                var id = args.Ability?.Id;
+                if (id == AbilityId.invoker_exort || id == AbilityId.invoker_wex || id == AbilityId.invoker_quas || id == AbilityId.invoker_invoke)
+                    return;
+                if (BlockActions)
+                {
+                    Game.PrintMessage($"OrderId: {args.OrderId}");
+                    args.Process = false;
+                }
+            };*/
         }
 
         public SphereCounter SpCounter { get; set; }
@@ -445,6 +456,7 @@ namespace InvokerAnnihilationCrappa
             {
                 return false;
             }
+            //BlockActions = true;
             if (Config.SmartInvoke)
             {
                 var sphereDelay = Config.InvokeTime;
@@ -477,8 +489,11 @@ namespace InvokerAnnihilationCrappa
             InvokeAbility.UseAbility();
             Log.Info($"invoke: [{info.Ability.Name}]");
             await Task.Delay(Config.AfterInvokeDelay);
+            //BlockActions = false;
             return true;
         }
+
+        //public bool BlockActions { get; set; }
 
         public bool Invoke(AbilityInfo info)
         {
@@ -491,6 +506,7 @@ namespace InvokerAnnihilationCrappa
             {
                 return false;
             }
+            //BlockActions = true;
             info.One.UseAbility();
             info.Two.UseAbility();
             info.Three.UseAbility();
@@ -502,6 +518,7 @@ namespace InvokerAnnihilationCrappa
             InvokeAbility.UseAbility();
             _invokeSleeper.Sleep(250);
             Log.Info($"invoke: [{info.Ability.Name}]");
+            //BlockActions = false;
             return true;
         }
 

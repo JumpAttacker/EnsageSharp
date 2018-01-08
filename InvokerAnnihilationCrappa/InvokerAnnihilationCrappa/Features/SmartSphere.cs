@@ -14,6 +14,7 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using AbilityId = Ensage.Common.Enums.AbilityId;
+using MouseButtons = Ensage.SDK.Input.MouseButtons;
 using MouseEventArgs = Ensage.SDK.Input.MouseEventArgs;
 
 namespace InvokerAnnihilationCrappa.Features

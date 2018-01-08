@@ -7,6 +7,7 @@ using Ensage;
 using Ensage.Common.Menu;
 using Ensage.SDK.Input;
 using SharpDX;
+using MouseButtons = Ensage.SDK.Input.MouseButtons;
 using MouseEventArgs = Ensage.SDK.Input.MouseEventArgs;
 
 namespace ArcAnnihilation.Panels

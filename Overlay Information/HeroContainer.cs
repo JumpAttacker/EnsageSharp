@@ -387,7 +387,7 @@ namespace OverlayInformation
                 Hero.Spellbook.Spells.Where(
                     x =>
                         (x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate) &&
-                        Abilities2.Find(y => y.Handle == x.Handle) == null);
+                        Abilities2.Find(y => y.Handle == x.Handle) == null && !x.IsHidden);
             foreach (var ability in abilities)
             {
                 Abilities2.Add(HolderHelper.GetOrCreate(ability));
