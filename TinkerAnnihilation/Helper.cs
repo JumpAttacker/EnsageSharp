@@ -182,8 +182,24 @@ namespace TinkerAnnihilation
                         if (!(mana - mCost > 0)) break;
                         mana -= mCost;
 
-                        var dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
-                            minusMagicResistancePerc: extraDamage);
+                        var dmgFromSpell = 0f;
+                        if (x.Id == Ensage.AbilityId.tinker_heat_seeking_missile)
+                        {
+                            float outgoingDamage = x.GetAbilityData("damage", x.Level);
+                            dmgFromSpell =
+                                globalTarget.SpellDamageTaken(
+                                    outgoingDamage,
+                                    DamageType.Magical,
+                                    Members.MyHero,
+                                    x.StoredName(),
+                                    false,
+                                    minusMagicResistancePerc: extraDamage);
+                        }
+                        else
+                        {
+                            dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
+                                minusMagicResistancePerc: extraDamage);
+                        }
                         if (x.GetAbilityId() == AbilityId.tinker_laser)
                         {
                             if (Members.LaserBuff)
@@ -287,8 +303,24 @@ namespace TinkerAnnihilation
                     var mCost = x.ManaCost;
                     if (!(mana - mCost > 0)) break;
                     mana -= mCost;
-                    var dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
-                        minusMagicResistancePerc: extraDamage);
+                    var dmgFromSpell = 0f;
+                    if (x.Id == Ensage.AbilityId.tinker_heat_seeking_missile)
+                    {
+                        float outgoingDamage = x.GetAbilityData("damage", x.Level);
+                        dmgFromSpell =
+                            globalTarget.SpellDamageTaken(
+                                outgoingDamage,
+                                DamageType.Magical,
+                                Members.MyHero,
+                                x.StoredName(),
+                                false,
+                                minusMagicResistancePerc: extraDamage);
+                    }
+                    else
+                    {
+                        dmgFromSpell = AbilityDamage.CalculateDamage(x, Members.MyHero, globalTarget,
+                            minusMagicResistancePerc: extraDamage);
+                    }
                     if (x.GetAbilityId() == AbilityId.tinker_laser)
                     {
                         if (Members.LaserBuff)

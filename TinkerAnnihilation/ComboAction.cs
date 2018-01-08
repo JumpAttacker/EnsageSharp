@@ -63,7 +63,7 @@ namespace TinkerAnnihilation
                 if (pos.IsZero)
                     continue;
                 var size = HUDInfo.GetHpBarSizeY();
-                var text = $"{(int) Helper.CalculateMyCurrentDamage(hero)} ({(int) Helper.CalculateMyDamage(hero)})";
+                var text = $"     {(int) Helper.CalculateMyCurrentDamage(hero)} ({(int) Helper.CalculateMyDamage(hero)})";
                 var textSize = Drawing.MeasureText(text, "Arial",
                     new Vector2((float)(size * 1.5), 500), FontFlags.AntiAlias);
                 var textPos = pos + new Vector2(HUDInfo.GetHPBarSizeX() + 4, 0);
