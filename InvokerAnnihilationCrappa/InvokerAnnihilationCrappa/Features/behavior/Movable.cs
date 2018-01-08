@@ -34,7 +34,7 @@ namespace InvokerAnnihilationCrappa.Features.behavior
             var mPos = Game.MouseScreenPosition;
             if (Utils.IsUnderRectangle(mPos, startPos.X, startPos.Y, size.X, size.Y))
             {
-                if ((_inputManager.ActiveButtons & MouseButtons.Left) != 0)
+                if ((_inputManager.ActiveButtons & MouseButtons.LeftDown) != 0)
                 {
                     if (!_sleeper.Sleeping)
                     {

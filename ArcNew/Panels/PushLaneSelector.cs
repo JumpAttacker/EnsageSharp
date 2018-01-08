@@ -178,7 +178,7 @@ namespace ArcAnnihilation.Panels
 
         private void OnMouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Buttons != MouseButtons.Left)
+            if (e.Buttons != MouseButtons.LeftUp)
                 return;
             var button = _buttons.FirstOrDefault(x => x.UnderMouse);
             if (button == null) return;
