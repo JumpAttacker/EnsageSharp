@@ -23,7 +23,7 @@ namespace OverlayInformation.Features
             Enable = panel.Item("Enable", true);
             Prediction = panel.Item("Prediction", true);
             DrawOnMinimap = panel.Item("Draw on minimap", true);
-            MinimapType = panel.Item("Minimap drawing type", new StringList("circle","name"));
+            MinimapType = panel.Item("Minimap drawing type", new StringList("circle","name","icon"));
             MinimapSize = panel.Item("Minimap size", new Slider(15, 1, 30));
             DrawOnMap = panel.Item("Draw on map", true);
             MapSize = panel.Item("Map size", new Slider(50, 1, 100));
@@ -72,7 +72,7 @@ namespace OverlayInformation.Features
                     container.LastTimeUnderVision = 0;
                     continue;
                 }
-                if (hero.IsVisible)
+                if (container.IsVisible)
                 {
                     /*if (!DrawOnMap)
                         container.LastTimeUnderVision = Game.RawGameTime;*/
@@ -89,9 +89,15 @@ namespace OverlayInformation.Features
                         var color = Color.FromArgb(255, (int) vecClr.X, (int) vecClr.Y, (int) vecClr.Z);
                         Render.DrawCircle(pos, MinimapSize, color);
                     }
-                    else
+                    else if (index == 1)
                     {
                         Render.DrawText(pos- MinimapSize/2f, hero.GetDisplayName(), Color.White,fontSize: MinimapSize);
+                    }
+                    else
+                    {
+                        Render.DrawTexture(container.HeroId.ToString(),
+                            new RectangleF(pos.X - MinimapSize / 2f, pos.Y - MinimapSize / 2f, MinimapSize,
+                                MinimapSize));
                     }
                 }
             }

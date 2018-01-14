@@ -137,6 +137,7 @@ namespace OverlayInformation
 
     public class HeroContainer
     {
+        public static string GamePath = Game.GamePath;
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public bool IsAlly { get; }
         public OverlayInformation Main { get; }
@@ -188,6 +189,12 @@ namespace OverlayInformation
             .ToList();
         public HeroContainer(Hero hero, bool isAlly, OverlayInformation main)
         {
+            var itemString = hero.HeroId.ToString().Remove(0, 14);
+            main.Context.Value.TextureManager.LoadFromFile(hero.HeroId.ToString(),
+                $@"{GamePath}\game\dota\materials\ensage_ui\miniheroes\png\{itemString}.png");
+            /*Log.Warn($"Texture Name: {itemString}");
+            Log.Warn($"GamePath: {$@"{GamePath}\game\dota\materials\ensage_ui\miniheroes\png\{itemString}.png"}");*/
+                //$@"resource\flash3\images\heroes\miniheroes\{hero.HeroId}.png");
             Name = hero.Name;
             Id = hero.Player == null ? 0 : hero.Player.Id;
             HolderHelper = new Holder();
@@ -306,7 +313,8 @@ namespace OverlayInformation
             Mana = Hero.Mana;
             MaxHealth = Hero.MaximumHealth;
             MaxMana = Hero.MaximumMana;
-            AbilityState = Ultimate.AbilityState;
+            if (Ultimate != null && Ultimate.IsValid)
+                AbilityState = Ultimate.AbilityState;
         }
         private void UpdateItems()
         {
