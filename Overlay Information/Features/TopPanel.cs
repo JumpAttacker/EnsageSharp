@@ -23,8 +23,10 @@ namespace OverlayInformation.Features
             HealthAndManaBars = panel.Menu("Health and Mana bars");
             HealthBar = HealthAndManaBars.Item("Health bar", true);
             ManaBar = HealthAndManaBars.Item("Mana bar", true);
-            SizeY = HealthAndManaBars.Item("Size", new Slider(7, 1, 20));
-
+            ExtraSizeX = HealthAndManaBars.Item("Extra Size X", new Slider(0, -25, 25));
+            SizeY = HealthAndManaBars.Item("Size Y", new Slider(7, 1, 20));
+            ExtraPosX = HealthAndManaBars.Item("Extra Position X", new Slider(0, -200, 200));
+            ExtraPosY = HealthAndManaBars.Item("Extra Position Y", new Slider(0, -200, 200));
 
             UltimateBar = panel.Item("Ultimate bar", true);
             UltimateBarSize = panel.Item("Ultimate bar size", new Slider(100, 1, 200));
@@ -57,6 +59,11 @@ namespace OverlayInformation.Features
 
             }
         }
+
+        public MenuItem<Slider> ExtraPosX { get; set; }
+        public MenuItem<Slider> ExtraPosY { get; set; }
+
+        public MenuItem<Slider> ExtraSizeX { get; set; }
 
         public MenuItem<Slider> UltimateBarSize { get; set; }
 
@@ -137,7 +144,7 @@ namespace OverlayInformation.Features
         private void DrawingOnOnDraw(EventArgs args)
         {
             var heroes = Config.Main.Updater.Heroes;
-            var size = new Vector2(_size.X, SizeY);
+            var size = new Vector2(_size.X + ExtraSizeX, SizeY);
             var ultimateBarSize = new Vector2(UltimateBarSize / 100f * _size.X);
             foreach (var heroCont in heroes)
             {
@@ -145,6 +152,7 @@ namespace OverlayInformation.Features
                 var pos = GetTopPanelPosition(hero);
                 if (pos.IsZero)
                     continue;
+                pos += new Vector2(ExtraPosX, ExtraPosY);
                 if (HealthBar)
                     pos = DrawingHelper.DrawBar(pos, heroCont.Health * size.X / heroCont.MaxHealth, size,
                         Color.GreenYellow,

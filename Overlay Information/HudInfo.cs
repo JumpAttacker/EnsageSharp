@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using SharpDX;
 
 namespace OverlayInformation
@@ -356,8 +358,31 @@ namespace OverlayInformation
 
             return new Vector2((float)(GetXX(hero) - 20 * Monitor + X * id), 0);
         }
+        private class FakeClass
+        {
+            public readonly int Id;
+            public readonly Team Team;
+
+            public FakeClass(int id, Team team)
+            {
+                Id = id;
+                Team = team;
+            }
+        }
+        private static readonly Dictionary<FakeClass, Vector2> FakeDict = new Dictionary<FakeClass, Vector2>();
         public static Vector2 GetFakeTopPanelPosition(int id, Team team)
         {
+            var fake = FakeDict.Find(x => x.Key.Id == id && x.Key.Team == team);
+            if (!fake.Value.IsZero)
+            {
+                return fake.Value;
+            }
+            else
+            {
+                var pos = new Vector2((float) (GetFakeXX(team) - 20 * Monitor + X * id), 0);
+                FakeDict.Add(new FakeClass(id,team), pos);
+                return pos;
+            }
             return new Vector2((float)(GetFakeXX(team) - 20 * Monitor + X * id), 0);
         }
 

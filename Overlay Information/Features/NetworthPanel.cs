@@ -76,8 +76,10 @@ namespace OverlayInformation.Features
         private void DrawGlobalPanel(EventArgs args)
         {
             var startPos = HudInfo.GetFakeTopPanelPosition(5, Team.Radiant) +
-                           new Vector2(0, (float) HudInfo.GetTopPanelSizeY());
-            var endPos = HudInfo.GetFakeTopPanelPosition(5, Team.Dire);
+                           new Vector2(Config.TopPanel.ExtraPosX,
+                               (float) HudInfo.GetTopPanelSizeY() + Config.TopPanel.ExtraPosY);
+            var endPos = HudInfo.GetFakeTopPanelPosition(5, Team.Dire) +
+                         new Vector2(Config.TopPanel.ExtraPosX, Config.TopPanel.ExtraPosY);
             var size = new Vector2(endPos.X - startPos.X, GlobalSizeY);
             uint direNetwoth = 0;
             uint radiantNetworh = 0;
