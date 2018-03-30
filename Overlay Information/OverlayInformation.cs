@@ -50,18 +50,22 @@ namespace OverlayInformation
         public Config Config;
         protected override void OnActivate()
         {
-            InventoryManager = Context.Value.Inventory;
-            Renderer = Context.Value.Renderer;
-            ParticleManager = Context.Value.Particle;
-            Owner = (Hero) Context.Value.Owner;
-            Updater = new Updater(this);
-            Log.Info("Updater loaded");
-            Config = new Config(this);
-            Log.Info("Config loaded");
-            /*InventoryManager.Value.Activate();
-            Log.Info("InventoryManager loaded");*/
+            UpdateManager.BeginInvoke(() =>
+            {
+                InventoryManager = Context.Value.Inventory;
+                Renderer = Context.Value.Renderer;
+                ParticleManager = Context.Value.Particle;
+                Owner = (Hero)Context.Value.Owner;
+                Updater = new Updater(this);
+                Log.Info("Updater loaded");
+                Config = new Config(this);
+                Log.Info("Config loaded");
+                /*InventoryManager.Value.Activate();
+                Log.Info("InventoryManager loaded");*/
 
-            InitLocalCheats();
+                InitLocalCheats();
+            }, 2000);
+            
         }
 
         private void InitLocalCheats()
