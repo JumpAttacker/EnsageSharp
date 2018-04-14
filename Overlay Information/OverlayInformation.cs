@@ -65,7 +65,6 @@ namespace OverlayInformation
 
                 InitLocalCheats();
             }, 2000);
-            
         }
 
         private void InitLocalCheats()
