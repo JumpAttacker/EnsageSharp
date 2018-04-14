@@ -110,6 +110,8 @@ namespace OverlayInformation.Features
             foreach (var container in Config.Main.Updater.EnemyHeroes)
             {
                 var hero = container.Hero;
+                if (hero == null || !hero.IsValid)
+                    continue;
                 if (container.LastTimeUnderVision<=0 && !hero.IsVisible)
                     continue;
                 if (!hero.IsAlive)
@@ -123,12 +125,19 @@ namespace OverlayInformation.Features
                 }
                 else
                 {
-                    var delay = Game.RawGameTime - container.LastTimeUnderVision;
-                    var pos = Drawing.WorldToScreen(Prediction ? hero.Predict(delay * 1000) : hero.Position);
-                    if (pos.IsZero)
-                        continue;
-                    var size = new Vector2(MapSize);
-                    Drawing.DrawRect(pos- size, size, Textures.GetHeroRoundTexture(hero.Name));
+                    try
+                    {
+                        var delay = Game.RawGameTime - container.LastTimeUnderVision;
+                        var pos = Drawing.WorldToScreen(Prediction ? hero.Predict(delay * 1000) : hero.Position);
+                        if (pos.IsZero)
+                            continue;
+                        var size = new Vector2(MapSize);
+                        Drawing.DrawRect(pos - size, size, Textures.GetHeroRoundTexture(hero.Name));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
                 }
             }
         }

@@ -315,19 +315,33 @@ namespace OverlayInformation.Features.Teleport_Catcher
         private void RenderOnDraw(object sender, EventArgs eventArgs)
         {
             if (Effects==null || !Effects.Any()) return;
-            foreach (var tpEffect in Effects)//.Where(x=>!x.IsAlly))
+            try
             {
-                if (tpEffect.Player==null)
-                    continue;
-                /*var vecClr = Config.TpCatcher.ColorList[tpEffect.Id] * 255;
-                var color = Color.FromArgb((int)vecClr.X, (int)vecClr.Y, (int)vecClr.Z);*/
+                foreach (var tpEffect in Effects)//.Where(x=>!x.IsAlly))
+                {
+                    try
+                    {
+                        if (tpEffect.Player == null)
+                            continue;
+                        /*var vecClr = Config.TpCatcher.ColorList[tpEffect.Id] * 255;
+                        var color = Color.FromArgb((int)vecClr.X, (int)vecClr.Y, (int)vecClr.Z);*/
 
-                /*Render.DrawRectangle(new RectangleF(200, 200, 200, 200), color, 100);
-                Render.DrawCircle(new Vector2(500,500), 50, color);*/
-                var pos = tpEffect.StartPos.WorldToMinimap();
-                Render.DrawCircle(pos, 10, tpEffect._color);
-                Render.DrawText(pos - new Vector2(_fontSize, 0), tpEffect.Hero.GetRealName(), tpEffect._color, _fontSize);
-                //Render.DrawCircle(tpEffect.StartPos.WorldToMinimap(), 5, tpEffect.IsAlly ? Color.RoyalBlue : Color.Red);
+                        /*Render.DrawRectangle(new RectangleF(200, 200, 200, 200), color, 100);
+                        Render.DrawCircle(new Vector2(500,500), 50, color);*/
+                        var pos = tpEffect.StartPos.WorldToMinimap();
+                        Render.DrawCircle(pos, 10, tpEffect._color);
+                        Render.DrawText(pos - new Vector2(_fontSize, 0), tpEffect.Hero.GetRealName(), tpEffect._color, _fontSize);
+                        //Render.DrawCircle(tpEffect.StartPos.WorldToMinimap(), 5, tpEffect.IsAlly ? Color.RoyalBlue : Color.Red);
+                    }
+                    catch (Exception e)
+                    {
+                        // ignored
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                // ignored
             }
         }
 
