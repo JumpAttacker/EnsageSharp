@@ -206,8 +206,9 @@ namespace OverlayInformation.Features.Teleport_Catcher
             Enable = panel.Item("Enable", true);
             Notification = panel.Item("Notification", true);
             DrawNames = panel.Item("Draw name on minimap", false);
-            _fontSize = panel.Item("Font size", new Slider(10,1,25));
+            _fontSize = panel.Item("Font/Icon size", new Slider(18,1,25));
             ExtraTime = panel.Item("Extra drawing time for tp (ms)", new Slider(0,0,5000));
+            Type = panel.Item("Drawing type", new StringList("Icon", "Colored cyrcle"));
             Render = config.Main.Renderer;
             
             Effects = new List<TeleportEffect>();
@@ -263,6 +264,8 @@ namespace OverlayInformation.Features.Teleport_Catcher
         public MenuItem<bool> Notification { get; set; }
 
         public MenuItem<Slider> ExtraTime { get; set; }
+
+        private MenuItem<StringList> Type;
 
         private void DrawingOnOnDraw(EventArgs args)
         {
@@ -329,8 +332,33 @@ namespace OverlayInformation.Features.Teleport_Catcher
                         /*Render.DrawRectangle(new RectangleF(200, 200, 200, 200), color, 100);
                         Render.DrawCircle(new Vector2(500,500), 50, color);*/
                         var pos = tpEffect.StartPos.WorldToMinimap();
-                        Render.DrawCircle(pos, 10, tpEffect._color);
-                        Render.DrawText(pos - new Vector2(_fontSize, 0), tpEffect.Hero.GetRealName(), tpEffect._color, _fontSize);
+                        if (Type.Value.SelectedIndex == 0)
+                        {
+                            try
+                            {
+                                Render.DrawTexture(tpEffect.Hero.HeroId.ToString(),
+                                    new RectangleF(pos.X - _fontSize / 2f, pos.Y - _fontSize / 2f, _fontSize,
+                                        _fontSize));
+                            }
+                            catch (TextureNotFoundException)
+                            {
+                                TextureHelper.LoadHeroTexture(tpEffect.Hero.HeroId);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine($"Error: {e}");
+                            }
+                        }
+                        else
+                        {
+                            Render.DrawCircle(pos, 10, tpEffect._color);
+                            if (DrawNames)
+                            {
+                                Render.DrawText(pos - new Vector2(_fontSize, 0), tpEffect.Hero.GetDisplayName(),
+                                    tpEffect._color, _fontSize);
+                            }
+                        }
+                        
                         //Render.DrawCircle(tpEffect.StartPos.WorldToMinimap(), 5, tpEffect.IsAlly ? Color.RoyalBlue : Color.Red);
                     }
                     catch (Exception e)

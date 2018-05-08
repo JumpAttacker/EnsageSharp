@@ -60,6 +60,8 @@ namespace OverlayInformation
                 Log.Info("Updater loaded");
                 Config = new Config(this);
                 Log.Info("Config loaded");
+                TextureHelper.Init(Context.Value);
+                Log.Info("TextureHelper loaded");
                 /*InventoryManager.Value.Activate();
                 Log.Info("InventoryManager loaded");*/
 
