@@ -361,13 +361,13 @@ namespace OverlayInformation.Features.Teleport_Catcher
                         
                         //Render.DrawCircle(tpEffect.StartPos.WorldToMinimap(), 5, tpEffect.IsAlly ? Color.RoyalBlue : Color.Red);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // ignored
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // ignored
             }
