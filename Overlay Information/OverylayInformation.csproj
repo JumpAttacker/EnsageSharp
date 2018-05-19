@@ -102,6 +102,7 @@
     <Compile Include="DrawingHelper.cs" />
     <Compile Include="Features\beh\Movable.cs" />
     <Compile Include="Features\CourEsp.cs" />
+    <Compile Include="Features\GlyphTracker.cs" />
     <Compile Include="Features\HeroOverlay.cs" />
     <Compile Include="Features\ItemPanel.cs" />
     <Compile Include="Features\LastPositionTracker.cs" />

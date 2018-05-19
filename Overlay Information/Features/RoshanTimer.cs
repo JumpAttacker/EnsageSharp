@@ -40,7 +40,6 @@ namespace OverlayInformation.Features
             {
                 Drawing.OnDraw += DrawingOnOnDraw;
                 UpdateManager.Subscribe(AegisSearcher, 500);
-                
             }
 
             Enable.Item.ValueChanged += (sender, args) =>

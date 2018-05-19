@@ -25,6 +25,7 @@ namespace OverlayInformation
             LastPositionTracker = new LastPositionTracker(this);
             OpenDotaHelper = new OpenDotaHelper(this);
             ShowMeMore = new ShowMeMore(this);
+            GlyphTracker = new GlyphTracker(this);
             RoshanTimer = new RoshanTimer(this);
             ShowIllusions = new ShowIllusions(this);
         }
@@ -36,7 +37,7 @@ namespace OverlayInformation
         public RoshanTimer RoshanTimer { get; set; }
 
         public ShowMeMore ShowMeMore { get; set; }
-
+        public GlyphTracker GlyphTracker { get; }
         public OpenDotaHelper OpenDotaHelper { get; set; }
 
         public LastPositionTracker LastPositionTracker { get; set; }
