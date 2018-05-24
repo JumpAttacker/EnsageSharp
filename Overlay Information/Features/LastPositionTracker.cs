@@ -17,6 +17,10 @@ namespace OverlayInformation.Features
         public Config Config { get; }
         public LastPositionTracker(Config config)
         {
+            if (Game.GameMode == GameMode.Turbo)
+            {
+                return;
+            }
             Config = config;
             var panel = Config.Factory.Menu("Last Position Tracker");
             Render = config.Main.Renderer;
