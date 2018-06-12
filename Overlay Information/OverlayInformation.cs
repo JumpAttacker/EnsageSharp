@@ -50,8 +50,8 @@ namespace OverlayInformation
         public Config Config;
         protected override void OnActivate()
         {
-            UpdateManager.BeginInvoke(() =>
-            {
+            //UpdateManager.BeginInvoke(() =>
+            //{
                 InventoryManager = Context.Value.Inventory;
                 Renderer = Context.Value.Renderer;
                 ParticleManager = Context.Value.Particle;
@@ -66,7 +66,7 @@ namespace OverlayInformation
                 Log.Info("InventoryManager loaded");*/
 
                 InitLocalCheats();
-            }, 2000);
+            //}, 2000);
         }
 
         private void InitLocalCheats()
