@@ -1,14 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using Ensage;
 using Ensage.SDK.Renderer;
 using Ensage.SDK.Service;
+using Ensage.SDK.VPK;
 using NLog;
 
 namespace OverlayInformation
 {
     public static class TextureHelper
     {
-        public static readonly Logger Log = LogManager.GetCurrentClassLogger();
         public static string GamePath = Game.GamePath;
         private static readonly List<string> LoadedList = new List<string>();
         public static void Init(IServiceContext conext)
@@ -23,33 +27,25 @@ namespace OverlayInformation
             if (LoadedList.Contains(id.ToString()))
                 return;
             LoadedList.Add(id.ToString());
-            Log.Debug($"Load from dota ability texture: {id}");
-            Render.LoadFromDota($"{id}", $@"resource\flash3\images\spellicons\{id}.png");
+            Console.WriteLine($"Load from dota ability texture: {id}");
+            Render.LoadFromDota($"{id}", $@"panorama\images\spellicons\{id}_png.vtex_c");
+            /*Render.LoadFromFile(id.ToString(),
+                $@"{GamePath}\game\dota\materials\ensage_ui\spellicons\png\{id}.png");*/
+            //Render.LoadFromDota($"{id}", $@"resource\flash3\images\spellicons\{id}.png");
+            //Render.LoadFromDota($"{id}", $@"resource\flash3\images\spellicons\{id}.png");
         }
 
         public static void LoadItemTexture(AbilityId id)
         {
             if (LoadedList.Contains(id.ToString()))
-            {
-                Log.Debug($"Already Loaded from dota item texture: {id}");
                 return;
-            }
             LoadedList.Add(id.ToString());
             var itemString = id.ToString().Remove(0, 5);
-            Log.Debug($"Load from dota item texture: {itemString}");
-            Render.LoadFromDota($"{id}", $@"resource\flash3\images\items\{itemString}.png");
-        }
-        public static void LoadItemTexture(string id)
-        {
-            if (LoadedList.Contains(id))
-            {
-                Log.Debug($"Already Loaded from dota item texture: {id}");
-                return;
-            }
-            LoadedList.Add(id);
-            var itemString = id.Remove(0, 5);
-            Log.Debug($"Load from dota item texture: {itemString}");
-            Render.LoadFromDota($"{id}", $@"resource\flash3\images\items\{itemString}.png");
+            Console.WriteLine($"Load from dota item texture: {itemString}");
+            //Render.LoadFromDota($"{id}", $@"resource\flash3\images\items\{itemString}.png");
+            LoadFromDota($"{id}", $@"panorama\images\items\{itemString}_png.vtex_c");
+            /*Render.LoadFromFile(id.ToString(),
+                $@"{GamePath}\game\dota\materials\ensage_ui\items\png\{itemString}.png");*/
         }
         /// <summary>
         /// load horizontal hero texure
@@ -61,9 +57,10 @@ namespace OverlayInformation
                 return;
             LoadedList.Add(id.ToString());
             var itemString = id.ToString().Remove(0, 14);
-            Log.Debug($"Load from dota hero[horizontal] texture: {id} TextureKey: [{itemString}]");
-            Render.LoadFromFile(id.ToString(),
-                $@"{GamePath}\game\dota\materials\ensage_ui\miniheroes\png\{itemString}.png");
+            Console.WriteLine($"Load from dota hero[horizontal] texture: {id} TextureKey: [{itemString}]");
+            Render.LoadFromDota($"{id}", $@"panorama\images\heroes\icons\{id}_png.vtex_c");
+            /*Render.LoadFromFile(id.ToString(),
+                $@"{GamePath}\game\dota\materials\ensage_ui\miniheroes\png\{itemString}.png");*/
         }
 
         public static void LoadAbilityTexture(params AbilityId[] id)
@@ -91,6 +88,35 @@ namespace OverlayInformation
             {
                 LoadHeroTexture(abilityId);
             }
+        }
+
+
+        private static readonly VpkBrowser VpkBrowser = new VpkBrowser();
+
+        public static bool LoadFromDota(string textureKey, string file, Rectangle rectangle = default)
+        {
+            try
+            {
+                var bitmapStream = VpkBrowser.FindImage(file);
+                if (bitmapStream != null)
+                {
+                    var stream = new MemoryStream();
+                    new Bitmap(bitmapStream).Clone(rectangle.IsEmpty ? new Rectangle(12, 0, 64, 64) : rectangle, PixelFormat.Undefined).Save(stream, ImageFormat.Png);
+                    return Render.LoadFromStream(textureKey, stream);
+                }
+
+                bitmapStream = VpkBrowser.FindImage(@"panorama\images\spellicons\invoker_empty1_png.vtex_c");
+                if (bitmapStream != null)
+                {
+                    return Render.LoadFromStream(textureKey, bitmapStream);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            return false;
         }
     }
 }
