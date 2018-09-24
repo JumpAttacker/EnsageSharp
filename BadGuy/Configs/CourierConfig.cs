@@ -24,9 +24,12 @@ namespace BadGuy.Configs
                     "give items to main hero", "block for selected hero"));
             Rate = courier.Item("Rate", new Slider(50, 5, 500));
             MutedHeroes = courier.Item("Muted:", new HeroToggler(new Dictionary<string, bool>(), useAllyHeroes: true));
+            ExtraSettingsForMute = courier.Item("Transfer items to main hero or just return to base", true);
             _updateHandler = UpdateManager.Subscribe(CourierAction.Updater, 0, Enable.Value);
             Enable.Item.ValueChanged += ItemOnValueChanged;
         }
+
+        public MenuItem<bool> ExtraSettingsForMute { get; set; }
 
         public MenuItem<HeroToggler> MutedHeroes { get; set; }
 

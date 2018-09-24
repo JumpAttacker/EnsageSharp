@@ -70,7 +70,16 @@ namespace BadGuy.Features
         {
             if (BadGuy.Config.Courier.MutedHeroes.Value.IsEnabled(hero.Name))
             {
-                cour.GetAbilityById(AbilityId.courier_return_to_base).UseAbility();
+                if (BadGuy.Config.Courier.ExtraSettingsForMute &&
+                    cour.Inventory.Items.Any(x => x.OldOwner.Equals(ObjectManager.LocalHero)))
+                {
+                    cour.GetAbilityById(AbilityId.courier_transfer_items).UseAbility();
+                }
+                else
+                {
+                    cour.GetAbilityById(AbilityId.courier_return_stash_items).UseAbility();
+                }
+
             }
         }
     }

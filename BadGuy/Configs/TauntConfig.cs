@@ -1,5 +1,6 @@
 using System;
 using BadGuy.Features;
+using Ensage;
 using Ensage.Common.Menu;
 using Ensage.SDK.Handlers;
 using Ensage.SDK.Helpers;
