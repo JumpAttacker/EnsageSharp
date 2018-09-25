@@ -15,7 +15,7 @@ namespace BadGuy.Configs
             Enable = draw.Item("Enable", false);
             Enable.Item.SetTooltip("Working only with CTRL hotkey");
             Key = draw.Item("Key", new KeyBind(0x11));
-            Key.Item.DontSave();
+            //Key.Item.DontSave();
             Rate = draw.Item("Rate", new Slider(40, 1, 1000));
             Speed = draw.Item("Speed", new Slider(4, 1, 10));
             _updateHandler = UpdateManager.Subscribe(DrawingAction.Updater, 0, Enable.Value);
