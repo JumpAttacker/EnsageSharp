@@ -92,7 +92,7 @@ namespace OverlayInformation.Features
             foreach (var source in EntityManager<Unit>.Entities.Where(
                     x =>
                         x.IsValid && x.IsAlive && x.Team == config.Main.Context.Value.Owner.Team &&
-                        x.ClassId == ClassId.CDOTA_BaseNPC_Healer))
+                        x.NetworkName == "CDOTA_BaseNPC_Healer"))
             {
                 Shrines.Add(new TowerOrShrine(source));
             }

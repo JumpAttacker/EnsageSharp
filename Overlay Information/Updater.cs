@@ -150,7 +150,7 @@ namespace OverlayInformation
                     Log.Error($"Cant init New Hero -> {hero.GetDisplayName()} [{hero.Handle}]");
                     return;
                 }
-                if (hero.ClassId == ClassId.CDOTA_Unit_Hero_MonkeyKing)
+                if (hero.HeroId == HeroId.npc_dota_hero_monkey_king)
                 {
                     if (!hero.Spellbook.Spells.Any())
                     {
@@ -164,7 +164,7 @@ namespace OverlayInformation
                 var isAlly = myTeam == targetTeam;
                 
                 var newHero = new HeroContainer(hero, isAlly, Main);
-                if (hero.ClassId == ClassId.CDOTA_Unit_Hero_PhantomAssassin && !isAlly)
+                if (hero.HeroId == HeroId.npc_dota_hero_phantom_assassin && !isAlly)
                 {
                     Main.Config.ShowMeMore.InitPhantomAssiasin(newHero);
                 }
