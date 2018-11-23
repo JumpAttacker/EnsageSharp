@@ -73,7 +73,7 @@ namespace OverlayInformation.Features
                         //ObjectManager.GetEntities<Unit>()
                         .FirstOrDefault(
                             unit =>
-                                unit.Name == "npc_dota_roshan" /*unit.ClassId == ClassId.CDOTA_Unit_Roshan*/&&
+                                unit.Name == "npc_dota_roshan" /*unit.NetworkName == "CDOTA_Unit_Roshan"*/&&
                                 unit.IsAlive);
             }
             if (AegisEvent)
