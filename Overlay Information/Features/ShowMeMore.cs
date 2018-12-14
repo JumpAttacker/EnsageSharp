@@ -172,8 +172,8 @@ namespace OverlayInformation.Features
 
         private void EntityAdded(object sender, Unit x)
         {
-            var classId = x.ClassId;
-            if (classId == ClassId.CDOTA_BaseNPC)
+            var networkName = x.NetworkName;
+            if (networkName == "CDOTA_BaseNPC")
             {
                 foreach (var mod in x.Modifiers)
                 {
@@ -193,7 +193,7 @@ namespace OverlayInformation.Features
                     else if (name == "modifier_kunkka_torrent_thinker")
                     {
                         var kunkka =
-                            Config.Main.Updater.Heroes.Find(y => y.Hero.ClassId == ClassId.CDOTA_Unit_Hero_Kunkka);
+                            Config.Main.Updater.Heroes.Find(y => y.Hero.HeroId == HeroId.npc_dota_hero_kunkka);
                         var range = 225;
                         if (
                                 kunkka?.Hero.GetAbilityById(AbilityId.special_bonus_unique_kunkka).Level > 0)

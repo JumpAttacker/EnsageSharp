@@ -50,7 +50,7 @@ namespace OverlayInformation.Features
                 entity.Team != Config.Main.Context.Value.Owner.Team && entity.Name.Contains("tower1"))
             {
                 Time = 0;
-                Log.Debug($"{entity.ClassId} -> {args.PropertyName} from {args.OldValue} to {args.NewValue}");
+                Log.Debug($"{entity.NetworkName} -> {args.PropertyName} from {args.OldValue} to {args.NewValue}");
             }
         }
 

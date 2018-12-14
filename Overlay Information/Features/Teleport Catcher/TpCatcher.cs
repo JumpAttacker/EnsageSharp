@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -15,6 +16,7 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Color = System.Drawing.Color;
+using AbilityId = Ensage.AbilityId;
 
 namespace OverlayInformation.Features.Teleport_Catcher
 {
@@ -106,8 +108,8 @@ namespace OverlayInformation.Features.Teleport_Catcher
                 }
                 Hero = Player?.Hero;
                 IsAlly = Player?.Team == ObjectManager.LocalHero.Team;
-                HasTravelBoots = Hero.HasItem(ClassId.CDOTA_Item_BootsOfTravel) ||
-                                              Hero.HasItem(ClassId.CDOTA_Item_BootsOfTravel_2);
+                HasTravelBoots = Hero.HasItem(ItemId.item_travel_boots) ||
+                                              Hero.HasItem(ItemId.item_travel_boots_2);
                 var closest =
                                     _main.TowerOrShrines.Where(
                                             x => x.IsAlive && x.Team == Hero.Team && x.Unit.IsInRange(StartPos, 1150))
@@ -145,8 +147,8 @@ namespace OverlayInformation.Features.Teleport_Catcher
                         {
                             try
                             {
-                                HasTravelBoots = hero.HasItem(ClassId.CDOTA_Item_BootsOfTravel) ||
-                                                 hero.HasItem(ClassId.CDOTA_Item_BootsOfTravel_2);
+                                HasTravelBoots = hero.HasItem(ItemId.item_travel_boots) ||
+                                                 hero.HasItem(ItemId.item_travel_boots_2);
                             }
                             catch (Exception)
                             {
@@ -216,14 +218,14 @@ namespace OverlayInformation.Features.Teleport_Catcher
             TowerOrShrines = new List<TowerOrShrine>();
             foreach (var unit in EntityManager<Unit>.Entities.Where(
                 x =>
-                    x.IsValid && (x.ClassId == ClassId.CDOTA_BaseNPC_Healer || x.ClassId == ClassId.CDOTA_BaseNPC_Tower))
+                    x.IsValid && (x.NetworkName == "CDOTA_BaseNPC_Healer" || x.NetworkName == "CDOTA_BaseNPC_Tower"))
             )
             {
                 TowerOrShrines.Add(new TowerOrShrine(unit));
             }
             EntityManager<Unit>.EntityRemoved += (sender, x) =>
             {
-                if (x.ClassId == ClassId.CDOTA_BaseNPC_Healer || x.ClassId == ClassId.CDOTA_BaseNPC_Tower)
+                if (x.NetworkName == "CDOTA_BaseNPC_Healer" || x.NetworkName == "CDOTA_BaseNPC_Tower")
                 {
                     var remove = TowerOrShrines.Find(y => y.Unit == x);
                     if (remove != null)
