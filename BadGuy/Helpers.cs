@@ -17,7 +17,7 @@ namespace BadGuy
             _allyFountain =
                 EntityManager<Unit>.Entities.FirstOrDefault(
                     x =>
-                        x != null && x.IsValid && x.ClassId == ClassId.CDOTA_Unit_Fountain &&
+                        x != null && x.IsValid && x.NetworkName == ClassId.CDOTA_Unit_Fountain.ToString() &&
                         x.Team == ObjectManager.LocalHero.Team);
             return _allyFountain;
         }
@@ -30,7 +30,7 @@ namespace BadGuy
             _enemyFountain =
                 EntityManager<Unit>.Entities.FirstOrDefault(
                     x =>
-                        x != null && x.IsValid && x.ClassId == ClassId.CDOTA_Unit_Fountain &&
+                        x != null && x.IsValid && x.NetworkName == ClassId.CDOTA_Unit_Fountain.ToString() &&
                         x.Team != ObjectManager.LocalHero.Team);
             return _enemyFountain;
         }
