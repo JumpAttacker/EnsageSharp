@@ -57,7 +57,7 @@ namespace InvokerAnnihilation
             Events.OnLoad += (sender, args) =>
             {
                 _myHero = ObjectManager.LocalHero;
-                if (_myHero.ClassId != ClassId.CDOTA_Unit_Hero_Invoker)
+                if (_myHero.NetworkName != ClassId.CDOTA_Unit_Hero_Invoker.ToString())
                 {
                     return;
                 }
@@ -1088,7 +1088,7 @@ namespace InvokerAnnihilation
                 ObjectManager.GetEntities<Unit>()
                     .Where(
                         x =>
-                            x.ClassId == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit && x.IsAlive &&
+                            x.NetworkName == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit.ToString() && x.IsAlive &&
                             x.Team == _myHero.Team && x.Distance2D(_myHero)<=800);
             return forge.FirstOrDefault();
         }

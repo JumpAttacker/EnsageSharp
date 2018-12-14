@@ -18,7 +18,7 @@ namespace ArcAnnihilation
             {
                 if (!Utils.SleepCheck("Towers.refresh")) return _towerList;
                 _towerList = ObjectManager.GetEntities<Unit>()
-                    .Where(x => x.ClassId == ClassId.CDOTA_BaseNPC_Tower && x.IsValid && x.IsAlive)
+                    .Where(x => x.NetworkName == ClassId.CDOTA_BaseNPC_Tower.ToString() && x.IsValid && x.IsAlive)
                     .ToList();
                 if (_towerList.Any())
                     Utils.Sleep(1000, "Towers.refresh");
@@ -94,7 +94,7 @@ namespace ArcAnnihilation
                 if (!Utils.SleepCheck("LaneCreeps.refresh")) return _laneCreepsList;
                 _laneCreepsList =
                     ObjectManager.GetEntities<Unit>()
-                        .Where(x => x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Lane && x.IsValid && x.IsAlive)
+                        .Where(x => x.NetworkName == ClassId.CDOTA_BaseNPC_Creep_Lane.ToString() && x.IsValid && x.IsAlive)
                         .ToList();
                 if (_laneCreepsList.Any())
                     Utils.Sleep(100, "LaneCreeps.refresh");
@@ -110,7 +110,7 @@ namespace ArcAnnihilation
                 if (_ally == null || !_ally.IsValid)
                 {
                     _ally = ObjectManager.GetEntities<Unit>()
-                        .FirstOrDefault(x => x.Team == ObjectManager.LocalHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
+                        .FirstOrDefault(x => x.Team == ObjectManager.LocalHero.Team && x.NetworkName == ClassId.CDOTA_Unit_Fountain.ToString());
                 }
                 return _ally;
             }
@@ -119,7 +119,7 @@ namespace ArcAnnihilation
                 if (_enemy == null || !_enemy.IsValid)
                 {
                     _enemy = ObjectManager.GetEntities<Unit>()
-                        .FirstOrDefault(x => x.Team != ObjectManager.LocalHero.Team && x.ClassId == ClassId.CDOTA_Unit_Fountain);
+                        .FirstOrDefault(x => x.Team != ObjectManager.LocalHero.Team && x.NetworkName == ClassId.CDOTA_Unit_Fountain.ToString());
                 }
                 return _enemy;
             }

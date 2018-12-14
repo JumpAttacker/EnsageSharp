@@ -38,7 +38,7 @@ namespace Techies_Annihilation.BombFolder
         public static void OnAddEntity(EntityEventArgs args)
         {
             var entity = args.Entity;
-            if (entity.Team == Core.Me.Team && entity.ClassId == ClassId.CDOTA_NPC_TechiesMines)
+            if (entity.Team == Core.Me.Team && entity.NetworkName == ClassId.CDOTA_NPC_TechiesMines.ToString())
             {
                 var isUltimate = entity.Spellbook().Spell1 != null;
                 Init((Unit)entity, isUltimate);
@@ -48,7 +48,7 @@ namespace Techies_Annihilation.BombFolder
         public static void OnRemoveEntity(EntityEventArgs args)
         {
             var entity = args.Entity;
-            if (entity.Team == Core.Me.Team && entity.ClassId == ClassId.CDOTA_NPC_TechiesMines)
+            if (entity.Team == Core.Me.Team && entity.NetworkName == ClassId.CDOTA_NPC_TechiesMines.ToString())
             {
                 Remove((Unit)entity);
             }
@@ -58,7 +58,7 @@ namespace Techies_Annihilation.BombFolder
         {
             var bombs =
                 ObjectManager.GetEntitiesFast<Unit>()
-                    .Where(x => x.Team == Core.Me.Team && x.ClassId == ClassId.CDOTA_NPC_TechiesMines)
+                    .Where(x => x.Team == Core.Me.Team && x.NetworkName == ClassId.CDOTA_NPC_TechiesMines.ToString())
                     .ToList();
             foreach (var bomb in bombs)
             {
@@ -71,7 +71,7 @@ namespace Techies_Annihilation.BombFolder
         {
             var x = sender;
             //if (sender is Hero)Printer.Print($"{args.PropertyName}: {args.OldValue} -> {args.NewValue}");
-            if (x.Team == Core.Me.Team && x.ClassId == ClassId.CDOTA_NPC_TechiesMines)
+            if (x.Team == Core.Me.Team && x.NetworkName == ClassId.CDOTA_NPC_TechiesMines.ToString())
             {
                 //Printer.Print($"{args.PropertyName}: {args.OldValue} -> {args.NewValue}");
                 if (args.PropertyName == "m_iHealth")

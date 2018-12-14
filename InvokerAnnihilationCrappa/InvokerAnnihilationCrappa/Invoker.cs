@@ -447,9 +447,10 @@ namespace InvokerAnnihilationCrappa
 
         public async Task<bool> InvokeAsync(AbilityInfo info)
         {
+            Log.Info($"Try to invoke -> {info.Ability.GetAbilityId()} ({info.Name})");
             if (!InvokeAbility.CanBeCasted())
             {
-                Log.Info($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
+                Log.Info($"can't invoke (cd) {InvokeAbility.Cooldown + 1}");
                 return false;
             }
             if (!CheckSpheresForLevel(info))
@@ -499,7 +500,7 @@ namespace InvokerAnnihilationCrappa
         {
             if (!InvokeAbility.CanBeCasted() || _invokeSleeper.Sleeping)
             {
-                Log.Info($"can't invoke (cd) {(int)InvokeAbility.Cooldown + 1}");
+                Log.Info($"can't invoke (cd) {InvokeAbility.Cooldown + 1}");
                 return false;
             }
             if (!CheckSpheresForLevel(info))

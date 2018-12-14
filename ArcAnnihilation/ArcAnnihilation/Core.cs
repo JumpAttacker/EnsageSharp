@@ -955,10 +955,10 @@ namespace ArcAnnihilation
                         .Where(
                             x =>
                                 !x.IsMagicImmune() && x.Team != _mainHero.Team &&
-                                (x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Lane ||
-                                 x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Siege ||
-                                 x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Neutral ||
-                                 x.ClassId == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit) && x.IsSpawned &&
+                                (x.NetworkName == ClassId.CDOTA_BaseNPC_Creep_Lane.ToString() ||
+                                 x.NetworkName == ClassId.CDOTA_BaseNPC_Creep_Siege.ToString() ||
+                                 x.NetworkName == ClassId.CDOTA_BaseNPC_Creep_Neutral.ToString() ||
+                                 x.NetworkName == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit.ToString()) && x.IsSpawned &&
                                 !x.IsAncient && x.IsAlive &&
                                 x.Distance2D(_mainHero) <= 600).OrderByDescending(x => x.Health)
                         .DefaultIfEmpty(null)
@@ -989,9 +989,9 @@ namespace ArcAnnihilation
                         .Where(
                             x =>
                                 !x.IsMagicImmune() && x.Team != _mainHero.Team &&
-                                (x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Lane ||
-                                 x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Siege ||
-                                 x.ClassId == ClassId.CDOTA_BaseNPC_Creep_Neutral) && x.IsSpawned && !x.IsAncient && x.IsAlive &&
+                                (x.NetworkName == ClassId.CDOTA_BaseNPC_Creep_Lane.ToString() ||
+                                 x.NetworkName == ClassId.CDOTA_BaseNPC_Creep_Siege.ToString() ||
+                                 x.NetworkName == ClassId.CDOTA_BaseNPC_Creep_Neutral.ToString()) && x.IsSpawned && !x.IsAncient && x.IsAlive &&
                                 x.Distance2D(clone) <= 600).OrderByDescending(x => x.Health)
                         .DefaultIfEmpty(null)
                         .FirstOrDefault();

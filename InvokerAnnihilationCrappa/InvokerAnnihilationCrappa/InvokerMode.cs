@@ -141,6 +141,7 @@ namespace InvokerAnnihilationCrappa
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
+            //Console.WriteLine($"On Execute");
             if (Me.Config.Prepare.Enable && Game.IsKeyDown(0x11))
                 return;
             if (_target == null || !_target.IsValid || !_target.IsAlive)
@@ -164,13 +165,13 @@ namespace InvokerAnnihilationCrappa
             
             if (_target != null)
             {
-                
                 var currentCombo = Me.Config.ComboPanel.Combos.First(x => x.Id == Me.SelectedCombo);
                 if (currentCombo.CurrentAbility < currentCombo.AbilityCount)
                 {
                     var currentAbility = currentCombo.AbilityInfos[currentCombo.CurrentAbility];
                     if (Me.Config.AbilitiesInCombo.Value.IsEnabled(currentAbility.Ability.Name) || currentAbility.Ability is Item)
                     {
+                        //Log.Warn($"Ability State: [{currentAbility.Ability.Name}] {currentAbility.Ability.AbilityState}");
                         if (currentAbility.Ability.AbilityState == AbilityState.Ready)
                         {
                             if (!currentAbility.Ability.CanBeCasted())
@@ -306,7 +307,7 @@ namespace InvokerAnnihilationCrappa
                         EntityManager<Unit>.Entities.Where(
                             x =>
                                 x.IsAlive && x.IsControllable && x.Team == Owner.Team && !x.Equals(Owner) &&
-                                x.ClassId == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit);
+                                x.NetworkName == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit.ToString());
                     foreach (var other in others)
                     {
                         if (other.IsAttacking())

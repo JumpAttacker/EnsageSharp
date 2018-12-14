@@ -110,6 +110,8 @@ namespace InvokerAnnihilationCrappa.Features
                 two = three;
             var empty1 = _main.Invoker.Owner.Spellbook.Spell4;
             var empty2 = _main.Invoker.Owner.Spellbook.Spell5;
+            //Console.WriteLine($"One: {one.Name} Two: {two.Name} Three: [{three?.Name}]");
+            //Console.WriteLine($"empty1: {empty1.Name} empty2: {empty2.Name}");
             var ability1Invoked = one.Ability.Equals(empty1) || one.Ability.Equals(empty2);
             var ability2Invoked = two.Ability.Equals(empty1) || two.Ability.Equals(empty2);
             if (ability1Invoked && ability2Invoked)

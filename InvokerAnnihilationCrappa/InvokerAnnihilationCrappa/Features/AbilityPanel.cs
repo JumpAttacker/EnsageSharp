@@ -72,6 +72,8 @@ namespace InvokerAnnihilationCrappa.Features
             var menu = QCast.MenuWithTexture("", ability.Ability.Name, ability.Ability.Name);
             var enable = menu.Item("Enable qCast", true);
             var key = menu.Item("Hotkey", new KeyBind('0'));
+            var ignoreInvise = menu.Item("Ignore invisibility", true);
+            ignoreInvise.Item.SetTooltip($"Invoke from invisibility");
             ability.UpdateKey(key.Value.Key);
             var key2 = KeyInterop.KeyFromVirtualKey((int)key.Value.Key);
             Log.Info($"{ability.Ability.Name} -> Key: {key.Value.Key} {key2}");
@@ -89,7 +91,8 @@ namespace InvokerAnnihilationCrappa.Features
                         if (ability.Ability.Equals(_main.Invoker.Owner.Spellbook.Spell4) ||
                             ability.Ability.Equals(_main.Invoker.Owner.Spellbook.Spell5) && !QcastRecaster)
                             return;
-                        _main.Invoker.Invoke(ability);
+                        if (_main.Invoker.Owner.IsVisibleToEnemies || ignoreInvise)
+                            _main.Invoker.Invoke(ability);
                     }
                     else
                         ability.UpdateKey(key.Value.Key);

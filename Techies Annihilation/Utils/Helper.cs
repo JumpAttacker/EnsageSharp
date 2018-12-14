@@ -33,13 +33,16 @@ namespace Techies_Annihilation.Utils
             return (int)((ability.FindCastPoint() + Core.Me.GetTurnTime(targetPosition)) * 1000.0 + Game.Ping);
         }
 
-        public static bool HasItem(this Unit unit, ItemId classId)
+        public static bool HasItem(this Unit unit, Ensage.AbilityId classId)
         {
-            return unit.Inventory.Items.Any(item => item.GetItemId() == classId);
+            //return unit.HasItem(classId);
+            return unit.Inventory.Items.Any(item => item.Id == classId);
         }
         public static bool HasAbility(this Unit unit, AbilityId classId)
         {
-            return unit.Spellbook.Spells.Any(item => item.GetAbilityId() == classId);
+            return false;
+            //return unit.HasAbility(classId);
+            //return unit.Spellbook.Spells.Any(item => item.Id == classId);
         }
 
         public static bool CanDie(this Hero hero,bool checkForAegis=false)
@@ -51,10 +54,10 @@ namespace Techies_Annihilation.Utils
                     "modifier_skeleton_king_reincarnation_scepter_active", "modifier_abaddon_borrowed_time"
                 },
                 false) &&
-                      (hero.ClassId != ClassId.CDOTA_Unit_Hero_Abaddon ||
+                      (hero.HeroId != HeroId.npc_dota_hero_abaddon ||
                        !hero.GetAbilityById(Ensage.AbilityId.abaddon_borrowed_time).CanBeCasted());
             if (checkForAegis)
-                return mod && !hero.HasItem(ItemId.item_aegis);
+                return mod && !hero.HasItem(Ensage.AbilityId.item_aegis);
             return mod;
         }
 

@@ -195,7 +195,7 @@ namespace InvokerAnnihilationCrappa
                     var forges =
                         EntityManager<Unit>.Entities.Any(
                             x =>
-                                x.IsValid && x.Team==Me.Owner.Team && x.ClassId == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit &&
+                                x.IsValid && x.Team==Me.Owner.Team && x.NetworkName == ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit.ToString() &&
                                 UnitExtensions.HealthPercent(x) > .55f);
                     if (!forges)
                         Ability.UseAbility();
