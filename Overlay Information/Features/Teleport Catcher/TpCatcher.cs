@@ -108,8 +108,8 @@ namespace OverlayInformation.Features.Teleport_Catcher
                 }
                 Hero = Player?.Hero;
                 IsAlly = Player?.Team == ObjectManager.LocalHero.Team;
-                HasTravelBoots = Hero.HasItem(ItemId.item_travel_boots) ||
-                                              Hero.HasItem(ItemId.item_travel_boots_2);
+                HasTravelBoots = Hero.GetItemById(AbilityId.item_travel_boots)!=null ||
+                                              Hero.GetItemById(AbilityId.item_travel_boots_2)!=null;
                 var closest =
                                     _main.TowerOrShrines.Where(
                                             x => x.IsAlive && x.Team == Hero.Team && x.Unit.IsInRange(StartPos, 1150))
@@ -147,8 +147,8 @@ namespace OverlayInformation.Features.Teleport_Catcher
                         {
                             try
                             {
-                                HasTravelBoots = hero.HasItem(ItemId.item_travel_boots) ||
-                                                 hero.HasItem(ItemId.item_travel_boots_2);
+                                HasTravelBoots = hero.GetItemById(AbilityId.item_travel_boots) != null ||
+                                                 hero.GetItemById(AbilityId.item_travel_boots_2) != null;
                             }
                             catch (Exception)
                             {
