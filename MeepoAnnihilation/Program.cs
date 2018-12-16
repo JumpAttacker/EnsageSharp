@@ -1274,7 +1274,7 @@ namespace MeepoAnnihilation
         {
             if (Utils.SleepCheck("SelectChecker"))
             {
-                _selectedMeepo = MyPlayer.Selection.Where(x => x.ClassId == ClassId.CDOTA_Unit_Hero_Meepo).ToList();
+                _selectedMeepo = MyPlayer.Selection.Where(x => (x as Hero)?.HeroId == HeroId.npc_dota_hero_meepo).ToList();
                 //Print("selected count: " + SelectedMeepo.Count);
                 Utils.Sleep(150, "SelectChecker");
             }
