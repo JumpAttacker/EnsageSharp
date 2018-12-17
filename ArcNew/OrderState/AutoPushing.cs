@@ -189,7 +189,7 @@ namespace ArcAnnihilation.OrderState
                     Status = $"Pushing{(target is Tower ? " Tower" : "")}";
                     if (Core.TempestHero.Spark.CanBeCasted())
                     {
-                        Printer.Log($"[AutoPushing][Spark][{target.Name} ({target.ClassId})]->{target.Position.PrintVector()}", true);
+                        Printer.Log($"[AutoPushing][Spark][{target.Name} ({target.NetworkName})]->{target.Position.PrintVector()}", true);
                         if (!target.Position.IsZero)
                         {
                             Core.TempestHero.Spark.UseAbility(target.Position);
