@@ -44,13 +44,14 @@ namespace ArcAnnihilation.Units
             if (target != null)
                 if (target.IsVisible)
                 {
-                    if (Hero.Distance2D(target) >= Math.Min(MenuManager.OrbWalkingRange, Hero.GetAttackRange()))
-                        Hero.Move(target.Position);
+                    var targetPos = target.NetworkPosition;
+                    if (Hero.Distance2D(targetPos) >= Math.Min(MenuManager.OrbWalkingRange, Hero.GetAttackRange()))
+                        Hero.Move(targetPos);
                     else if (MenuManager.OrbWalkerGoBeyond)
                     {
-                        var pos = (target.NetworkPosition - Hero.NetworkPosition).Normalized();
-                        pos *= 50;
-                        pos = Hero.NetworkPosition - pos;
+                        var pos = (targetPos - Hero.Position).Normalized();
+                        pos *= MenuManager.OrbWalkingRange;
+                        pos = targetPos - pos;
                         Hero.Move(pos);
                     }
                 }
