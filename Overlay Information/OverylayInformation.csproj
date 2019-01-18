@@ -41,8 +41,9 @@
     <Reference Include="clipper_library">
       <HintPath>..\..\..\..\..\..\Ensage\References\clipper_library.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage">
-      <HintPath>..\..\..\..\..\..\Ensage\References\Ensage.dll</HintPath>
+    <Reference Include="Ensage, Version=0.0.0.1, Culture=neutral, PublicKeyToken=a41ba14f653257a6, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\En\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
       <HintPath>..\..\..\..\..\..\Ensage\References\Ensage.Common.dll</HintPath>

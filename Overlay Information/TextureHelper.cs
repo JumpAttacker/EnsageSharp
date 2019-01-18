@@ -113,7 +113,7 @@ namespace OverlayInformation
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Console.WriteLine($"[Error][TextureKey: [{textureKey}]]{e}");
             }
 
             return false;

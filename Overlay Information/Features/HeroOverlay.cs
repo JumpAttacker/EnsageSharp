@@ -233,7 +233,7 @@ namespace OverlayInformation.Features
                             if (ability.AbilityState == AbilityState.Ready)
                             {
                                 Config.Main.ParticleManager.AddOrUpdate(hero, $"sphere {heroCont.Id}",
-                                    "particles/items_fx/immunity_sphere_buff.vpcf", ParticleAttachment.RootboneFollow,
+                                    "particles/items_fx/immunity_sphere_buff.vpcf", ParticleAttachment.RootBoneFollow,
                                     RestartType.None);
                             }
                             else
@@ -241,6 +241,7 @@ namespace OverlayInformation.Features
                                 Config.Main.ParticleManager.Remove($"sphere {heroCont.Id}");
                             }
                         }
+
                         pos = DrawItemState(pos, ability, abilitySize, itemBorderWhite ? Color.White : Color.Black);
                     }
                 }
