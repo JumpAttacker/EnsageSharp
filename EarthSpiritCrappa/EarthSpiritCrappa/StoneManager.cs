@@ -15,19 +15,19 @@ namespace EarthSpiritCrappa
         {
             Main = earthSpiritCrappa;
             Stones =
-                EntityManager<Unit>.Entities.Where(x => x.IsValid && x.ClassId == ClassId.CDOTA_Unit_Earth_Spirit_Stone)
+                EntityManager<Unit>.Entities.Where(x => x.IsValid && x.NetworkName == ClassId.CDOTA_Unit_Earth_Spirit_Stone.ToString())
                     .ToList();
 
             EntityManager<Unit>.EntityAdded += (sender, unit) =>
             {
-                if (unit.ClassId == ClassId.CDOTA_Unit_Earth_Spirit_Stone)
+                if (unit.NetworkName == ClassId.CDOTA_Unit_Earth_Spirit_Stone.ToString())
                 {
                     Stones.Add(unit);
                 }
             };
             EntityManager<Unit>.EntityRemoved += (sender, unit) =>
             {
-                if (unit.ClassId == ClassId.CDOTA_Unit_Earth_Spirit_Stone)
+                if (unit.NetworkName == ClassId.CDOTA_Unit_Earth_Spirit_Stone.ToString())
                 {
                     Stones.Remove(unit);
                 }
