@@ -317,7 +317,7 @@ namespace ArcAnnihilation
                     new MenuItem("OrbWalking.Type", "Type").SetValue(
                         new StringList(new[] {"follow mouse", "follow target"}, 1)));
                 orbwalnking.AddItem(
-                    new MenuItem("OrbWalking.minDistance", "Min distance").SetValue(new Slider(100, 0, 600)));
+                    new MenuItem("OrbWalking.minDistance", "Min distance").SetValue(new Slider(100, 0, 1000)));
 
                 /*orbwalnking.AddItem(
                 new MenuItem("OrbWalking.bonusWindupMs", "Bonus Windup Time").SetValue(new Slider(100, 100, 1000))
