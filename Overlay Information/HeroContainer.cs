@@ -23,6 +23,11 @@ namespace OverlayInformation
             UpdateManager.Subscribe(Flush, 5000);
         }
 
+        public void Dispose()
+        {
+            UpdateManager.Unsubscribe(Flush);
+        }
+
         private void Flush()
         {
             var temp = Holders.Where(x => x.IsValid);
@@ -37,37 +42,30 @@ namespace OverlayInformation
             Holders.Add(find);
             return find;
         }
-
-        public void Dispose()
-        {
-            UpdateManager.Unsubscribe(Flush);
-        }
     }
+
     public class AbilityHolder
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public Ability Ability;
-        public uint Handle;
-        public Hero Owner;
-        public AbilityId Id;
         public AbilityState AbilityState;
-        public DotaTexture Texture;
         public float Cooldown;
-        public bool IsUltimate;
-        public bool IsHidden;
-        public bool IsValid => Ability != null && Ability.IsValid;
-        public int MaximumLevel { get; set; }
-        public AbilitySlot AbilitySlot { get; set; }
-        public string Name { get; set; }
-        public Item Item;
         public uint Cost;
+        public uint Handle;
+        public AbilityId Id;
+        public bool IsHidden;
+        public bool IsUltimate;
+        public Item Item;
+        public Hero Owner;
+        public DotaTexture Texture;
+
         public AbilityHolder(Ability ability)
         {
             Ability = ability;
             Handle = ability.Handle;
             Name = ability.Name;
             MaximumLevel = Ability.MaximumLevel;
-            Owner = (Hero)ability.Owner;
+            Owner = (Hero) ability.Owner;
             Id = Ability.Id;
             AbilityState = ability.AbilityState;
             Texture = Ability is Item
@@ -78,10 +76,7 @@ namespace OverlayInformation
             IsHidden = ability.IsHidden;
             AbilitySlot = ability.AbilitySlot;
             Item = ability as Item;
-            if (Item != null)
-            {
-                Cost = Item.Cost;
-            }
+            if (Item != null) Cost = Item.Cost;
             UpdateManager.BeginInvoke(async () =>
             {
                 while (ability.IsValid)
@@ -92,17 +87,19 @@ namespace OverlayInformation
                     AbilitySlot = ability.AbilitySlot;
                     await Task.Delay(300);
                 }
+
                 //Log.Debug($"[{Owner.Name}] end for -> {Id}");
             });
         }
+
+        public bool IsValid => Ability != null && Ability.IsValid;
+        public int MaximumLevel { get; set; }
+        public AbilitySlot AbilitySlot { get; set; }
+        public string Name { get; set; }
     }
 
     public class CourContainer : IDisposable
     {
-        public Courier Cour { get; }
-        public bool IsAlly { get; }
-        public OverlayInformation Main { get; }
-
         public CourContainer(Courier cour, bool isAlly, OverlayInformation main)
         {
             Cour = cour;
@@ -113,18 +110,9 @@ namespace OverlayInformation
             UpdateManager.Subscribe(FlushChecker, 1000);
         }
 
-        private void FlushChecker()
-        {
-            if (Cour == null || !Cour.IsValid)
-            {
-                Dispose();
-            }
-        }
-
-        private void UpdateItems()
-        {
-            Items = Cour.Inventory.Items.ToList();
-        }
+        public Courier Cour { get; }
+        public bool IsAlly { get; }
+        public OverlayInformation Main { get; }
 
         public List<Item> Items { get; set; }
 
@@ -133,32 +121,23 @@ namespace OverlayInformation
             UpdateManager.Unsubscribe(UpdateItems);
             UpdateManager.Unsubscribe(FlushChecker);
         }
+
+        private void FlushChecker()
+        {
+            if (Cour == null || !Cour.IsValid) Dispose();
+        }
+
+        private void UpdateItems()
+        {
+            Items = Cour.Inventory.Items.ToList();
+        }
     }
 
     public class HeroContainer
     {
         public static string GamePath = Game.GamePath;
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public bool IsAlly { get; }
-        public OverlayInformation Main { get; }
-        public bool IsOwner { get; }
-        public Hero Hero { get; }
-        //public Ability Ultimate;
-        public AbilityHolder Ultimate;
-        public List<AbilityHolder> Abilities2;
-        public List<AbilityHolder> Items;
-        public List<AbilityHolder> DangItems;
-        public List<AbilityHolder> InvisBreakerItems;
-        public float LastTimeUnderVision;
-        public float Health;
-        public float MaxHealth;
-        public float Mana;
-        public float MaxMana;
-        public bool IsVisible;
-        public uint Networth;
-        public bool DontDraw;
-        public bool AghanimState;
-        public Inventory HeroInventory { get; set; }
+
         private static readonly List<AbilityId> DangeItemList = new List<AbilityId>
         {
             AbilityId.item_blink,
@@ -171,25 +150,36 @@ namespace OverlayInformation
             AbilityId.item_glimmer_cape,
             AbilityId.item_invis_sword
         };
+
         private static readonly List<AbilityId> InvisBreakerList = new List<AbilityId>
         {
             AbilityId.item_gem,
             AbilityId.item_dust,
             AbilityId.item_ward_sentry,
-            AbilityId.item_ward_dispenser,
+            AbilityId.item_ward_dispenser
         };
+
+        public List<AbilityHolder> Abilities2;
+        public bool AghanimState;
+        public List<AbilityHolder> DangItems;
+        public bool DontDraw;
+        public float Health;
+        public Holder HolderHelper;
+        public List<AbilityHolder> InvisBreakerItems;
+        public bool IsVisible;
+        public List<AbilityHolder> Items;
+        public float LastTimeUnderVision;
+        public float Mana;
+        public float MaxHealth;
+        public float MaxMana;
+        public uint Networth;
 
         //private readonly InventoryManager _manager;
         public float TimeInFog;
-        public AbilityState AbilityState { get; set; }
-        public Holder HolderHelper;
-        public string Name { get; set; }
-        public List<Ability> GetAllAbilities => Hero.Spellbook.Spells.Where(
-                x => 
-                x.Name != "generic_hidden" 
-                && !x.Name.StartsWith("seasonal_")
-                && (x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate))
-            .ToList();
+
+        //public Ability Ultimate;
+        public AbilityHolder Ultimate;
+
         public HeroContainer(Hero hero, bool isAlly, OverlayInformation main)
         {
             var itemString = hero.HeroId.ToString().Remove(0, 14);
@@ -197,7 +187,7 @@ namespace OverlayInformation
                 $@"{GamePath}\game\dota\materials\ensage_ui\miniheroes\png\{itemString}.png");
             /*Log.Warn($"Texture Name: {itemString}");
             Log.Warn($"GamePath: {$@"{GamePath}\game\dota\materials\ensage_ui\miniheroes\png\{itemString}.png"}");*/
-                //$@"resource\flash3\images\heroes\miniheroes\{hero.HeroId}.png");
+            //$@"resource\flash3\images\heroes\miniheroes\{hero.HeroId}.png");
             Name = hero.Name;
             Id = hero.Player == null ? 0 : hero.Player.Id;
             HolderHelper = new Holder();
@@ -213,12 +203,13 @@ namespace OverlayInformation
             Abilities2 = new List<AbilityHolder>();
             foreach (var ability in GetAllAbilities)
             {
-                var holder = HolderHelper.GetOrCreate(ability);//new AbilityHolder(ability);
+                var holder = HolderHelper.GetOrCreate(ability); //new AbilityHolder(ability);
                 Abilities2.Add(holder);
                 if (holder.IsUltimate)
                     Ultimate = holder;
                 Log.Info($"{ability.Name} -> {(ability.AbilityType == AbilityType.Basic ? "basic" : "ultimate")}");
             }
+
             HeroInventory = Hero.Inventory;
             /*_manager = new InventoryManager(new EnsageServiceContext(hero));
             //manager.CollectionChanged += ManagerOnCollectionChanged;
@@ -253,20 +244,16 @@ namespace OverlayInformation
             UpdateItems();
             UpdateManager.Subscribe(UpdateItems, 500);
             UpdateManager.Subscribe(UpdateInfo, 250);
-            UpdateManager.Subscribe(FlushChecker,1000);
+            UpdateManager.Subscribe(FlushChecker, 1000);
 
             var dividedWeStand = hero.Spellbook.SpellR as DividedWeStand;
             if (dividedWeStand != null && hero.HeroId == HeroId.npc_dota_hero_meepo && dividedWeStand.UnitIndex > 0)
-            {
                 DontDraw = true;
-            }
 
             HeroId = hero.HeroId;
-            if (HeroId == HeroId.npc_dota_hero_rubick || HeroId == HeroId.npc_dota_hero_doom_bringer/* ||
+            if (HeroId == HeroId.npc_dota_hero_rubick || HeroId == HeroId.npc_dota_hero_doom_bringer /* ||
                 classId == ClassId.CDOTA_Unit_Hero_Invoker*/ || HeroId == HeroId.npc_dota_hero_morphling)
-            {
                 UpdateManager.Subscribe(AbilityUpdater, 750);
-            }
 
             /*Main.Context.Value.AbilityDetector.AbilityCasted += (sender, args) =>
             {
@@ -278,7 +265,25 @@ namespace OverlayInformation
             };*/
         }
 
+        public bool IsAlly { get; }
+        public OverlayInformation Main { get; }
+        public bool IsOwner { get; }
+        public Hero Hero { get; }
+        public Inventory HeroInventory { get; set; }
+        public AbilityState AbilityState { get; set; }
+        public string Name { get; set; }
+
+        public List<Ability> GetAllAbilities => Hero.Spellbook.Spells.Where(
+                x =>
+                    x.Name != "generic_hidden"
+                    && !x.Name.Contains("seasonal")
+                    && !x.Name.Contains("high_five")
+                    && (x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate))
+            .ToList();
+
         public HeroId HeroId { get; set; }
+
+        public int Id { get; set; }
 
         private void FlushChecker()
         {
@@ -290,9 +295,11 @@ namespace OverlayInformation
                     Log.Error(
                         $"CUSTOM FLUSH FOR {Name} id -> [{Id}] -> player -> [{(player != null ? player.Name : "null")}]");
                 }
+
                 Flush();
             }
-            else if (Hero.IsIllusion && !Hero.HasModifier("modifier_morphling_replicate") && Hero.IsAlive && Hero.IsVisible)
+            else if (Hero.IsIllusion && !Hero.HasModifier("modifier_morphling_replicate") && Hero.IsAlive &&
+                     Hero.IsVisible)
             {
                 Log.Error(
                     $"Flush cuz illusion {Name} id -> [{Id}]");
@@ -306,12 +313,15 @@ namespace OverlayInformation
                 return;
             IsVisible = Hero.IsVisible;
             if (IsVisible)
+            {
                 LastTimeUnderVision = Game.RawGameTime;
+            }
             else
             {
                 TimeInFog = Game.RawGameTime - LastTimeUnderVision;
                 return;
             }
+
             Health = Hero.Health;
             Mana = Hero.Mana;
             MaxHealth = Hero.MaximumHealth;
@@ -319,6 +329,7 @@ namespace OverlayInformation
             if (Ultimate != null && Ultimate.IsValid)
                 AbilityState = Ultimate.AbilityState;
         }
+
         private void UpdateItems()
         {
             if (Hero == null || !Hero.IsValid)
@@ -345,26 +356,18 @@ namespace OverlayInformation
                         InvisBreakerItems.Add(localHolder);
                 }
             }
+
             var tmpAgh = Hero.HasAghanimsScepter();
 
-            if (!AghanimState && tmpAgh || AghanimState && !tmpAgh)
-            {
-                RefreshAbilities2();
-            }
+            if (!AghanimState && tmpAgh || AghanimState && !tmpAgh) RefreshAbilities2();
             AghanimState = tmpAgh;
         }
-
-        public int Id { get; set; }
 
         private void AbilityUpdater()
         {
             //var needToRefresh = Abilities.Any(x => x == null || !x.IsValid || x.IsHidden);
             var needToRefresh = Abilities2.Any(x => x == null || !x.IsValid || x.IsHidden);
-            if (needToRefresh)
-            {
-                //Game.PrintMessage($"need to rrefresh for {this.HeroId}");
-                RefreshAbilities2();
-            }
+            if (needToRefresh) RefreshAbilities2();
         }
 
         /*private void ManagerOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
@@ -406,7 +409,8 @@ namespace OverlayInformation
                 Log.Info($"added new ability -> {ability.Name} ({ability.Owner.Name})");
                 //Game.PrintMessage($"added new ability -> {ability.Name} ({ability.Owner.Name})");
             }
-            Abilities2.RemoveAll(x => !x.IsValid/* || x.IsHidden*/);
+
+            Abilities2.RemoveAll(x => !x.IsValid /* || x.IsHidden*/);
         }
 
         public void Flush()
@@ -414,9 +418,7 @@ namespace OverlayInformation
             //_manager.Deactivate();
             if (HeroId == HeroId.npc_dota_hero_rubick || HeroId == HeroId.npc_dota_hero_doom_bringer /* ||
                 classId == ClassId.CDOTA_Unit_Hero_Invoker*/ || HeroId == HeroId.npc_dota_hero_morphling)
-            {
                 UpdateManager.Unsubscribe(AbilityUpdater);
-            }
 
             UpdateManager.Unsubscribe(UpdateItems);
             UpdateManager.Unsubscribe(UpdateInfo);
