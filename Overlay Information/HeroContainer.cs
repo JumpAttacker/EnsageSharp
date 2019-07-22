@@ -401,6 +401,9 @@ namespace OverlayInformation
                 Hero.Spellbook.Spells.Where(
                     x =>
                         (x.AbilityType == AbilityType.Basic || x.AbilityType == AbilityType.Ultimate) &&
+                        x.Name != "generic_hidden"
+                        && !x.Name.Contains("seasonal")
+                        && !x.Name.Contains("high_five") &&
                         Abilities2.Find(y => y.Handle == x.Handle) == null && !x.IsHidden);
             foreach (var ability in abilities)
             {
