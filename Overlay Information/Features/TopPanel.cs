@@ -6,16 +6,18 @@ using Ensage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
 using Ensage.SDK.Menu;
+using Ensage.SDK.Renderer;
 using SharpDX;
 using SharpDX.Direct2D1;
+using Color = System.Drawing.Color;
 
 namespace OverlayInformation.Features
 {
     public class TopPanel
     {
-        public Config Config { get; }
+        private readonly Vector2 _size;
         private readonly Dictionary<Hero, Vector2> _topPanelPosition;
-        private Vector2 _size;
+
         public TopPanel(Config config)
         {
             Config = config;
@@ -37,28 +39,28 @@ namespace OverlayInformation.Features
             RectangleR = panel.Item("rectangle's color -> R", new Slider(255, 0, 255));
             RectangleG = panel.Item("rectangle's color -> G", new Slider(0, 0, 255));
             RectangleB = panel.Item("rectangle's color -> B", new Slider(255, 0, 255));
-            
 
 
             _topPanelPosition = new Dictionary<Hero, Vector2>();
             Drawing.OnDraw += DrawingOnOnDraw;
             var size = HudInfo.GetTopPanelSize(Config.Main.Context.Value.Owner as Hero);
             _size = new Vector2(size[0], size[1]);
-              
+
             config.Main.Renderer.Draw += RendererOnDraw;
             IsDx11 = Drawing.RenderMode == RenderMode.Dx11;
             if (IsDx11)
             {
                 Clr =
-                    Config.Main.BrushCache.GetOrCreate(System.Drawing.Color.FromArgb(RectangleA, RectangleR, RectangleG,
+                    Config.Main.BrushCache.GetOrCreate(Color.FromArgb(RectangleA, RectangleR, RectangleG,
                         RectangleB));
                 RectangleA.PropertyChanged += OnChangeClr;
                 RectangleR.PropertyChanged += OnChangeClr;
                 RectangleG.PropertyChanged += OnChangeClr;
                 RectangleB.PropertyChanged += OnChangeClr;
-
             }
         }
+
+        public Config Config { get; }
 
         public MenuItem<Slider> ExtraPosX { get; set; }
         public MenuItem<Slider> ExtraPosY { get; set; }
@@ -66,13 +68,6 @@ namespace OverlayInformation.Features
         public MenuItem<Slider> ExtraSizeX { get; set; }
 
         public MenuItem<Slider> UltimateBarSize { get; set; }
-
-        private void OnChangeClr(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
-        {
-            Clr =
-                Config.Main.BrushCache.GetOrCreate(System.Drawing.Color.FromArgb(RectangleA, RectangleR, RectangleG,
-                    RectangleB));
-        }
 
         public bool IsDx11 { get; set; }
 
@@ -99,11 +94,18 @@ namespace OverlayInformation.Features
 
         public MenuItem<Slider> SizeY { get; set; }
 
-        private void RendererOnDraw(object sender, EventArgs eventArgs)
+        private void OnChangeClr(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            Clr =
+                Config.Main.BrushCache.GetOrCreate(Color.FromArgb(RectangleA, RectangleR, RectangleG,
+                    RectangleB));
+        }
+
+        private void RendererOnDraw(IRenderer renderer)
         {
             var heroes = Config.Main.Updater.AllyHeroes;
             var size = HudInfo.GetTopPanelSize();
-                
+
             foreach (var heroCont in heroes)
             {
                 var hero = heroCont.Hero;
@@ -116,27 +118,20 @@ namespace OverlayInformation.Features
                 {
                     var isVisible = hero.IsVisibleToEnemies;
                     if (isVisible)
-                    {
                         if (AllyVisibleBarType.Value.SelectedIndex == 1)
                         {
                             //pos = Game.MouseScreenPosition;
-                                
+
                             var rectangle = new RectangleF(pos.X, pos.Y - size.Y, size.X, size.Y);
                             if (IsDx11)
-                            {
                                 Config.Main.D11Context.RenderTarget.FillRectangle(rectangle, Clr);
-                            }
                             else
-                            {
-                                //Config.Main.D9Context.Device.G.FillRectangle(rectangle, clr);
-                                Config.Main.Renderer.DrawRectangle(rectangle,
-                                    System.Drawing.Color.FromArgb(RectangleA, RectangleR, RectangleG,
+                                renderer.DrawRectangle(rectangle,
+                                    Color.FromArgb(RectangleA, RectangleR, RectangleG,
                                         RectangleB), 5);
-                            }
                             /*Config.Main.Renderer.DrawRectangle(rectangle,
                                 System.Drawing.Color.FromArgb(255, 255, 0, 255),10);*/
                         }
-                    }
                 }
             }
         }
@@ -155,23 +150,20 @@ namespace OverlayInformation.Features
                 pos += new Vector2(ExtraPosX, ExtraPosY);
                 if (HealthBar)
                     pos = DrawingHelper.DrawBar(pos, heroCont.Health * size.X / heroCont.MaxHealth, size,
-                        Color.GreenYellow,
-                        Color.Red);
+                        SharpDX.Color.GreenYellow,
+                        SharpDX.Color.Red);
                 if (ManaBar)
-                    pos = DrawingHelper.DrawBar(pos, heroCont.Mana * size.X / heroCont.MaxMana, size, Color.Blue,
-                        new Color(155, 155, 155, 155));
+                    pos = DrawingHelper.DrawBar(pos, heroCont.Mana * size.X / heroCont.MaxMana, size,
+                        SharpDX.Color.Blue,
+                        new SharpDX.Color(155, 155, 155, 155));
                 if (VisibleBar)
                     if (heroCont.IsAlly)
                     {
                         var isVisible = hero.IsVisibleToEnemies;
                         if (isVisible)
-                        {
                             if (AllyVisibleBarType.Value.SelectedIndex == 0)
-                            {
                                 pos = DrawingHelper.DrawBar(pos, "visible", new Vector2(size.X, size.Y * 2),
-                                    Color.White);
-                            }
-                        }
+                                    SharpDX.Color.White);
                     }
                     else
                     {
@@ -184,14 +176,14 @@ namespace OverlayInformation.Features
                         {
                             var time = (int) (Game.RawGameTime - heroCont.LastTimeUnderVision) + 1;
                             pos = DrawingHelper.DrawBar(pos, $"in fog {time}", new Vector2(size.X, size.Y * 2),
-                                Color.White);
+                                SharpDX.Color.White);
                         }
                     }
+
                 if (UltimateBar || UltimateIcon)
                 {
                     var ultimate = heroCont.Ultimate;
                     if (UltimateBar)
-                    {
                         switch (heroCont.AbilityState)
                         {
                             case AbilityState.OnCooldown:
@@ -200,16 +192,15 @@ namespace OverlayInformation.Features
                                     break;
                                 var cd = Math.Min(99, (int) (cdCalc + 1));
                                 pos = DrawingHelper.DrawBar(pos, cd.ToString(CultureInfo.InvariantCulture),
-                                    ultimateBarSize, ultimate.Texture, Color.White);
+                                    ultimateBarSize, ultimate.Texture, SharpDX.Color.White);
                                 break;
                             case AbilityState.NotEnoughMana:
                                 var mana = Math.Min(99, (int) (ultimate.Ability.ManaCost - heroCont.Mana));
                                 pos = DrawingHelper.DrawBar(pos, mana.ToString(CultureInfo.InvariantCulture),
-                                    ultimateBarSize, ultimate.Texture, Color.White,
-                                    new Color(100, 100, 255, 100));
+                                    ultimateBarSize, ultimate.Texture, SharpDX.Color.White,
+                                    new SharpDX.Color(100, 100, 255, 100));
                                 break;
                         }
-                    }
 
                     if (UltimateIcon && !heroCont.IsAlly)
                     {
@@ -256,7 +247,10 @@ namespace OverlayInformation.Features
                 _topPanelPosition[hero] = pos;
             }
             else if (pos.IsZero)
+            {
                 pos = HudInfo.GetTopPanelPosition(hero);
+            }
+
             return pos + new Vector2(0, _size.Y);
         }
 

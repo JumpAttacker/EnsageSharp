@@ -13,17 +13,16 @@ using log4net;
 using OverlayInformation.Features.Teleport_Catcher;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
-using Color = System.Drawing.Color;
 
 namespace OverlayInformation.Features
 {
     public class ShrineHelper
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public Config Config { get; }
-        private Dictionary<TowerOrShrine, bool> _underVision;
         private readonly Dictionary<uint, Ability> _abilityDictinart;
         private readonly Dictionary<TowerOrShrine, ParticleEffect> _effects;
+        private Dictionary<TowerOrShrine, bool> _underVision;
+
         public ShrineHelper(Config config)
         {
             _underVision = new Dictionary<TowerOrShrine, bool>();
@@ -49,18 +48,13 @@ namespace OverlayInformation.Features
                 }
                 else
                 {
-
                     RenderMode.Draw -= ValueOnDraw;
                     UpdateManager.Unsubscribe(Callback);
                     Entity.OnInt32PropertyChange -= EntityOnOnInt32PropertyChange;
                     Drawing.OnDraw -= DrawingOnOnDraw;
                     if (_effects.Any())
-                    {
                         foreach (var element in _effects.ToDictionary(x => x.Key, y => y.Value))
-                        {
                             UnHandleEffect(element.Key);
-                        }
-                    }
                 }
             };
             DrawVisible.Item.ValueChanged += (sender, args) =>
@@ -68,53 +62,52 @@ namespace OverlayInformation.Features
                 if (!Enable)
                     return;
                 if (args.GetNewValue<bool>())
-                {
                     Drawing.OnDraw += DrawingOnOnDraw;
-                }
                 else
-                {
                     RenderMode.Draw -= ValueOnDraw;
-                }
             };
             if (Enable)
             {
-                if (DrawVisible)
-                {
-                    RenderMode.Draw += ValueOnDraw;
-                }
+                if (DrawVisible) RenderMode.Draw += ValueOnDraw;
 
                 UpdateManager.Subscribe(Callback, 150);
                 Entity.OnInt32PropertyChange += EntityOnOnInt32PropertyChange;
 
                 Drawing.OnDraw += DrawingOnOnDraw;
             }
+
             Shrines = new List<TowerOrShrine>();
             foreach (var source in EntityManager<Unit>.Entities.Where(
-                    x =>
-                        x.IsValid && x.IsAlive && x.Team == config.Main.Context.Value.Owner.Team &&
-                        x.NetworkName == "CDOTA_BaseNPC_Healer"))
-            {
+                x =>
+                    x.IsValid && x.IsAlive && x.Team == config.Main.Context.Value.Owner.Team &&
+                    x.NetworkName == "CDOTA_BaseNPC_Healer"))
                 Shrines.Add(new TowerOrShrine(source));
-            }
-                
+
             foreach (var me in Shrines)
             {
                 bool visible;
-                if (!_underVision.TryGetValue(me, out visible))
-                {
-                    _underVision.Add(me, me.Unit.IsVisibleToEnemies);
-                }
+                if (!_underVision.TryGetValue(me, out visible)) _underVision.Add(me, me.Unit.IsVisibleToEnemies);
             }
-
-            
         }
+
+        public Config Config { get; }
+
+        public IRenderManager RenderMode { get; set; }
+
+        public MenuItem<Slider> TextOnMinimapSize { get; set; }
+
+        public List<TowerOrShrine> Shrines { get; set; }
+
+        public MenuItem<bool> DrawVisible { get; set; }
+
+        public MenuItem<bool> Enable { get; set; }
 
         private void EntityOnOnInt32PropertyChange(Entity sender, Int32PropertyChangeEventArgs args)
         {
             if (args.PropertyName == "m_iTaggedAsVisibleByTeam")
             {
                 var me = Shrines.Find(x => x.Unit.Equals(sender));
-                if (me!=null)
+                if (me != null)
                 {
                     var newValue = args.NewValue;
                     var oldValue = args.OldValue;
@@ -123,21 +116,13 @@ namespace OverlayInformation.Features
                     {
                         bool visible;
                         if (!_underVision.TryGetValue(me, out visible))
-                        {
                             _underVision.Add(me, isVisible);
-                        }
                         else
-                        {
                             _underVision[me] = isVisible;
-                        }
                     }
                 }
             }
         }
-
-        public IRendererManager RenderMode { get; set; }
-
-        public MenuItem<Slider> TextOnMinimapSize { get; set; }
 
         private void DrawingOnOnDraw(EventArgs args)
         {
@@ -164,14 +149,15 @@ namespace OverlayInformation.Features
                     pos += new Vector2(-hpBarSize / 2, hpBarSize * 1.5f);
                     if (true)
                     {
-                        Drawing.DrawRect(pos, new Vector2(size.X, size.Y), SharpDX.Color.Black);
+                        Drawing.DrawRect(pos, new Vector2(size.X, size.Y), Color.Black);
                         Drawing.DrawRect(pos, new Vector2(isBuff ? cdDelta : size.X - cdDelta, size.Y),
-                            isBuff ? SharpDX.Color.Orange : SharpDX.Color.YellowGreen);
-                        Drawing.DrawRect(pos, new Vector2(size.X, size.Y), SharpDX.Color.Black, true);
+                            isBuff ? Color.Orange : Color.YellowGreen);
+                        Drawing.DrawRect(pos, new Vector2(size.X, size.Y), Color.Black, true);
                     }
+
                     if (true)
                     {
-                        var text = isBuff ? $"{(int)(remTine / 5 * 100)}%" : $"{(int)(100 - cd / cdLength * 100)}%";
+                        var text = isBuff ? $"{(int) (remTine / 5 * 100)}%" : $"{(int) (100 - cd / cdLength * 100)}%";
                         var textSize = Drawing.MeasureText(text, "Arial",
                             new Vector2(size.Y * 1, size.Y / 2), FontFlags.AntiAlias);
                         var textPos = pos + new Vector2(size.X / 2 - textSize.X / 2, size.Y - textSize.Y);
@@ -182,7 +168,7 @@ namespace OverlayInformation.Features
                             text,
                             textPos,
                             new Vector2(textSize.Y, 0),
-                            SharpDX.Color.White,
+                            Color.White,
                             FontFlags.AntiAlias | FontFlags.StrikeOut);
                     }
                 }
@@ -202,23 +188,13 @@ namespace OverlayInformation.Features
                 var inRange = myPos.Distance2D(shrine.Position) <= 700;
 
                 if (inRange && CheckForAbility(shrine))
-                {
                     HandleEffect(shrine);
-                }
                 else
-                {
                     UnHandleEffect(shrine);
-                }
             }
         }
 
-        public List<TowerOrShrine> Shrines { get; set; }
-
-        public MenuItem<bool> DrawVisible { get; set; }
-
-        public MenuItem<bool> Enable { get; set; }
-
-        private void ValueOnDraw(object sender, EventArgs eventArgs)
+        private void ValueOnDraw(IRenderer renderer)
         {
             var removeList = _underVision;
             foreach (var b in _underVision.ToList())
@@ -233,10 +209,11 @@ namespace OverlayInformation.Features
                 {
                     var pos = me.Position;
                     var mapPos = pos.WorldToMinimap();
-                    RenderMode.DrawText(mapPos - new Vector2(TextOnMinimapSize / 2f, TextOnMinimapSize), "V",
-                        Color.White, fontSize: TextOnMinimapSize);
+                    renderer.DrawText(mapPos - new Vector2(TextOnMinimapSize / 2f, TextOnMinimapSize), "V",
+                        System.Drawing.Color.White, TextOnMinimapSize);
                 }
             }
+
             _underVision = removeList;
         }
 
@@ -268,10 +245,7 @@ namespace OverlayInformation.Features
         {
             var unit = shrine.Unit;
             ParticleEffect effect;
-            if (_effects.TryGetValue(shrine, out effect))
-            {
-                effect.Dispose();
-            }
+            if (_effects.TryGetValue(shrine, out effect)) effect.Dispose();
             _effects.Remove(shrine);
         }
 

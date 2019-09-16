@@ -183,6 +183,7 @@ namespace OverlayInformation
         public HeroContainer(Hero hero, bool isAlly, OverlayInformation main)
         {
             var itemString = hero.HeroId.ToString().Remove(0, 14);
+            main.Context.Value.TextureManager.LoadHeroFromDota(hero.HeroId);
             main.Context.Value.TextureManager.LoadFromFile(hero.HeroId.ToString(),
                 $@"{GamePath}\game\dota\materials\ensage_ui\miniheroes\png\{itemString}.png");
             /*Log.Warn($"Texture Name: {itemString}");
