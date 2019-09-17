@@ -37,7 +37,7 @@ namespace InvokerAnnihilationCrappa
         public Lazy<IOrbwalkerManager> OrbwalkerManager { get; }
         public Lazy<ITargetSelectorManager> TargetManager { get; }
         public Lazy<IPrediction> Prediction { get; }
-        public Lazy<IRendererManager> Renderer { get; }
+        public Lazy<IRenderManager> Renderer { get; }
         public Lazy<IParticleManager> ParticleManager { get; }
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public Config Config { get; set; }
@@ -56,7 +56,7 @@ namespace InvokerAnnihilationCrappa
             [Import] Lazy<IInputManager> input,
             [Import] Lazy<IOrbwalkerManager> orbwalkerManager,
             [Import] Lazy<ITargetSelectorManager> targetManager,
-            [Import] Lazy<IPrediction> prediction, [Import] Lazy<IRendererManager> renderer,
+            [Import] Lazy<IPrediction> prediction, [Import] Lazy<IRenderManager> renderer,
             [Import] Lazy<IParticleManager> particleManager, [Import] Lazy<AbilityFactory> abilityFactory)
         {
             _abilityFactory = abilityFactory;
