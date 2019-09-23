@@ -62,6 +62,7 @@ namespace ArcAnnihilation.Units
 
         public virtual async Task Combo(CancellationToken cancellationToken)
         {
+            var rnd = new Random();
             if (Hero.IsAlive && !Hero.IsInvisible())
             {
                 await TargetFinder(cancellationToken);
@@ -73,7 +74,8 @@ namespace ArcAnnihilation.Units
                     await UseAbilities(cancellationToken);
                 }
             }
-            await Await.Delay(25, cancellationToken);
+
+            await Await.Delay(rnd.Next(50, 150), cancellationToken);
             //await Await.Delay(500, cancellationToken);
             /*
             await AbilitiesBehaviour.UseAbilities(this);
