@@ -44,7 +44,8 @@ namespace ArcAnnihilation
             MainHero = new MainHero();
             MainHero.Init();
             AutoMidas.GetNewInstance(MainHero);
-            DelayAction.Add(100,() => GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate);
+            UpdateManager.BeginInvoke(() => { UpdateManager.Subscribe(OnUpdate, 250); },100);
+//            DelayAction.Add(100,() => GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate);
 
             UpdateManager.Subscribe(TempestUpdater,500);
             var manager = Program.GetContext.Inventory;
@@ -79,7 +80,7 @@ namespace ArcAnnihilation
                 }
             };
         }
-
+        
         private static void TempestUpdater()
         {
             if (TempestManager.Tempest != null && TempestManager.Tempest.IsValid)
@@ -99,7 +100,7 @@ namespace ArcAnnihilation
             }
         }
 
-        public static void GameDispatcherOnOnUpdate(EventArgs args)
+        public static void OnUpdate()
         {
             if (!MenuManager.IsEnable)
                 return;
