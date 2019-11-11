@@ -96,10 +96,7 @@ namespace OverlayInformation
             
             if (ratio == 266)
             {
-                Console.WriteLine(
-                    @"Your screen resolution is testing have wrong size/position, (" + ratio
-                    + ")");
-      compareWidth = 2450;
+                compareWidth = 2450;
                 panelHeroSizeX = 53.28;
                 tinfoHeroDown = 50.96;
                 DireCompare = 2.301;
