@@ -93,8 +93,17 @@ namespace OverlayInformation
             }
 
             var ratio = Math.Floor((decimal)(ScreenSize.X / ScreenSize.Y * 100));
-            
-            if (ratio == 266)
+            if (ratio == 355)
+            {
+                compareWidth = 3400;
+                panelHeroSizeX = 55.78;
+                DireCompare = 2.223;
+                RadiantCompare = 2.515;
+                HpBarHeight = 11;
+                HpBarWidth = 91;
+                HpBarX = 45;
+                HpBarY = 28;
+            }else if (ratio == 266)
             {
                 compareWidth = 2450;
                 panelHeroSizeX = 53.28;
