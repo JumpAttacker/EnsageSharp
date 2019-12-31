@@ -93,7 +93,28 @@ namespace OverlayInformation
             }
 
             var ratio = Math.Floor((decimal)(ScreenSize.X / ScreenSize.Y * 100));
-            if (ratio == 213)
+            if (ratio == 355)
+            {
+                compareWidth = 3400;
+                panelHeroSizeX = 55.78;
+                DireCompare = 2.223;
+                RadiantCompare = 2.515;
+                HpBarHeight = 11;
+                HpBarWidth = 91;
+                HpBarX = 45;
+                HpBarY = 28;
+            }else if (ratio == 266)
+            {
+                compareWidth = 2450;
+                panelHeroSizeX = 53.28;
+                tinfoHeroDown = 50.96;
+                DireCompare = 2.301;
+                RadiantCompare = 2.745;
+                HpBarHeight = 9;
+                HpBarWidth = 87;
+                HpBarX = 43;
+                HpBarY = 27;
+            }else if (ratio == 213)
             {
                 compareWidth = 1600;
                 panelHeroSizeX = 45.28;
