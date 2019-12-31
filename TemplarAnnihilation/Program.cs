@@ -59,7 +59,7 @@ namespace TemplarAnnihilation
                 
             };
             if (!_loaded && ObjectManager.LocalHero != null &&
-                ObjectManager.LocalHero.ClassId == Members.MyClassId && Game.IsInGame)
+                ObjectManager.LocalHero.HeroId == Members.MyClassId && Game.IsInGame)
             {
                 Load();
                 _loaded = true;
@@ -79,7 +79,7 @@ namespace TemplarAnnihilation
 
         private static void Load()
         {
-            if (ObjectManager.LocalHero.ClassId != Members.MyClassId)
+            if (ObjectManager.LocalHero.HeroId != Members.MyClassId)
                 return;
             if (Members.MyHero == null || !Members.MyHero.IsValid)
             {

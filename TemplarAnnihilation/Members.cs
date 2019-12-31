@@ -11,7 +11,7 @@ namespace TemplarAnnihilation
 
         public static Hero MyHero;
         public static Team MyTeam;
-        public static ClassId MyClassId = ClassId.CDOTA_Unit_Hero_TemplarAssassin;
+        public static HeroId MyClassId = HeroId.npc_dota_hero_templar_assassin;
 
         public static List<string> Items;
 
