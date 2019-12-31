@@ -27,7 +27,7 @@ namespace OverlayInformation.Features
             MinimapType = panel.Item("Minimap drawing type", new StringList("circle", "name", "icon"));
             MinimapSize = panel.Item("Minimap size", new Slider(15, 1, 30));
             DrawOnMap = panel.Item("Draw on map", true);
-            MapSize = panel.Item("Map size", new Slider(50, 1, 100));
+            MapSize = panel.Item("Map size", new Slider(50, 1));
 
             if (Enable)
             {

@@ -4,21 +4,20 @@ namespace OverlayInformation.Features.Open_Dota
 {
     public class PlayerInfo
     {
-        public string Matches { get; set; }
-        public string Name { get; set; }
+        public string Country;
+        public Hero Hero;
 
         public int Id;
-        public int Solo;
         public int Party;
-        public string Country;
         public string PossibleMmr;
-        public string Wr;
-        public Hero Hero;
+        public int Solo;
         public string TotalGames;
         public string Wins;
+        public string Wr;
         public int WrOnCurrentHero;
 
-        public PlayerInfo(int id, int solo, int party, string country, string possibleMmr, string winrate, string matches, string name)
+        public PlayerInfo(int id, int solo, int party, string country, string possibleMmr, string winrate,
+            string matches, string name)
         {
             Matches = matches;
             Id = id;
@@ -39,5 +38,8 @@ namespace OverlayInformation.Features.Open_Dota
             Wins = wins;
             WrOnCurrentHero = wrOnCurrentHero;
         }
+
+        public string Matches { get; set; }
+        public string Name { get; set; }
     }
 }

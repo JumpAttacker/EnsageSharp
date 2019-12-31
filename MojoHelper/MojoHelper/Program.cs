@@ -171,24 +171,13 @@ namespace MojoHelper
             if (owner.Team == Me.Team)
                 return;
             var pos = owner.Position;
-            var pass = false;
-            foreach (var hero in EntityManager<Hero>.Entities)
-            {
-                var player = hero.Player;
-                if (player != null && player.PlayerSteamId > 0)
-                {
-                    var item =
-                        Config.Factory.Target.Item($"{Config.Factory.Target.Name}.MojoId {player.PlayerSteamId}");
-                    if (item != null)
-                    {
-                        if (item.GetValue<bool>() && hero.Distance2D(pos) <= 2750)
-                        {
-                            pass = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            var pass = (from hero in EntityManager<Hero>.Entities
+                let player = hero.Player
+                where player != null && player.PlayerSteamId > 0
+                let item = Config.Factory.Target.Item($"{Config.Factory.Target.Name}.MojoId {player.PlayerSteamId}")
+                where item != null
+                where item.GetValue<bool>() && hero.Distance2D(pos) <= 2750
+                select hero).Any();
             //if (!HeroList.Any(x => x.Distance2D(pos) <= 3000))
             //if (!Config.SteamIds.Select(y => y.Hero).Any(x => x.Distance2D(pos) <= 3000))
             if (!pass)
@@ -205,6 +194,7 @@ namespace MojoHelper
                     if (!unit.IsValid)
                         continue;
                     Network.MapPing(unit.Position.ToVector2(), PingType.Normal);
+                    Log.Debug($"Map.Ping [1]");
                     await Task.Delay(Config.Rate);
                 }
                 foreach (var manager in EffectList.ToList())
@@ -217,6 +207,7 @@ namespace MojoHelper
                         continue;
                     }
                     Network.MapPing(unit.GetControlPoint(0).ToVector2(), PingType.Normal);
+                    Log.Debug($"Map.Ping [2]");
                     await Task.Delay(Config.TpRate);
                 }
 

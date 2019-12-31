@@ -10,11 +10,9 @@ namespace OverlayInformation.Features.Teleport_Catcher
     public class TowerOrShrine
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public Unit Unit { get; }
-        public bool IsAlive => Unit.IsAlive;
-        public int TpCounter { get; private set; }
-        public Team Team;
         public Vector3 Position;
+        public Team Team;
+
         public TowerOrShrine(Unit unit)
         {
             Unit = unit;
@@ -23,6 +21,10 @@ namespace OverlayInformation.Features.Teleport_Catcher
             Position = unit.Position;
             //Log.Debug($"new. {unit.Name} {unit.ClassId} isAlly: {IsAlly}");
         }
+
+        public Unit Unit { get; }
+        public bool IsAlive => Unit.IsAlive;
+        public int TpCounter { get; private set; }
 
         public void Inc()
         {
@@ -38,7 +40,7 @@ namespace OverlayInformation.Features.Teleport_Catcher
         public float CalculateLifeTime()
         {
             var time = TpCounter == 1 ? 3 : 4 + 0.5f * TpCounter;
-            
+
             return time;
         }
     }

@@ -381,10 +381,7 @@ namespace OverlayInformation
         public static Vector2 GetFakeTopPanelPosition(int id, Team team)
         {
             var fake = FakeDict.Find(x => x.Key.Id == id && x.Key.Team == team);
-            if (!fake.Value.IsZero)
-            {
-                return fake.Value;
-            }
+            if (!fake.Value.IsZero) return fake.Value;
 
             var pos = new Vector2((float) (GetFakeXX(team) - 20 * Monitor + X * id), 0);
             FakeDict.Add(new FakeClass(id, team), pos);

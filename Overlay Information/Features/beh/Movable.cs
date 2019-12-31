@@ -1,19 +1,18 @@
-﻿using System.Windows.Forms;
-using Ensage;
+﻿using Ensage;
 using Ensage.Common;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.SDK.Input;
 using SharpDX;
-using MouseButtons = Ensage.SDK.Input.MouseButtons;
 
 namespace OverlayInformation.Features.beh
 {
     public abstract class Movable
     {
-        private Sleeper _sleeper;
         private Vector2 _globalDif;
-        private bool _movableLoaded;
         private IInputManager _inputManager;
+        private bool _movableLoaded;
+        private Sleeper _sleeper;
+
         public void LoadMovable(IInputManager valueInput)
         {
             if (_movableLoaded)
@@ -22,7 +21,7 @@ namespace OverlayInformation.Features.beh
             _sleeper = new Sleeper();
             _inputManager = valueInput;
         }
-        
+
 
         public bool CanMoveWindow(ref Vector2 startPos, Vector2 size, bool drawMovablePosition = false)
         {
@@ -31,9 +30,9 @@ namespace OverlayInformation.Features.beh
                 Drawing.DrawRect(startPos, size, new Color(155, 155, 155, 155));
                 Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 255), true);
             }
+
             var mPos = Game.MouseScreenPosition;
             if (Utils.IsUnderRectangle(mPos, startPos.X, startPos.Y, size.X, size.Y))
-            {
                 if ((_inputManager.ActiveButtons & MouseButtons.LeftDown) != 0)
                 {
                     if (!_sleeper.Sleeping)
@@ -41,10 +40,11 @@ namespace OverlayInformation.Features.beh
                         _globalDif = mPos - startPos;
                         _sleeper.Sleep(500);
                     }
+
                     startPos = mPos - _globalDif;
                     return true;
                 }
-            }
+
             return false;
         }
     }

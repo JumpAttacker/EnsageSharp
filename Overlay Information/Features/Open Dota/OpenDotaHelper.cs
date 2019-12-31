@@ -20,9 +20,9 @@ namespace OverlayInformation.Features.Open_Dota
 {
     public class OpenDotaHelper : Movable
     {
-        public Config Config { get; }
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<PlayerInfo> _playerInfoList;
+
         public OpenDotaHelper(Config config)
         {
             Config = config;
@@ -58,6 +58,8 @@ namespace OverlayInformation.Features.Open_Dota
             };
         }
 
+        public Config Config { get; }
+
         public MenuItem<Slider> TempSize { get; set; }
 
         public MenuItem<Slider> PosY { get; set; }
@@ -68,6 +70,8 @@ namespace OverlayInformation.Features.Open_Dota
         public MenuItem<Slider> SizeY { get; set; }
 
         public MenuItem<bool> CanMove { get; set; }
+
+        public MenuItem<bool> Enable { get; set; }
 
         private async void Loading()
         {
@@ -89,23 +93,25 @@ namespace OverlayInformation.Features.Open_Dota
                         Log.Error("Wrong steam id!");
                         continue;
                     }
+
                     var test = await FindWinRateAsync(steamId);
                     if (test < 0 || test > 100)
                     {
                         Log.Error("Cant load this player!");
                         continue;
                     }
+
                     var playerReq = await GetPlayerAsync(steamId);
                     var wr = await FindFullWinRateAsync(steamId);
                     //var accName = GetValue("personaname\":", playerReq);
-                    int estimate = 0;
-                    int stdDev = 0;
-                    int solo = 0;
-                    int party = 0;
-                    string country = "";
-                    string possibleMmr = "";
-                    string matches = "";
-                    string infoAboutHero = "";
+                    var estimate = 0;
+                    var stdDev = 0;
+                    var solo = 0;
+                    var party = 0;
+                    var country = "";
+                    var possibleMmr = "";
+                    var matches = "";
+                    var infoAboutHero = "";
                     /*int estimate = Convert.ToInt32(GetValue("estimate\":", playerReq));
                     int stdDev = Convert.ToInt32(GetValue("stdDev\":", playerReq));
                     int solo = Convert.ToInt32(GetValue("solo_competitive_rank\":", playerReq));
@@ -121,6 +127,7 @@ namespace OverlayInformation.Features.Open_Dota
                     {
                         //Log.Error("1");
                     }
+
                     try
                     {
                         var item = GetValue("stdDev\":", playerReq);
@@ -131,6 +138,7 @@ namespace OverlayInformation.Features.Open_Dota
                     {
                         //Log.Error("2");
                     }
+
                     try
                     {
                         var item = GetValue("solo_competitive_rank\":", playerReq);
@@ -140,6 +148,7 @@ namespace OverlayInformation.Features.Open_Dota
                     {
                         //Log.Error("3");
                     }
+
                     try
                     {
                         var item = GetValue("\"competitive_rank\":", playerReq);
@@ -149,6 +158,7 @@ namespace OverlayInformation.Features.Open_Dota
                     {
                         //Log.Error("4");
                     }
+
                     try
                     {
                         country = GetValue("loccountrycode\":", playerReq);
@@ -157,6 +167,7 @@ namespace OverlayInformation.Features.Open_Dota
                     {
                         //Log.Error("5");
                     }
+
                     try
                     {
                         possibleMmr = $"{estimate - stdDev}-{estimate + stdDev}";
@@ -165,6 +176,7 @@ namespace OverlayInformation.Features.Open_Dota
                     {
                         //Log.Error("6");
                     }
+
                     try
                     {
                         matches = await FindMatches(steamId);
@@ -173,6 +185,7 @@ namespace OverlayInformation.Features.Open_Dota
                     {
                         //Log.Error("7");
                     }
+
                     try
                     {
                         infoAboutHero = await FindInfoAboutHero(steamId, (uint) player.Hero.HeroId);
@@ -185,24 +198,24 @@ namespace OverlayInformation.Features.Open_Dota
 
                     Log.Debug(
                         $"[WinRate: {wr}] [solo: {solo}] [party {party}] [estimate mmr: {possibleMmr}] [{country}] history: {matches}");
-                    string totalGames = "";
-                    string wins = "";
+                    var totalGames = "";
+                    var wins = "";
                     try
                     {
                         totalGames = GetValue("games", infoAboutHero).TrimStart(':');
                     }
                     catch (Exception)
                     {
-
                     }
+
                     try
                     {
                         wins = GetValue("win", infoAboutHero).TrimStart(':');
                     }
                     catch (Exception)
                     {
-
                     }
+
                     var wrOnCurrentHero = 0;
                     try
                     {
@@ -210,8 +223,8 @@ namespace OverlayInformation.Features.Open_Dota
                     }
                     catch (Exception)
                     {
-
                     }
+
                     try
                     {
                         Log.Debug(
@@ -219,7 +232,6 @@ namespace OverlayInformation.Features.Open_Dota
                     }
                     catch (Exception)
                     {
-
                     }
 
                     _playerInfoList.Add(new PlayerInfo((int) i, solo, party, country, possibleMmr, wr, matches,
@@ -242,10 +254,10 @@ namespace OverlayInformation.Features.Open_Dota
             var stageSize = new Vector2(size.X / 7f, size.Y / 10f);
             var itemSize = new Vector2(stageSize.X / .7f, stageSize.Y);
             var emptyTexture = Textures.GetTexture("materials/ensage_ui/items/emptyitembg.vmat");*/
-            
+
             foreach (var info in _playerInfoList)
             {
-                StringBuilder text = new StringBuilder();
+                var text = new StringBuilder();
                 if (info.Wr.Length > 0)
                     text.Append($" {info.Wr}");
                 if (info.Solo > 0)
@@ -276,32 +288,30 @@ namespace OverlayInformation.Features.Open_Dota
                     {
                         // ignored
                     }
+
                     if (count > 0)
                     {
                         text.Clear();
                         text.Append($" -> Games: {info.TotalGames} Wins: {info.Wins} WR: {info.WrOnCurrentHero}%");
-                        
+
                         //size = DrawHeroIcon(pos, "npc_dota_hero_antimage", size.Y);
                         pos += new Vector2(size.X, 0);
                         size = DrawTextOnCenter(pos, text.ToString());
                         pos += new Vector2(0, size.Y);
                     }
                 }
+
                 pos = new Vector2(startPosition.X, pos.Y);
             }
+
             if (CanMove)
-            {
-                if (CanMoveWindow(ref startPosition, new Vector2(pos.X - startPosition.X, pos.Y - startPosition.Y), true))
+                if (CanMoveWindow(ref startPosition, new Vector2(pos.X - startPosition.X, pos.Y - startPosition.Y),
+                    true))
                 {
                     PosX.Item.SetValue(new Slider((int) startPosition.X, 0, 2000));
                     PosY.Item.SetValue(new Slider((int) startPosition.Y, 0, 2000));
-                    return;
                 }
-            }
-
         }
-
-        public MenuItem<bool> Enable { get; set; }
 
         private Vector2 DrawTextOnCenter(Vector2 pos, string text)
         {
@@ -309,18 +319,18 @@ namespace OverlayInformation.Features.Open_Dota
                 new Vector2(TempSize), FontFlags.AntiAlias | FontFlags.StrikeOut);
             Drawing.DrawRect(pos, textSize, new Color(155, 155, 155, 155));
             Drawing.DrawText(
-                    text, "Arial",
-                    pos, new Vector2(TempSize),
-                    Color.White,
-                    FontFlags.AntiAlias | FontFlags.StrikeOut);
-            
+                text, "Arial",
+                pos, new Vector2(TempSize),
+                Color.White,
+                FontFlags.AntiAlias | FontFlags.StrikeOut);
+
             Drawing.DrawRect(pos, textSize, Color.White, true);
             return textSize;
         }
 
         private Vector2 DrawHeroIcon(Vector2 pos, string name, float size)
         {
-            var iconSize = new Vector2(size*1.7f, size);
+            var iconSize = new Vector2(size * 1.7f, size);
             Drawing.DrawRect(pos, iconSize, Textures.GetHeroTexture(name));
             Drawing.DrawRect(pos, iconSize, Color.White, true);
             return iconSize;
@@ -341,14 +351,18 @@ namespace OverlayInformation.Features.Open_Dota
                 FontFlags.AntiAlias | FontFlags.StrikeOut);
         }
 
+        public void OnDeactivate()
+        {
+            Drawing.OnDraw -= DrawingOnOnDraw;
+        }
+
         #region Fakes
+
         private async void PartyFake()
         {
             Log.Debug("starting fake");
             if (true)
-            {
                 for (uint i = 0; i < 10; i++)
-                {
                     try
                     {
                         Console.WriteLine(new string('-', Console.BufferWidth));
@@ -359,22 +373,24 @@ namespace OverlayInformation.Features.Open_Dota
                             Log.Error("Wrong steam id!");
                             continue;
                         }
+
                         var test = await FindWinRateAsync(steamId);
                         if (test < 0 || test > 100)
                         {
                             Log.Error("Cant load this player!");
                             continue;
                         }
+
                         var playerReq = await GetPlayerAsync(steamId);
                         var wr = await FindFullWinRateAsync(steamId);
                         //var accName = GetValue("personaname\":", playerReq);
-                        int estimate = 0;
-                        int stdDev = 0;
-                        int solo = 0;
-                        int party = 0;
-                        string country = "";
-                        string possibleMmr = "";
-                        string matches = "";
+                        var estimate = 0;
+                        var stdDev = 0;
+                        var solo = 0;
+                        var party = 0;
+                        var country = "";
+                        var possibleMmr = "";
+                        var matches = "";
                         /*int estimate = Convert.ToInt32(GetValue("estimate\":", playerReq));
                         int stdDev = Convert.ToInt32(GetValue("stdDev\":", playerReq));
                         int solo = Convert.ToInt32(GetValue("solo_competitive_rank\":", playerReq));
@@ -385,12 +401,12 @@ namespace OverlayInformation.Features.Open_Dota
                         {
                             //Console.WriteLine("estimate: "+ GetValue("estimate\":", playerReq));
                             estimate = Convert.ToInt32(GetValue("{\"estimate\":", playerReq));
-
                         }
                         catch (Exception)
                         {
                             //Log.Error("1");
                         }
+
                         try
                         {
                             var item = GetValue("stdDev\":", playerReq);
@@ -401,6 +417,7 @@ namespace OverlayInformation.Features.Open_Dota
                         {
                             //Log.Error("2");
                         }
+
                         try
                         {
                             var item = GetValue("solo_competitive_rank\":", playerReq);
@@ -410,6 +427,7 @@ namespace OverlayInformation.Features.Open_Dota
                         {
                             //Log.Error("3");
                         }
+
                         try
                         {
                             var item = GetValue("\"competitive_rank\":", playerReq);
@@ -419,6 +437,7 @@ namespace OverlayInformation.Features.Open_Dota
                         {
                             //Log.Error("4");
                         }
+
                         try
                         {
                             country = GetValue("loccountrycode\":", playerReq);
@@ -427,6 +446,7 @@ namespace OverlayInformation.Features.Open_Dota
                         {
                             //Log.Error("5");
                         }
+
                         try
                         {
                             possibleMmr = $"{estimate - stdDev}-{estimate + stdDev}";
@@ -435,6 +455,7 @@ namespace OverlayInformation.Features.Open_Dota
                         {
                             //Log.Error("6");
                         }
+
                         try
                         {
                             matches = await FindMatches(steamId);
@@ -443,8 +464,9 @@ namespace OverlayInformation.Features.Open_Dota
                         {
                             //Log.Error("7");
                         }
+
                         //Log.Debug("test: "+ matches);
-                        _playerInfoList.Add(new PlayerInfo((int)i, solo, party, country, possibleMmr, wr, matches,
+                        _playerInfoList.Add(new PlayerInfo((int) i, solo, party, country, possibleMmr, wr, matches,
                             "FAKE " + i));
                         Log.Debug(
                             $"[WinRate: {wr}] [solo: {solo}] [party {party}] [estimate mmr: {possibleMmr}] [{country}] history: {matches}");
@@ -467,17 +489,12 @@ namespace OverlayInformation.Features.Open_Dota
                         {
                             Log.Debug($"cant find {player.Name}!");
                         }*/
-
-
-
                     }
                     catch (Exception e)
                     {
                         Log.Debug($"error with player: ({i}) -> {e}");
                     }
 
-                }
-            }
             Log.Debug("ending fake");
         }
 
@@ -486,11 +503,11 @@ namespace OverlayInformation.Features.Open_Dota
             Log.Debug("loading!");
             var s = await GetPlayerAsync(1);
             Log.Debug(s);
-            s = await FindInfoAboutHero(1, (uint)ObjectManager.LocalHero.HeroId);
+            s = await FindInfoAboutHero(1, (uint) ObjectManager.LocalHero.HeroId);
             Log.Debug(s);
             var totalGames = GetValue("games", s).TrimStart(':');
             var wins = GetValue("win", s).TrimStart(':');
-            var wrOnCurrentHero = (float)Convert.ToInt32(wins) / Convert.ToInt32(totalGames) * 100.0f;
+            var wrOnCurrentHero = (float) Convert.ToInt32(wins) / Convert.ToInt32(totalGames) * 100.0f;
             Log.Debug(
                 $"[Hero: {ObjectManager.LocalHero.GetRealName()} -> [Games {totalGames}] [Wins {wins}] [WR {wrOnCurrentHero}%]");
         }
@@ -498,12 +515,12 @@ namespace OverlayInformation.Features.Open_Dota
         #endregion
 
         #region Helpers
-        
+
         private async Task<string> TryToFindPlayerAsync(string name, bool print = false)
         {
             var request = WebRequest.Create($"https://api.opendota.com/api/search?q={name}&similarity=1");
             string strContent;
-            using (var response = (HttpWebResponse)await Task.Factory
+            using (var response = (HttpWebResponse) await Task.Factory
                 .FromAsync(request.BeginGetResponse,
                     request.EndGetResponse,
                     null))
@@ -514,14 +531,15 @@ namespace OverlayInformation.Features.Open_Dota
                 if (print)
                     Console.WriteLine(strContent);
             }
+
             return strContent;
         }
-        
+
         private async Task<string> GetPlayerAsync(uint id)
         {
             var webRequest = WebRequest.Create($"https://api.opendota.com/api/players/{id}");
             string strContent;
-            var response = (HttpWebResponse)await Task.Factory
+            var response = (HttpWebResponse) await Task.Factory
                 .FromAsync(webRequest.BeginGetResponse,
                     webRequest.EndGetResponse,
                     null);
@@ -531,15 +549,16 @@ namespace OverlayInformation.Features.Open_Dota
                 strContent = reader.ReadToEnd();
                 //Console.WriteLine(strContent);
             }
+
             return strContent;
         }
-        
+
         private async Task<int> FindWinRateAsync(uint id)
         {
             var webRequest = WebRequest.Create($"https://api.opendota.com/api/players/{id}/wl");
             //((HttpWebRequest)webRequest).UserAgent = ".NET Framework";
             string strContent;
-            var response = (HttpWebResponse)await Task.Factory
+            var response = (HttpWebResponse) await Task.Factory
                 .FromAsync(webRequest.BeginGetResponse,
                     webRequest.EndGetResponse,
                     null);
@@ -549,16 +568,18 @@ namespace OverlayInformation.Features.Open_Dota
                 strContent = reader.ReadToEnd();
                 //Console.WriteLine(strContent);
             }
-            int win = Convert.ToInt32(GetValue("win\":", strContent));
-            int lose = Convert.ToInt32(GetValue("lose\":", strContent));
-            return (int)(win / (win + (double)lose) * 100f);
+
+            var win = Convert.ToInt32(GetValue("win\":", strContent));
+            var lose = Convert.ToInt32(GetValue("lose\":", strContent));
+            return (int) (win / (win + (double) lose) * 100f);
         }
+
         private async Task<string> FindFullWinRateAsync(uint id)
         {
             var webRequest = WebRequest.Create($"https://api.opendota.com/api/players/{id}/wl");
             //((HttpWebRequest)webRequest).UserAgent = ".NET Framework";
             string strContent;
-            var response = (HttpWebResponse)await Task.Factory
+            var response = (HttpWebResponse) await Task.Factory
                 .FromAsync(webRequest.BeginGetResponse,
                     webRequest.EndGetResponse,
                     null);
@@ -567,16 +588,20 @@ namespace OverlayInformation.Features.Open_Dota
             {
                 strContent = reader.ReadToEnd();
             }
-            int win = Convert.ToInt32(GetValue("win\":", strContent));
-            int lose = Convert.ToInt32(GetValue("lose\":", strContent));
-            var wr = (int)(win / (win + (double)lose) * 100f);
+
+            var win = Convert.ToInt32(GetValue("win\":", strContent));
+            var lose = Convert.ToInt32(GetValue("lose\":", strContent));
+            var wr = (int) (win / (win + (double) lose) * 100f);
             return $"({win}/{lose}) {wr}%";
         }
+
         private async Task<string> FindMatches(uint id, int gameLimit = 5, int gameMode = 22)
         {
-            var webRequest = WebRequest.Create($"https://api.opendota.com/api/players/{id}/matches?limit={gameLimit}&game_mode={gameMode}");
+            var webRequest =
+                WebRequest.Create(
+                    $"https://api.opendota.com/api/players/{id}/matches?limit={gameLimit}&game_mode={gameMode}");
             //((HttpWebRequest)webRequest).UserAgent = ".NET Framework";
-            var response = (HttpWebResponse)await Task.Factory
+            var response = (HttpWebResponse) await Task.Factory
                 .FromAsync(webRequest.BeginGetResponse,
                     webRequest.EndGetResponse,
                     null);
@@ -597,18 +622,21 @@ namespace OverlayInformation.Features.Open_Dota
                     //Console.WriteLine(tempLine);
                     var playerSlot = Convert.ToInt32(GetValue("player_slot\":", tempLine));
                     var radiantWin = GetValue("radiant_win\":", tempLine) == "true";
-                    var win = (playerSlot <= 10 && radiantWin) || (playerSlot > 10 && !radiantWin);
+                    var win = playerSlot <= 10 && radiantWin || playerSlot > 10 && !radiantWin;
                     info += win ? "+" : "-";
                 }
             }
+
             info += "]";
             return info;
         }
+
         private async Task<string> FindInfoAboutHero(uint playerid, uint heroId)
         {
-            var webRequest = WebRequest.Create($"https://api.opendota.com/api/players/{playerid}/heroes?hero_id={heroId}");
+            var webRequest =
+                WebRequest.Create($"https://api.opendota.com/api/players/{playerid}/heroes?hero_id={heroId}");
             string strContent;
-            var response = (HttpWebResponse)await Task.Factory
+            var response = (HttpWebResponse) await Task.Factory
                 .FromAsync(webRequest.BeginGetResponse,
                     webRequest.EndGetResponse,
                     null);
@@ -618,7 +646,8 @@ namespace OverlayInformation.Features.Open_Dota
                 strContent = reader.ReadToEnd();
                 //Console.WriteLine(strContent);
             }
-            string trimmed = strContent.Trim();
+
+            var trimmed = strContent.Trim();
             var end = trimmed.Substring(0, trimmed.IndexOf('}') + 1);
             return end;
         }
@@ -637,11 +666,7 @@ namespace OverlayInformation.Features.Open_Dota
                 return 0.ToString();
             return kek;
         }
-        #endregion
 
-        public void OnDeactivate()
-        {
-            Drawing.OnDraw -= DrawingOnOnDraw;
-        }
+        #endregion
     }
 }

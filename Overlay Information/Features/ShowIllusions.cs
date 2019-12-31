@@ -17,7 +17,16 @@ namespace OverlayInformation.Features
     public class ShowIllusions : IDisposable
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        public Config Config { get; }
+
+        public static List<string> ShowIllusionList = new List<string>
+        {
+            "materials/ensage_ui/particles/smoke_illusions_mod.vpcf",
+            "materials/ensage_ui/particles/illusions_mod.vpcf",
+            "materials/ensage_ui/particles/illusions_mod_v2.vpcf",
+            "materials/ensage_ui/particles/illusions_mod_balloons.vpcf"
+            //"particles/items2_fx/shadow_amulet_active_ground_proj.vpcf"
+        };
+
         public ShowIllusions(Config config)
         {
             Config = config;
@@ -32,21 +41,14 @@ namespace OverlayInformation.Features
             ClrA = panel.Item("Alpha", new Slider(255, 0, 255));
             MyTeam = ObjectManager.LocalHero.Team;
 
-            if (Enable)
-            {
-                Load();
-            }
+            if (Enable) Load();
 
             Enable.Item.ValueChanged += (sender, args) =>
             {
                 if (args.GetNewValue<bool>())
-                {
                     Load();
-                }
                 else
-                {
                     UnLoad();
-                }
             };
 
             Id.PropertyChanged += OnChangeAnySettings;
@@ -57,16 +59,7 @@ namespace OverlayInformation.Features
             ClrA.PropertyChanged += OnChangeAnySettings;
         }
 
-        private void OnChangeAnySettings(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
-        {
-            if (!Enable)
-                return;
-            var illusions = EntityManager<Hero>.Entities.Where(x => x.IsAlive && x.Team != MyTeam && x.IsIllusion);
-            foreach (var x in illusions)
-            {
-                AddEffect(x);
-            }
-        }
+        public Config Config { get; }
 
         public MenuItem<Slider> ClrR { get; set; }
         public MenuItem<Slider> ClrG { get; set; }
@@ -82,14 +75,21 @@ namespace OverlayInformation.Features
 
         public IParticleManager Particle { get; set; }
 
-        public static List<string> ShowIllusionList = new List<string>()
+        public MenuItem<bool> Enable { get; set; }
+
+        public void Dispose()
         {
-            "materials/ensage_ui/particles/smoke_illusions_mod.vpcf",
-            "materials/ensage_ui/particles/illusions_mod.vpcf",
-            "materials/ensage_ui/particles/illusions_mod_v2.vpcf",
-            "materials/ensage_ui/particles/illusions_mod_balloons.vpcf",
-            //"particles/items2_fx/shadow_amulet_active_ground_proj.vpcf"
-        };
+            if (Enable) UnLoad();
+        }
+
+        private void OnChangeAnySettings(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            if (!Enable)
+                return;
+            var illusions = EntityManager<Hero>.Entities.Where(x => x.IsAlive && x.Team != MyTeam && x.IsIllusion);
+            foreach (var x in illusions) AddEffect(x);
+        }
+
         private void EntityAdded(object sender, Hero x)
         {
             if (x.Team == MyTeam || !x.IsIllusion)
@@ -100,14 +100,17 @@ namespace OverlayInformation.Features
         public void AddEffect(Hero x)
         {
             if (GetId == 0)
-                Particle.AddOrUpdate(x, "showIllusion" + x.Handle, ShowIllusionList[GetId], ParticleAttachment.AbsOrigin);
+            {
+                Particle.AddOrUpdate(x, "showIllusion" + x.Handle, ShowIllusionList[GetId],
+                    ParticleAttachment.AbsOrigin);
+            }
             else
             {
                 var size = new Vector3(IllusionSize, ClrA, 0);
-                Particle.AddOrUpdate(x, "showIllusion" + x.Handle, ShowIllusionList[GetId], ParticleAttachment.AbsOrigin,
+                Particle.AddOrUpdate(x, "showIllusion" + x.Handle, ShowIllusionList[GetId],
+                    ParticleAttachment.AbsOrigin,
                     RestartType.FullRestart,
-                    1, size, 2, GetColor );
-
+                    1, size, 2, GetColor);
             }
         }
 
@@ -115,24 +118,12 @@ namespace OverlayInformation.Features
         {
             EntityManager<Hero>.EntityAdded += EntityAdded;
         }
+
         private void UnLoad()
         {
             EntityManager<Hero>.EntityAdded -= EntityAdded;
             var illusions = EntityManager<Hero>.Entities.Where(x => x.IsAlive && x.Team != MyTeam && x.IsIllusion);
-            foreach (var x in illusions)
-            {
-                Particle.Remove("showIllusion" + x.Handle);
-            }
-        }
-
-        public MenuItem<bool> Enable { get; set; }
-
-        public void Dispose()
-        {
-            if (Enable)
-            {
-                UnLoad();
-            }
+            foreach (var x in illusions) Particle.Remove("showIllusion" + x.Handle);
         }
     }
 }

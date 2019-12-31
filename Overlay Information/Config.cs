@@ -9,6 +9,8 @@ namespace OverlayInformation
 {
     public class Config : IDisposable
     {
+        public OverlayInformation Main;
+
         public Config(OverlayInformation overlayInformation)
         {
             Factory = MenuFactory.Create("Overlay Information");
@@ -53,8 +55,6 @@ namespace OverlayInformation
         public HeroOverlay HeroOverlay { get; set; }
 
         public TopPanel TopPanel { get; set; }
-
-        public OverlayInformation Main;
         public MenuItem<bool> DebugMessages { get; set; }
         public MenuFactory Factory { get; }
 

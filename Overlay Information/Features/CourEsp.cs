@@ -10,8 +10,6 @@ namespace OverlayInformation.Features
 {
     public class CourEsp
     {
-        public Config Config { get; }
-
         public CourEsp(Config config)
         {
             Config = config;
@@ -27,29 +25,25 @@ namespace OverlayInformation.Features
             EnableForAlly.Item.ValueChanged += (sender, args) =>
             {
                 if (args.GetNewValue<bool>())
-                {
                     Drawing.OnDraw += DrawOnAlly;
-                }
                 else
-                {
                     Drawing.OnDraw -= DrawOnAlly;
-                }
             };
 
             EnableForEnemy.Item.ValueChanged += (sender, args) =>
             {
                 if (args.GetNewValue<bool>())
-                {
                     Drawing.OnDraw += DrawOnEnemy;
-                }
                 else
-                {
                     Drawing.OnDraw -= DrawOnEnemy;
-                }
             };
         }
 
+        public Config Config { get; }
+
         public MenuItem<Slider> ItemSize { get; set; }
+        public MenuItem<bool> EnableForAlly { get; set; }
+        public MenuItem<bool> EnableForEnemy { get; set; }
 
         private void DrawOnAlly(EventArgs args)
         {
@@ -89,6 +83,7 @@ namespace OverlayInformation.Features
                 }
             }
         }
+
         public Vector2 DrawItemState(Vector2 pos, Item ability, Vector2 maxSize, Color color)
         {
             var itemSize = new Vector2(maxSize.X * 1.5f, maxSize.Y);
@@ -96,7 +91,5 @@ namespace OverlayInformation.Features
             Drawing.DrawRect(pos, new Vector2(maxSize.X, maxSize.Y), color, true);
             return pos + new Vector2(maxSize.X - 1, 0);
         }
-        public MenuItem<bool> EnableForAlly { get; set; }
-        public MenuItem<bool> EnableForEnemy { get; set; }
     }
 }

@@ -11,8 +11,6 @@ namespace OverlayInformation.Features
 {
     public class ItemPanel : Movable
     {
-        public Config Config { get; }
-
         public ItemPanel(Config config)
         {
             Config = config;
@@ -46,6 +44,8 @@ namespace OverlayInformation.Features
             LoadMovable(config.Main.Context.Value.Input);
         }
 
+        public Config Config { get; }
+
         public MenuItem<bool> HighLightAntiInvisItems { get; set; }
 
         public MenuItem<bool> DrawOnlyAntiInvisItems { get; set; }
@@ -64,14 +64,12 @@ namespace OverlayInformation.Features
             var startPosition = pos;
             var size = new Vector2(SizeX * 10, SizeY * 10);
             if (CanMove)
-            {
                 if (CanMoveWindow(ref pos, size, true))
                 {
-                    PosX.Item.SetValue(new Slider((int)pos.X, 1, 2500));
-                    PosY.Item.SetValue(new Slider((int)pos.Y, 1, 2500));
+                    PosX.Item.SetValue(new Slider((int) pos.X, 1, 2500));
+                    PosY.Item.SetValue(new Slider((int) pos.Y, 1, 2500));
                 }
-            }
-            
+
             var stageSize = new Vector2(size.X / 7f, size.Y / 5f);
             var itemSize = new Vector2(stageSize.X / .7f, stageSize.Y);
             var emptyTexture = Textures.GetTexture("materials/ensage_ui/items/emptyitembg.vmat");
@@ -94,6 +92,7 @@ namespace OverlayInformation.Features
                     {
                         // ignored
                     }
+
                     if (item == null || !item.IsValid)
                     {
                         Drawing.DrawRect(pos, itemSize, emptyTexture);
@@ -101,7 +100,6 @@ namespace OverlayInformation.Features
                     else
                     {
                         if (DrawOnlyAntiInvisItems)
-                        {
                             if (item.Id != AbilityId.item_dust && item.Id != AbilityId.item_gem &&
                                 item.Id != AbilityId.item_ward_sentry && item.Id != AbilityId.item_ward_dispenser)
                             {
@@ -110,7 +108,7 @@ namespace OverlayInformation.Features
                                 pos += new Vector2(stageSize.X, 0);
                                 continue;
                             }
-                        }
+
                         var bottletype = item.Item as Bottle;
                         if (bottletype != null && bottletype.StoredRune != RuneType.None)
                         {
@@ -127,11 +125,12 @@ namespace OverlayInformation.Features
                         if (item.AbilityState == AbilityState.OnCooldown)
                         {
                             var cooldown = item.Cooldown + 1;
-                            var cdText = ((int)cooldown).ToString();
+                            var cdText = ((int) cooldown).ToString();
                             DrawItemCooldown(cdText, pos, stageSize);
                         }
                     }
-                    if (HighLightAntiInvisItems && !DrawOnlyAntiInvisItems && item != null )
+
+                    if (HighLightAntiInvisItems && !DrawOnlyAntiInvisItems && item != null)
                     {
                         if (item.Id == AbilityId.item_dust || item.Id == AbilityId.item_gem ||
                             item.Id == AbilityId.item_ward_sentry || item.Id == AbilityId.item_ward_dispenser)
@@ -151,8 +150,10 @@ namespace OverlayInformation.Features
 
                     pos += new Vector2(stageSize.X, 0);
                 }
+
                 pos = new Vector2(startPos.X, startPos.Y + itemSize.Y);
             }
+
             Drawing.DrawRect(startPosition, size, Color.White, true);
         }
 

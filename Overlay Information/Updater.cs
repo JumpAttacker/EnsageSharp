@@ -13,14 +13,8 @@ namespace OverlayInformation
 {
     public class Updater
     {
-        private OverlayInformation Main { get; }
-        public List<HeroContainer> Heroes { get; }
-        public List<HeroContainer> AllyHeroes { get; }
-        public List<HeroContainer> EnemyHeroes { get; }
-        public List<CourContainer> EnemyCouriers { get; set; }
-        public List<CourContainer> AllyCouriers { get; set; }
-        public List<CourContainer> Couriers { get; set; }
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public Updater(OverlayInformation overlayInformation)
         {
             Main = overlayInformation;
@@ -32,23 +26,11 @@ namespace OverlayInformation
             AllyCouriers = new List<CourContainer>();
             EnemyCouriers = new List<CourContainer>();
 
-            foreach (var entity in ObjectManager.GetDormantEntities<Hero>())
-            {
-                OnNewHero(null, entity);
-            }
-            foreach (var entity in ObjectManager.GetEntities<Hero>())
-            {
-                OnNewHero(null, entity);
-            }
+            foreach (var entity in ObjectManager.GetDormantEntities<Hero>()) OnNewHero(null, entity);
+            foreach (var entity in ObjectManager.GetEntities<Hero>()) OnNewHero(null, entity);
 
-            foreach (var entity in ObjectManager.GetDormantEntities<Courier>())
-            {
-                OnNewCour(null, entity);
-            }
-            foreach (var entity in ObjectManager.GetEntities<Courier>())
-            {
-                OnNewCour(null, entity);
-            }
+            foreach (var entity in ObjectManager.GetDormantEntities<Courier>()) OnNewCour(null, entity);
+            foreach (var entity in ObjectManager.GetEntities<Courier>()) OnNewCour(null, entity);
 
             EntityManager<Hero>.EntityAdded += OnNewHero;
             EntityManager<Courier>.EntityAdded += OnNewCour;
@@ -77,6 +59,14 @@ namespace OverlayInformation
             }, 5);*/
         }
 
+        private OverlayInformation Main { get; }
+        public List<HeroContainer> Heroes { get; }
+        public List<HeroContainer> AllyHeroes { get; }
+        public List<HeroContainer> EnemyHeroes { get; }
+        public List<CourContainer> EnemyCouriers { get; set; }
+        public List<CourContainer> AllyCouriers { get; set; }
+        public List<CourContainer> Couriers { get; set; }
+
         private void OnHeroRemoved(object sender, Hero e)
         {
             var founder = Heroes.Find(x => x.Hero.Equals(e));
@@ -89,6 +79,7 @@ namespace OverlayInformation
                     EnemyHeroes.Remove(founder);
             }
         }
+
         private void OnCourRemoved(object sender, Courier e)
         {
             var founder = Couriers.Find(x => x.Cour.Equals(e));
@@ -107,11 +98,12 @@ namespace OverlayInformation
             //if (courier.Team==Main.Owner.Team)
             //    return;
 
-            if (Couriers.Any(x=>x.Cour.Equals(courier)))
+            if (Couriers.Any(x => x.Cour.Equals(courier)))
             {
                 Log.Error($"Cant init this Cour -> {courier.GetDisplayName()} [{courier.Handle}]");
                 return;
             }
+
             var myTeam = Main.Context.Value.Owner.Team;
             var targetTeam = courier.Team;
             var isAlly = myTeam == targetTeam;
@@ -121,15 +113,12 @@ namespace OverlayInformation
                 Couriers.Add(newHero);
 
                 if (isAlly)
-                {
                     AllyCouriers.Add(newHero);
-                }
                 else
-                {
                     EnemyCouriers.Add(newHero);
-                }
 
-                Log.Info($"New courier -> {courier.GetDisplayName()} [{courier.Handle}] [{(isAlly ? "Ally" : "Enemy")}]");
+                Log.Info(
+                    $"New courier -> {courier.GetDisplayName()} [{courier.Handle}] [{(isAlly ? "Ally" : "Enemy")}]");
             }
             catch (Exception e)
             {
@@ -150,36 +139,29 @@ namespace OverlayInformation
                     Log.Error($"Cant init New Hero -> {hero.GetDisplayName()} [{hero.Handle}]");
                     return;
                 }
+
                 if (hero.HeroId == HeroId.npc_dota_hero_monkey_king)
-                {
                     if (!hero.Spellbook.Spells.Any())
                     {
                         Log.Error($"Monkey king bugisoft (ubishit) -> [{hero.Handle}]");
                         return;
                     }
-                }
-                
+
                 var myTeam = Main.Context.Value.Owner.Team;
                 var targetTeam = hero.Team;
                 var isAlly = myTeam == targetTeam;
-                
+
                 var newHero = new HeroContainer(hero, isAlly, Main);
                 if (hero.HeroId == HeroId.npc_dota_hero_phantom_assassin && !isAlly)
-                {
                     Main.Config.ShowMeMore.InitPhantomAssiasin(newHero);
-                }
                 try
                 {
                     Heroes.Add(newHero);
 
                     if (isAlly)
-                    {
                         AllyHeroes.Add(newHero);
-                    }
                     else
-                    {
                         EnemyHeroes.Add(newHero);
-                    }
 
                     Log.Info($"New Hero -> {hero.GetDisplayName()} [{hero.Handle}] [{(isAlly ? "Ally" : "Enemy")}]");
                 }
@@ -192,15 +174,9 @@ namespace OverlayInformation
 
         public void OnDeactivate()
         {
-            foreach (var container in Heroes)
-            {
-                container.Flush();
-            }
-            
-            foreach (var container in Couriers)
-            {
-                container.Dispose();
-            }
+            foreach (var container in Heroes) container.Flush();
+
+            foreach (var container in Couriers) container.Dispose();
 
             AllyHeroes.Clear();
             EnemyHeroes.Clear();

@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Windows.Forms;
 using Ensage;
 using Ensage.Common.Menu;
 using Ensage.Common.Objects;
@@ -13,8 +12,6 @@ namespace OverlayInformation.Features
 {
     public class HeroOverlay
     {
-        public Config Config { get; }
-        
         public HeroOverlay(Config config)
         {
             Config = config;
@@ -58,6 +55,8 @@ namespace OverlayInformation.Features
             Drawing.OnDraw += DrawingOnOnDraw;
             HealthBarSize = new Vector2(HudInfo.GetHPBarSizeX(), HudInfo.GetHpBarSizeY());
         }
+
+        public Config Config { get; }
 
         public MenuItem<bool> ItemInvisBreakItems { get; set; }
 
@@ -108,6 +107,7 @@ namespace OverlayInformation.Features
         public MenuItem<bool> ManaBars { get; set; }
 
         public Vector2 HealthBarSize { get; set; }
+
         private void DrawingOnOnDraw(EventArgs args)
         {
             var heroes = Config.Main.Updater.Heroes;
@@ -131,13 +131,12 @@ namespace OverlayInformation.Features
                 var size = new Vector2(HudInfo.GetHPBarSizeX(hero) + ExtraSizeX,
                     HudInfo.GetHpBarSizeY(hero) + ExtraSizeY);
                 if (HealthBar)
-                {
                     if (!heroCont.IsAlly)
                     {
                         var health = DrawMaxHealth ? $"{hero.Health}/{heroCont.MaxHealth}" : $"{hero.Health}";
                         DrawingHelper.DrawHealthBar(pos, size, health, HealthBarTextSize);
                     }
-                }
+
                 if (heroCont.IsOwner)
                 {
                     pos += new Vector2(-1, size.Y);
@@ -147,7 +146,7 @@ namespace OverlayInformation.Features
                 {
                     pos += new Vector2(0, size.Y - 2);
                 }
-                
+
                 if (ManaBars)
                 {
                     if (heroCont.IsAlly && ManaBarsForAlly || !heroCont.IsAlly && ManaBarsForEnemy)
@@ -155,12 +154,12 @@ namespace OverlayInformation.Features
                         var mana = heroCont.Mana;
                         pos = DrawingHelper.DrawManaBar(pos, mana * size.X / heroCont.MaxMana, size,
                             new Color(0, 155, 255, 255),
-                            new Color(0, 0, 0, 255), ((int)mana).ToString(), ManaBarsNumbers,
+                            new Color(0, 0, 0, 255), ((int) mana).ToString(), ManaBarsNumbers,
                             ManaBarsSize.Value.Value);
                     }
                     else if (heroCont.IsAlly && !ManaBarsForAlly)
                     {
-                        pos += new Vector2(0, size.Y/2);
+                        pos += new Vector2(0, size.Y / 2);
                     }
                 }
 
@@ -168,7 +167,7 @@ namespace OverlayInformation.Features
                 {
                     var tempSize = size.X * AbilitySize / 30f;
                     var abilitySize = new Vector2(tempSize);
-                    
+
                     //IEnumerable<Ability> abilities = heroCont.Abilities;
                     //var enumerable = abilities as Ability[] ?? abilities.ToArray();
                     //var abilityCount = abilities.Count();
@@ -193,10 +192,8 @@ namespace OverlayInformation.Features
 
                     try
                     {
-                        foreach (var ability in abilities.OrderBy(x=>x.AbilitySlot))
-                        {
+                        foreach (var ability in abilities.OrderBy(x => x.AbilitySlot))
                             pos = DrawAbilityState(pos, ability, abilitySize);
-                        }
                     }
                     catch (Exception)
                     {
@@ -231,15 +228,11 @@ namespace OverlayInformation.Features
                         if (id == AbilityId.item_sphere)
                         {
                             if (ability.AbilityState == AbilityState.Ready)
-                            {
                                 Config.Main.ParticleManager.AddOrUpdate(hero, $"sphere {heroCont.Id}",
                                     "particles/items_fx/immunity_sphere_buff.vpcf", ParticleAttachment.RootBoneFollow,
                                     RestartType.None);
-                            }
                             else
-                            {
                                 Config.Main.ParticleManager.Remove($"sphere {heroCont.Id}");
-                            }
                         }
 
                         pos = DrawItemState(pos, ability, abilitySize, itemBorderWhite ? Color.White : Color.Black);
@@ -263,15 +256,16 @@ namespace OverlayInformation.Features
                         break;
                     case AbilityState.NotEnoughMana:
                         var mana = ability.Ability.ManaCost - ability.Owner.Mana;
-                        var manaText = ((int)mana).ToString();
+                        var manaText = ((int) mana).ToString();
                         DrawAbilityMana(manaText, pos, maxSize);
                         break;
                     case AbilityState.OnCooldown:
                         var cooldown = ability.Cooldown + 1;
-                        var cdText = ((int)cooldown).ToString();
+                        var cdText = ((int) cooldown).ToString();
                         DrawAbilityCooldown(cdText, pos, maxSize);
                         break;
                 }
+
                 if (ability.MaximumLevel > 1)
                     DrawAbilityLevel(level, pos, maxSize);
             }
@@ -300,6 +294,7 @@ namespace OverlayInformation.Features
             {
                 Drawing.DrawRect(pos, itemSize, Textures.GetItemTexture(ability.Name));
             }
+
             //Drawing.DrawRect(pos, new Vector2(maxSize.X * 70 / 100f, maxSize.Y / 2f), Color.White, true);
             switch (abilityState)
             {
@@ -310,15 +305,16 @@ namespace OverlayInformation.Features
                         if (chrages > 0)
                             DrawItemCharge(chrages, pos, maxSize);
                     }
+
                     break;
                 case AbilityState.NotEnoughMana:
-                    var mana = ability.ManaCost - ((Hero)ability.Owner).Mana;
-                    var manaText = ((int)mana).ToString();
+                    var mana = ability.ManaCost - ((Hero) ability.Owner).Mana;
+                    var manaText = ((int) mana).ToString();
                     DrawAbilityMana(manaText, pos, maxSize);
                     break;
                 case AbilityState.OnCooldown:
                     var cooldown = Math.Min(99, ability.Cooldown + 1);
-                    var cdText = ((int)cooldown).ToString();
+                    var cdText = ((int) cooldown).ToString();
                     DrawItemCooldown(cdText, pos, maxSize);
                     break;
             }
@@ -326,6 +322,7 @@ namespace OverlayInformation.Features
             Drawing.DrawRect(pos, new Vector2(maxSize.X, maxSize.Y), color, true);
             return pos + new Vector2(maxSize.X - 1, 0);
         }
+
         public Vector2 DrawItemState(Vector2 pos, AbilityHolder ability, Vector2 maxSize, Color color)
         {
             var abilityState = ability.AbilityState;
@@ -342,6 +339,7 @@ namespace OverlayInformation.Features
             {
                 Drawing.DrawRect(pos, itemSize, Textures.GetItemTexture(ability.Name));
             }
+
             //Drawing.DrawRect(pos, new Vector2(maxSize.X * 70 / 100f, maxSize.Y / 2f), Color.White, true);
             switch (abilityState)
             {
@@ -352,15 +350,16 @@ namespace OverlayInformation.Features
                         if (chrages > 0)
                             DrawItemCharge(chrages, pos, maxSize);
                     }
+
                     break;
                 case AbilityState.NotEnoughMana:
                     var mana = ability.Ability.ManaCost - ability.Owner.Mana;
-                    var manaText = ((int)mana).ToString();
+                    var manaText = ((int) mana).ToString();
                     DrawAbilityMana(manaText, pos, maxSize);
                     break;
                 case AbilityState.OnCooldown:
                     var cooldown = Math.Min(99, ability.Cooldown + 1);
-                    var cdText = ((int)cooldown).ToString();
+                    var cdText = ((int) cooldown).ToString();
                     DrawItemCooldown(cdText, pos, maxSize);
                     break;
             }
@@ -384,15 +383,16 @@ namespace OverlayInformation.Features
                         break;
                     case AbilityState.NotEnoughMana:
                         var mana = ability.ManaCost - ((Hero) ability.Owner).Mana;
-                        var manaText = ((int)mana).ToString();
+                        var manaText = ((int) mana).ToString();
                         DrawAbilityMana(manaText, pos, maxSize);
                         break;
                     case AbilityState.OnCooldown:
                         var cooldown = ability.Cooldown + 1;
-                        var cdText = ((int)cooldown).ToString();
+                        var cdText = ((int) cooldown).ToString();
                         DrawAbilityCooldown(cdText, pos, maxSize);
                         break;
                 }
+
                 if (ability.MaximumLevel > 1)
                     DrawAbilityLevel(level, pos, maxSize);
             }
@@ -420,6 +420,7 @@ namespace OverlayInformation.Features
                 Color.White,
                 FontFlags.AntiAlias | FontFlags.StrikeOut);
         }
+
         private void DrawItemCharge(uint charge, Vector2 pos, Vector2 maxSize)
         {
             var text = charge.ToString();

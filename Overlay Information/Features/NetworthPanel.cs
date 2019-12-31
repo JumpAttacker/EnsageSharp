@@ -12,12 +12,6 @@ namespace OverlayInformation.Features
 {
     public class NetworthPanel : Movable
     {
-        public Config Config { get; }
-
-        private enum Orders
-        {
-            Standard,Descending,Ascending, Team1, Team2
-        }
         public NetworthPanel(Config config)
         {
             Config = config;
@@ -37,7 +31,7 @@ namespace OverlayInformation.Features
                 new StringList("standart", "by descending", "by ascending", "by team 1", "by team 2"));
             SizeX = panel.Item("Size X", new Slider(28, 1));
             SizeY = panel.Item("Size Y", new Slider(14, 1));
-            
+
             CanMove = panel.Item("Movable", false);
             PosX = panel.Item("Position -> X", new Slider(500, 1, 2500));
             PosY = panel.Item("Position -> Y", new Slider(500, 1, 2500));
@@ -65,6 +59,8 @@ namespace OverlayInformation.Features
             LoadMovable(config.Main.Context.Value.Input);
         }
 
+        public Config Config { get; }
+
         public MenuItem<bool> DrawPercent { get; set; }
 
         public MenuItem<bool> DrawTeamValues { get; set; }
@@ -72,6 +68,18 @@ namespace OverlayInformation.Features
         public MenuItem<Slider> GetCoef { get; set; }
 
         public MenuItem<Slider> GlobalSizeY { get; set; }
+
+        public MenuItem<bool> EnableGlobal { get; set; }
+
+        public MenuItem<StringList> OrderBy { get; set; }
+
+        public MenuItem<Slider> SizeX { get; set; }
+        public MenuItem<Slider> SizeY { get; set; }
+        public MenuItem<bool> CanMove { get; set; }
+        public MenuItem<bool> Cooldown { get; set; }
+        public MenuItem<Slider> PosX { get; set; }
+        public MenuItem<Slider> PosY { get; set; }
+        public MenuItem<bool> Enable { get; set; }
 
         private void DrawGlobalPanel(EventArgs args)
         {
@@ -87,17 +95,14 @@ namespace OverlayInformation.Features
             {
                 var hero = heroC.Hero;
                 if (hero.Team == Team.Radiant)
-                {
                     radiantNetworh += heroC.Networth;
-                }
                 else
-                {
                     direNetwoth += heroC.Networth;
-                }
             }
+
             Color rightClr;
             Color leftClr;
-            
+
             var percent = 100 * radiantNetworh / Math.Max(1, radiantNetworh + direNetwoth);
             var currentSize = size.X / 100 * percent;
             var lineSize = new Vector2(currentSize, size.Y);
@@ -121,9 +126,9 @@ namespace OverlayInformation.Features
 
             var text = $"{percent}%";
             var textSize = Drawing.MeasureText(text, "Arial",
-                new Vector2((float)(size.Y * .95), size.Y / 2), FontFlags.AntiAlias);
+                new Vector2((float) (size.Y * .95), size.Y / 2), FontFlags.AntiAlias);
             var textPos = endOfGreen - new Vector2(textSize.X / 2, /*lineSize.Y / 2 - textSize.Y / 2*/0);
-            var coef = GetCoef/10f;
+            var coef = GetCoef / 10f;
             if (DrawPercent)
                 Drawing.DrawText(
                     text,
@@ -150,37 +155,23 @@ namespace OverlayInformation.Features
             }
         }
 
-        public MenuItem<bool> EnableGlobal { get; set; }
-
-        public MenuItem<StringList> OrderBy { get; set; }
-
-        public MenuItem<Slider> SizeX { get; set; }
-        public MenuItem<Slider> SizeY { get; set; }
-        public MenuItem<bool> CanMove { get; set; }
-        public MenuItem<bool> Cooldown { get; set; }
-        public MenuItem<Slider> PosX { get; set; }
-        public MenuItem<Slider> PosY { get; set; }
-        public MenuItem<bool> Enable { get; set; }
-
         private void DrawingOnOnDraw(EventArgs args)
         {
             var pos = new Vector2(PosX.Value.Value, PosY.Value.Value);
             var startPosition = pos;
             var size = new Vector2(SizeX * 10, SizeY * 10);
             if (CanMove)
-            {
                 if (CanMoveWindow(ref pos, size, true))
                 {
                     PosX.Item.SetValue(new Slider((int) pos.X, 1, 2500));
                     PosY.Item.SetValue(new Slider((int) pos.Y, 1, 2500));
                 }
-            }
 
             var stageSize = new Vector2(size.X / 7f, size.Y / 10f);
             var itemSize = new Vector2(stageSize.X / .7f, stageSize.Y);
-            var orderIndex = (Orders)OrderBy.Value.SelectedIndex;
+            var orderIndex = (Orders) OrderBy.Value.SelectedIndex;
             var heroes = GetHeroes(orderIndex);
-            if (heroes==null || heroes.Count==0)
+            if (heroes == null || heroes.Count == 0)
                 return;
             var maxNetworth = heroes.Max(x => x.Networth);
             foreach (var heroC in heroes)
@@ -196,9 +187,10 @@ namespace OverlayInformation.Features
                 Drawing.DrawRect(pos, lineSize,
                     heroC.IsAlly ? new Color(0, 155, 0, 155) : new Color(155, 0, 0, 155));
                 DrawText(heroC.Networth.ToString(), pos, lineSize);
-                Drawing.DrawRect(pos, newSize, Color.White,true);
+                Drawing.DrawRect(pos, newSize, Color.White, true);
                 pos = new Vector2(startPos.X, startPos.Y + itemSize.Y);
             }
+
             Drawing.DrawRect(startPosition, size, Color.White, true);
         }
 
@@ -209,7 +201,7 @@ namespace OverlayInformation.Features
                 case Orders.Standard:
                     return Config.Main.Updater.Heroes;
                 case Orders.Descending:
-                    return Config.Main.Updater.Heroes.OrderByDescending(x=>x.Networth).ToList();
+                    return Config.Main.Updater.Heroes.OrderByDescending(x => x.Networth).ToList();
                 case Orders.Ascending:
                     return Config.Main.Updater.Heroes.OrderBy(x => x.Networth).ToList();
                 case Orders.Team1:
@@ -239,6 +231,15 @@ namespace OverlayInformation.Features
         {
             Drawing.OnDraw -= DrawingOnOnDraw;
             Drawing.OnDraw -= DrawGlobalPanel;
+        }
+
+        private enum Orders
+        {
+            Standard,
+            Descending,
+            Ascending,
+            Team1,
+            Team2
         }
     }
 }
