@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
@@ -10,71 +9,6 @@ namespace OverlayInformation
 {
     public static class HudInfo
     {
-        #region Static Fields
-
-        /// <summary>
-        ///     The dire compare.
-        /// </summary>
-        public static double DireCompare;
-
-        /// <summary>
-        ///     The health bar height.
-        /// </summary>
-        private static readonly double HpBarHeight;
-
-        /// <summary>
-        ///     The health bar width.
-        /// </summary>
-        private static readonly double HpBarWidth;
-
-        /// <summary>
-        ///     The health bar x.
-        /// </summary>
-        private static readonly double HpBarX;
-
-        /// <summary>
-        ///     The health bar y.
-        /// </summary>
-        private static readonly float HpBarY;
-
-        /// <summary>
-        ///     The monitor.
-        /// </summary>
-        internal static readonly float Monitor;
-
-        /// <summary>
-        ///     The player id dictionary.
-        /// </summary>
-        private static readonly Dictionary<float, int> PlayerIdDictionary = new Dictionary<float, int>();
-
-        /// <summary>
-        ///     The radiant compare.
-        /// </summary>
-        public static double RadiantCompare;
-
-        /// <summary>
-        ///     The rate.
-        /// </summary>
-        private static readonly float Rate;
-
-        /// <summary>
-        ///     The screen size.
-        /// </summary>
-        private static readonly Vector2 ScreenSize;
-
-        /// <summary>
-        ///     The x.
-        /// </summary>
-        internal static double X;
-
-
-        /// <summary>
-        ///     The y.
-        /// </summary>
-        private static double y;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -82,8 +16,8 @@ namespace OverlayInformation
         /// </summary>
         static HudInfo()
         {
-            double tinfoHeroDown;
-            double panelHeroSizeX;
+            double tinfoHeroDown = 0;
+            double panelHeroSizeX = 0;
             float compareWidth;
             ScreenSize = new Vector2(Drawing.Width, Drawing.Height);
             if (ScreenSize.X == 0)
@@ -92,7 +26,7 @@ namespace OverlayInformation
                 return;
             }
 
-            var ratio = Math.Floor((decimal)(ScreenSize.X / ScreenSize.Y * 100));
+            var ratio = Math.Floor((decimal) (ScreenSize.X / ScreenSize.Y * 100));
             if (ratio == 355)
             {
                 compareWidth = 3400;
@@ -103,7 +37,8 @@ namespace OverlayInformation
                 HpBarWidth = 91;
                 HpBarX = 45;
                 HpBarY = 28;
-            }else if (ratio == 266)
+            }
+            else if (ratio == 266)
             {
                 compareWidth = 2450;
                 panelHeroSizeX = 53.28;
@@ -114,7 +49,8 @@ namespace OverlayInformation
                 HpBarWidth = 87;
                 HpBarX = 43;
                 HpBarY = 27;
-            }else if (ratio == 213)
+            }
+            else if (ratio == 213)
             {
                 compareWidth = 1600;
                 panelHeroSizeX = 45.28;
@@ -202,7 +138,7 @@ namespace OverlayInformation
             {
                 Console.WriteLine(
                     @"Your screen resolution is not supported and drawings might have wrong size/position, (" + ratio
-                    + ")");
+                                                                                                              + ")");
                 compareWidth = 1600;
                 panelHeroSizeX = 65;
                 tinfoHeroDown = 25.714;
@@ -264,6 +200,72 @@ namespace OverlayInformation
         }*/
 
         //private static Line _line;
+
+        #endregion
+
+        #region Static Fields
+
+        /// <summary>
+        ///     The dire compare.
+        /// </summary>
+        public static double DireCompare;
+
+        /// <summary>
+        ///     The health bar height.
+        /// </summary>
+        private static readonly double HpBarHeight;
+
+        /// <summary>
+        ///     The health bar width.
+        /// </summary>
+        private static readonly double HpBarWidth;
+
+        /// <summary>
+        ///     The health bar x.
+        /// </summary>
+        private static readonly double HpBarX;
+
+        /// <summary>
+        ///     The health bar y.
+        /// </summary>
+        private static readonly float HpBarY;
+
+        /// <summary>
+        ///     The monitor.
+        /// </summary>
+        internal static readonly float Monitor;
+
+        /// <summary>
+        ///     The player id dictionary.
+        /// </summary>
+        private static readonly Dictionary<float, int> PlayerIdDictionary = new Dictionary<float, int>();
+
+        /// <summary>
+        ///     The radiant compare.
+        /// </summary>
+        public static double RadiantCompare;
+
+        /// <summary>
+        ///     The rate.
+        /// </summary>
+        private static readonly float Rate;
+
+        /// <summary>
+        ///     The screen size.
+        /// </summary>
+        private static readonly Vector2 ScreenSize;
+
+        /// <summary>
+        ///     The x.
+        /// </summary>
+        internal static double X;
+
+
+        /// <summary>
+        ///     The y.
+        /// </summary>
+        private static double y;
+
         #endregion
 
         #region Public Methods and Operators
@@ -281,23 +283,19 @@ namespace OverlayInformation
         {
             var pos = unit.Position + new Vector3(0, 0, unit.HealthBarOffset);
             Vector2 screenPos;
-            if (!Drawing.WorldToScreen(pos, out screenPos))
-            {
-                return Vector2.Zero;
-            }
+            if (!Drawing.WorldToScreen(pos, out screenPos)) return Vector2.Zero;
 
             var localHero = ObjectManager.LocalHero;
             if (localHero != null && Equals(unit, localHero))
             {
                 if (unit.NetworkName == "CDOTA_Unit_Hero_Meepo")
-                {
-                    return screenPos + new Vector2((float)(-HpBarX * 1.05 * Monitor), (float)(-HpBarY * 1.3 * Monitor));
-                }
+                    return screenPos + new Vector2((float) (-HpBarX * 1.05 * Monitor),
+                               (float) (-HpBarY * 1.3 * Monitor));
 
-                return screenPos + new Vector2((float)(-HpBarX * 1.05 * Monitor), (float)(-HpBarY * 1.15 * Monitor));
+                return screenPos + new Vector2((float) (-HpBarX * 1.05 * Monitor), (float) (-HpBarY * 1.15 * Monitor));
             }
 
-            return screenPos + new Vector2((float)(-HpBarX * Monitor), -HpBarY * Monitor);
+            return screenPos + new Vector2((float) (-HpBarX * Monitor), -HpBarY * Monitor);
         }
 
         /// <summary>
@@ -312,12 +310,9 @@ namespace OverlayInformation
         public static float GetHPBarSizeX(Unit unit = null)
         {
             var hero = ObjectManager.LocalHero;
-            if (unit != null && hero != null && Equals(unit, hero))
-            {
-                return (float)((float)HpBarWidth * Monitor * 1.1);
-            }
+            if (unit != null && hero != null && Equals(unit, hero)) return (float) ((float) HpBarWidth * Monitor * 1.1);
 
-            return (float)HpBarWidth * Monitor;
+            return (float) HpBarWidth * Monitor;
         }
 
         /// <summary>
@@ -332,12 +327,9 @@ namespace OverlayInformation
         public static float GetHpBarSizeY(Unit unit = null)
         {
             var hero = ObjectManager.LocalHero;
-            if (unit != null && hero != null && Equals(unit, hero))
-            {
-                return (float)(HpBarHeight * Monitor * 1.05);
-            }
+            if (unit != null && hero != null && Equals(unit, hero)) return (float) (HpBarHeight * Monitor * 1.05);
 
-            return (float)(HpBarHeight * Monitor);
+            return (float) (HpBarHeight * Monitor);
         }
 
         /// <summary>
@@ -355,13 +347,9 @@ namespace OverlayInformation
             if (hero.Player == null)
             {
                 if (PlayerIdDictionary.ContainsKey(hero.Handle))
-                {
                     id = PlayerIdDictionary[hero.Handle];
-                }
                 else
-                {
                     return Vector2.Zero;
-                }
             }
             else
             {
@@ -369,16 +357,13 @@ namespace OverlayInformation
             }
 
             if (!PlayerIdDictionary.ContainsKey(hero.Handle))
-            {
                 PlayerIdDictionary.Add(hero.Handle, id);
-            }
             else
-            {
                 PlayerIdDictionary[hero.Handle] = id;
-            }
 
-            return new Vector2((float)(GetXX(hero) - 20 * Monitor + X * id), 0);
+            return new Vector2((float) (GetXX(hero) - 20 * Monitor + X * id), 0);
         }
+
         private class FakeClass
         {
             public readonly int Id;
@@ -390,7 +375,9 @@ namespace OverlayInformation
                 Team = team;
             }
         }
+
         private static readonly Dictionary<FakeClass, Vector2> FakeDict = new Dictionary<FakeClass, Vector2>();
+
         public static Vector2 GetFakeTopPanelPosition(int id, Team team)
         {
             var fake = FakeDict.Find(x => x.Key.Id == id && x.Key.Team == team);
@@ -398,13 +385,11 @@ namespace OverlayInformation
             {
                 return fake.Value;
             }
-            else
-            {
-                var pos = new Vector2((float) (GetFakeXX(team) - 20 * Monitor + X * id), 0);
-                FakeDict.Add(new FakeClass(id,team), pos);
-                return pos;
-            }
-            return new Vector2((float)(GetFakeXX(team) - 20 * Monitor + X * id), 0);
+
+            var pos = new Vector2((float) (GetFakeXX(team) - 20 * Monitor + X * id), 0);
+            FakeDict.Add(new FakeClass(id, team), pos);
+            return pos;
+            return new Vector2((float) (GetFakeXX(team) - 20 * Monitor + X * id), 0);
         }
 
         /// <summary>
@@ -418,7 +403,7 @@ namespace OverlayInformation
         /// </returns>
         public static Vector2 GetTopPanelSize(Hero hero = null)
         {
-            var size = new Vector2((float)GetTopPanelSizeX(hero), (float)GetTopPanelSizeY(hero));
+            var size = new Vector2((float) GetTopPanelSizeX(hero), (float) GetTopPanelSizeY(hero));
             return size;
         }
 
@@ -489,7 +474,8 @@ namespace OverlayInformation
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            Drawing.DrawRect(GetTopPanelPosition(ObjectManager.LocalHero), GetTopPanelSize(ObjectManager.LocalHero), Color.White);
+            Drawing.DrawRect(GetTopPanelPosition(ObjectManager.LocalHero), GetTopPanelSize(ObjectManager.LocalHero),
+                Color.White);
             var v = ObjectManager.LocalHero;
             /*for (int i = 0; i < 5; i++)
             {
@@ -507,7 +493,6 @@ namespace OverlayInformation
             Drawing.DrawRect(GetFakeTopPanelPosition(7, Team.Dire), GetTopPanelSize(v), Color.White);
 
             Drawing.DrawRect(GetFakeTopPanelPosition(5, Team.Dire), GetTopPanelSize(v), Color.White);
-
         }
 
         /// <summary>
@@ -522,20 +507,15 @@ namespace OverlayInformation
         private static double GetXX(Entity hero)
         {
             var screenSize = new Vector2(Drawing.Width, Drawing.Height);
-            if (hero.Team == Team.Radiant)
-            {
-                return screenSize.X / RadiantCompare + 1;
-            }
+            if (hero.Team == Team.Radiant) return screenSize.X / RadiantCompare + 1;
 
             return screenSize.X / DireCompare + 1;
         }
+
         private static double GetFakeXX(Team team)
         {
             var screenSize = new Vector2(Drawing.Width, Drawing.Height);
-            if (team == Team.Radiant)
-            {
-                return screenSize.X / RadiantCompare + 1;
-            }
+            if (team == Team.Radiant) return screenSize.X / RadiantCompare + 1;
 
             return screenSize.X / DireCompare + 1;
         }
