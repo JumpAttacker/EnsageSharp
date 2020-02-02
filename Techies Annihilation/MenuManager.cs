@@ -34,6 +34,7 @@ namespace Techies_Annihilation
         public static bool LandMinesDrawDigs => GetBool("Drawing.LandMineStatus.Digs.Enable");
         public static double GetBombDelay => GetSlider("Settings.Delay")/1000f;
 
+
         public static bool IsEnableDelayBlow => GetBool("Settings.Delay.Enable");
         public static bool IsStackerEnabled => GetBool("Drawing.Stacker.Enable");
         public static bool IsSuperDetonate => GetBool("Settings.SuperDetonate.Enable");
@@ -112,12 +113,11 @@ namespace Techies_Annihilation
 
         private static void RangeOnChange(object sender, OnValueChangeEventArgs onValueChangeEventArgs)
         {
-            var menu = sender as MenuItem;
-            if (menu==null)
+            if (!(sender is MenuItem menu))
                 return;
             if (onValueChangeEventArgs.GetNewValue<bool>())
                 return;
-            List<BombManager> list = new List<BombManager>();
+            var list = new List<BombManager>();
             switch (menu.Name)
             {
                 case "Drawing.Range.LandMine":

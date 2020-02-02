@@ -35,10 +35,12 @@ namespace Legion_Annihilation
         };
 
         public static Sleeper Updater;
+
         public static List<ItemId> BlackList = new List<ItemId>
         {
             ItemId.item_blink
         };
+
         public static ParticleEffect BlinkRange { get; set; }
         public static float MyCurrentMana { get; set; }
     }

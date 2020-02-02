@@ -10,18 +10,20 @@ namespace Legion_Annihilation
     {
         public static int GetAbilityDelay(Unit target, Ability ability)
         {
-            return (int)((ability.FindCastPoint() + Members.MyHero.GetTurnTime(target)) * 1000.0 + Game.Ping);
+            return (int) ((ability.FindCastPoint() + Members.MyHero.GetTurnTime(target)) * 1000.0 + Game.Ping);
         }
 
         public static int GetAbilityDelay(Vector3 targetPosition, Ability ability)
         {
-            return (int)((ability.FindCastPoint() + Members.MyHero.GetTurnTime(targetPosition)) * 1000.0 + Game.Ping);
+            return (int) ((ability.FindCastPoint() + Members.MyHero.GetTurnTime(targetPosition)) * 1000.0 + Game.Ping);
         }
+
         public static bool IsItemEnable(string name)
         {
             return Members.Menu.Item("itemEnable").GetValue<AbilityToggler>().IsEnabled(name);
         }
-        public static bool IsItemEnable(Item name,bool isInCombo=true)
+
+        public static bool IsItemEnable(Item name, bool isInCombo = true)
         {
             return isInCombo
                 ? Members.Menu.Item("itemEnable").GetValue<AbilityToggler>().IsEnabled(name.StoredName())
@@ -32,6 +34,7 @@ namespace Legion_Annihilation
         {
             return Members.Menu.Item("abilityEnable").GetValue<AbilityToggler>().IsEnabled(name);
         }
+
         public static bool IsAbilityEnable(Ability name)
         {
             return Members.Menu.Item("abilityEnable").GetValue<AbilityToggler>().IsEnabled(name.StoredName());

@@ -6,6 +6,7 @@ namespace Legion_Annihilation
     internal static class Printer
     {
         #region Helpers
+
         public static void PrintInfo(string text, params object[] arguments)
         {
             PrintEncolored(text, ConsoleColor.White, arguments);
@@ -34,6 +35,7 @@ namespace Legion_Annihilation
             if (print || Members.Menu.Item("Dev.Text.enable").GetValue<bool>())
                 Game.PrintMessage(str);
         }
+
         #endregion
     }
 }
