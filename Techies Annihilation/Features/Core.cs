@@ -52,7 +52,7 @@ namespace Techies_Annihilation.Features
             var spellAmp = 0;//UnitExtensions.GetSpellAmplification(Me);
             foreach (var hero in Heroes.GetByTeam(EnemyTeam))      
             {
-                if (HeroSleeper.Sleeping(hero) || !hero.IsAlive || !hero.IsVisible || !hero.CanDie(MenuManager.CheckForAegis))
+                if (HeroSleeper.Sleeping(hero) || !hero.IsAlive || !hero.IsVisible || !hero.CanDie(MenuManager.CheckForAegis) || hero.IsMagicImmune())
                     continue;
                 if (hero.HasModifiers(
                     new[]
