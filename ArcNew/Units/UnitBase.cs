@@ -20,8 +20,8 @@ namespace ArcAnnihilation.Units
         public ICanUseAbilties AbilitiesBehaviour;
         public IAbilityChecker AbilityChecker;
         public Task ComboTask;
-        public float CooldownOnAttacking = 0.015f;
-        public float CooldownOnMoving = 0.015f;
+        public float CooldownOnAttacking = 0.150f;
+        public float CooldownOnMoving = 0.100f;
         public IDrawAttackRange DrawRanger;
         public Ability Flux;
         public Hero Hero;
