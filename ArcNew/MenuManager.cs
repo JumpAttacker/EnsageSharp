@@ -252,7 +252,7 @@ namespace ArcAnnihilation
             var autoPushingKeys = new Menu("Auto Pushing Hotkey", "Auto Pushing Hotkey");
             var panels = new Menu("Panels", "Panels");
             settings.AddItem(new MenuItem("OrbWalking.Type", "[Orbwalking] move to target").SetValue(false))
-                .SetTooltip("or to mouse");
+                .SetTooltip("or to mouse [working only with orbwalker.[move to target]");
             settings.AddItem(
                 new MenuItem("OrbWalking.Range", "[Orbwalking] min range").SetValue(new Slider(50, 10, 1000)));
             settings.AddItem(
