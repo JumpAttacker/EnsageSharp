@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Specialized;
 using System.Threading;
 using ArcAnnihilation.Manager;
@@ -8,11 +7,8 @@ using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
-using Ensage.Common.Threading;
 using Ensage.SDK.Helpers;
 using Ensage.SDK.Inventory;
-using Ensage.SDK.Service;
-using SharpDX;
 
 namespace ArcAnnihilation
 {
@@ -23,17 +19,7 @@ namespace ArcAnnihilation
         public static UnitBase MainHero;
         public static UnitBase TempestHero;
 
-        static Core()
-        {
-            /*var manager = new InventoryManager(new EnsageServiceContext(ObjectManager.LocalHero));
-            manager.CollectionChanged += (sender, args) =>
-            {
-                if (args.Action == NotifyCollectionChangedAction.Add)
-                {
-                    var newItem = args.NewItems[0];
-                }
-            };*/
-        }
+        private static bool _disableFunc;
 
         public static void Init()
         {
@@ -44,43 +30,31 @@ namespace ArcAnnihilation
             MainHero = new MainHero();
             MainHero.Init();
             AutoMidas.GetNewInstance(MainHero);
-            UpdateManager.BeginInvoke(() => { UpdateManager.Subscribe(OnUpdate, 250); },100);
+            UpdateManager.BeginInvoke(() => { UpdateManager.Subscribe(OnUpdate, 250); }, 100);
 //            DelayAction.Add(100,() => GameDispatcher.OnUpdate += GameDispatcherOnOnUpdate);
 
-            UpdateManager.Subscribe(TempestUpdater,500);
+            UpdateManager.Subscribe(TempestUpdater, 500);
             var manager = Program.GetContext.Inventory;
             foreach (var item in manager.Inventory.Items)
-            {
                 if (MenuManager.Items.ContainsKey(item.Id.ToString()))
-                {
                     MenuManager.AddNewItem(item.Id);
-                }
-            }
             manager.CollectionChanged += (sender, args) =>
             {
                 if (args.Action == NotifyCollectionChangedAction.Add)
                 {
                     foreach (InventoryItem iitem in args.NewItems)
-                    {
                         if (MenuManager.Items.ContainsKey(iitem.Id.ToString()))
-                        {
                             MenuManager.AddNewItem(iitem.Id);
-                        }
-                    }
                 }
                 else if (args.Action == NotifyCollectionChangedAction.Remove)
                 {
                     foreach (InventoryItem iitem in args.OldItems)
-                    {
                         if (MenuManager.Items.ContainsKey(iitem.Id.ToString()))
-                        {
                             MenuManager.RemoveOldItem(iitem.Id);
-                        }
-                    }
                 }
             };
         }
-        
+
         private static void TempestUpdater()
         {
             if (TempestManager.Tempest != null && TempestManager.Tempest.IsValid)
@@ -96,7 +70,6 @@ namespace ArcAnnihilation
                     if (MenuManager.IsAutoPushPanelEnable)
                         PushLaneSelector.GetInstance().Load();
                 });
-
             }
         }
 
@@ -118,7 +91,6 @@ namespace ArcAnnihilation
             }
         }
 
-        private static bool _disableFunc;
         public static void ComboStatusChanger(object sender, OnValueChangeEventArgs e)
         {
             if (_disableFunc)
@@ -127,7 +99,7 @@ namespace ArcAnnihilation
             if (e.GetNewValue<KeyBind>().Active)
             {
                 var menu = sender as MenuItem;
-                if (menu==null)
+                if (menu == null)
                     return;
                 OrderManager.Orders.AutoPushing.ParticleManager.Remove("targetting_range");
                 if (menu.Equals(MenuManager.DefaultCombo))
@@ -166,6 +138,7 @@ namespace ArcAnnihilation
                 {
                     OrderManager.ChangeOrder(OrderManager.Orders.Idle);
                 }
+
                 /*if (!_loaded)
                 {
                     _loaded = true;
@@ -177,18 +150,16 @@ namespace ArcAnnihilation
                 var menu = sender as MenuItem;
                 if (menu == null)
                     return;
-                if (menu.Equals(MenuManager.SummonAndPushing) || menu.Equals(MenuManager.SummonAndCombo))
-                {
-                    return;
-                }
+                if (menu.Equals(MenuManager.SummonAndPushing) || menu.Equals(MenuManager.SummonAndCombo)) return;
                 if (ComboToken != null)
                 {
                     ComboToken?.Cancel();
                     ComboToken?.Dispose();
                     ComboToken = null;
                 }
+
                 Target = null;
-                
+
                 if (menu.Equals(MenuManager.DefaultCombo))
                 {
                     OrderManager.ChangeOrder(OrderManager.Orders.Idle);
@@ -214,6 +185,7 @@ namespace ArcAnnihilation
                 {
                     OrderManager.ChangeOrder(OrderManager.Orders.Idle);
                 }
+
                 FlushHotkeys();
             }
         }
@@ -222,10 +194,13 @@ namespace ArcAnnihilation
         {
             _disableFunc = true;
             MenuManager.DefaultCombo.SetValue(new KeyBind(MenuManager.DefaultCombo.GetValue<KeyBind>().Key));
-            MenuManager.TempestCombo.SetValue(new KeyBind(MenuManager.TempestCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
+            MenuManager.TempestCombo.SetValue(new KeyBind(MenuManager.TempestCombo.GetValue<KeyBind>().Key,
+                KeyBindType.Toggle));
             MenuManager.SparkSpamCombo.SetValue(new KeyBind(MenuManager.SparkSpamCombo.GetValue<KeyBind>().Key));
-            MenuManager.SparkSpamTempestOnlyCombo.SetValue(new KeyBind(MenuManager.SparkSpamTempestOnlyCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
-            MenuManager.AutoPushingCombo.SetValue(new KeyBind(MenuManager.AutoPushingCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
+            MenuManager.SparkSpamTempestOnlyCombo.SetValue(
+                new KeyBind(MenuManager.SparkSpamTempestOnlyCombo.GetValue<KeyBind>().Key, KeyBindType.Toggle));
+            MenuManager.AutoPushingCombo.SetValue(new KeyBind(MenuManager.AutoPushingCombo.GetValue<KeyBind>().Key,
+                KeyBindType.Toggle));
             _disableFunc = false;
         }
     }

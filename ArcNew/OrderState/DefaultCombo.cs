@@ -7,6 +7,7 @@ namespace ArcAnnihilation.OrderState
     {
         public override bool NeedTarget => true;
         public override bool CanBeExecuted => MenuManager.DefaultCombo.GetValue<KeyBind>().Active;
+
         public override void Execute()
         {
             if (Core.MainHero.CanCallCombo)

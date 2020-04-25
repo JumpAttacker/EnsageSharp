@@ -12,7 +12,7 @@ namespace ArcAnnihilation.Panels
     {
         private static InfoPanel _panel;
         private bool _loaded;
-        
+
         private void OnDrawing(EventArgs args)
         {
             if (!MenuManager.IsEnable)
@@ -25,7 +25,7 @@ namespace ArcAnnihilation.Panels
             var isSparkSpam = OrderManager.CurrentOrder as SparkSpam;
             var isSparkSpamTempest = OrderManager.CurrentOrder as SparkSpamTempest;
             var isTempestCombo = OrderManager.CurrentOrder as TempestCombo;
-            var startPos = MenuManager.GetInfoPanelPosition;//new Vector2(10, 350);
+            var startPos = MenuManager.GetInfoPanelPosition; //new Vector2(10, 350);
             var tSize = new Vector2(MenuManager.GetInfoPanelSize);
             if (MenuManager.InfoPanelCanBeMovedByMouse)
             {
@@ -36,6 +36,7 @@ namespace ArcAnnihilation.Panels
                     return;
                 }
             }
+
             if (isAutoPushing != null && !PushLaneSelector.GetInstance().Loaded)
             {
                 var lane = isAutoPushing.CurrentLane;
@@ -47,7 +48,7 @@ namespace ArcAnnihilation.Panels
             else if (isDefaultCombo != null)
             {
                 var target = Core.MainHero.Orbwalker.GetTarget();
-                var size = DrawText($"Default Combo", tSize, startPos);
+                var size = DrawText("Default Combo", tSize, startPos);
 
                 if (target != null)
                 {
@@ -57,8 +58,8 @@ namespace ArcAnnihilation.Panels
             }
             else if (isTempestCombo != null)
             {
-                var size = DrawText($"Tempest Combo", tSize, startPos);
-                if (Core.TempestHero==null)
+                var size = DrawText("Tempest Combo", tSize, startPos);
+                if (Core.TempestHero == null)
                     return;
                 var target = Core.Target;
                 if (target != null)
@@ -69,13 +70,14 @@ namespace ArcAnnihilation.Panels
             }
             else if (isSparkSpam != null)
             {
-                DrawText($"Spark Spam", tSize, startPos);
+                DrawText("Spark Spam", tSize, startPos);
             }
             else if (isSparkSpamTempest != null)
             {
-                DrawText($"[Tempest] Spark Spam", tSize, startPos);
+                DrawText("[Tempest] Spark Spam", tSize, startPos);
             }
         }
+
         public void Load()
         {
             if (_loaded) return;
@@ -107,18 +109,15 @@ namespace ArcAnnihilation.Panels
                 FontFlags.AntiAlias | FontFlags.StrikeOut);
             return textSize;
         }
+
         private static Vector2 DrawHeroIcon(Unit target, Vector2 size, Vector2 startPos)
         {
             var extra = new Vector2(size.X / 3, 0);
             var finalSize = size + extra;
             if (target is Hero)
-            {
                 Drawing.DrawRect(startPos, finalSize, Textures.GetHeroTexture(target.StoredName()));
-            }
             else
-            {
                 Drawing.DrawRect(startPos, finalSize, new Color(0, 155, 255));
-            }
             Drawing.DrawRect(startPos, finalSize, new Color(0, 0, 0, 255), true);
             return finalSize;
         }

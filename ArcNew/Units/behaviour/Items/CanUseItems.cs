@@ -35,7 +35,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
             if (unitBase is Tempest)
             {
                 var ability = unitBase.Hero.GetItemById(ItemId.item_sphere);
-                if (ability!=null && ability.CanBeCasted() && ability.CanHit(Core.MainHero.Hero))
+                if (ability != null && ability.CanBeCasted() && ability.CanHit(Core.MainHero.Hero))
                 {
                     ability.UseAbility(Core.MainHero.Hero);
                     var delayTime = ability.GetAbilityDelay();
@@ -43,6 +43,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                         $"[{unitBase}][Linken] To main hero-> ({delayTime})");
                     await Await.Delay(delayTime, Core.ComboToken.Token);
                 }
+
                 if (OrderManager.CurrentOrder is DefaultCombo)
                 {
                     ability = unitBase.Hero.GetItemById(ItemId.item_solar_crest) ??
@@ -66,10 +67,11 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     Printer.Log($"cant use {ability.Name} to {Core.Target.Name}");
                     continue;
                 }
+
                 var canHit = (ability.Id == AbilityId.item_blink
-                                 ? unitBase.Hero.Distance2D(Core.Target) - MenuManager.GetBlinkExtraRange <
-                                   (MenuManager.BlinkUseExtraRange ? ability.TravelDistance() : 50000)
-                                 : ability.CanHit(Core.Target)) || _afterBlink.Sleeping;
+                    ? unitBase.Hero.Distance2D(Core.Target) - MenuManager.GetBlinkExtraRange <
+                      (MenuManager.BlinkUseExtraRange ? ability.TravelDistance() : 50000)
+                    : ability.CanHit(Core.Target)) || _afterBlink.Sleeping;
                 var isNoTarget = ability.IsAbilityBehavior(AbilityBehavior.NoTarget) &&
                                  (unitBase.Hero.Distance2D(Core.Target) <= 750 || ability.IsInvis());
                 if (!canHit && !isNoTarget)
@@ -77,6 +79,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     Printer.Both($"{ability.Name} cant hit target!");
                     continue;
                 }
+
                 /*if (isNoTarget && unitBase.Hero.Distance2D(Core.Target)>=800)
                     continue;*/
                 // if (canHit || _afterBlink)
@@ -85,6 +88,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     Printer.Both($"{ability.Name} cant cast, cuz under invis!");
                     continue;
                 }
+
                 var delayTime = 0;
                 if (ability.IsAbilityBehavior(AbilityBehavior.NoTarget))
                 {
@@ -92,20 +96,21 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     {
                         var blink = unitBase.Hero.GetItemById(ItemId.item_blink);
                         if (blink != null && blink.CanBeCasted())
-                        {
                             if (MenuManager.SilverEdgeBlocker)
                             {
                                 counter++;
                                 continue;
                             }
-                        }
+
                         _afterInvis.Sleep(500);
                     }
-                    if (ability.Id == AbilityId.item_satanic && UnitExtensions.HealthPercent(unitBase.Hero)>0.7f)
+
+                    if (ability.Id == AbilityId.item_satanic && UnitExtensions.HealthPercent(unitBase.Hero) > 0.7f)
                     {
                         counter++;
                         continue;
                     }
+
                     ability.UseAbility();
                 }
                 else if (ability.IsAbilityBehavior(AbilityBehavior.UnitTarget))
@@ -114,25 +119,28 @@ namespace ArcAnnihilation.Units.behaviour.Items
                     {
                         ability.UseAbility(unitBase.Hero);
                     }
-                    else if (ability.TargetTeamType == TargetTeamType.Enemy || ability.TargetTeamType == TargetTeamType.All ||
-                             ability.TargetTeamType == TargetTeamType.Custom || ability.TargetTeamType == (TargetTeamType) 7)
+                    else if (ability.TargetTeamType == TargetTeamType.Enemy ||
+                             ability.TargetTeamType == TargetTeamType.All ||
+                             ability.TargetTeamType == TargetTeamType.Custom ||
+                             ability.TargetTeamType == (TargetTeamType) 7)
                     {
-                        var amWithAghUnderLinken = Core.Target.ClassId == ClassId.CDOTA_Unit_Hero_AntiMage &&
+                        var amWithAghUnderLinken = (Core.Target as Hero).HeroId == HeroId.npc_dota_hero_antimage &&
                                                    Core.Target.GetItemById(ItemId.item_ultimate_scepter) != null &&
                                                    Core.Target.GetAbilityById(AbilityId.antimage_spell_shield)
                                                        .CanBeCasted();
                         var isDisable = ability.IsDisable();
                         var isLinken = Core.Target.IsLinkensProtected();
                         var retardedAm = isLinken && amWithAghUnderLinken;
-                        if (((isLinken || amWithAghUnderLinken) &&
-                             (isDisable || ability.IsDagon() || ability.Id == AbilityId.item_ethereal_blade ||
-                              ability.Id == AbilityId.item_nullifier)) ||
-                            (retardedAm && (ability.Id == AbilityId.item_orchid ||
-                             ability.Id == AbilityId.item_bloodthorn)))
+                        if ((isLinken || amWithAghUnderLinken) &&
+                            (isDisable || ability.IsDagon() || ability.Id == AbilityId.item_ethereal_blade ||
+                             ability.Id == AbilityId.item_nullifier) ||
+                            retardedAm && (ability.Id == AbilityId.item_orchid ||
+                                           ability.Id == AbilityId.item_bloodthorn))
                         {
                             counter++;
                             continue;
                         }
+
                         if (ability.Id == AbilityId.item_ethereal_blade &&
                             unitBase.GetItems()
                                 .Any(
@@ -151,34 +159,38 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                 Core.Target.HasModifiers(
                                     new[] {"modifier_slark_dark_pact", "modifier_slark_dark_pact_pulses"}, false);
                             var lotusMid = Core.Target.HasModifier("modifier_item_lotus_orb_active");
-                            if ((slarkMod || lotusMid) && isDisable && ability.Id!=AbilityId.item_sheepstick)
+                            if ((slarkMod || lotusMid) && isDisable && ability.Id != AbilityId.item_sheepstick)
                             {
                                 counter++;
                                 continue;
                             }
+
                             if (ability.Id == AbilityId.item_sheepstick && GlobalHexSleeper.Sleeping)
                             {
                                 counter++;
                                 continue;
                             }
+
                             if ((ability.Id == AbilityId.item_orchid ||
                                  ability.Id == AbilityId.item_bloodthorn) && GlobalOrchidSleeper.Sleeping)
                             {
                                 counter++;
                                 continue;
                             }
+
                             if (isDisable)
                             {
                                 if (Core.Target.IsUnitState(UnitState.Stunned) ||
                                     Core.Target.IsUnitState(UnitState.Hexed))
                                 {
                                     var time = Ensage.Common.Utils.DisableDuration(Core.Target);
-                                    if (time >= 0.35f + Game.Ping/1000)
+                                    if (time >= 0.35f + Game.Ping / 1000)
                                     {
                                         counter++;
                                         continue;
                                     }
                                 }
+
                                 ability.UseAbility(Core.Target);
                                 GlobalHexSleeper.Sleep(800);
                             }
@@ -194,8 +206,10 @@ namespace ArcAnnihilation.Units.behaviour.Items
                                         counter++;
                                         continue;
                                     }
+
                                     GlobalOrchidSleeper.Sleep(800);
                                 }
+
                                 ability.UseAbility(Core.Target);
                             }
                         }
@@ -219,6 +233,7 @@ namespace ArcAnnihilation.Units.behaviour.Items
                             counter++;
                             continue;
                         }
+
                         ability.UseAbility(pos);
                         await Task.Delay((int) MenuManager.GetBlinkExtraDelay, Core.ComboToken.Token);
                     }
@@ -227,12 +242,14 @@ namespace ArcAnnihilation.Units.behaviour.Items
                         ability.UseAbility(Core.Target.Position);
                     }
                 }
+
                 delayTime = ability.GetAbilityDelay(Core.Target);
                 Printer.Both(
                     $"[{unitBase}][item] {ability.Name} ({delayTime}) [After Blink: {_afterBlink.Sleeping}] [{ability.TravelDistance()}]");
                 await Await.Delay(delayTime, Core.ComboToken.Token);
                 //await Task.Delay(150, Core.ComboToken.Token);
             }
+
             Printer.Log("now we can use abilities -> " + (unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter));
             return unitBase.GetItems().Count(x => x.CanBeCasted()) <= counter;
         }

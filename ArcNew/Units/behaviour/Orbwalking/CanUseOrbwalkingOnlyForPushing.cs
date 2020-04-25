@@ -1,7 +1,6 @@
 namespace ArcAnnihilation.Units.behaviour.Orbwalking
 {
-    class CanUseOrbwalkingOnlyForPushing : ICanUseOrbwalking
+    internal class CanUseOrbwalkingOnlyForPushing : ICanUseOrbwalking
     {
-
     }
 }

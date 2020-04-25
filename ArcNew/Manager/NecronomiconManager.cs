@@ -16,7 +16,8 @@ namespace ArcAnnihilation.Manager
             ObjectManager.OnAddEntity += args =>
             {
                 var hero = args.Entity as Unit;
-                if (hero == null || !hero.IsValid || hero.Team != Core.MainHero.Hero.Team || !hero.IsControllable) return;
+                if (hero == null || !hero.IsValid || hero.Team != Core.MainHero.Hero.Team ||
+                    !hero.IsControllable) return;
 
                 if (hero.Name.Contains("npc_dota_necronomicon_warrior") ||
                     hero.Name.Contains("npc_dota_necronomicon_archer"))
@@ -33,6 +34,7 @@ namespace ArcAnnihilation.Manager
                         necr = new MeleeNecr(hero);
                         Printer.Both("added [Melee] Necronomicon: " + hero.Name);
                     }
+
                     necr.Init();
                     GetNecronomicons.Add(necr);
                 }
@@ -62,13 +64,13 @@ namespace ArcAnnihilation.Manager
             };
         }
 
+        public static List<Necronomicon> GetNecronomicons { get; private set; }
+
+        public static List<RangeNecr> GetRangeNecronomicons { get; private set; }
+
         public static NecronomiconManager GetNecronomiconManager()
         {
             return _necronomiconManager ?? (_necronomiconManager = new NecronomiconManager());
         }
-
-        public static List<Necronomicon> GetNecronomicons { get; private set; }
-
-        public static List<RangeNecr> GetRangeNecronomicons { get; private set; }
     }
 }

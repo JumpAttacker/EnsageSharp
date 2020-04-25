@@ -9,9 +9,10 @@ namespace ArcAnnihilation
 {
     public class AutoMidas
     {
+        public UnitBase Base;
         public Hero Me;
         public Item Midas;
-        public UnitBase Base;
+
         public AutoMidas(UnitBase me)
         {
             Base = me;
@@ -80,6 +81,7 @@ namespace ArcAnnihilation
                 Midas = Me.GetItemById(ItemId.item_hand_of_midas);
                 return;
             }
+
             if (Midas.CanBeCasted())
             {
                 var creep =
@@ -89,11 +91,9 @@ namespace ArcAnnihilation
                                 !x.IsMagicImmune() && x.IsSpawned)
                         .OrderByDescending(x => x.Health).FirstOrDefault();
                 if (creep != null)
-                {
                     Midas.UseAbility(creep);
-                    /*Printer.Log(
+                /*Printer.Log(
                         $"AutoMidas -> {creep.Name} ({creep.Health}/{creep.MaximumHealth}) (id: {creep.Handle})");*/
-                }
             }
         }
 

@@ -24,6 +24,7 @@ namespace ArcAnnihilation.Units
             OrbwalkingBehaviour = new CanUseOrbwalking();
             DrawRanger = new DrawAttackRange();
         }
+
         public bool IsValid => Hero != null && Hero.IsValid;
 
         public override void InitAbilities()
@@ -36,17 +37,16 @@ namespace ArcAnnihilation.Units
         public override void MoveAction(Unit target)
         {
             var time = Game.RawGameTime;
-            if (time - LastMoveOrderIssuedTime < CooldownOnMoving)
-            {
-                return;
-            }
+            if (time - LastMoveOrderIssuedTime < CooldownOnMoving) return;
             LastMoveOrderIssuedTime = Game.RawGameTime;
             if (target != null)
                 if (target.IsVisible)
                 {
                     var targetPos = target.NetworkPosition;
                     if (Hero.Distance2D(targetPos) >= Math.Min(MenuManager.OrbWalkingRange, Hero.GetAttackRange()))
+                    {
                         Hero.Move(targetPos);
+                    }
                     else if (MenuManager.OrbWalkerGoBeyond)
                     {
                         var pos = (targetPos - Hero.Position).Normalized();
@@ -66,7 +66,7 @@ namespace ArcAnnihilation.Units
 
         public override IEnumerable<Item> GetItems()
         {
-            var items = Hero.Inventory.Items.Where(x=>AbilityChecker.IsItemEnabled(x.Id));
+            var items = Hero.Inventory.Items.Where(x => AbilityChecker.IsItemEnabled(x.Id));
             if (MenuManager.CustomComboPriorityTempest)
                 items = items.OrderBy(x => MenuManager.GetItemOrderTempest(x.Id));
             return items;

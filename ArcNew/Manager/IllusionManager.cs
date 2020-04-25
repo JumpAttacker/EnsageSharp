@@ -20,7 +20,8 @@ namespace ArcAnnihilation.Manager
                 DelayAction.Add(150, () =>
                 {
                     var hero = args.Entity as Hero;
-                    if (hero == null || !hero.IsIllusion || hero.Team != Core.MainHero.Hero.Team || !hero.IsControllable ||
+                    if (hero == null || !hero.IsIllusion || hero.Team != Core.MainHero.Hero.Team ||
+                        !hero.IsControllable ||
                         hero.HasModifier("modifier_kill")) return;
 
                     Printer.Both("added illusion: " + hero.Name);
@@ -37,7 +38,6 @@ namespace ArcAnnihilation.Manager
 
                 if (args.PropertyName != "m_iHealth") return;
 
-                
 
                 if (args.NewValue == 0)
                 {
@@ -52,11 +52,11 @@ namespace ArcAnnihilation.Manager
             };
         }
 
+        public static List<Illusion> GetIllusions { get; private set; }
+
         public static IllusionManager GetCreepManager()
         {
             return _illusionManager ?? (_illusionManager = new IllusionManager());
         }
-
-        public static List<Illusion> GetIllusions { get; private set; }
     }
 }

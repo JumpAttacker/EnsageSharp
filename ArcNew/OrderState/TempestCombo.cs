@@ -7,6 +7,7 @@ namespace ArcAnnihilation.OrderState
     {
         public override bool CanBeExecuted => MenuManager.TempestCombo.GetValue<KeyBind>().Active;
         public override bool NeedTarget => true;
+
         public override void Execute()
         {
             if (Core.TempestHero != null && Core.TempestHero.CanCallCombo)

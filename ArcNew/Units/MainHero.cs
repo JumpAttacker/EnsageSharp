@@ -39,10 +39,7 @@ namespace ArcAnnihilation.Units
         public override void MoveAction(Unit target)
         {
             var time = Game.RawGameTime;
-            if (time - LastMoveOrderIssuedTime < CooldownOnMoving)
-            {
-                return;
-            }
+            if (time - LastMoveOrderIssuedTime < CooldownOnMoving) return;
             LastMoveOrderIssuedTime = Game.RawGameTime;
             if (MenuManager.OrbWalkType && target != null)
             {
@@ -60,25 +57,26 @@ namespace ArcAnnihilation.Units
                 }
             }
             else
+            {
                 Hero.Move(Game.MousePosition);
+            }
         }
 
         public override async Task UseAbilities(CancellationToken cancellationToken)
         {
             if (TempestDouble.CanBeCasted() && AbilityChecker.IsAbilityEnabled(TempestDouble.Id))
-            {
                 if (TempestManager.Tempest == null || !TempestManager.Tempest.IsValid || !Core.TempestHero.IsAlive)
                 {
                     TempestDouble.UseAbility();
                     await Task.Delay(TempestDouble.GetAbilityDelay(), cancellationToken);
                 }
-            }
+
             await AbilitiesBehaviour.UseAbilities(this);
         }
 
         public override IEnumerable<Item> GetItems()
         {
-            var items=Hero.Inventory.Items.Where(x=>AbilityChecker.IsItemEnabled(x.Id));
+            var items = Hero.Inventory.Items.Where(x => AbilityChecker.IsItemEnabled(x.Id));
             if (MenuManager.CustomComboPriorityHero)
                 items = items.OrderBy(x => MenuManager.GetItemOrderHero(x.Id));
             return items;

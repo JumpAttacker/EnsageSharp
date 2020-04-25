@@ -8,12 +8,15 @@ namespace ArcAnnihilation.Manager
 {
     internal class TempestManager
     {
+        public static Hero Tempest { get; set; }
+
         public static void Fresh()
         {
             Tempest =
                 EntityManager<Hero>.Entities
                     .FirstOrDefault(
-                        x => x != null && x.IsValid && x.Team == ObjectManager.LocalHero.Team && x.IsAlive && x.HasModifier("modifier_kill"));
+                        x => x != null && x.IsValid && x.Team == ObjectManager.LocalHero.Team && x.IsAlive &&
+                             x.HasModifier("modifier_kill"));
             if (Tempest == null || !Tempest.IsValid)
                 UpdateManager.Subscribe(TempestUpdater, 100);
         }
@@ -35,7 +38,5 @@ namespace ArcAnnihilation.Manager
                 }
             }
         }
-
-        public static Hero Tempest { get; set; }
     }
 }

@@ -1,52 +1,47 @@
 ﻿using System;
 using System.Linq;
-using System.Windows.Forms;
 using ArcAnnihilation.OrderState;
 using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common.Menu;
 using Ensage.SDK.Input;
 using SharpDX;
-using MouseButtons = Ensage.SDK.Input.MouseButtons;
-using MouseEventArgs = Ensage.SDK.Input.MouseEventArgs;
 
 namespace ArcAnnihilation.Panels
 {
     public class PushLaneSelector : Movable
     {
-        public class Button
-        {
-            public string Text;
-            public Vector2 Position;
-            public Vector2 Size;
-            public bool UnderMouse;
-            public bool Active;
-
-            public Button(string text, Vector2 position, Vector2 size)
-            {
-                Text = text;
-                Position = position;
-                Size = size;
-            }
-            public Button(string text, bool active=false)
-            {
-                Text = text;
-                Active = active;
-            }
-        }
-        private static PushLaneSelector _panel;
-        public bool Loaded;
-        public string GetSelectedLane => _buttons.FirstOrDefault(x => x.Active)?.Text;
         public enum LanesType
         {
-            AutoPushing, OnlyTop, OnlyMid, OnlyBot
+            AutoPushing,
+            OnlyTop,
+            OnlyMid,
+            OnlyBot
         }
+
+        private static PushLaneSelector _panel;
+        private readonly Button[] _buttons;
+        public bool Loaded;
+
+        public PushLaneSelector()
+        {
+            Input = new InputManager();
+            _buttons = new[]
+            {
+                new Button("Auto Pushing", true),
+                new Button("Only Top"),
+                new Button("Only Mid"),
+                new Button("Only Bot")
+            };
+        }
+
+        public string GetSelectedLane => _buttons.FirstOrDefault(x => x.Active)?.Text;
+
+        private IInputManager Input { get; }
+
         public void SetSelectedLane(LanesType type)
         {
-            foreach (var button in _buttons)
-            {
-                button.Active = false;
-            }
+            foreach (var button in _buttons) button.Active = false;
 
             switch (type)
             {
@@ -66,21 +61,7 @@ namespace ArcAnnihilation.Panels
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
         }
-        private readonly Button[] _buttons;
-        
-        public PushLaneSelector()
-        {
-            Input = new InputManager();
-            _buttons = new[]
-            {
-                new Button("Auto Pushing",true),
-                new Button("Only Top"),
-                new Button("Only Mid"),
-                new Button("Only Bot")
-            };
-        }
 
-        private IInputManager Input { get; }
         private void OnDrawing(EventArgs args)
         {
             if (!MenuManager.IsEnable)
@@ -88,24 +69,17 @@ namespace ArcAnnihilation.Panels
             var canGo = OrderManager.CurrentOrder is AutoPushing || OrderManager.CurrentOrder is Idle;
             if (!canGo && MenuManager.PushLanePanelHide)
                 return;
-            var startPos = MenuManager.GetPushLanePanelPosition;//new Vector2(10, 350);
+            var startPos = MenuManager.GetPushLanePanelPosition; //new Vector2(10, 350);
             var size = MenuManager.GetPushLaneSelectorSize;
             var text = _buttons[0].Text;
             var order = OrderManager.CurrentOrder as AutoPushing;
-            if (_buttons[0].Active && order?.CurrentLane != null)
-            {
-                text += $" {order.CurrentLane}";
-            }
+            if (_buttons[0].Active && order?.CurrentLane != null) text += $" {order.CurrentLane}";
             var textSize = Drawing.MeasureText($"{text}", "Arial",
                 new Vector2(size), FontFlags.None);
             var rectSize = new Vector2(textSize.X, textSize.Y * 4);
             if (MenuManager.PushLanePanelCanBeMovedByMouse)
-            {
                 if (CanMoveWindow(ref startPos, rectSize))
-                {
                     MenuManager.SetPushLanePanelPosition((int) startPos.X, (int) startPos.Y);
-                }
-            }
             Drawing.DrawRect(startPos, rectSize, new Color(0, 0, 0, 155));
             if (OrderManager.CurrentOrder is AutoPushing)
                 Drawing.DrawRect(startPos - new Vector2(1, 1), rectSize + new Vector2(2, 2), new Color(0, 255, 0, 255),
@@ -120,6 +94,7 @@ namespace ArcAnnihilation.Panels
                 button.Size = DrawText(count == 1 ? text : button.Text, new Vector2(size), button);
             }
         }
+
         public void Load()
         {
             if (Loaded) return;
@@ -129,6 +104,7 @@ namespace ArcAnnihilation.Panels
             Input.MouseClick += OnMouseClick;
             Printer.Both($"[{this}] loaded");
         }
+
         public void UnLoad()
         {
             if (!Loaded) return;
@@ -141,7 +117,7 @@ namespace ArcAnnihilation.Panels
 
         private static Vector2 DrawText(string text, Vector2 tSize, Button button)
         {
-            Vector2 startPos = button.Position;
+            var startPos = button.Position;
             var textSize = Drawing.MeasureText(text, "Arial",
                 tSize, FontFlags.None);
             if (Ensage.Common.Utils.IsUnderRectangle(Game.MouseScreenPosition, startPos.X, startPos.Y, textSize.X,
@@ -154,6 +130,7 @@ namespace ArcAnnihilation.Panels
             {
                 button.UnderMouse = false;
             }
+
             var textPos = startPos;
             Drawing.DrawText(
                 text,
@@ -183,8 +160,30 @@ namespace ArcAnnihilation.Panels
             var button = _buttons.FirstOrDefault(x => x.UnderMouse);
             if (button == null) return;
             button.Active = true;
-            foreach (var b in _buttons.Where(x=>!x.UnderMouse))
+            foreach (var b in _buttons.Where(x => !x.UnderMouse))
                 b.Active = false;
+        }
+
+        public class Button
+        {
+            public bool Active;
+            public Vector2 Position;
+            public Vector2 Size;
+            public string Text;
+            public bool UnderMouse;
+
+            public Button(string text, Vector2 position, Vector2 size)
+            {
+                Text = text;
+                Position = position;
+                Size = size;
+            }
+
+            public Button(string text, bool active = false)
+            {
+                Text = text;
+                Active = active;
+            }
         }
     }
 }

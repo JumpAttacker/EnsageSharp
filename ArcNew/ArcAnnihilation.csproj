@@ -39,59 +39,73 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="clipper_library">
-      <HintPath>C:\En\References\clipper_library.dll</HintPath>
+    <Reference Include="clipper_library, Version=1.0.0.0, Culture=neutral, PublicKeyToken=07aeca4266f4b547">
+      <HintPath>F:\En\References\clipper_library.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage, Version=0.0.0.1, Culture=neutral, PublicKeyToken=a41ba14f653257a6, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\En\References\Ensage.dll</HintPath>
+    <Reference Include="Divine.Core, Version=4.0.0.8, Culture=neutral, PublicKeyToken=null">
+      <HintPath>F:\En\References\Divine.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage.Common, Version=1.2.5.6, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\En\References\Ensage.Common.dll</HintPath>
+    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745">
+      <HintPath>F:\En\References\DotNetZip.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage.SDK">
-      <HintPath>C:\En\References\Ensage.SDK.dll</HintPath>
+    <Reference Include="Ensage, Version=0.0.0.1, Culture=neutral, PublicKeyToken=a41ba14f653257a6">
+      <HintPath>F:\En\References\Ensage.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\En\References\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Ensage.Common, Version=1.2.8.6, Culture=neutral, PublicKeyToken=9849de8727708dde">
+      <HintPath>F:\En\References\Ensage.Common.dll</HintPath>
     </Reference>
-    <Reference Include="PlaySharp.Service">
-      <HintPath>C:\En\References\PlaySharp.Service.dll</HintPath>
+    <Reference Include="Ensage.SDK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2a0bb906a796e43b">
+      <HintPath>F:\En\References\Ensage.SDK.dll</HintPath>
     </Reference>
-    <Reference Include="PlaySharp.Toolkit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\En\References\PlaySharp.Toolkit.dll</HintPath>
+    <Reference Include="Microsoft.VisualStudio.Threading, Version=15.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>F:\En\References\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\En\References\SharpDX.dll</HintPath>
+    <Reference Include="Microsoft.VisualStudio.Validation, Version=15.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>F:\En\References\Microsoft.VisualStudio.Validation.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Direct2D1">
-      <HintPath>C:\En\References\SharpDX.Direct2D1.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>F:\En\References\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Direct3D11">
-      <HintPath>C:\En\References\SharpDX.Direct3D11.dll</HintPath>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c">
+      <HintPath>F:\En\References\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Direct3D9, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\En\References\SharpDX.Direct3D9.dll</HintPath>
+    <Reference Include="PlaySharp.Sentry, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1e7fb7ba433d028b">
+      <HintPath>F:\En\References\PlaySharp.Sentry.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.DXGI">
-      <HintPath>C:\En\References\SharpDX.DXGI.dll</HintPath>
+    <Reference Include="PlaySharp.Service, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\PlaySharp.Service.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Mathematics">
-      <HintPath>C:\En\References\SharpDX.Mathematics.dll</HintPath>
+    <Reference Include="PlaySharp.Toolkit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\PlaySharp.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.XInput, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66">
+      <HintPath>F:\En\References\SharpDX.XInput.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.1.37.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\En\References\System.Collections.Immutable.dll</HintPath>
-    </Reference>
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
+      <HintPath>F:\En\References\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />

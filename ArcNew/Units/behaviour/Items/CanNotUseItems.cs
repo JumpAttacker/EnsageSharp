@@ -2,7 +2,7 @@
 
 namespace ArcAnnihilation.Units.behaviour.Items
 {
-    class CanNotUseItems : ICanUseItems
+    internal class CanNotUseItems : ICanUseItems
     {
         public async Task<bool> UseItems(UnitBase unitBase)
         {

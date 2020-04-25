@@ -30,10 +30,7 @@ namespace ArcAnnihilation.Units
         public override void MoveAction(Unit target)
         {
             var time = Game.RawGameTime;
-            if (time - LastMoveOrderIssuedTime < CooldownOnMoving)
-            {
-                return;
-            }
+            if (time - LastMoveOrderIssuedTime < CooldownOnMoving) return;
 
             LastMoveOrderIssuedTime = Game.RawGameTime;
             if (target != null)
@@ -53,7 +50,7 @@ namespace ArcAnnihilation.Units
         public RangeNecr(Unit necr) : base(necr)
         {
             AbilitiesBehaviour = new CanUseAbilitiesNecroArcher();
-            OrbwalkingBehaviour= new CanUseOrbwalking();
+            OrbwalkingBehaviour = new CanUseOrbwalking();
         }
 
         public override async Task Combo(CancellationToken cancellationToken)
@@ -63,12 +60,13 @@ namespace ArcAnnihilation.Units
         }
     }
 
-    class MeleeNecr : Necronomicon
+    internal class MeleeNecr : Necronomicon
     {
         public MeleeNecr(Unit necr) : base(necr)
         {
             OrbwalkingBehaviour = new CanUseOrbwalkingOnlyForPushing();
         }
+
         public override async Task Combo(CancellationToken cancellationToken)
         {
             await TargetFinder(cancellationToken);
@@ -79,7 +77,7 @@ namespace ArcAnnihilation.Units
         {
             if (Orbwalker.CanAttack(Core.Target))
                 Necr.Attack(Core.Target);
-            await Await.Delay(250,cancellationToken);
+            await Await.Delay(250, cancellationToken);
         }
     }
 }

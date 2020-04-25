@@ -55,10 +55,7 @@ namespace ArcAnnihilation.Units.behaviour.Orders
             var pos = Game.MousePosition;
             while (true)
             {
-                if (_myBase.IsAlive)
-                {
-                    CastSpark(_myBase.Hero, pos);
-                }
+                if (_myBase.IsAlive) CastSpark(_myBase.Hero, pos);
                 await Task.Delay(500, Core.ComboToken.Token);
             }
         }
@@ -66,10 +63,7 @@ namespace ArcAnnihilation.Units.behaviour.Orders
         private void CastSpark(Hero me, Vector3 pos)
         {
             var spark = me.GetAbilityById(AbilityId.arc_warden_spark_wraith);
-            if (spark.CanBeCasted())
-            {
-                spark.UseAbility(pos);
-            }
+            if (spark.CanBeCasted()) spark.UseAbility(pos);
         }
     }
 }

@@ -6,7 +6,6 @@ using ArcAnnihilation.Utils;
 using Ensage;
 using Ensage.Common.Menu;
 using SharpDX;
-using AbilityId = Ensage.AbilityId;
 
 namespace ArcAnnihilation
 {
@@ -97,63 +96,6 @@ namespace ArcAnnihilation
         public static float GetInfoPanelSize => GetSlider("InfoPanel.Size");
         public static float GetPushLaneSelectorSize => GetSlider("PushLaneSelector.Size");
         public static bool UseTravels => GetBool("AutoPushing.Travels");
-        public static bool IsAbilityEnabledTempest(AbilityId id) => GetToggle("spellTempest", id.ToString());
-        public static bool IsAbilityEnabled(AbilityId id) => GetToggle("spellHero", id.ToString());
-
-        /*public static bool IsItemEnabledTempest(ItemId id) =>
-            GetToggle("itemTempestEnable",
-                id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
-                    ? ItemId.item_necronomicon.ToString()
-                    : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
-                      id == ItemId.item_dagon_5
-                        ? ItemId.item_dagon.ToString()
-                        : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());*/
-
-        public static bool IsItemEnabledTempest(AbilityId id) => GetToggle("itemTempestEnable", id.ToString());
-        public static bool IsItemEnabled(AbilityId id) => GetToggle("itemHeroEnable", id.ToString());
-        /*public static bool IsItemEnabled(ItemId id) =>
-            GetToggle("itemHeroEnable",
-                id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
-                    ? ItemId.item_necronomicon.ToString()
-                    : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
-                      id == ItemId.item_dagon_5
-                        ? ItemId.item_dagon.ToString()
-                        : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());*/
-
-        /*public static uint GetItemOrderHero(ItemId id) => GetPriority("itemHero",
-            id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
-                ? ItemId.item_necronomicon
-                : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
-                  id == ItemId.item_dagon_5
-                    ? ItemId.item_dagon
-                    : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);*/
-
-        public static uint GetItemOrderTempest(AbilityId id) => GetPriority("itemTempest", id);
-        public static uint GetItemOrderHero(AbilityId id) => GetPriority("itemHero", id);
-        /*public static uint GetItemOrderTempest(ItemId id) => GetPriority("itemTempest",
-            id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
-                ? ItemId.item_necronomicon
-                : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
-                  id == ItemId.item_dagon_5
-                    ? ItemId.item_dagon
-                    : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);*/
-
-        public static void SetPushLanePanelPosition(int x, int y)
-        {
-            Menu.Item("PushLaneSelector.X").SetValue(new Slider(x, 0, 2000));
-            Menu.Item("PushLaneSelector.Y").SetValue(new Slider(y, 0, 2000));
-        }
-        public static void SetInfoPanelPosition(int x, int y)
-        {
-            Menu.Item("InfoPanel.X").SetValue(new Slider(x, 0, 2000));
-            Menu.Item("InfoPanel.Y").SetValue(new Slider(y, 0, 2000));
-        }
-        public static void SetItemPanelPosition(int x, int y)
-        {
-            Menu.Item("ItemPanel.X").SetValue(new Slider(x, 0, 2000));
-            Menu.Item("ItemPanel.Y").SetValue(new Slider(y, 0, 2000));
-        }
-
 
 
         public static bool PushLanePanelCanBeMovedByMouse => GetBool("PushLaneSelector.Moving");
@@ -161,10 +103,13 @@ namespace ArcAnnihilation
         public static bool ItemPanelCanBeMovedByMouse => GetBool("ItemPanel.Moving");
         public static bool AutoMidas => GetBool("AutoMidas.Enable");
         public static bool PushLanePanelHide => GetBool("PushLaneSelector.Hide");
+
         public static Vector2 GetPushLanePanelPosition
             => new Vector2(GetSlider("PushLaneSelector.X"), GetSlider("PushLaneSelector.Y"));
+
         public static Vector2 GetInfoPanelPosition
             => new Vector2(GetSlider("InfoPanel.X"), GetSlider("InfoPanel.Y"));
+
         public static Vector2 GetItemPanelPosition
             => new Vector2(GetSlider("ItemPanel.X"), GetSlider("ItemPanel.Y"));
 
@@ -185,12 +130,94 @@ namespace ArcAnnihilation
         public static bool IsSummmoningAndCombing => GetKey("Combo.SummonAndCombo.Key");
         public static bool IsSummmoningAndPushing => GetKey("Combo.SummonAndPushing.Key");
         public static float GetBlinkExtraDelay => GetSlider("Blink.ExtraDelay");
+
+        public static bool IsAbilityEnabledTempest(AbilityId id)
+        {
+            return GetToggle("spellTempest", id.ToString());
+        }
+
+        public static bool IsAbilityEnabled(AbilityId id)
+        {
+            return GetToggle("spellHero", id.ToString());
+        }
+
+        /*public static bool IsItemEnabledTempest(ItemId id) =>
+            GetToggle("itemTempestEnable",
+                id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
+                    ? ItemId.item_necronomicon.ToString()
+                    : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
+                      id == ItemId.item_dagon_5
+                        ? ItemId.item_dagon.ToString()
+                        : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());*/
+
+        public static bool IsItemEnabledTempest(AbilityId id)
+        {
+            return GetToggle("itemTempestEnable", id.ToString());
+        }
+
+        public static bool IsItemEnabled(AbilityId id)
+        {
+            return GetToggle("itemHeroEnable", id.ToString());
+        }
+        /*public static bool IsItemEnabled(ItemId id) =>
+            GetToggle("itemHeroEnable",
+                id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
+                    ? ItemId.item_necronomicon.ToString()
+                    : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
+                      id == ItemId.item_dagon_5
+                        ? ItemId.item_dagon.ToString()
+                        : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade.ToString() : id.ToString());*/
+
+        /*public static uint GetItemOrderHero(ItemId id) => GetPriority("itemHero",
+            id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
+                ? ItemId.item_necronomicon
+                : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
+                  id == ItemId.item_dagon_5
+                    ? ItemId.item_dagon
+                    : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);*/
+
+        public static uint GetItemOrderTempest(AbilityId id)
+        {
+            return GetPriority("itemTempest", id);
+        }
+
+        public static uint GetItemOrderHero(AbilityId id)
+        {
+            return GetPriority("itemHero", id);
+        }
+        /*public static uint GetItemOrderTempest(ItemId id) => GetPriority("itemTempest",
+            id == ItemId.item_necronomicon_2 || id == ItemId.item_necronomicon_3
+                ? ItemId.item_necronomicon
+                : id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 ||
+                  id == ItemId.item_dagon_5
+                    ? ItemId.item_dagon
+                    : id == ItemId.item_diffusal_blade_2 ? ItemId.item_diffusal_blade : id);*/
+
+        public static void SetPushLanePanelPosition(int x, int y)
+        {
+            Menu.Item("PushLaneSelector.X").SetValue(new Slider(x, 0, 2000));
+            Menu.Item("PushLaneSelector.Y").SetValue(new Slider(y, 0, 2000));
+        }
+
+        public static void SetInfoPanelPosition(int x, int y)
+        {
+            Menu.Item("InfoPanel.X").SetValue(new Slider(x, 0, 2000));
+            Menu.Item("InfoPanel.Y").SetValue(new Slider(y, 0, 2000));
+        }
+
+        public static void SetItemPanelPosition(int x, int y)
+        {
+            Menu.Item("ItemPanel.X").SetValue(new Slider(x, 0, 2000));
+            Menu.Item("ItemPanel.Y").SetValue(new Slider(y, 0, 2000));
+        }
+
         public static bool InAnyCombo(ulong key)
-            =>
-                GetKeyId("Combo.Key") == key || GetKeyId("Combo.Tempest.Key") == key ||
-                GetKeyId("Combo.Sparks.Tempest.Key") == key || GetKeyId("Combo.Sparks.Key") == key ||
-                GetKeyId("Combo.AutoPushing.Key") == key;
-            
+        {
+            return GetKeyId("Combo.Key") == key || GetKeyId("Combo.Tempest.Key") == key ||
+                   GetKeyId("Combo.Sparks.Tempest.Key") == key || GetKeyId("Combo.Sparks.Key") == key ||
+                   GetKeyId("Combo.AutoPushing.Key") == key;
+        }
+
 
         public static void Init()
         {
@@ -236,7 +263,7 @@ namespace ArcAnnihilation
                 new MenuItem("AutoSummoning.Pushing", "Cast ultimate on autopusing").SetValue(false));
             settings.AddItem(
                 new MenuItem("AutoSummoning.TempestCombo", "Cast ultimate on tempest combo").SetValue(false));
-            var mf=settings.AddItem(
+            var mf = settings.AddItem(
                 new MenuItem("MagneticField.InFront", "Use Magnetic Field in front of ur hero").SetValue(true));
             var toggle = settings.AddItem(
                 new MenuItem("MagneticField.InFront.ToggleKey", "Toggle for magnetic field setting").SetValue(
@@ -255,7 +282,8 @@ namespace ArcAnnihilation
             settings.AddItem(
                 new MenuItem("AutoMidas.Enable", "Auto midas").SetValue(true));
             var usages = new Menu("Using in combo", "usages");
-            var sparkSettings = new Menu("SparkSettings", "SparkSettings", false, AbilityId.arc_warden_spark_wraith.ToString());
+            var sparkSettings = new Menu("SparkSettings", "SparkSettings", false,
+                AbilityId.arc_warden_spark_wraith.ToString());
             sparkSettings.AddItem(new MenuItem("SparkSettings.Smart", "Smart spark").SetValue(false))
                 .SetTooltip("Use only if target is out of attack range");
             var fluxSettings = new Menu("FluxSettings", "FluxSettings", false, AbilityId.arc_warden_flux.ToString());
@@ -287,12 +315,14 @@ namespace ArcAnnihilation
                 new MenuItem("PushLaneSelector.Y", "Pos Y").SetValue(new Slider(350, 0, 2000)));
             var autoPushingSettings = new Menu("AutoPushing Settings", "AutoPushingSettings");
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.Travels", "Enable travel boots").SetValue(true));
-            autoPushingSettings.AddItem(new MenuItem("AutoPushing.TowerPriority", "Tower priority > creep priority").SetValue(true));
-            autoPushingSettings.AddItem(new MenuItem("AutoPushing.CheckForEnemyCreeps", "[Travels] Check for enemy creeps").SetValue(true));
+            autoPushingSettings.AddItem(new MenuItem("AutoPushing.TowerPriority", "Tower priority > creep priority")
+                .SetValue(true));
+            autoPushingSettings.AddItem(
+                new MenuItem("AutoPushing.CheckForEnemyCreeps", "[Travels] Check for enemy creeps").SetValue(true));
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.AutoTargetting", "Do tempest combo").SetValue(true))
                 .SetTooltip("if you find any target in attack range");
             autoPushingSettings.AddItem(new MenuItem("AutoPushing.AutoPushingTargettingRange", "Auto Targetting range")
-                .SetValue(new Slider(800, 200, 1600))).ValueChanged+= (sender, args) =>
+                .SetValue(new Slider(800, 200, 1600))).ValueChanged += (sender, args) =>
             {
                 if (OrderManager.CurrentOrder is AutoPushing && DrawTargettingRange)
                     OrderManager.Orders.AutoPushing.ParticleManager.DrawRange(Core.TempestHero.Hero, "targetting_range",
@@ -321,9 +351,9 @@ namespace ArcAnnihilation
                     new MenuItem("Blink.ExtraRange", "Extra range").SetValue(new Slider(50, 0, 1200)))
                 .SetTooltip("blink dist(1200 by def) + this value");
             blink.AddItem(
-                    new MenuItem("Blink.ExtraRange.Use", "Use extra range").SetValue(true));
+                new MenuItem("Blink.ExtraRange.Use", "Use extra range").SetValue(true));
             blink.AddItem(
-                    new MenuItem("Blink.BlockSilver", "Dont use silver edge if dagger can be casted").SetValue(true));
+                new MenuItem("Blink.BlockSilver", "Dont use silver edge if dagger can be casted").SetValue(true));
             blink.AddItem(
                 new MenuItem("Blink.MinRange", "Min range for blink").SetValue(new Slider(400, 0, 1000)));
             blink.AddItem(
@@ -338,17 +368,17 @@ namespace ArcAnnihilation
             var itemListTempest = Items.Keys.ToList().ToDictionary(item => item, item => true);
             itemHero.AddItem(
                 new MenuItem("itemHeroEnable", "").SetValue(new AbilityToggler(new Dictionary<string, bool>())));
-                //new MenuItem("itemHeroEnable", "").SetValue(new AbilityToggler(itemListHero)));
+            //new MenuItem("itemHeroEnable", "").SetValue(new AbilityToggler(itemListHero)));
             itemHero.AddItem(new MenuItem("customOrderHero", "Use Custom Order").SetValue(false));
             itemHero.AddItem(new MenuItem("itemHero", "").SetValue(new PriorityChanger(new List<string>())));
             //itemHero.AddItem(new MenuItem("itemHero", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
             itemTempest.AddItem(
                 new MenuItem("itemTempestEnable", "").SetValue(new AbilityToggler(new Dictionary<string, bool>())));
-                //new MenuItem("itemTempestEnable", "").SetValue(new AbilityToggler(itemListTempest)));
+            //new MenuItem("itemTempestEnable", "").SetValue(new AbilityToggler(itemListTempest)));
             itemTempest.AddItem(new MenuItem("customOrderTempest", "Use Custom Order").SetValue(false));
             itemTempest.AddItem(
                 new MenuItem("itemTempest", "").SetValue(new PriorityChanger(new List<string>())));
-                //new MenuItem("itemTempest", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
+            //new MenuItem("itemTempest", "").SetValue(new PriorityChanger(Items.Keys.ToList())));
 
             spellHero.AddItem(new MenuItem("spellHero", "").SetValue(new AbilityToggler(dict)));
             spellTempest.AddItem(new MenuItem("spellTempest", "").SetValue(new AbilityToggler(dict2)));
@@ -396,6 +426,7 @@ namespace ArcAnnihilation
             Menu.Item("itemTempest").GetValue<PriorityChanger>().Add(name);
             Printer.Log($"Add new item -> {item}");
         }
+
         public static void RemoveOldItem(AbilityId item)
         {
             var name = item.ToString();
@@ -415,6 +446,7 @@ namespace ArcAnnihilation
         {
             return Menu.Item(item).GetValue<KeyBind>().Active;
         }
+
         private static uint GetKeyId(string item)
         {
             return Menu.Item(item).GetValue<KeyBind>().Key;

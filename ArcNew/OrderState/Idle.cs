@@ -4,7 +4,6 @@ namespace ArcAnnihilation.OrderState
     {
         public override void Execute()
         {
-            
         }
     }
 }

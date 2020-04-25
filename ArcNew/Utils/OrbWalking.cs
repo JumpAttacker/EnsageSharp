@@ -15,6 +15,13 @@ namespace ArcAnnihilation.Utils
 {
     public class Orbwalker
     {
+        public enum OrbwalkingMode
+        {
+            Idle,
+            Combo,
+            Pushing
+        }
+
         private readonly HashSet<NetworkActivity> _attackActivityList = new HashSet<NetworkActivity>
         {
             NetworkActivity.Attack,
@@ -22,23 +29,23 @@ namespace ArcAnnihilation.Utils
             NetworkActivity.AttackEvent
         };
 
-        public enum OrbwalkingMode
-        {
-            Idle, Combo, Pushing
-        }
+        public UnitBase BasicUnit;
 
         public OrbwalkingMode Mode;
+
         private Orbwalker(UnitBase basic)
         {
             BasicUnit = basic;
             if (basic.Hero != null)
+            {
                 Owner = basic.Hero;
+            }
             else
             {
                 var necr = basic as Necronomicon;
                 if (necr != null) Owner = necr.Necr;
                 else
-                    Printer.Log("cant init "+ basic, true);
+                    Printer.Log("cant init " + basic, true);
             }
         }
 
@@ -56,8 +63,6 @@ namespace ArcAnnihilation.Utils
 
         public Unit Owner { get; set; }
 
-        public UnitBase BasicUnit;
-
         public float TurnEndTime { get; set; }
 
         private ParticleManager EffectManager { get; set; }
@@ -72,10 +77,7 @@ namespace ArcAnnihilation.Utils
         public bool Attack(Unit unit)
         {
             var time = Game.RawGameTime;
-            if (time - LastAttackOrderIssuedTime < BasicUnit.CooldownOnAttacking)
-            {
-                return false;
-            }
+            if (time - LastAttackOrderIssuedTime < BasicUnit.CooldownOnAttacking) return false;
 
             TurnEndTime = Game.RawGameTime + Game.Ping / 2000f + Owner.TurnTime(unit.NetworkPosition) + 0.1f;
             Owner.Attack(unit);
@@ -85,7 +87,8 @@ namespace ArcAnnihilation.Utils
         public bool CanAttack(Unit target)
         {
             var rotationTime = Owner.TurnTime(target.NetworkPosition);
-            return Owner.CanAttack() && Game.RawGameTime + 0.1f + rotationTime + Game.Ping / 2000f - LastAttackTime > 1f / Owner.AttacksPerSecond;
+            return Owner.CanAttack() && Game.RawGameTime + 0.1f + rotationTime + Game.Ping / 2000f - LastAttackTime >
+                   1f / Owner.AttacksPerSecond;
         }
 
         public bool CanMove(Unit target)
@@ -109,11 +112,9 @@ namespace ArcAnnihilation.Utils
                                             unit.IsValid && unit.IsAlive && unit.Team != Owner.Team &&
                                             Owner.IsValidOrbwalkingTarget(unit));
 
-                            if (tower != null)
-                            {
-                                return tower;
-                            }
+                            if (tower != null) return tower;
                         }
+
                         var barracks =
                             ObjectManager.GetEntitiesFast<Building>()
                                 .FirstOrDefault(
@@ -121,10 +122,7 @@ namespace ArcAnnihilation.Utils
                                         unit.IsValid && unit.IsAlive && unit.Team != Owner.Team && !(unit is Tower) &&
                                         Owner.IsValidOrbwalkingTarget(unit) && unit.Name != "portrait_world_unit");
 
-                        if (barracks != null)
-                        {
-                            return barracks;
-                        }
+                        if (barracks != null) return barracks;
 
                         var jungleMob =
                             EntityManager<Creep>.Entities.FirstOrDefault(
@@ -132,10 +130,7 @@ namespace ArcAnnihilation.Utils
                                     unit.IsValid && unit.IsSpawned && unit.IsAlive && unit.IsNeutral &&
                                     Owner.IsValidOrbwalkingTarget(unit));
 
-                        if (jungleMob != null)
-                        {
-                            return jungleMob;
-                        }
+                        if (jungleMob != null) return jungleMob;
 
                         var creep =
                             EntityManager<Creep>.Entities.Where(
@@ -145,10 +140,7 @@ namespace ArcAnnihilation.Utils
                                 .OrderBy(x => x.Health)
                                 .FirstOrDefault();
 
-                        if (creep != null)
-                        {
-                            return creep;
-                        }
+                        if (creep != null) return creep;
                         if (!MenuManager.TowerPriority)
                         {
                             var tower =
@@ -158,11 +150,9 @@ namespace ArcAnnihilation.Utils
                                             unit.IsValid && unit.IsAlive && unit.Team != Owner.Team &&
                                             Owner.IsValidOrbwalkingTarget(unit));
 
-                            if (tower != null)
-                            {
-                                return tower;
-                            }
+                            if (tower != null) return tower;
                         }
+
                         var others =
                             ObjectManager.GetEntitiesFast<Unit>()
                                 .FirstOrDefault(
@@ -171,10 +161,7 @@ namespace ArcAnnihilation.Utils
                                         !unit.IsInvulnerable() && unit.Team != Owner.Team &&
                                         Owner.IsValidOrbwalkingTarget(unit) && unit.ClassId != ClassId.CDOTA_BaseNPC);
 
-                        if (others != null)
-                        {
-                            return others;
-                        }
+                        if (others != null) return others;
                         break;
                     case OrbwalkingMode.Combo:
                         return Core.Target;
@@ -190,16 +177,13 @@ namespace ArcAnnihilation.Utils
 
         public bool Load()
         {
-            if (Initialized)
-            {
-                return false;
-            }
+            if (Initialized) return false;
 
             Initialized = true;
             EffectManager = new ParticleManager();
             if (BasicUnit.DrawRanger is DrawAttackRange)
                 UpdateManager.Subscribe(OnDrawingsUpdate, 1000);
-            
+
 
             Game.OnIngameUpdate += OnOnIngameUpdate;
             Entity.OnInt32PropertyChange += Hero_OnInt32PropertyChange;
@@ -211,10 +195,8 @@ namespace ArcAnnihilation.Utils
         {
             var time = Game.RawGameTime;
             if (time - LastMoveOrderIssuedTime < 5 / 1000f)
-            {
                 // 0.005f
                 return false;
-            }
 
             LastMoveOrderIssuedTime = Game.RawGameTime;
 
@@ -224,10 +206,7 @@ namespace ArcAnnihilation.Utils
 
         public bool Unload()
         {
-            if (!Initialized)
-            {
-                return false;
-            }
+            if (!Initialized) return false;
 
             Initialized = false;
             if (BasicUnit.DrawRanger is DrawAttackRange)
@@ -247,13 +226,11 @@ namespace ArcAnnihilation.Utils
             Mode = OrbwalkingMode.Idle;
 
             var isTempest = BasicUnit as Tempest;
-            if (isTempest != null && (Game.IsPaused || Game.IsChatOpen || !BasicUnit.IsAlive || !isTempest.IsValid))
-            {
-                return;
-            }
+            if (isTempest != null &&
+                (Game.IsPaused || Game.IsChatOpen || !BasicUnit.IsAlive || !isTempest.IsValid)) return;
             if (OrderManager.CurrentOrder == OrderManager.Orders.DefaultCombo ||
-                (OrderManager.CurrentOrder == OrderManager.Orders.TempestCombo && (isTempest != null ||
-                 !(BasicUnit is MainHero))))
+                OrderManager.CurrentOrder == OrderManager.Orders.TempestCombo && (isTempest != null ||
+                                                                                  !(BasicUnit is MainHero)))
             {
                 if (BasicUnit.OrbwalkingBehaviour is CanUseOrbwalking)
                     Mode = OrbwalkingMode.Combo;
@@ -269,13 +246,10 @@ namespace ArcAnnihilation.Utils
                 EffectManager.Remove("attackTarget" + Owner.Handle);
                 return;
             }
-            // turning
-            if (TurnEndTime > Game.RawGameTime)
-            {
-                return;
-            }
-            var target = GetTarget();
 
+            // turning
+            if (TurnEndTime > Game.RawGameTime) return;
+            var target = GetTarget();
             if ((target == null || !CanAttack(target) || UnitExtensions.IsAttackImmune(target)) && CanMove(target))
             {
                 if (BasicUnit.OrbwalkingBehaviour is CanUseOrbwalking)
@@ -293,34 +267,20 @@ namespace ArcAnnihilation.Utils
             if (BasicUnit.OrbwalkingBehaviour is CanUseOrbwalking)
             {
                 if (LastTarget != null && LastTarget.IsValid && LastTarget.IsAlive)
-                {
                     EffectManager.DrawRange(LastTarget, "attackTarget" + Owner.Handle, 60, Color.Red);
-                }
                 else
-                {
                     EffectManager.Remove("attackTarget" + Owner.Handle);
-                }
             }
         }
 
         private void Hero_OnInt32PropertyChange(Entity sender, Int32PropertyChangeEventArgs args)
         {
-            if (!ReferenceEquals(sender, Owner))
-            {
-                return;
-            }
+            if (sender.ClassNetworkId != Owner.ClassNetworkId) return;
+            if (!args.PropertyName.Equals("m_networkactivity", StringComparison.InvariantCultureIgnoreCase)) return;
 
-            if (!args.PropertyName.Equals("m_networkactivity", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return;
-            }
+            var newNetworkActivity = (NetworkActivity) args.NewValue;
 
-            var newNetworkActivity = (NetworkActivity)args.NewValue;
-
-            if (_attackActivityList.Contains(newNetworkActivity))
-            {
-                LastAttackTime = Game.RawGameTime - Game.Ping / 2000f;
-            }
+            if (_attackActivityList.Contains(newNetworkActivity)) LastAttackTime = Game.RawGameTime - Game.Ping / 2000f;
         }
 
         private void OnDrawingsUpdate()

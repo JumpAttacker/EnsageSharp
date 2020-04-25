@@ -4,7 +4,7 @@ using Ensage.Common.Threading;
 
 namespace ArcAnnihilation.Units.behaviour.Abilities
 {
-    class CanUseAbilitiesNecroArcher : ICanUseAbilties
+    internal class CanUseAbilitiesNecroArcher : ICanUseAbilties
     {
         public async Task UseAbilities(UnitBase unitBase)
         {

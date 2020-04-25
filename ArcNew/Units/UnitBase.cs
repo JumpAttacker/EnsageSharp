@@ -12,29 +12,26 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Threading;
-using Orbwalker = ArcAnnihilation.Utils.Orbwalker;
 
 namespace ArcAnnihilation.Units
 {
     public abstract class UnitBase
     {
         public ICanUseAbilties AbilitiesBehaviour;
-        public ICanUseOrbwalking OrbwalkingBehaviour;
-        public ICanUseItems ItemsBehaviour;
         public IAbilityChecker AbilityChecker;
+        public Task ComboTask;
+        public float CooldownOnAttacking = 0.015f;
+        public float CooldownOnMoving = 0.015f;
         public IDrawAttackRange DrawRanger;
         public Ability Flux;
+        public Hero Hero;
+        public ICanUseItems ItemsBehaviour;
+        public float LastMoveOrderIssuedTime;
         public Ability MagneticField;
+        public Orbwalker Orbwalker;
+        public ICanUseOrbwalking OrbwalkingBehaviour;
         public Ability Spark;
         public Ability TempestDouble;
-        public Hero Hero;
-        public Orbwalker Orbwalker;
-        public float LastMoveOrderIssuedTime;
-        public float CooldownOnMoving = 0.015f;
-        public float CooldownOnAttacking = 0.015f;
-        public Task ComboTask;
-        public bool IsAlive => Hero.IsAlive;
-        public bool CanCallCombo => ComboTask == null || ComboTask.IsCanceled || ComboTask.IsCompleted || ComboTask.IsFaulted;
 
         protected UnitBase()
         {
@@ -43,6 +40,12 @@ namespace ArcAnnihilation.Units
             ItemsBehaviour = new CanNotUseItems();
             DrawRanger = new DontDrawAttackRange();
         }
+
+        public bool IsAlive => Hero.IsAlive;
+
+        public bool CanCallCombo =>
+            ComboTask == null || ComboTask.IsCanceled || ComboTask.IsCompleted || ComboTask.IsFaulted;
+
         public void ExTask(Task combo)
         {
             ComboTask = combo;
@@ -55,7 +58,7 @@ namespace ArcAnnihilation.Units
                 Core.Target = TargetSelector.ClosestToMouse(Core.MainHero.Hero, 500);
                 Printer.Both(Core.Target != null
                     ? $"[TargetFinder] new target: {Core.Target.Name} | {Core.Target.Handle}"
-                    : $"[TargetFinder] trying to find target!");
+                    : "[TargetFinder] trying to find target!");
                 await Task.Delay(100, cancellationToken);
             }
         }
@@ -68,11 +71,9 @@ namespace ArcAnnihilation.Units
                 await TargetFinder(cancellationToken);
                 var afterItems = await UseItems(cancellationToken);
                 if (afterItems)
-                {
                     /*if (Hero.GetItemById(ItemId.item_sheepstick) == null ||
-                        !Hero.GetItemById(ItemId.item_sheepstick).CanBeCasted())*/
+                            !Hero.GetItemById(ItemId.item_sheepstick).CanBeCasted())*/
                     await UseAbilities(cancellationToken);
-                }
             }
 
             await Await.Delay(rnd.Next(50, 150), cancellationToken);
@@ -97,20 +98,24 @@ namespace ArcAnnihilation.Units
         public virtual void Init()
         {
             InitAbilities();
-            if (OrbwalkingBehaviour is CanUseOrbwalking || OrbwalkingBehaviour is CanUseOrbwalkingOnlyForPushing)
+            if (OrbwalkingBehaviour is CanUseOrbwalking ||
+                OrbwalkingBehaviour is CanUseOrbwalkingOnlyForPushing)
             {
                 Orbwalker = Orbwalker.GetNewOrbwalker(this);
                 Orbwalker.Load();
             }
+
             try
             {
-                Printer.Both($"[{this}][init] -> [{Hero?.Name}] [{Hero?.Handle}] [{Orbwalker?.GetHashCode()}]");
+                Printer.Both(
+                    $"[{this}][init] -> [{Hero?.Name}] [{Hero?.Handle}] [{Orbwalker?.GetHashCode()}]");
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
         }
+
         public abstract void InitAbilities();
         public abstract void MoveAction(Unit target);
         public abstract IEnumerable<Item> GetItems();

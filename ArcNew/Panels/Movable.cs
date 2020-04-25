@@ -6,10 +6,11 @@ namespace ArcAnnihilation.Panels
 {
     public abstract class Movable
     {
-        private Sleeper _sleeper;
         private Vector2 _globalDif;
-        private bool _isClicked = false;
-        private bool _movableLoaded = false;
+        private bool _isClicked;
+        private bool _movableLoaded;
+        private Sleeper _sleeper;
+
         public void LoadMovable()
         {
             if (_movableLoaded)
@@ -18,6 +19,7 @@ namespace ArcAnnihilation.Panels
             _sleeper = new Sleeper();
             Game.OnWndProc += Game_OnWndProc;
         }
+
         public void UnloadMovable()
         {
             if (!_movableLoaded)
@@ -28,16 +30,13 @@ namespace ArcAnnihilation.Panels
 
         private void Game_OnWndProc(WndEventArgs args)
         {
-            if (Game.IsChatOpen)
-            {
-                return;
-            }
+            if (Game.IsChatOpen) return;
             switch (args.Msg)
             {
-                case (uint)Ensage.Common.Utils.WindowsMessages.WM_LBUTTONUP:
+                case (uint) Ensage.Common.Utils.WindowsMessages.WM_LBUTTONUP:
                     _isClicked = false;
                     break;
-                case (uint)Ensage.Common.Utils.WindowsMessages.WM_LBUTTONDOWN:
+                case (uint) Ensage.Common.Utils.WindowsMessages.WM_LBUTTONDOWN:
                     _isClicked = true;
                     break;
             }
@@ -52,9 +51,9 @@ namespace ArcAnnihilation.Panels
                 Drawing.DrawRect(startPos, size, new Color(0, 0, 0, 155));
                 Drawing.DrawRect(startPos, size, new Color(155, 155, 155, 255), true);
             }
+
             var mPos = Game.MouseScreenPosition;
             if (Ensage.Common.Utils.IsUnderRectangle(mPos, startPos.X, startPos.Y, size.X, size.Y))
-            {
                 if (_isClicked)
                 {
                     if (!_sleeper.Sleeping)
@@ -62,10 +61,11 @@ namespace ArcAnnihilation.Panels
                         _globalDif = mPos - startPos;
                         _sleeper.Sleep(500);
                     }
+
                     startPos = mPos - _globalDif;
                     return true;
                 }
-            }
+
             return false;
         }
     }

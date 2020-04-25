@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcAnnihilation.Units.behaviour.Orbwalking;
 using Ensage;
@@ -12,6 +13,7 @@ namespace ArcAnnihilation.Units
             OrbwalkingBehaviour = new CanUseOrbwalking();
             CooldownOnMoving = 0.05f;
         }
+
         public bool IsValid => Hero != null && Hero.IsValid;
         /*public override void Init()
         {
@@ -23,16 +25,12 @@ namespace ArcAnnihilation.Units
 
         public override void InitAbilities()
         {
-            
         }
 
         public override void MoveAction(Unit target)
         {
             var time = Game.RawGameTime;
-            if (time - LastMoveOrderIssuedTime < CooldownOnMoving)
-            {
-                return;
-            }
+            if (time - LastMoveOrderIssuedTime < CooldownOnMoving) return;
 
             LastMoveOrderIssuedTime = Game.RawGameTime;
             if (target != null)
@@ -41,7 +39,7 @@ namespace ArcAnnihilation.Units
 
         public override IEnumerable<Item> GetItems()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

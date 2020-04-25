@@ -10,22 +10,19 @@ namespace ArcAnnihilation.Units.behaviour.Orders
     {
         protected TaskHandler Handler { get; set; }
 
+        public abstract Task ExecuteAsync(CancellationToken token = default(CancellationToken));
+
+        public bool CanExecute => OrderManager.CanBeExecuted;
+
         public void Execute()
         {
-            if (Handler == null)
-            {
-                Handler = UpdateManager.Run(ExecuteAsync,false);
-            }
+            if (Handler == null) Handler = UpdateManager.Run(ExecuteAsync, false);
             Handler.RunAsync();
         }
-
-        public abstract Task ExecuteAsync(CancellationToken token = default(CancellationToken));
 
         public void Cancel()
         {
             Handler?.Cancel();
         }
-
-        public bool CanExecute => OrderManager.CanBeExecuted;
     }
 }

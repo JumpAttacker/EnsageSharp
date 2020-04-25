@@ -15,16 +15,20 @@ using Ensage.SDK.Helpers;
 using Ensage.SDK.Renderer.Particle;
 using SharpDX;
 using AbilityId = Ensage.AbilityId;
+using EntityExtensions = Ensage.SDK.Extensions.EntityExtensions;
+using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace ArcAnnihilation.OrderState
 {
     public class AutoPushing : Order
     {
-        public override bool CanBeExecuted => MenuManager.AutoPushingCombo.GetValue<KeyBind>().Active;
-        public ParticleManager ParticleManager = new ParticleManager();
         private readonly Sleeper _sleeper;
+
         //public Lane ClosestLane;
         public Map Map;
+        public ParticleManager ParticleManager = new ParticleManager();
+        public string Status;
+
         public AutoPushing()
         {
             Map = new Map();
@@ -35,17 +39,21 @@ namespace ArcAnnihilation.OrderState
             _sleeper = new Sleeper();
         }
 
+        public override bool CanBeExecuted => MenuManager.AutoPushingCombo.GetValue<KeyBind>().Active;
+
         public List<Vector3> TopPath { get; set; }
         public List<Vector3> MidPath { get; set; }
         public List<Vector3> BotPath { get; set; }
-        public string Status;
+
+        public MapArea CurrentLane { get; set; }
+
         public override void Execute()
         {
             if (Core.TempestHero != null && Core.TempestHero.Hero.IsAlive)
             {
-                if (Ensage.SDK.Extensions.UnitExtensions.HasModifier(Core.TempestHero.Hero, "modifier_teleporting"))
+                if (UnitExtensions.HasModifier(Core.TempestHero.Hero, "modifier_teleporting"))
                     return;
-                if (Ensage.SDK.Extensions.UnitExtensions.IsChanneling(Core.TempestHero.Hero))
+                if (UnitExtensions.IsChanneling(Core.TempestHero.Hero))
                     return;
                 if (_sleeper.Sleeping)
                     return;
@@ -53,7 +61,7 @@ namespace ArcAnnihilation.OrderState
                 var currentLane = GetLane(Core.TempestHero.Hero);
                 CurrentLane = currentLane;
                 var target = Core.TempestHero.Orbwalker.GetTarget();
-                if (target==null || target.Position.IsZero || !target.IsAlive)
+                if (target == null || target.Position.IsZero || !target.IsAlive)
                 {
                     var path = FindOrGetNeededPath(Core.TempestHero.Hero);
                     var lastPoint = path[path.Count - 1];
@@ -98,6 +106,7 @@ namespace ArcAnnihilation.OrderState
                                     if (creepForTravels != null)
                                         break;
                                 }
+
                                 if (creepForTravels != null && creepForTravels.Distance2D(Core.TempestHero.Hero) > 1500)
                                 {
                                     var point = path[path.Count - 1];
@@ -115,7 +124,6 @@ namespace ArcAnnihilation.OrderState
                             }
                             else
                             {
-                                
                                 var finalPos = temp.First();
                                 var ally =
                                     EntityManager<Creep>.Entities.Where(
@@ -123,7 +131,7 @@ namespace ArcAnnihilation.OrderState
                                                          allyCreep.Team == ObjectManager.LocalHero.Team &&
                                                          Map.GetLane(allyCreep) == currentLane &&
                                                          allyCreep.HealthPercent() > 0.75)
-                                        .OrderBy(y => Ensage.SDK.Extensions.EntityExtensions.Distance2D(y, finalPos))
+                                        .OrderBy(y => EntityExtensions.Distance2D(y, finalPos))
                                         .FirstOrDefault();
                                 var allyTwr =
                                     EntityManager<Tower>.Entities.Where(
@@ -131,7 +139,7 @@ namespace ArcAnnihilation.OrderState
                                                          allyCreep.Team == ObjectManager.LocalHero.Team &&
                                                          Map.GetLane(allyCreep) == currentLane &&
                                                          allyCreep.HealthPercent() > 0.1)
-                                        .OrderBy(y => Ensage.SDK.Extensions.EntityExtensions.Distance2D(y, finalPos))
+                                        .OrderBy(y => EntityExtensions.Distance2D(y, finalPos))
                                         .FirstOrDefault();
 
                                 Unit tpTarget = null;
@@ -139,15 +147,11 @@ namespace ArcAnnihilation.OrderState
                                 {
                                     var dist1 = finalPos.Distance2D(ally);
                                     var dist2 = finalPos.Distance2D(allyTwr);
-                                    
+
                                     if (dist1 > dist2)
-                                    {
                                         tpTarget = allyTwr;
-                                    }
                                     else
-                                    {
                                         tpTarget = ally;
-                                    }
                                 }
 
                                 if (tpTarget != null && tpTarget.Distance2D(Core.TempestHero.Hero) > 1500)
@@ -155,7 +159,7 @@ namespace ArcAnnihilation.OrderState
                                     var point = path[path.Count - 1];
                                     var distance1 = point.Distance2D(tpTarget);
                                     var distance2 = point.Distance2D(Core.TempestHero.Hero);
-                                    
+
                                     if (distance1 < distance2 || Map.GetLane(Core.TempestHero.Hero) != currentLane)
                                     {
                                         travels.UseAbility(tpTarget.Position);
@@ -170,14 +174,8 @@ namespace ArcAnnihilation.OrderState
 
                     try
                     {
-                        foreach (var illusion in IllusionManager.GetIllusions)
-                        {
-                            illusion.Hero.Move(closest);
-                        }
-                        foreach (var necro in NecronomiconManager.GetNecronomicons)
-                        {
-                            necro.Necr.Move(closest);
-                        }
+                        foreach (var illusion in IllusionManager.GetIllusions) illusion.Hero.Move(closest);
+                        foreach (var necro in NecronomiconManager.GetNecronomicons) necro.Necr.Move(closest);
                     }
                     catch (Exception e)
                     {
@@ -189,7 +187,9 @@ namespace ArcAnnihilation.OrderState
                     Status = $"Pushing{(target is Tower ? " Tower" : "")}";
                     if (Core.TempestHero.Spark.CanBeCasted())
                     {
-                        Printer.Log($"[AutoPushing][Spark][{target.Name} ({target.NetworkName})]->{target.Position.PrintVector()}", true);
+                        Printer.Log(
+                            $"[AutoPushing][Spark][{target.Name} ({target.NetworkName})]->{target.Position.PrintVector()}",
+                            true);
                         if (!target.Position.IsZero)
                         {
                             Core.TempestHero.Spark.UseAbility(target.Position);
@@ -206,7 +206,7 @@ namespace ArcAnnihilation.OrderState
                             EntityManager<Creep>.Entities
                                 .FirstOrDefault(
                                     x =>
-                                         x.IsAlive && x.Team == ObjectManager.LocalHero.Team &&
+                                        x.IsAlive && x.Team == ObjectManager.LocalHero.Team &&
                                         x.IsInRange(Core.TempestHero.Hero, 500) && x.HealthPercent() <= 0.92 &&
                                         x.IsMelee);
                         if (allyCreep != null)
@@ -215,6 +215,7 @@ namespace ArcAnnihilation.OrderState
                             _sleeper.Sleep(500);
                         }
                     }
+
                     itemForPushing = Core.TempestHero.Hero.GetItemById(ItemId.item_manta);
 
                     if (itemForPushing != null && itemForPushing.CanBeCasted())
@@ -231,21 +232,23 @@ namespace ArcAnnihilation.OrderState
                         itemForPushing.UseAbility();
                         _sleeper.Sleep(500);
                     }
+
                     if (Core.TempestHero.Orbwalker.GetTarget() is Tower)
                     {
                         var field = Core.TempestHero.MagneticField;
                         if (field.CanBeCasted())
                         {
                             var pos =
-                            (Core.TempestHero.Orbwalker.GetTarget().NetworkPosition -
-                             Core.TempestHero.Hero.NetworkPosition).Normalized();
-                            pos *= (280 + 150);
+                                (Core.TempestHero.Orbwalker.GetTarget().NetworkPosition -
+                                 Core.TempestHero.Hero.NetworkPosition).Normalized();
+                            pos *= 280 + 150;
                             pos = Core.TempestHero.Orbwalker.GetTarget().NetworkPosition - pos;
                             field.UseAbility(pos);
                             _sleeper.Sleep(1000);
                         }
                     }
                 }
+
                 if (MenuManager.AutoPushingTargetting)
                 {
                     var enemyHero =
@@ -285,28 +288,30 @@ namespace ArcAnnihilation.OrderState
                         var lastPoint = path[path.Count - 1];
                         var closest = path.Where(
                                 x =>
-                                    x.Distance2D(lastPoint) < Core.TempestHero.Hero.Position.Distance2D(lastPoint) - 300)
+                                    x.Distance2D(lastPoint) <
+                                    Core.TempestHero.Hero.Position.Distance2D(lastPoint) - 300)
                             .OrderBy(pos => CheckForDist(pos, Core.TempestHero.Hero))
                             .FirstOrDefault();
                         illusion.Hero.Move(closest);
                     }
+
                     foreach (var necro in necros)
                     {
                         var path = FindOrGetNeededPath(necro.Necr);
                         var lastPoint = path[path.Count - 1];
                         var closest = path.Where(
                                 x =>
-                                    x.Distance2D(lastPoint) < Core.TempestHero.Hero.Position.Distance2D(lastPoint) - 300)
+                                    x.Distance2D(lastPoint) <
+                                    Core.TempestHero.Hero.Position.Distance2D(lastPoint) - 300)
                             .OrderBy(pos => CheckForDist(pos, Core.TempestHero.Hero))
                             .FirstOrDefault();
                         necro.Necr.Move(closest);
                     }
+
                     _sleeper.Sleep(500);
                 }
             }
         }
-
-        public MapArea CurrentLane { get; set; }
 
         private MapArea GetLane(Hero hero)
         {
@@ -319,21 +324,13 @@ namespace ArcAnnihilation.OrderState
                         selected = selected.Substring(5);
                         if (selected != "Pushing")
                         {
-                            if (selected.Equals("Top"))
-                            {
-                                return MapArea.Top;
-                            }
-                            if (selected.Equals("Mid"))
-                            {
-                                return MapArea.Middle;
-                            }
-                            if (selected.Equals("Bot"))
-                            {
-                                return MapArea.Bottom;
-                            }
+                            if (selected.Equals("Top")) return MapArea.Top;
+                            if (selected.Equals("Mid")) return MapArea.Middle;
+                            if (selected.Equals("Bot")) return MapArea.Bottom;
                         }
                     }
                 }
+
             var lane = MenuManager.IsSummmoningAndPushing ? GetLane(Game.MousePosition) : Map.GetLane(hero);
             switch (lane)
             {
@@ -367,22 +364,13 @@ namespace ArcAnnihilation.OrderState
                         selected = selected.Substring(5);
                         if (selected != "Pushing")
                         {
-                            if (selected.Equals("Top"))
-                            {
-                                return TopPath;
-                            }
-                            if (selected.Equals("Mid"))
-                            {
-                                return MidPath;
-                            }
-                            if (selected.Equals("Bot"))
-                            {
-                                return BotPath;
-                            }
+                            if (selected.Equals("Top")) return TopPath;
+                            if (selected.Equals("Mid")) return MidPath;
+                            if (selected.Equals("Bot")) return BotPath;
                         }
                     }
                 }
-            
+
             if (!MenuManager.IsSummmoningAndPushing)
             {
                 var currentLane = Map.GetLane(hero);
@@ -442,50 +430,17 @@ namespace ArcAnnihilation.OrderState
 
         public MapArea GetLane(Vector3 pos)
         {
-            if (Map.Top.IsInside(pos))
-            {
-                return MapArea.Top;
-            }
-            if (Map.Middle.IsInside(pos))
-            {
-                return MapArea.Middle;
-            }
-            if (Map.Bottom.IsInside(pos))
-            {
-                return MapArea.Bottom;
-            }
-            if (Map.River.IsInside(pos))
-            {
-                return MapArea.River;
-            }
-            if (Map.RadiantBase.IsInside(pos))
-            {
-                return MapArea.RadiantBase;
-            }
-            if (Map.DireBase.IsInside(pos))
-            {
-                return MapArea.DireBase;
-            }
-            if (Map.Roshan.IsInside(pos))
-            {
-                return MapArea.RoshanPit;
-            }
-            if (Map.DireBottomJungle.IsInside(pos))
-            {
-                return MapArea.DireBottomJungle;
-            }
-            if (Map.DireTopJungle.IsInside(pos))
-            {
-                return MapArea.DireTopJungle;
-            }
-            if (Map.RadiantBottomJungle.IsInside(pos))
-            {
-                return MapArea.RadiantBottomJungle;
-            }
-            if (Map.RadiantTopJungle.IsInside(pos))
-            {
-                return MapArea.RadiantTopJungle;
-            }
+            if (Map.Top.IsInside(pos)) return MapArea.Top;
+            if (Map.Middle.IsInside(pos)) return MapArea.Middle;
+            if (Map.Bottom.IsInside(pos)) return MapArea.Bottom;
+            if (Map.River.IsInside(pos)) return MapArea.River;
+            if (Map.RadiantBase.IsInside(pos)) return MapArea.RadiantBase;
+            if (Map.DireBase.IsInside(pos)) return MapArea.DireBase;
+            if (Map.Roshan.IsInside(pos)) return MapArea.RoshanPit;
+            if (Map.DireBottomJungle.IsInside(pos)) return MapArea.DireBottomJungle;
+            if (Map.DireTopJungle.IsInside(pos)) return MapArea.DireTopJungle;
+            if (Map.RadiantBottomJungle.IsInside(pos)) return MapArea.RadiantBottomJungle;
+            if (Map.RadiantTopJungle.IsInside(pos)) return MapArea.RadiantTopJungle;
 
             return MapArea.Unknown;
         }

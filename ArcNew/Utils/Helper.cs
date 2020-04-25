@@ -8,6 +8,7 @@ using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.SDK.Helpers;
 using SharpDX;
+using AbilityId = Ensage.AbilityId;
 using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
 
 namespace ArcAnnihilation.Utils
@@ -16,49 +17,54 @@ namespace ArcAnnihilation.Utils
     {
         public static string PrintVector(this Vector3 vec)
         {
-            return $"new Vector3({(int)vec.X},{(int)vec.Y},{(int)vec.Z}),";
-            
+            return $"new Vector3({(int) vec.X},{(int) vec.Y},{(int) vec.Z}),";
         }
+
         public static string PrintVector(this Vector2 vec)
         {
             return $"({vec.X};{vec.Y})";
         }
+
         public static int GetAbilityDelay(this Ability ability, Unit target)
         {
-            return (int)((ability.FindCastPoint() + Core.MainHero.Hero.GetTurnTime(target)) * 1000.0 + (Math.Abs(Game.Ping) < 5 ? 50 : Game.Ping));
+            return (int) ((ability.FindCastPoint() + Core.MainHero.Hero.GetTurnTime(target)) * 1000.0 +
+                          (Math.Abs(Game.Ping) < 5 ? 50 : Game.Ping));
         }
+
         public static int GetAbilityDelay(this Ability ability)
         {
-            return (int) ((ability.FindCastPoint()) * 1000.0 + (Math.Abs(Game.Ping) < 5 ? 50 : Game.Ping));
+            return (int) (ability.FindCastPoint() * 1000.0 + (Math.Abs(Game.Ping) < 5 ? 50 : Game.Ping));
         }
 
         public static int GetAbilityDelay(this Ability ability, Vector3 targetPosition)
         {
-            return (int)((ability.FindCastPoint() + Core.MainHero.Hero.GetTurnTime(targetPosition)) * 1000.0 + (Math.Abs(Game.Ping) < 5 ? 50 : Game.Ping));
+            return (int) ((ability.FindCastPoint() + Core.MainHero.Hero.GetTurnTime(targetPosition)) * 1000.0 +
+                          (Math.Abs(Game.Ping) < 5 ? 50 : Game.Ping));
         }
 
-        public static bool HasItem(this Unit unit, Ensage.AbilityId classId)
+        public static bool HasItem(this Unit unit, AbilityId classId)
         {
             return unit.Inventory.Items.Any(item => item.Id == classId);
         }
-        public static bool HasAbility(this Unit unit, Ensage.AbilityId classId)
+
+        public static bool HasAbility(this Unit unit, AbilityId classId)
         {
             return unit.Spellbook.Spells.Any(item => item.Id == classId);
         }
 
-        public static bool CanDie(this Hero hero,bool checkForAegis=false)
+        public static bool CanDie(this Hero hero, bool checkForAegis = false)
         {
             var mod = !hero.HasModifiers(
-                new[]
-                {
-                    "modifier_dazzle_shallow_grave", "modifier_oracle_false_promise",
-                    "modifier_skeleton_king_reincarnation_scepter_active", "modifier_abaddon_borrowed_time"
-                },
-                false) &&
-                      (hero.ClassId != ClassId.CDOTA_Unit_Hero_Abaddon ||
-                       !hero.GetAbilityById(Ensage.AbilityId.abaddon_borrowed_time).CanBeCasted());
+                          new[]
+                          {
+                              "modifier_dazzle_shallow_grave", "modifier_oracle_false_promise",
+                              "modifier_skeleton_king_reincarnation_scepter_active", "modifier_abaddon_borrowed_time"
+                          },
+                          false) &&
+                      (hero.HeroId != HeroId.npc_dota_hero_abaddon ||
+                       !hero.GetAbilityById(AbilityId.abaddon_borrowed_time).CanBeCasted());
             if (checkForAegis)
-                return mod && !hero.HasItem(Ensage.AbilityId.item_aegis);
+                return mod && !hero.HasItem(AbilityId.item_aegis);
             return mod;
         }
 
@@ -71,12 +77,12 @@ namespace ArcAnnihilation.Utils
                 await Task.Delay(100, cancellationToken);
             }
         }
+
         public static bool TargetFinder()
         {
             if (Core.Target != null && Core.Target.IsValid && Core.Target.IsAlive)
             {
                 if (Core.Target.ClassId == ClassId.CDOTA_Unit_Hero_Phoenix)
-                {
                     if (!Core.Target.IsVisible)
                     {
                         var egg =
@@ -91,9 +97,10 @@ namespace ArcAnnihilation.Utils
                                 $"[TargetFinder] new target: phoenix to egg {Core.Target.Name} | {Core.Target.Handle}");
                         }
                     }
-                }
+
                 return true;
             }
+
             //modifier_morphling_replicate
             var mousePos = Game.MousePosition;
             Core.Target = EntityManager<Hero>.Entities.Where(x =>
@@ -112,7 +119,10 @@ namespace ArcAnnihilation.Utils
                     Core.Target = tempTarget;
             }
             else if (Core.Target == null && tempTarget != null)
+            {
                 Core.Target = tempTarget;
+            }
+
             if (Core.Target == null) return false;
             Printer.Both($"[TargetFinder] new target: {Core.Target.Name} | {Core.Target.Handle}");
             return true;
@@ -138,10 +148,7 @@ namespace ArcAnnihilation.Utils
                 while (!target.HasModifier(name))
                 {
                     await Task.Delay(100, ct);
-                    if (startTime + time - Game.RawGameTime <= 0)
-                    {
-                        return false;
-                    }
+                    if (startTime + time - Game.RawGameTime <= 0) return false;
                 }
             }
             catch (OperationCanceledException)
@@ -155,7 +162,8 @@ namespace ArcAnnihilation.Utils
         public static bool IsDagon(this Item item)
         {
             var id = item.GetItemId();
-            return id == ItemId.item_dagon || id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 || id == ItemId.item_dagon_4 || id == ItemId.item_dagon_5;
+            return id == ItemId.item_dagon || id == ItemId.item_dagon_2 || id == ItemId.item_dagon_3 ||
+                   id == ItemId.item_dagon_4 || id == ItemId.item_dagon_5;
         }
     }
 }

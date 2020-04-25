@@ -12,8 +12,8 @@ namespace ArcAnnihilation.Panels
 {
     public class ItemPanel : Movable
     {
-        private bool _loaded;
         private static ItemPanel _panel;
+        private bool _loaded;
 
         public void OnDrawing(EventArgs args)
         {
@@ -22,21 +22,20 @@ namespace ArcAnnihilation.Panels
 
             var count = 0;
             var startPos = MenuManager.GetItemPanelPosition;
-            if (MenuManager.ItemPanelCanBeMovedByMouse && CanMoveWindow(ref startPos,new Vector2(85),true))
-            {
-                MenuManager.SetItemPanelPosition((int)startPos.X, (int)startPos.Y);
-            }
-            foreach (var item in TempestManager.Tempest.Inventory.Items.Where(x=>x.AbilityState == AbilityState.OnCooldown))
+            if (MenuManager.ItemPanelCanBeMovedByMouse && CanMoveWindow(ref startPos, new Vector2(85), true))
+                MenuManager.SetItemPanelPosition((int) startPos.X, (int) startPos.Y);
+            foreach (var item in TempestManager.Tempest.Inventory.Items.Where(x =>
+                x.AbilityState == AbilityState.OnCooldown))
             {
                 count++;
-                
+
                 var size = MenuManager.GetItemPanelSize;
                 Drawing.DrawRect(startPos, new Vector2(size, size / 2f), Textures.GetItemTexture(item.StoredName()));
                 Drawing.DrawRect(startPos, new Vector2(size * 70 / 100f, size / 2f), Color.White, true);
 
-                var text = ((int) item.Cooldown+1).ToString();
+                var text = ((int) item.Cooldown + 1).ToString();
                 var textSize = Drawing.MeasureText(text, "Arial",
-                    new Vector2((float)(size/2 * .9), (float)(size/2 * .9)), FontFlags.AntiAlias);
+                    new Vector2((float) (size / 2 * .9), (float) (size / 2 * .9)), FontFlags.AntiAlias);
                 Drawing.DrawRect(startPos + new Vector2(0, 2), textSize + new Vector2(0, -2), new Color(0, 0, 0, 155));
                 var textPos = startPos;
                 Drawing.DrawText(
@@ -50,7 +49,6 @@ namespace ArcAnnihilation.Panels
                     startPos = new Vector2(112, 215 + size / 2f);
                 else
                     startPos += new Vector2(size * 70 / 100f, 0);
-
             }
         }
 

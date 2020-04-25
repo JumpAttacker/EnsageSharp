@@ -10,9 +10,10 @@ using Ensage.SDK.Service.Metadata;
 namespace ArcAnnihilation
 {
     [ExportPlugin("Arc Annihilation", HeroId.npc_dota_hero_arc_warden)]
-    class Program : Plugin
+    internal class Program : Plugin
     {
         public static IServiceContext GetContext;
+
         [ImportingConstructor]
         public Program(IServiceContext context)
         {
@@ -21,7 +22,6 @@ namespace ArcAnnihilation
 
         private static void Main()
         {
-
         }
 
         protected override void OnActivate()
